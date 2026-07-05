@@ -1,0 +1,737 @@
+{
+  "app": {
+    "name": "Rotary Minutes",
+    "tagline": "Procès-verbaux modernes pour clubs Rotary et Rotaract"
+  },
+  "nav": {
+    "home": "Accueil",
+    "meetings": "Réunions",
+    "minutes": "Procès-verbaux",
+    "emails": "Emails",
+    "members": "Membres",
+    "statistics": "Statistiques",
+    "district": "District",
+    "settings": "Paramètres",
+    "dashboard": "Tableau de bord",
+    "notifications": "Notifications",
+    "subscription": "Abonnement",
+    "changePlan": "Changer d'offre",
+    "support": "Support"
+  },
+  "notifications": {
+    "title": "Notifications & Annonces",
+    "unauthorized": "Vous devez être connecté pour voir vos notifications."
+  },
+  "features": {
+    "unavailableTitle": "Fonctionnalité non disponible",
+    "unavailableMessage": "La fonctionnalité « {feature} » n'est pas incluse dans votre offre actuelle ({plan}).",
+    "upgradeHint": "Passez à une offre supérieure pour débloquer plus de fonctionnalités.",
+    "upgradeCta": "Voir les offres",
+    "backDashboard": "Retour au tableau de bord",
+    "pdfDisabled": "L'export PDF n'est pas disponible dans votre offre.",
+    "labels": {
+      "emailsEnabled": "Module emails",
+      "statisticsEnabled": "Statistiques",
+      "liveMeetings": "Réunions en direct",
+      "pdfExport": "Export PDF",
+      "districtDashboard": "Tableau de bord district",
+      "offlineMode": "Mode hors-ligne"
+    }
+  },
+  "auth": {
+    "login": "Connexion",
+    "register": "Créer un compte",
+    "logout": "Déconnexion",
+    "email": "Adresse email",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "forgotPassword": "Mot de passe oublié ?",
+    "resetPassword": "Réinitialiser",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "clubName": "Nom du club",
+    "noAccount": "Pas encore de compte ?",
+    "hasAccount": "Déjà un compte ?",
+    "trialInfo": "Essai gratuit de 14 jours, sans carte bancaire"
+  },
+  "dashboard": {
+    "welcome": "Bienvenue",
+    "nextMeeting": "Prochaine réunion",
+    "openActions": "Actions en attente",
+    "recentMinutes": "Derniers PV",
+    "attendanceRate": "Taux d'assiduité",
+    "scheduledEmails": "Emails programmés",
+    "notifications": "Notifications",
+    "quickActions": "Actions rapides",
+    "newMeeting": "Nouvelle réunion",
+    "newMinute": "Nouveau PV",
+    "meetingsThisMonth": "Réunions ce mois",
+    "pastMeetings": "Réunions passées"
+  },
+  "meetings": {
+    "title": "Réunions",
+    "new": "Nouvelle réunion",
+    "fromLast": "Créer à partir de la dernière réunion",
+    "live": "Réunion en direct",
+    "addAgendaItem": "Ajouter un point",
+    "date": "Date",
+    "location": "Lieu",
+    "startTime": "Heure de début",
+    "endTime": "Heure de fin",
+    "presidedBy": "Présidée par",
+    "secretary": "Secrétaire",
+    "type": "Type de réunion",
+    "types": {
+      "STATUTORY": "Réunion statutaire",
+      "COMMITTEE": "Réunion du comité",
+      "COMMISSION": "Réunion de commission",
+      "GENERAL_ASSEMBLY": "Assemblée Générale",
+      "JOINT_MEETING": "Réunion commune",
+      "GOVERNOR_VISIT": "Visite du Gouverneur",
+      "TRAINING": "Formation",
+      "SPECIAL": "Réunion spéciale"
+    },
+    "commissionName": "Nom de la commission",
+    "partnerClubs": "Clubs présents",
+    "governor": "Gouverneur",
+    "adg": "ADG",
+    "officialGuests": "Invités officiels"
+  },
+  "attendance": {
+    "title": "Présences",
+    "checkInTitle": "Émargement",
+    "markAllPresent": "Tous présents",
+    "guests": "Invités",
+    "addGuest": "Ajouter",
+    "guestName": "Nom de l'invité",
+    "present": "Présents",
+    "excusedAbsent": "Absents excusés",
+    "unexcusedAbsent": "Absents non excusés",
+    "traveling": "Membres en voyage",
+    "travelReturn": "Retour de voyage",
+    "rotaryGuest": "Invités rotariens",
+    "rotaractGuest": "Invités rotaractiens",
+    "nonRotaryGuest": "Invités non rotariens",
+    "speaker": "Conférenciers",
+    "visitor": "Visiteurs",
+    "birthday": "Anniversaires",
+    "external": "Assiduité extérieure",
+    "rate": "Taux d'assiduité",
+    "annualRate": "Assiduité annuelle",
+    "monthlyRate": "Assiduité mensuelle"
+  },
+  "minutes": {
+    "title": "Procès-verbaux",
+    "new": "Nouveau PV",
+    "library": "Bibliothèque",
+    "draft": "Brouillon",
+    "inReview": "En révision",
+    "finalized": "Finalisé",
+    "archived": "Archivé",
+    "agenda": "Ordre du jour",
+    "agendaItem": "Point",
+    "decisions": "Décisions",
+    "actions": "Actions",
+    "responsible": "Responsable",
+    "dueDate": "Échéance",
+    "status": "Statut",
+    "comments": "Commentaires",
+    "remarks": "Remarques",
+    "freeText": "Zone libre",
+    "download": "Télécharger PDF",
+    "share": "Partager",
+    "duplicate": "Dupliquer",
+    "archive": "Archiver",
+    "export": "Exporter",
+    "verify": "Vérifier l'authenticité",
+    "autoSave": "Sauvegarde automatique",
+    "offlineDraft": "Brouillon hors-ligne",
+    "versionHistory": "Historique des versions",
+    "finalize": "Finaliser et authentifier"
+  },
+  "members": {
+    "title": "Membres",
+    "add": "Ajouter un membre",
+    "active": "Actifs",
+    "inactive": "Inactifs",
+    "position": "Fonction",
+    "birthday": "Anniversaire",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "phone": "Téléphone",
+    "joinDate": "Date d'entrée",
+    "sponsor": "Parrain Rotary",
+    "commission": "Commission",
+    "bio": "Biographie",
+    "photoUrl": "URL photo",
+    "backToList": "Retour à la liste"
+  },
+  "emails": {
+    "title": "Emails",
+    "compose": "Composer",
+    "templates": "Modèles",
+    "campaigns": "Campagnes",
+    "contacts": "Contacts",
+    "groups": "Groupes",
+    "history": "Historique",
+    "schedule": "Planifier",
+    "cc": "CC",
+    "bcc": "BCC",
+    "back": "Retour aux emails",
+    "composeDesc": "Composer et envoyer un email à un groupe ou des destinataires",
+    "templatesDesc": "Modèles système et personnalisés (rappel réunion, cotisation, bienvenue…)",
+    "campaignsDesc": "Campagnes envoyées, programmées et brouillons",
+    "contactsDesc": "Contacts, groupes, import CSV et synchronisation membres",
+    "historyDesc": "Historique détaillé de chaque envoi",
+    "noPermission": "Vous n'avez pas la permission d'envoyer des emails.",
+    "addContact": "Ajouter un contact",
+    "importMembers": "Importer depuis les membres",
+    "importCsv": "Import CSV (email, prénom, nom)",
+    "importCsvBtn": "Importer",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "company": "Société",
+    "addGroup": "Nouveau groupe",
+    "groupName": "Nom du groupe",
+    "groupDescription": "Description",
+    "selectContacts": "Sélectionner les contacts",
+    "templatesHint": "Variables : {{clubName}}, {{firstName}}, {{memberName}}, {{meetingDate}}, {{meetingLocation}}, {{minuteTitle}}, {{verifyUrl}}, {{dashboardUrl}}",
+    "addTemplate": "Nouveau modèle",
+    "templateName": "Nom du modèle",
+    "subject": "Objet",
+    "body": "Corps du message",
+    "variablesHint": "Utilisez {{variable}} pour personnaliser le contenu.",
+    "system": "Système",
+    "campaignName": "Nom de la campagne",
+    "quickSend": "Envoi rapide",
+    "useTemplate": "Modèle",
+    "recipientGroup": "Groupe destinataires",
+    "recipientsManual": "Destinataires (emails séparés par virgule)",
+    "recipients": "Destinataires",
+    "replyTo": "Répondre à",
+    "sendNow": "Envoyer",
+    "resendDisabled": "Resend n'est pas configuré — les envois seront simulés (enregistrés en base sans email réel).",
+    "sendSuccess": "{count} email(s) envoyé(s).",
+    "simulatedSuccess": "{count} email(s) simulé(s) (Resend désactivé).",
+    "scheduledSuccess": "Campagne programmée.",
+    "sentAt": "Envoyé le",
+    "status": {
+      "DRAFT": "Brouillon",
+      "SCHEDULED": "Programmé",
+      "SENDING": "En cours",
+      "SENT": "Envoyé",
+      "FAILED": "Échec"
+    },
+    "logStatus": {
+      "sent": "Envoyé",
+      "failed": "Échec",
+      "simulated": "Simulé",
+      "skipped": "Ignoré"
+    },
+    "stats": {
+      "opens": "Ouvertures",
+      "errors": "Erreurs"
+    },
+    "errors": {
+      "NO_RECIPIENTS": "Aucun destinataire sélectionné.",
+      "NOT_FOUND": "Élément introuvable.",
+      "ALREADY_SENT": "Cette campagne a déjà été envoyée."
+    }
+  },
+  "statistics": {
+    "title": "Statistiques",
+    "annualAttendance": "Assiduité annuelle",
+    "meetingsCount": "Nombre de réunions",
+    "byMember": "Présence par membre",
+    "byMonth": "Présence par mois",
+    "byType": "Présence par type",
+    "visitors": "Participation des visiteurs",
+    "lowAttendanceAlert": "Membres à assiduité faible"
+  },
+  "district": {
+    "title": "Tableau de bord district",
+    "overviewTitle": "District {district}",
+    "mandateLabel": "Mandat Rotary {label}",
+    "clubsCount": "Clubs du district",
+    "finalizedMinutes": "PV finalisés",
+    "avgAttendance": "Assiduité moyenne",
+    "clubsTable": "Vue d'ensemble des clubs",
+    "clubName": "Club",
+    "city": "Ville",
+    "members": "Membres",
+    "attendance": "Assiduité",
+    "meetingsCount": "Réunions",
+    "noClubs": "Aucun club actif dans ce district",
+    "viewMinutes": "Voir les PV finalisés",
+    "minutesTitle": "Procès-verbaux du district",
+    "minutesSubtitle": "PV finalisés du district {district}",
+    "minutesForbidden": "Vous n'avez pas l'autorisation de consulter les PV du district.",
+    "minuteTitle": "Titre",
+    "meetingDate": "Date de réunion",
+    "status": "Statut",
+    "noMinutes": "Aucun PV finalisé dans ce district",
+    "backToDashboard": "Retour au tableau de bord district",
+    "readOnlyNotice": "Accès en lecture seule — PV finalisés uniquement.",
+    "unauthorized": "Vous n'avez pas accès au tableau de bord district.",
+    "governorMode": "Vue gouverneur de district — accès lecture seule aux données finalisées.",
+    "benchmarkTitle": "Benchmark club vs district",
+    "benchmarkSubtitle": "Comparez votre club à la moyenne du district {district} — mandat {label}",
+    "benchmarkAnonymized": "Les moyennes district sont des agrégats anonymisés de tous les clubs."
+  },
+  "admin": {
+    "title": "Super Admin",
+    "subtitle": "Gestion globale de la plateforme Rotary Minutes",
+    "stats": {
+      "activeClubs": "Clubs actifs",
+      "inactive": "inactifs",
+      "users": "Utilisateurs",
+      "subscriptions": "Abonnements actifs",
+      "trialing": "en essai",
+      "minutesMonth": "PV ce mois",
+      "finalized": "finalisés",
+      "thisMonth": "ce mois",
+      "newClubs": "Nouveaux clubs",
+      "meetings": "Réunions totales",
+      "members": "Membres actifs",
+      "trialsExpiring": "Essais à surveiller"
+    },
+    "clubs": {
+      "title": "Gestion des clubs"
+    },
+    "health": {
+      "title": "Santé de la plateforme",
+      "database": "Base de données",
+      "resend": "API Resend",
+      "email": "Envoi d'emails",
+      "trialsExpiring": "Essais expirant (7j)",
+      "stripe": "Facturation Stripe",
+      "latency": "Ping {ms} ms",
+      "configured": "Clé API configurée",
+      "notConfigured": "Non configuré",
+      "enabled": "Activé",
+      "disabled": "Désactivé",
+      "count": "{count} essai(s)",
+      "statusOk": "OK",
+      "statusWarn": "À vérifier",
+      "error": "Échec de connexion",
+      "maintenance": "Mode maintenance ACTIVÉ",
+      "stripeKeysMissing": "Clés Stripe manquantes dans .env",
+      "envStatus": "Env requis : {requiredOk}/{requiredTotal} · recommandé : {recommendedOk}/{recommendedTotal}"
+    },
+    "analytics": {
+      "title": "Analytique produit",
+      "dau": "DAU estimé",
+      "dauHint": "Utilisateurs uniques aujourd'hui (audit + sessions)",
+      "wau": "WAU estimé",
+      "wauHint": "Utilisateurs actifs sur 7 jours",
+      "sessions": "Sessions actives",
+      "sessionsHint": "Sessions auth valides maintenant",
+      "featureUsage": "Usage des fonctionnalités (7j)",
+      "noUsage": "Aucune activité enregistrée",
+      "churnRisk": "Risque de churn",
+      "expiring": "{count} expirant",
+      "expired": "{count} expiré",
+      "pastDue": "{count} en retard"
+    }
+  },
+  "settings": {
+    "title": "Paramètres",
+    "club": "Club",
+    "users": "Utilisateurs",
+    "subscription": "Abonnement",
+    "language": "Langue",
+    "timezone": "Fuseau horaire"
+  },
+  "subscription": {
+    "monthly": "Mensuel",
+    "annual": "Annuel",
+    "savePercent": "−{percent}%",
+    "annualHint": "Économisez {percent}% en payant à l'année",
+    "perMonth": "mois",
+    "perYear": "an",
+    "billedMonthly": "Facturé mensuellement",
+    "billedAnnually": "Facturé {amount}/an",
+    "youSave": "Économisez {amount}/an",
+    "popular": "Populaire",
+    "currentPlan": "Offre actuelle",
+    "choosePlan": "Choisir {name}",
+    "planSelected": "Offre sélectionnée",
+    "stripeNote": "Intégration Stripe — configuration des clés API requise pour le paiement.",
+    "trialBanner": {
+      "daysLeft": "Essai gratuit : {count, plural, one {# jour restant} other {# jours restants}} (expire le {date})",
+      "lastDay": "Dernier jour d'essai gratuit (expire le {date})",
+      "upgrade": "Choisir un abonnement"
+    },
+    "expired": {
+      "title": "Essai expiré",
+      "description": "L'essai gratuit de {club} est terminé. Choisissez un abonnement pour continuer à utiliser Rotary Minutes.",
+      "upgrade": "Voir les offres"
+    },
+    "promo": {
+      "title": "Code promo",
+      "placeholder": "Ex. WELCOME20",
+      "apply": "Appliquer",
+      "applying": "Vérification…",
+      "applied": "Code {code} appliqué (−{value})",
+      "remove": "Retirer",
+      "discountActive": "Réduction active : {value}",
+      "errors": {
+        "NOT_FOUND": "Code promo introuvable",
+        "INACTIVE": "Ce code promo n'est plus actif",
+        "EXPIRED": "Ce code promo a expiré",
+        "NOT_YET_VALID": "Ce code promo n'est pas encore valide",
+        "MAX_USES_REACHED": "Ce code promo a atteint sa limite d'utilisation"
+      }
+    },
+    "referral": {
+      "title": "Parrainage",
+      "description": "Invitez un autre club : recevez 1 mois offert quand il souscrit à un abonnement payant.",
+      "codeLabel": "Votre code",
+      "linkLabel": "Lien de parrainage",
+      "referrals": "Clubs parrainés",
+      "rewards": "Récompenses obtenues"
+    },
+    "addons": {
+      "title": "Options complémentaires",
+      "description": "Activez des modules en plus de votre abonnement.",
+      "activate": "Activer",
+      "active": "Activé"
+    },
+    "stripe": {
+      "manageBilling": "Gérer la facturation",
+      "checkoutSuccess": "Paiement confirmé — votre abonnement est actif.",
+      "checkoutCancel": "Paiement annulé — aucun changement n'a été appliqué.",
+      "checkoutFailed": "Impossible d'ouvrir le paiement Stripe. Vérifiez la configuration."
+    }
+  },
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "sort": "Trier",
+    "loading": "Chargement...",
+    "noResults": "Aucun résultat",
+    "confirm": "Confirmer",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "viewAll": "Voir tout"
+  },
+  "onboarding": {
+    "title": "Configuration de votre club",
+    "subtitle": "Quelques étapes pour démarrer avec Rotary Minutes",
+    "continue": "Continuer",
+    "skip": "Passer",
+    "finish": "Terminer",
+    "error": "Une erreur est survenue. Réessayez.",
+    "steps": {
+      "CLUB_PROFILE": "Profil du club",
+      "MEMBERS": "Membres",
+      "FIRST_MEETING": "Première réunion",
+      "INVITE_USERS": "Inviter des utilisateurs"
+    },
+    "descriptions": {
+      "CLUB_PROFILE": "Complétez les informations de base de votre club.",
+      "MEMBERS": "Ajoutez au moins un membre du club.",
+      "FIRST_MEETING": "Planifiez votre première réunion statutaire.",
+      "INVITE_USERS": "Invitez un secrétaire ou un autre officier."
+    },
+    "fields": {
+      "clubName": "Nom du club",
+      "district": "District",
+      "country": "Pays",
+      "city": "Ville",
+      "meetingLocation": "Lieu de réunion",
+      "meetingDay": "Jour de réunion",
+      "meetingTime": "Heure de réunion",
+      "email": "Email",
+      "website": "Site web",
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "meetingDate": "Date de réunion",
+      "startTime": "Heure de début",
+      "tempPassword": "Mot de passe temporaire",
+      "passwordHint": "Requis pour les nouveaux comptes (8 car. min.)",
+      "role": "Rôle"
+    },
+    "roles": {
+      "SECRETARY": "Secrétaire",
+      "PRESIDENT": "Président",
+      "READER": "Lecteur",
+      "ADMIN": "Administrateur"
+    }
+  },
+  "offline": {
+    "offline": "Hors ligne",
+    "draftSaved": "brouillon enregistré localement",
+    "syncing": "Synchronisation…",
+    "synced": "Synchronisé"
+  },
+  "verify": {
+    "authentic": "Document authentique et non modifié",
+    "invalid": "Document non reconnu ou altéré",
+    "club": "Club :",
+    "minutes": "PV :",
+    "meetingDate": "Date de réunion :",
+    "finalizedAt": "Finalisé le :",
+    "hashAlgorithm": "Algorithme d'intégrité",
+    "hashDescription": "Empreinte SHA-256 calculée sur le contenu du PV (titre, ordre du jour, présences). Toute modification invalide ce hash.",
+    "downloadPdf": "Télécharger le PDF authentifié",
+    "backHome": "Retour à l'accueil"
+  },
+  "integrations": {
+    "title": "Intégrations",
+    "cardDescription": "Clés API REST et webhooks sortants pour connecter vos outils.",
+    "manage": "Gérer les intégrations",
+    "upgradeRequired": "L'accès API est réservé au plan Enterprise ou activé par le Super Admin.",
+    "upgradeCta": "Voir les offres",
+    "docsIntro": "Documentation OpenAPI :",
+    "apiKey": {
+      "title": "Clés API",
+      "name": "Nom de la clé",
+      "create": "Créer une clé",
+      "revoke": "Révoquer",
+      "revoked": "Clé révoquée",
+      "revokedLabel": "révoquée",
+      "created": "Clé API créée",
+      "error": "Impossible de créer la clé",
+      "copyOnce": "Copiez cette clé maintenant — elle ne sera plus affichée.",
+      "dismiss": "J'ai copié la clé"
+    },
+    "webhooks": {
+      "title": "Webhooks sortants",
+      "url": "URL de destination",
+      "create": "Ajouter un webhook",
+      "delete": "Supprimer",
+      "test": "Tester",
+      "testSent": "Événement de test envoyé",
+      "created": "Webhook créé",
+      "deleted": "Webhook supprimé",
+      "error": "Impossible de créer le webhook",
+      "secretOnce": "Secret de signature (HMAC) — enregistrez-le maintenant :",
+      "dismiss": "J'ai enregistré le secret",
+      "deliveries": "{count} livraison(s)"
+    },
+    "scopes": {
+      "READ_MINUTES": "Lire les PV",
+      "READ_MEETINGS": "Lire les réunions",
+      "READ_MEMBERS": "Lire les membres"
+    },
+    "events": {
+      "MINUTE_FINALIZED": "PV finalisé",
+      "MEETING_CREATED": "Réunion créée",
+      "MEMBER_CREATED": "Membre ajouté"
+    }
+  },
+  "gdpr": {
+    "title": "Données personnelles",
+    "auditTitle": "Journal d'audit",
+    "auditDescription": "Exportez l'historique des actions de votre club au format CSV (5000 dernières entrées).",
+    "auditExport": "Exporter CSV",
+    "loginRequired": "Connectez-vous pour gérer vos données.",
+    "description": "Conformément au RGPD, vous pouvez exporter vos données ou demander la suppression de votre compte.",
+    "exportTitle": "Export de données",
+    "exportDescription": "Téléchargez une copie de vos données personnelles au format JSON.",
+    "exportButton": "Demander l'export",
+    "exportSuccess": "Export téléchargé avec succès.",
+    "deleteTitle": "Suppression de compte",
+    "deleteDescription": "Demandez la suppression de votre compte. Un administrateur traitera votre demande sous 30 jours.",
+    "deleteButton": "Demander la suppression",
+    "deleteConfirm": "Confirmer la demande de suppression de votre compte ?",
+    "deleteSuccess": "Demande enregistrée. Vous serez contacté par email.",
+    "deleteReasonPlaceholder": "Motif (optionnel)",
+    "lastRequest": "Dernière demande",
+    "processing": "Traitement…",
+    "status": {
+      "PENDING": "En attente",
+      "PROCESSING": "En cours",
+      "COMPLETED": "Terminé",
+      "FAILED": "Échoué"
+    },
+    "errors": {
+      "UNAUTHORIZED": "Non autorisé",
+      "ALREADY_PENDING": "Une demande est déjà en cours",
+      "NOT_FOUND": "Utilisateur introuvable",
+      "EXPORT_FAILED": "Échec de l'export"
+    }
+  },
+  "privacy": {
+    "title": "Politique de confidentialité",
+    "updated": "Dernière mise à jour : juillet 2026",
+    "intro": "Rotary Minutes s'engage à protéger vos données personnelles conformément au Règlement Général sur la Protection des Données (RGPD).",
+    "statusLink": "État des services",
+    "sections": {
+      "controller": {
+        "title": "Responsable du traitement",
+        "body": "Rotary Minutes SAS\nEmail : privacy@rotaryminutes.app"
+      },
+      "data": {
+        "title": "Données collectées",
+        "body": "Nous collectons : identité (nom, email), données de club (membres, réunions, procès-verbaux), journaux d'audit et préférences de consentement."
+      },
+      "purpose": {
+        "title": "Finalités",
+        "body": "Fourniture du service SaaS, authentification des PV, facturation, support client et amélioration du produit."
+      },
+      "retention": {
+        "title": "Conservation",
+        "body": "Les données sont conservées pendant la durée de l'abonnement et jusqu'à 3 ans après résiliation, sauf obligation légale contraire."
+      },
+      "rights": {
+        "title": "Vos droits",
+        "body": "Accès, rectification, effacement, portabilité, limitation et opposition. Exercez vos droits depuis Paramètres ou par email à privacy@rotaryminutes.app."
+      },
+      "security": {
+        "title": "Sécurité",
+        "body": "Chiffrement TLS, isolation multi-tenant par club, hash SHA-256 des PV finalisés et journal d'audit complet."
+      },
+      "contact": {
+        "title": "Contact DPO",
+        "body": "Pour toute question : privacy@rotaryminutes.app. Réclamation possible auprès de la CNIL."
+      }
+    }
+  },
+  "status": {
+    "title": "État des services",
+    "lastChecked": "Dernière vérification",
+    "overall": "État global",
+    "overallStatus": {
+      "operational": "Tous les systèmes sont opérationnels",
+      "degraded": "Performance dégradée sur certains services",
+      "down": "Interruption de service"
+    },
+    "status": {
+      "operational": "Opérationnel",
+      "degraded": "Dégradé",
+      "down": "Indisponible"
+    },
+    "services": {
+      "database": "Base de données",
+      "resend": "Emails (Resend)",
+      "cron": "Tâches planifiées"
+    }
+  },
+  "landing": {
+    "hero": "Rédigez vos procès-verbaux en 5 minutes",
+    "subtitle": "La plateforme collaborative pour les clubs Rotary et Rotaract du monde entier",
+    "cta": "Commencer l'essai gratuit",
+    "tryDemo": "Essayer la démo",
+    "caseStudiesLink": "Témoignages clients",
+    "highlights": {
+      "secure": "Multi-tenant sécurisé",
+      "bilingual": "Bilingue FR / EN",
+      "offline": "Mode hors ligne",
+      "pdf": "PDF authentifié par QR Code",
+      "district": "Tableau de bord district"
+    },
+    "features": {
+      "write": "Rédaction intuitive",
+      "writeDesc": "Auto-remplissage intelligent, réunion en direct, zéro formation",
+      "pdf": "PDF professionnel",
+      "pdfDesc": "Logo, QR code d'authentification, compatible impression",
+      "share": "Partage & archivage",
+      "shareDesc": "Versionné, recherchable, accessible partout",
+      "secure": "Sécurisé & multi-tenant",
+      "secureDesc": "Chaque club isolé, hash inviolable, audit complet"
+    },
+    "personas": {
+      "title": "Conçu pour votre rôle",
+      "subtitle": "Secrétaire, président ou gouverneur — Rotary Minutes s'adapte à vos besoins.",
+      "secretary": {
+        "title": "Secrétaire de club",
+        "description": "Rédigez, finalisez et partagez les PV en quelques minutes.",
+        "benefits": [
+          "Mode réunion en direct avec auto-remplissage",
+          "Modèles d'ordre du jour par type de réunion",
+          "Export PDF authentifié en un clic"
+        ]
+      },
+      "president": {
+        "title": "Président de club",
+        "description": "Suivez les décisions, actions et l'activité du club en un coup d'œil.",
+        "benefits": [
+          "Tableau de bord avec actions ouvertes",
+          "Statistiques d'assiduité et participation",
+          "Circuit de validation avant finalisation"
+        ]
+      },
+      "governor": {
+        "title": "Gouverneur de district",
+        "description": "Pilotez l'activité du district avec un accès lecture seule aux données finalisées.",
+        "benefits": [
+          "Vue d'ensemble du district",
+          "Benchmark club vs moyenne district",
+          "Bibliothèque de PV finalisés"
+        ]
+      }
+    },
+    "pricing": {
+      "title": "Tarifs simples et transparents",
+      "subtitle": "Choisissez l'offre adaptée à votre club. Essai gratuit de 14 jours inclus.",
+      "trialNote": "Essai gratuit 14 jours · Sans carte bancaire",
+      "cta": "Commencer l'essai gratuit"
+    }
+  },
+  "demo": {
+    "loading": "Préparation de l'environnement démo…",
+    "unavailable": "Les données démo ne sont pas disponibles. Lancez le seed de la base.",
+    "backHome": "Retour à l'accueil",
+    "sandbox": "Bac à sable interactif",
+    "readOnly": "Lecture seule",
+    "startTrial": "Essai gratuit",
+    "notice": "Aperçu en lecture seule. Inscrivez-vous pour créer et modifier les données de votre club.",
+    "expires": "Session expire le {date}",
+    "members": "Membres",
+    "meetings": "Réunions",
+    "minutes": "Procès-verbaux",
+    "memberList": "Membres actifs",
+    "recentMinutes": "PV récents",
+    "clubInfo": "Informations du club",
+    "president": "Président",
+    "secretary": "Secrétaire",
+    "meetingDay": "Réunion",
+    "location": "Lieu"
+  },
+  "caseStudies": {
+    "title": "Témoignages clients",
+    "subtitle": "Découvrez comment les clubs Rotary gagnent du temps avec Rotary Minutes.",
+    "backHome": "Retour à l'accueil",
+    "backList": "Tous les témoignages",
+    "empty": "Aucun témoignage publié pour le moment.",
+    "cta": "Commencer l'essai gratuit"
+  },
+  "support": {
+    "title": "Support",
+    "subtitle": "Besoin d'aide ? Ouvrez un ticket et notre équipe vous répondra.",
+    "newTicket": "Nouveau ticket",
+    "myTickets": "Mes tickets",
+    "subject": "Objet",
+    "subjectPlaceholder": "Résumé de votre demande",
+    "message": "Message",
+    "messagePlaceholder": "Décrivez votre question ou problème en détail…",
+    "submit": "Envoyer le ticket",
+    "submitting": "Envoi…",
+    "created": "Ticket créé avec succès",
+    "validationError": "Veuillez remplir tous les champs",
+    "error": "Une erreur est survenue. Réessayez.",
+    "noTickets": "Aucun ticket. Créez-en un ci-dessus si vous avez besoin d'aide.",
+    "reply": "Envoyer la réponse",
+    "replyPlaceholder": "Écrivez votre réponse…",
+    "replySent": "Réponse envoyée",
+    "you": "Vous",
+    "staffReply": "Équipe support",
+    "userReply": "Utilisateur",
+    "statusUpdated": "Statut mis à jour",
+    "adminTitle": "Tickets support",
+    "adminSubtitle": "Gérer et répondre aux demandes des utilisateurs",
+    "status": {
+      "OPEN": "Ouvert",
+      "IN_PROGRESS": "En cours",
+      "RESOLVED": "Résolu",
+      "CLOSED": "Fermé"
+    }
+  }
+}

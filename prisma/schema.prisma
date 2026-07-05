@@ -1,0 +1,1010 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum Language {
+  FR
+  EN
+}
+
+enum ClubType {
+  ROTARY
+  ROTARACT
+}
+
+enum ClubRole {
+  PRESIDENT
+  SECRETARY
+  PROTOCOL
+  TREASURER
+  FOUNDATION_CHAIR
+  MEMBERSHIP_CHAIR
+  PUBLIC_IMAGE_CHAIR
+  ADMIN
+  READER
+}
+
+enum MeetingType {
+  STATUTORY
+  COMMITTEE
+  COMMISSION
+  GENERAL_ASSEMBLY
+  JOINT_MEETING
+  GOVERNOR_VISIT
+  TRAINING
+  SPECIAL
+}
+
+enum AttendanceCategory {
+  PRESENT
+  EXCUSED_ABSENT
+  UNEXCUSED_ABSENT
+  TRAVELING
+  TRAVEL_RETURN
+  ROTARY_GUEST
+  ROTARACT_GUEST
+  NON_ROTARY_GUEST
+  SPEAKER
+  VISITOR
+  BIRTHDAY
+  EXTERNAL_ATTENDANCE
+}
+
+enum MinuteStatus {
+  DRAFT
+  IN_PROGRESS
+  REVIEW
+  FINALIZED
+  ARCHIVED
+}
+
+enum AgendaItemStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  DEFERRED
+  CANCELLED
+}
+
+enum SubscriptionPlan {
+  TRIAL
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}
+
+enum BillingInterval {
+  MONTHLY
+  ANNUAL
+}
+
+enum NotificationType {
+  MEETING_REMINDER
+  ACTION_REMINDER
+  DEADLINE_REMINDER
+  NEW_MEETING
+  NEW_MINUTE
+  SYSTEM
+  ANNOUNCEMENT
+}
+
+enum AnnouncementTarget {
+  ALL_CLUBS
+  CLUB
+  USERS
+  ROLE
+}
+
+enum EmailCampaignStatus {
+  DRAFT
+  SCHEDULED
+  SENDING
+  SENT
+  FAILED
+}
+
+enum PromoDiscountType {
+  PERCENT
+  FIXED_AMOUNT
+}
+
+enum AddonKey {
+  EMAILS
+  DISTRICT
+  ADVANCED_STATS
+}
+
+enum DistrictAccessRole {
+  VIEWER
+  GOVERNOR
+  ADG
+}
+
+enum DataRequestStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum SupportTicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum CheckInMethod {
+  QR
+  MANUAL
+}
+
+enum OnboardingStepKey {
+  CLUB_PROFILE
+  MEMBERS
+  FIRST_MEETING
+  INVITE_USERS
+  COMPLETE
+}
+
+// ─── Auth (NextAuth) ─────────────────────────────────────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── Multi-tenant Core ───────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  passwordHash  String?
+  firstName     String
+  lastName      String
+  image         String?
+  isSuperAdmin  Boolean   @default(false)
+  language      Language  @default(FR)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  memberships   ClubMembership[]
+  minutesAuthored Minute[] @relation("MinuteAuthor")
+  minuteVersions  MinuteVersion[]
+  notifications Notification[]
+  auditLogs     AuditLog[]
+  districtAccess  DistrictAccess[]
+  districtAccessGranted DistrictAccess[] @relation("DistrictAccessGrantedBy")
+  announcements Announcement[]
+  minutesSubmitted Minute[] @relation("MinuteSubmitter")
+  minutesApproved  Minute[] @relation("MinuteApprover")
+  memberProfile    Member?
+  supportTickets   SupportTicket[]
+  dataExportRequests DataExportRequest[]
+  deletionRequests   DeletionRequest[]
+  consentRecords     ConsentRecord[]
+}
+
+model Club {
+  id              String    @id @default(cuid())
+  slug            String    @unique
+  name            String
+  type            ClubType  @default(ROTARY)
+  logoUrl         String?
+  district        String?
+  country         String
+  city            String
+  address         String?
+  meetingLocation String?
+  meetingDay      String?
+  meetingTime     String?
+  email           String?
+  phone           String?
+  website         String?
+  presidentName   String?
+  secretaryName   String?
+  memberCount     Int       @default(0)
+  foundedAt       DateTime?
+  currency        String    @default("EUR")
+  description     String?   @db.Text
+  timezone        String    @default("Europe/Paris")
+  language        Language  @default(FR)
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  memberships     ClubMembership[]
+  members         Member[]
+  commissions     Commission[]
+  meetings        Meeting[]
+  minutes         Minute[]
+  emailContacts   EmailContact[]
+  emailGroups     EmailGroup[]
+  emailTemplates  EmailTemplate[]
+  emailCampaigns  EmailCampaign[]
+  notifications   Notification[]
+  subscription    Subscription?
+  auditLogs       AuditLog[]
+  features        ClubFeatures?
+  clubAddons      ClubAddon[]
+  clubOnboarding  ClubOnboarding?
+  referralsGiven  Referral[] @relation("ReferrerClub")
+  officerMandates OfficerMandate[]
+  supportTickets  SupportTicket[]
+  featureFlagOverrides ClubFeatureFlagOverride[]
+  apiKeys         ClubApiKey[]
+  webhooks        ClubWebhook[]
+}
+
+model ClubMembership {
+  id        String   @id @default(cuid())
+  clubId    String
+  userId    String
+  role      ClubRole @default(READER)
+  isActive  Boolean  @default(true)
+  joinedAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([clubId, userId])
+  @@index([clubId])
+  @@index([userId])
+}
+
+model Member {
+  id           String    @id @default(cuid())
+  clubId       String
+  firstName    String
+  lastName     String
+  email        String?
+  phone        String?
+  position     String?
+  joinDate     DateTime?
+  isActive     Boolean   @default(true)
+  birthday     DateTime?
+  photoUrl     String?
+  bio          String?   @db.Text
+  commissionId String?
+  sponsorName  String?
+  userId       String?   @unique
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  club         Club      @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  commission   Commission? @relation(fields: [commissionId], references: [id], onDelete: SetNull)
+  user         User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  attendances  MeetingAttendance[]
+  officerMandates OfficerMandate[]
+
+  @@index([clubId])
+}
+
+model Commission {
+  id        String   @id @default(cuid())
+  clubId    String
+  name      String
+  chairName String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  members   Member[]
+
+  @@index([clubId])
+}
+
+// ─── Meetings & Minutes ──────────────────────────────────────────────────────
+
+model Meeting {
+  id              String      @id @default(cuid())
+  clubId          String
+  title           String?
+  date            DateTime
+  location        String?
+  startTime       String?
+  endTime         String?
+  presidedBy      String?
+  secretary       String?
+  type            MeetingType @default(STATUTORY)
+  // Type-specific fields (JSON for flexibility)
+  typeMetadata    Json?
+  isLive          Boolean     @default(false)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  club            Club        @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  attendances     MeetingAttendance[]
+  minute          Minute?
+  checkInToken    MeetingCheckInToken?
+
+  @@index([clubId, date])
+}
+
+model MeetingAttendance {
+  id         String             @id @default(cuid())
+  meetingId  String
+  memberId   String?
+  guestName  String?
+  category   AttendanceCategory
+  notes      String?
+
+  meeting    Meeting            @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  member     Member?            @relation(fields: [memberId], references: [id], onDelete: SetNull)
+
+  @@index([meetingId])
+}
+
+model Minute {
+  id              String       @id @default(cuid())
+  clubId          String
+  meetingId       String       @unique
+  title           String
+  status          MinuteStatus @default(DRAFT)
+  contentHash     String?
+  qrCodeUrl       String?
+  verifyUrl       String?
+  freeText        String?      @db.Text
+  authorId        String?
+  submittedAt     DateTime?
+  submittedById   String?
+  reviewComment   String?
+  approvedAt      DateTime?
+  approvedById    String?
+  finalizedAt     DateTime?
+  archivedAt      DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  club            Club         @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  meeting         Meeting      @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  author          User?        @relation("MinuteAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  submittedBy     User?        @relation("MinuteSubmitter", fields: [submittedById], references: [id], onDelete: SetNull)
+  approvedBy      User?        @relation("MinuteApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  agendaItems     AgendaItem[]
+  versions        MinuteVersion[]
+
+  @@index([clubId, status])
+  @@index([clubId, createdAt])
+  @@index([contentHash])
+}
+
+model AgendaItem {
+  id           String           @id @default(cuid())
+  minuteId     String
+  sortOrder    Int              @default(0)
+  title        String
+  description  String?          @db.Text
+  decisions    String?          @db.Text
+  actions      String?          @db.Text
+  responsible  String?
+  dueDate      DateTime?
+  status       AgendaItemStatus @default(OPEN)
+  comments     String?          @db.Text
+  remarks      String?          @db.Text
+
+  minute       Minute           @relation(fields: [minuteId], references: [id], onDelete: Cascade)
+
+  @@index([minuteId])
+}
+
+model MinuteVersion {
+  id          String   @id @default(cuid())
+  minuteId    String
+  version     Int
+  snapshot    Json
+  contentHash String
+  authorId    String?
+  createdAt   DateTime @default(now())
+
+  minute      Minute   @relation(fields: [minuteId], references: [id], onDelete: Cascade)
+  author      User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@unique([minuteId, version])
+  @@index([minuteId])
+}
+
+// ─── Email Module ────────────────────────────────────────────────────────────
+
+model EmailContact {
+  id        String   @id @default(cuid())
+  clubId    String
+  email     String
+  firstName String?
+  lastName  String?
+  company   String?
+  tags      String[]
+  createdAt DateTime @default(now())
+
+  club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  groups    EmailGroupContact[]
+
+  @@unique([clubId, email])
+  @@index([clubId])
+}
+
+model EmailGroup {
+  id          String   @id @default(cuid())
+  clubId      String
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+
+  club        Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  contacts    EmailGroupContact[]
+  campaigns   EmailCampaign[]
+
+  @@index([clubId])
+}
+
+model EmailGroupContact {
+  id        String @id @default(cuid())
+  groupId   String
+  contactId String
+
+  group     EmailGroup   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  contact   EmailContact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, contactId])
+}
+
+model EmailTemplate {
+  id        String   @id @default(cuid())
+  clubId    String?
+  name      String
+  slug      String
+  subject   String
+  body      String   @db.Text
+  isSystem  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  club      Club?    @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  campaigns EmailCampaign[]
+
+  @@index([clubId])
+}
+
+model EmailCampaign {
+  id           String              @id @default(cuid())
+  clubId       String
+  templateId   String?
+  groupId      String?
+  name         String
+  subject      String
+  body         String              @db.Text
+  recipients   String[]
+  status       EmailCampaignStatus @default(DRAFT)
+  scheduledAt  DateTime?
+  sentAt       DateTime?
+  cc           String[]
+  bcc          String[]
+  replyTo      String?
+  openCount    Int                 @default(0)
+  clickCount   Int                 @default(0)
+  errorCount   Int                 @default(0)
+  createdAt    DateTime            @default(now())
+
+  club         Club                @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  template     EmailTemplate?      @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  group        EmailGroup?         @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  logs         EmailLog[]
+
+  @@index([clubId])
+}
+
+model EmailLog {
+  id         String   @id @default(cuid())
+  campaignId String
+  recipient  String
+  status     String
+  openedAt   DateTime?
+  clickedAt  DateTime?
+  error      String?
+  createdAt  DateTime @default(now())
+
+  campaign   EmailCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+}
+
+// ─── Subscriptions & Billing ─────────────────────────────────────────────────
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  clubId               String             @unique
+  plan                 SubscriptionPlan   @default(TRIAL)
+  status               SubscriptionStatus @default(TRIALING)
+  billingInterval      BillingInterval    @default(MONTHLY)
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  stripePriceId        String?
+  promoCodeId          String?
+  referredByClubId     String?
+  trialEndsAt          DateTime?
+  currentPeriodEnd     DateTime?
+  cancelledAt          DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  club                 Club               @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  promoCode            PromoCode?         @relation(fields: [promoCodeId], references: [id], onDelete: SetNull)
+}
+
+// ─── District Dashboard ──────────────────────────────────────────────────────
+
+model DistrictAccess {
+  id          String             @id @default(cuid())
+  userId      String
+  district    String
+  role        DistrictAccessRole @default(VIEWER)
+  canViewPV   Boolean            @default(false)
+  grantedAt   DateTime           @default(now())
+  expiresAt   DateTime?
+  grantedById String?
+
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  grantedBy   User?              @relation("DistrictAccessGrantedBy", fields: [grantedById], references: [id], onDelete: SetNull)
+
+  @@unique([userId, district])
+}
+
+// ─── Notifications & Audit ───────────────────────────────────────────────────
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  clubId    String?
+  type      NotificationType
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  club      Club?            @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  clubId     String?
+  userId     String?
+  action     String
+  entity     String
+  entityId   String?
+  metadata   Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  club       Club?    @relation(fields: [clubId], references: [id], onDelete: SetNull)
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([clubId, createdAt])
+  @@index([userId])
+}
+
+// ─── SaaS Platform (Super Admin) ─────────────────────────────────────────────
+
+model AppSettings {
+  id                    String   @id @default("global")
+  appName               String   @default("Rotary Minutes")
+  tagline               String?
+  supportEmail          String?
+  stripeEnabled         Boolean  @default(false)
+  resendEnabled         Boolean  @default(false)
+  trialDays             Int      @default(14)
+  maintenanceMode       Boolean  @default(false)
+  annualDiscountPercent Int      @default(20)
+  currency              String   @default("EUR")
+  config                Json?
+  updatedAt             DateTime @updatedAt
+}
+
+model PlanConfig {
+  plan                 SubscriptionPlan @id
+  nameFr               String
+  nameEn               String
+  descriptionFr        String?
+  descriptionEn        String?
+  priceMonthly         Int
+  featuresFr           String[]
+  featuresEn           String[]
+  stripePriceIdMonthly String?
+  stripePriceIdAnnual  String?
+  memberLimit          Int?
+  isActive             Boolean          @default(true)
+  isPopular            Boolean          @default(false)
+  sortOrder            Int              @default(0)
+  updatedAt            DateTime         @updatedAt
+}
+
+model ClubFeatures {
+  clubId                  String   @id
+  emailsEnabled           Boolean  @default(true)
+  statisticsEnabled       Boolean  @default(true)
+  districtDashboard       Boolean  @default(false)
+  pdfExport               Boolean  @default(true)
+  offlineMode             Boolean  @default(false)
+  liveMeetings            Boolean  @default(true)
+  emailsMenuVisible       Boolean  @default(false)
+  statisticsMenuVisible   Boolean  @default(false)
+  pdfMenuVisible          Boolean  @default(false)
+  liveMeetingsMenuVisible Boolean  @default(false)
+  districtMenuVisible     Boolean  @default(false)
+  offlineMenuVisible      Boolean  @default(false)
+  apiAccessEnabled        Boolean  @default(false)
+  memberLimit             Int?
+  updatedAt               DateTime @updatedAt
+
+  club                    Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+}
+
+model RoleConfig {
+  role          ClubRole @id
+  labelFr       String
+  labelEn       String
+  description   String?
+  permissions   Json
+  isActive      Boolean  @default(true)
+  updatedAt     DateTime @updatedAt
+}
+
+model Announcement {
+  id              String             @id @default(cuid())
+  title           String
+  message         String             @db.Text
+  targetType      AnnouncementTarget
+  targetClubIds   String[]
+  targetUserIds   String[]
+  targetRoles     ClubRole[]
+  sendEmail       Boolean            @default(false)
+  authorId        String
+  sentAt          DateTime?
+  createdAt       DateTime           @default(now())
+
+  author          User               @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+// ─── Phase 1: Billing extras ─────────────────────────────────────────────────
+
+model PromoCode {
+  id              String            @id @default(cuid())
+  code            String            @unique
+  discountType    PromoDiscountType @default(PERCENT)
+  discountValue   Int
+  validFrom       DateTime          @default(now())
+  validUntil      DateTime?
+  maxUses         Int?
+  usedCount       Int               @default(0)
+  isActive        Boolean           @default(true)
+  createdAt       DateTime          @default(now())
+
+  subscriptions   Subscription[]
+}
+
+model AddonConfig {
+  key             AddonKey @id
+  nameFr          String
+  nameEn          String
+  priceMonthly    Int
+  stripePriceId   String?
+  isActive        Boolean  @default(true)
+  updatedAt       DateTime @updatedAt
+}
+
+model ClubAddon {
+  id              String   @id @default(cuid())
+  clubId          String
+  addonKey        AddonKey
+  activatedAt     DateTime @default(now())
+  expiresAt       DateTime?
+
+  club            Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@unique([clubId, addonKey])
+  @@index([clubId])
+}
+
+model Referral {
+  id              String   @id @default(cuid())
+  referrerClubId  String
+  referredClubId  String   @unique
+  rewardApplied   Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  referrerClub    Club     @relation("ReferrerClub", fields: [referrerClubId], references: [id], onDelete: Cascade)
+}
+
+// ─── Phase 1: Minute templates ───────────────────────────────────────────────
+
+model MinuteTemplate {
+  id           String      @id @default(cuid())
+  meetingType  MeetingType
+  locale       Language
+  name         String
+  isSystem     Boolean     @default(true)
+  clubId       String?
+  sortOrder    Int         @default(0)
+  items        Json
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([meetingType, locale, clubId])
+}
+
+// ─── Phase 1: Attendance QR ──────────────────────────────────────────────────
+
+model MeetingCheckInToken {
+  id         String   @id @default(cuid())
+  meetingId  String   @unique
+  token      String   @unique
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  meeting    Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+}
+
+// ─── Phase 1: Members & onboarding ─────────────────────────────────────────
+
+model OfficerMandate {
+  id         String   @id @default(cuid())
+  clubId     String
+  memberId   String?
+  role       ClubRole
+  holderName String
+  startDate  DateTime
+  endDate    DateTime
+  createdAt  DateTime @default(now())
+
+  club       Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  member     Member?  @relation(fields: [memberId], references: [id], onDelete: SetNull)
+
+  @@index([clubId, startDate])
+}
+
+model ClubOnboarding {
+  clubId       String   @id
+  currentStep  OnboardingStepKey @default(CLUB_PROFILE)
+  completedSteps OnboardingStepKey[]
+  completedAt  DateTime?
+  updatedAt    DateTime @updatedAt
+
+  club         Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+}
+
+// ─── Phase 1: GDPR ───────────────────────────────────────────────────────────
+
+model DataExportRequest {
+  id          String            @id @default(cuid())
+  userId      String
+  clubId      String?
+  status      DataRequestStatus @default(PENDING)
+  downloadUrl String?
+  expiresAt   DateTime?
+  createdAt   DateTime          @default(now())
+  completedAt DateTime?
+
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model DeletionRequest {
+  id          String            @id @default(cuid())
+  userId      String
+  status      DataRequestStatus @default(PENDING)
+  reason      String?
+  createdAt   DateTime          @default(now())
+  processedAt DateTime?
+
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ConsentRecord {
+  id         String   @id @default(cuid())
+  userId     String
+  type       String
+  granted    Boolean
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
+}
+
+// ─── Phase 1: Support & marketing ────────────────────────────────────────────
+
+model SupportTicket {
+  id         String              @id @default(cuid())
+  clubId     String?
+  userId     String
+  subject    String
+  status     SupportTicketStatus @default(OPEN)
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+
+  club       Club?               @relation(fields: [clubId], references: [id], onDelete: SetNull)
+  user       User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages   SupportMessage[]
+
+  @@index([status, createdAt])
+}
+
+model SupportMessage {
+  id         String   @id @default(cuid())
+  ticketId   String
+  authorId   String?
+  body       String   @db.Text
+  isStaff    Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  ticket     SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+}
+
+model CaseStudy {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  titleFr     String
+  titleEn     String
+  summaryFr   String
+  summaryEn   String
+  contentFr   String   @db.Text
+  contentEn   String   @db.Text
+  clubName    String
+  isPublished Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+}
+
+model DemoSession {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+// ─── Phase 9: Feature flags & production ─────────────────────────────────────
+
+model FeatureFlag {
+  key             String   @id
+  nameFr          String
+  nameEn          String
+  descriptionFr   String?
+  descriptionEn   String?
+  defaultEnabled  Boolean  @default(false)
+  rolloutPercent  Int      @default(0)
+  isActive        Boolean  @default(true)
+  updatedAt       DateTime @updatedAt
+
+  overrides       ClubFeatureFlagOverride[]
+}
+
+model ClubFeatureFlagOverride {
+  id        String   @id @default(cuid())
+  clubId    String
+  flagKey   String
+  enabled   Boolean
+  note      String?
+  updatedAt DateTime @updatedAt
+
+  club      Club        @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  flag      FeatureFlag @relation(fields: [flagKey], references: [key], onDelete: Cascade)
+
+  @@unique([clubId, flagKey])
+  @@index([clubId])
+}
+
+// ─── Phase 10: Public API & webhooks ─────────────────────────────────────────
+
+enum ApiKeyScope {
+  READ_MINUTES
+  READ_MEETINGS
+  READ_MEMBERS
+}
+
+enum WebhookEvent {
+  MINUTE_FINALIZED
+  MEETING_CREATED
+  MEMBER_CREATED
+}
+
+model ClubApiKey {
+  id          String        @id @default(cuid())
+  clubId      String
+  name        String
+  keyPrefix   String
+  keyHash     String
+  scopes      ApiKeyScope[]
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  isActive    Boolean       @default(true)
+  createdById String?
+  createdAt   DateTime      @default(now())
+
+  club        Club          @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@index([clubId])
+  @@index([keyPrefix])
+}
+
+model ClubWebhook {
+  id         String         @id @default(cuid())
+  clubId     String
+  url        String
+  secret     String
+  events     WebhookEvent[]
+  isActive   Boolean        @default(true)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  club       Club           @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  deliveries WebhookDelivery[]
+
+  @@index([clubId])
+}
+
+model WebhookDelivery {
+  id          String        @id @default(cuid())
+  webhookId   String
+  event       WebhookEvent
+  payload     Json
+  statusCode  Int?
+  error       String?
+  attempt     Int           @default(1)
+  deliveredAt DateTime?
+  createdAt   DateTime      @default(now())
+
+  webhook     ClubWebhook   @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  @@index([webhookId, createdAt])
+}

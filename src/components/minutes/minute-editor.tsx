@@ -1,0 +1,312 @@
+"use client";
+
+import { useState, useCallback, useEffect, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
+import Link from "next/link";
+import { Plus, GripVertical, Save, Download } from "lucide-react";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { saveMinute } from "@/actions/minutes";
+import {
+  saveDraftOffline,
+  getUnsyncedDrafts,
+  markDraftSynced,
+} from "@/lib/offline";
+import { MinuteWorkflowActions } from "./minute-workflow-actions";
+import { MinuteAssistPanel } from "./minute-assist-panel";
+import { format } from "date-fns";
+import { fr, enUS } from "date-fns/locale";
+
+interface AgendaItem {
+  id: string;
+  title: string;
+  description: string;
+  decisions: string;
+  actions: string;
+  responsible: string;
+  dueDate: string;
+  status: string;
+}
+
+interface MinuteData {
+  id: string;
+  title: string;
+  status: string;
+  reviewComment?: string | null;
+  meeting: {
+    date: Date | string;
+    location?: string | null;
+    presidedBy?: string | null;
+    secretary?: string | null;
+    type?: string;
+  };
+  agendaItems: AgendaItem[];
+}
+
+export function MinuteEditor({
+  minute,
+  clubId,
+  pdfEnabled = true,
+  pdfVisible = true,
+  canSubmit = false,
+  canApprove = false,
+}: {
+  minute: MinuteData;
+  clubId: string;
+  pdfEnabled?: boolean;
+  pdfVisible?: boolean;
+  canSubmit?: boolean;
+  canApprove?: boolean;
+}) {
+  const t = useTranslations("minutes");
+  const tMeetings = useTranslations("meetings");
+  const tCommon = useTranslations("common");
+  const locale = useLocale();
+  const router = useRouter();
+  const dateLocale = locale === "fr" ? fr : enUS;
+
+  const [items, setItems] = useState<AgendaItem[]>(
+    minute.agendaItems.length > 0
+      ? minute.agendaItems
+      : [{ id: "1", title: "Ouverture de la séance", description: "", decisions: "", actions: "", responsible: "", dueDate: "", status: "OPEN" }]
+  );
+  const [saving, setSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [isOffline, setIsOffline] = useState(false);
+  const [status, setStatus] = useState(minute.status);
+  const [, startTransition] = useTransition();
+  const readOnly = ["FINALIZED", "ARCHIVED", "REVIEW"].includes(status);
+
+  const doSave = useCallback(async () => {
+    if (["FINALIZED", "ARCHIVED", "REVIEW"].includes(status)) return;
+    setSaving(true);
+    const payload = { agendaItems: items };
+
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      await saveDraftOffline(minute.id, clubId, payload);
+      setIsOffline(true);
+      setLastSaved(new Date());
+      setSaving(false);
+      return;
+    }
+
+    setIsOffline(false);
+    const result = await saveMinute(minute.id, payload);
+    if (!result?.error) {
+      await markDraftSynced(minute.id);
+      setLastSaved(new Date());
+    }
+    setSaving(false);
+  }, [minute.id, clubId, items, status]);
+
+  const syncOfflineDrafts = useCallback(async () => {
+    const drafts = await getUnsyncedDrafts();
+    for (const draft of drafts) {
+      if (draft.id !== minute.id) continue;
+      const data = draft.data as { agendaItems: AgendaItem[] };
+      const result = await saveMinute(draft.id, data);
+      if (!result?.error) {
+        await markDraftSynced(draft.id);
+        if (data.agendaItems) setItems(data.agendaItems);
+        setLastSaved(new Date());
+        setIsOffline(false);
+        startTransition(() => router.refresh());
+      }
+    }
+  }, [minute.id, router, startTransition]);
+
+  useEffect(() => {
+    const timer = setInterval(doSave, 30000);
+    return () => clearInterval(timer);
+  }, [doSave]);
+
+  useEffect(() => {
+    const onOffline = () => setIsOffline(true);
+    const onOnline = () => {
+      setIsOffline(false);
+      void syncOfflineDrafts();
+    };
+    window.addEventListener("offline", onOffline);
+    window.addEventListener("online", onOnline);
+    setIsOffline(typeof navigator !== "undefined" && !navigator.onLine);
+    return () => {
+      window.removeEventListener("offline", onOffline);
+      window.removeEventListener("online", onOnline);
+    };
+  }, [syncOfflineDrafts]);
+
+  function addItem() {
+    setItems((prev) => [
+      ...prev,
+      { id: Date.now().toString(), title: "", description: "", decisions: "", actions: "", responsible: "", dueDate: "", status: "OPEN" },
+    ]);
+  }
+
+  function updateItem(id: string, field: keyof AgendaItem, value: string) {
+    setItems((prev) => prev.map((item) => (item.id === id ? { ...item, [field]: value } : item)));
+  }
+
+  const meetingDate = new Date(minute.meeting.date);
+  const statusLabel =
+    status === "FINALIZED"
+      ? t("finalized")
+      : status === "REVIEW"
+        ? t("inReview")
+        : t("draft");
+
+  return (
+    <div className="space-y-6">
+      <MinuteWorkflowActions
+        minuteId={minute.id}
+        status={status}
+        canSubmit={canSubmit}
+        canApprove={canApprove}
+        reviewComment={minute.reviewComment}
+      />
+
+      <MinuteAssistPanel
+        items={items}
+        meetingType={minute.meeting.type ?? "STATUTORY"}
+        locale={locale}
+      />
+
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-2">
+          <Badge variant={status === "FINALIZED" ? "success" : status === "REVIEW" ? "default" : "warning"}>
+            {statusLabel}
+          </Badge>
+          {isOffline ? (
+            <span className="text-xs text-amber-600">{t("offlineDraft")}</span>
+          ) : saving ? (
+            <span className="text-xs text-gray-400">{t("autoSave")}...</span>
+          ) : lastSaved ? (
+            <span className="text-xs text-gray-400">{t("autoSave")} — {lastSaved.toLocaleTimeString()}</span>
+          ) : null}
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={doSave} disabled={saving}>
+            <Save className="h-4 w-4" />
+            {tCommon("save")}
+          </Button>
+          {status === "FINALIZED" && pdfVisible ? (
+            pdfEnabled ? (
+              <a
+                href={`/api/pdf/${minute.id}`}
+                download
+                className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+              >
+                <Download className="h-4 w-4" />
+                {t("download")}
+              </a>
+            ) : (
+              <Link
+                href={`/${locale}/settings/subscription`}
+                className={cn(buttonVariants({ variant: "outline", size: "sm" }), "text-amber-700")}
+              >
+                <Download className="h-4 w-4" />
+                {locale === "fr" ? "PDF — changer d'offre" : "PDF — upgrade"}
+              </Link>
+            )
+          ) : null}
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader><CardTitle>{minute.title}</CardTitle></CardHeader>
+        <CardContent className="grid sm:grid-cols-3 gap-4 text-sm">
+          <div>
+            <span className="text-gray-500">{tMeetings("date")}</span>
+            <p className="font-medium">{format(meetingDate, "d MMMM yyyy", { locale: dateLocale })}</p>
+          </div>
+          <div>
+            <span className="text-gray-500">{tMeetings("location")}</span>
+            <p className="font-medium">{minute.meeting.location}</p>
+          </div>
+          <div>
+            <span className="text-gray-500">{tMeetings("presidedBy")}</span>
+            <p className="font-medium">{minute.meeting.presidedBy}</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold text-gray-900">{t("agenda")}</h3>
+          <Button variant="outline" size="sm" onClick={addItem} disabled={readOnly}>
+            <Plus className="h-4 w-4" />
+            {tMeetings("addAgendaItem")}
+          </Button>
+        </div>
+
+        {items.map((item, index) => (
+          <Card key={item.id}>
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <GripVertical className="h-4 w-4 text-gray-300 cursor-grab" />
+                <span className="text-xs font-medium text-gray-400">{t("agendaItem")} {index + 1}</span>
+              </div>
+              <Input
+                label={t("agendaItem")}
+                value={item.title}
+                onChange={(e) => updateItem(item.id, "title", e.target.value)}
+                placeholder="Titre du point"
+                disabled={readOnly}
+              />
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-gray-700">Description</label>
+                <textarea
+                  value={item.description}
+                  onChange={(e) => updateItem(item.id, "description", e.target.value)}
+                  rows={2}
+                  disabled={readOnly}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-navy focus:outline-none focus:ring-2 focus:ring-navy/20 disabled:opacity-60"
+                />
+              </div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-gray-700">{t("decisions")}</label>
+                  <textarea
+                    value={item.decisions}
+                    onChange={(e) => updateItem(item.id, "decisions", e.target.value)}
+                    rows={2}
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-navy focus:outline-none focus:ring-2 focus:ring-navy/20"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-gray-700">{t("actions")}</label>
+                  <textarea
+                    value={item.actions}
+                    onChange={(e) => updateItem(item.id, "actions", e.target.value)}
+                    rows={2}
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-navy focus:outline-none focus:ring-2 focus:ring-navy/20"
+                  />
+                </div>
+              </div>
+              <div className="grid sm:grid-cols-3 gap-3">
+                <Input label={t("responsible")} value={item.responsible} onChange={(e) => updateItem(item.id, "responsible", e.target.value)} />
+                <Input label={t("dueDate")} type="date" value={item.dueDate} onChange={(e) => updateItem(item.id, "dueDate", e.target.value)} />
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-gray-700">{t("status")}</label>
+                  <select
+                    value={item.status}
+                    onChange={(e) => updateItem(item.id, "status", e.target.value)}
+                    className="flex h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm"
+                  >
+                    <option value="OPEN">Ouvert</option>
+                    <option value="IN_PROGRESS">En cours</option>
+                    <option value="COMPLETED">Terminé</option>
+                    <option value="DEFERRED">Reporté</option>
+                  </select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
