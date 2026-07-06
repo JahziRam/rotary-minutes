@@ -6,6 +6,9 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["pg", "pg-cloudflare"],
+  experimental: {
+    optimizePackageImports: ["lucide-react", "date-fns", "@tanstack/react-query"],
+  },
   images: {
     remotePatterns: [{ protocol: "https", hostname: "**" }],
   },
