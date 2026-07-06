@@ -19,7 +19,7 @@ jobs:
           node-version: 22
           cache: npm
 
-      - run: npm ci
+      - run: npm install --ignore-scripts && npx prisma generate
 
       - name: Build and deploy
         run: npm run deploy:cf
