@@ -3,14 +3,19 @@ import { PrismaClient } from "@/generated/prisma/client";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 /** Incrémenter quand le schéma Prisma change (invalide le cache dev). */
-const PRISMA_SCHEMA_VERSION = 12;
+const PRISMA_SCHEMA_VERSION = 13;
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
   prismaSchemaVersion?: number;
 };
 
+function isRenderInternalPostgres(url: string): boolean {
+  return /@dpg-[a-z0-9-]+(?:\/|:|$)/i.test(url) && !/\.render\.com/i.test(url);
+}
+
 function ensureSslForRemotePostgres(url: string): string {
+  if (isRenderInternalPostgres(url)) return url;
   if (!/render\.com|prisma\.io/i.test(url)) return url;
   if (/sslmode=|ssl=true/i.test(url)) return url;
   const sep = url.includes("?") ? "&" : "?";
@@ -38,9 +43,11 @@ function resolveConnectionString(): string {
 
 function createPrismaClient() {
   const connectionString = resolveConnectionString();
-  const needsSsl = /render\.com|prisma\.io/i.test(connectionString);
+  const useSsl =
+    /render\.com|prisma\.io/i.test(connectionString) &&
+    !isRenderInternalPostgres(connectionString);
   const adapter = new PrismaPg(
-    needsSsl
+    useSsl
       ? { connectionString, ssl: { rejectUnauthorized: false } }
       : { connectionString }
   );
