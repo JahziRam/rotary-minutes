@@ -23,7 +23,11 @@ jobs:
       - run: npm install --ignore-scripts && npx prisma generate
 
       - name: Build and deploy
-        run: npm run deploy:cf
+        run: |
+          npm run deploy:cf || {
+            echo "::error::Deploy failed. If logs show code 10027, upgrade Workers Paid (10 MiB limit): https://dash.cloudflare.com/?to=/:account/workers/plans"
+            exit 1
+          }
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
