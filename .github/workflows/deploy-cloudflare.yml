@@ -52,8 +52,7 @@ jobs:
     steps:
       - name: Explain why deploy is paused
         run: |
-          echo "::warning::Full app deploy is paused until Workers Paid or Startup credits."
+          echo "::notice::Full app deploy is paused until Workers Paid or Startup credits."
           echo "Bundle size is ~4.7 MiB gzip (free tier limit: 3 MiB)."
-          echo "Landing page deploys automatically via 'Deploy landing page' workflow."
-          echo "Live landing: https://rotary-minutes-landing.pages.dev"
-          exit 1
+          echo "Re-run with 'confirm_paid_plan' checked after upgrading."
+          echo "Landing page: https://rotary-minutes-landing.pages.dev"
