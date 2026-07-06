@@ -5,8 +5,12 @@ Oracle bloque souvent les inscriptions (Madagascar, carte bancaire, vérificatio
 
 ## 1. Créer le compte Render
 
-1. https://dashboard.render.com/register → **Sign up with GitHub**
-2. Autoriser l'accès au repo `JahziRam/rotary-minutes` (privé)
+1. https://dashboard.render.com/register → email **ou** GitHub (les deux conviennent)
+2. **Inscrit par email par erreur ?** Pas grave — il faut seulement connecter GitHub pour déployer :
+   - https://dashboard.render.com/u/settings#account-security
+   - Section **Git deployment credentials** → **Connect GitHub**
+   - Autoriser l'accès au repo `JahziRam/rotary-minutes` (privé)
+   - Si le repo n'apparaît pas : https://github.com/apps/render/installations/new → **Repository access** → inclure `rotary-minutes`
 
 ## 2. Déployer via Blueprint
 
