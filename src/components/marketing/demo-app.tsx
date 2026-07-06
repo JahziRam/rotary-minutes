@@ -19,6 +19,12 @@ import {
   Menu,
   X,
   Coins,
+  Wallet,
+  CheckSquare,
+  CalendarRange,
+  Ticket,
+  UserCircle,
+  FolderOpen,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { MinutePreview } from "@/components/minutes/minute-preview";
@@ -40,6 +46,12 @@ import {
   DemoSupportPanel,
   DemoMinuteEditorPanel,
   DemoDuesPanel,
+  DemoTreasuryPanel,
+  DemoActionsPanel,
+  DemoCalendarPanel,
+  DemoEventsPanel,
+  DemoPortalPanel,
+  DemoDocumentsPanel,
 } from "./demo-panels";
 
 export type DemoTab =
@@ -50,6 +62,12 @@ export type DemoTab =
   | "emails"
   | "members"
   | "dues"
+  | "treasury"
+  | "actions"
+  | "calendar"
+  | "events"
+  | "myAccount"
+  | "documents"
   | "statistics"
   | "district"
   | "settings"
@@ -65,6 +83,12 @@ const NAV: { id: DemoTab; icon: typeof Home; labelKey: string }[] = [
   { id: "emails", icon: Mail, labelKey: "emails" },
   { id: "members", icon: Users, labelKey: "members" },
   { id: "dues", icon: Coins, labelKey: "dues" },
+  { id: "treasury", icon: Wallet, labelKey: "treasury" },
+  { id: "actions", icon: CheckSquare, labelKey: "actions" },
+  { id: "calendar", icon: CalendarRange, labelKey: "calendar" },
+  { id: "events", icon: Ticket, labelKey: "events" },
+  { id: "myAccount", icon: UserCircle, labelKey: "myAccount" },
+  { id: "documents", icon: FolderOpen, labelKey: "documents" },
   { id: "statistics", icon: BarChart3, labelKey: "statistics" },
   { id: "district", icon: Map, labelKey: "district" },
   { id: "settings", icon: Settings, labelKey: "settings" },
@@ -138,6 +162,18 @@ export function DemoApp({ locale }: { locale: string }) {
         return <DemoMembersPanel locale={locale} />;
       case "dues":
         return <DemoDuesPanel locale={locale} />;
+      case "treasury":
+        return <DemoTreasuryPanel locale={locale} />;
+      case "actions":
+        return <DemoActionsPanel locale={locale} />;
+      case "calendar":
+        return <DemoCalendarPanel locale={locale} />;
+      case "events":
+        return <DemoEventsPanel locale={locale} />;
+      case "myAccount":
+        return <DemoPortalPanel locale={locale} />;
+      case "documents":
+        return <DemoDocumentsPanel locale={locale} />;
       case "statistics":
         return <DemoStatisticsPanel locale={locale} />;
       case "district":

@@ -987,9 +987,37 @@
     },
     "pricing": {
       "title": "Tarifs simples et transparents",
-      "subtitle": "Choisissez l'offre adaptée à votre club. Essai gratuit de 14 jours inclus.",
+      "subtitle": "Choisissez l'offre adaptée à votre club. Les modules s'activent automatiquement selon votre formule.",
       "trialNote": "Essai gratuit 14 jours · Sans carte bancaire",
       "cta": "Commencer l'essai gratuit"
+    },
+    "privacyLink": "Confidentialité",
+    "termsLink": "Conditions d'utilisation",
+    "modules": {
+      "badge": "Modules inclus selon l'offre",
+      "title": "Bien plus que des procès-verbaux",
+      "subtitle": "Des briques modulaires activées avec votre abonnement — sans complexifier le quotidien du secrétariat.",
+      "note": "Chaque formule inclut un socle essentiel. Les modules avancés s'ajoutent avec Professional et Enterprise.",
+      "finance": {
+        "title": "Finances club",
+        "desc": "Cotisations, trésorerie et rapports trésorier PDF."
+      },
+      "execution": {
+        "title": "Actions & suivi",
+        "desc": "Décisions des PV transformées en tâches avec rappels."
+      },
+      "calendar": {
+        "title": "Calendrier unifié",
+        "desc": "Réunions, échéances, événements et anniversaires."
+      },
+      "portal": {
+        "title": "Portail membre",
+        "desc": "Chaque membre consulte cotisations, présences et documents."
+      },
+      "advanced": {
+        "title": "Gouvernance & district",
+        "desc": "Archives, mandats, intégrations et vue district (Enterprise)."
+      }
     }
   },
   "demo": {
@@ -1286,6 +1314,57 @@
       "IN_PROGRESS": "En cours",
       "RESOLVED": "Résolu",
       "CLOSED": "Fermé"
+    }
+  },
+  "legal": {
+    "disclaimer": {
+      "text": "Rotary Minutes est un outil indépendant. Il n'est ni affilié, ni approuvé, ni sponsorisé par Rotary International.",
+      "termsLink": "Conditions d'utilisation"
+    }
+  },
+  "terms": {
+    "title": "Conditions générales d'utilisation",
+    "updated": "Dernière mise à jour : juillet 2026",
+    "intro": "Les présentes conditions régissent l'accès et l'utilisation de la plateforme Rotary Minutes. En créant un compte ou en utilisant le service, vous les acceptez.",
+    "privacyLink": "Politique de confidentialité",
+    "statusLink": "État des services",
+    "sections": {
+      "acceptance": {
+        "title": "Acceptation",
+        "body": "L'utilisation de Rotary Minutes implique l'acceptation intégrale des présentes conditions. Si vous n'acceptez pas ces termes, n'utilisez pas le service."
+      },
+      "service": {
+        "title": "Description du service",
+        "body": "Rotary Minutes est une plateforme SaaS de gestion de club (membres, réunions, procès-verbaux, communications et modules optionnels). Le service est fourni « en l'état », sous réserve des fonctionnalités activées pour votre club."
+      },
+      "disclaimer": {
+        "title": "Indépendance vis-à-vis de Rotary International",
+        "body": "Rotary Minutes est un produit indépendant développé par des tiers. Il n'est pas un outil officiel de Rotary International, ni affilié, approuvé ou sponsorisé par Rotary International ou ses organisations affiliées. Les marques Rotary et Rotaract appartiennent à leurs propriétaires respectifs. Vous restez responsable du respect des règles et chartes de votre organisation."
+      },
+      "accounts": {
+        "title": "Comptes et accès",
+        "body": "Vous êtes responsable de la confidentialité de vos identifiants et des actions effectuées depuis votre compte. Les rôles et permissions au sein du club sont définis par l'administrateur du club."
+      },
+      "data": {
+        "title": "Données et contenu",
+        "body": "Vous conservez la propriété des données que vous saisissez. Vous nous accordez une licence limitée pour héberger, traiter et afficher ces données afin de fournir le service. Consultez notre politique de confidentialité pour le traitement des données personnelles."
+      },
+      "billing": {
+        "title": "Abonnements et modules",
+        "body": "Les formules et tarifs sont définis par l'éditeur et peuvent évoluer. Les modules inclus s'activent automatiquement selon l'offre souscrite ; un super administrateur peut désactiver certains modules par club. Les essais gratuits et conditions de facturation sont précisés lors de l'inscription."
+      },
+      "liability": {
+        "title": "Limitation de responsabilité",
+        "body": "Dans les limites autorisées par la loi, Rotary Minutes ne saurait être tenu responsable des dommages indirects, pertes de données dues à une mauvaise utilisation, ou décisions prises sur la base des informations exportées depuis la plateforme."
+      },
+      "changes": {
+        "title": "Modifications",
+        "body": "Nous pouvons mettre à jour ces conditions. La date de dernière mise à jour est indiquée en tête de page. L'utilisation continue du service après modification vaut acceptation."
+      },
+      "contact": {
+        "title": "Contact",
+        "body": "Pour toute question : legal@rotaryminutes.app"
+      }
     }
   }
 }

@@ -81,6 +81,10 @@ export async function updateClubSubscription(
     },
   });
 
+  const effectivePlan = data.plan ?? club.subscription?.plan ?? "TRIAL";
+  const { syncClubFeaturesFromPlan } = await import("@/lib/features");
+  await syncClubFeaturesFromPlan(clubId, effectivePlan);
+
   revalidatePath(`/${locale}/admin`);
   return { success: true };
 }

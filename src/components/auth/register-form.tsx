@@ -10,6 +10,7 @@ import { registerClub } from "@/actions/auth";
 
 export function RegisterForm({ referredByCode }: { referredByCode?: string }) {
   const t = useTranslations("auth");
+  const tLegal = useTranslations("legal.disclaimer");
   const locale = useLocale();
   const router = useRouter();
   const [error, setError] = useState("");
@@ -111,6 +112,12 @@ export function RegisterForm({ referredByCode }: { referredByCode?: string }) {
                   {error}
                 </p>
               )}
+              <p className="text-xs text-gray-500 leading-relaxed">
+                {tLegal("text")}{" "}
+                <Link href={`/${locale}/terms`} className="text-navy underline-offset-2 hover:underline">
+                  {tLegal("termsLink")}
+                </Link>
+              </p>
               <Button type="submit" variant="gold" className="w-full" disabled={loading}>
                 {loading ? "..." : t("register")}
               </Button>

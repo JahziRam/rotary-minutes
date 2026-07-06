@@ -16,6 +16,8 @@ import { PersonasSection } from "@/components/marketing/personas-section";
 import { PricingSection } from "@/components/marketing/pricing-section";
 import { ClubSolutionSection } from "@/components/marketing/club-solution-section";
 import { LandingHeader } from "@/components/marketing/landing-header";
+import { ModulesTeaserSection } from "@/components/marketing/modules-teaser-section";
+import { RotaryDisclaimer } from "@/components/marketing/rotary-disclaimer";
 
 export default async function LandingPage({
   params,
@@ -111,6 +113,8 @@ export default async function LandingPage({
         <ClubSolutionSection />
       </div>
 
+      <ModulesTeaserSection />
+
       <section className="bg-gray-50 py-12 sm:py-16 lg:py-24">
         <div className="mx-auto max-w-6xl px-3 sm:px-4">
           <div className="mb-8 text-center sm:mb-12">
@@ -148,6 +152,8 @@ export default async function LandingPage({
 
       <LandingCta locale={locale} />
 
+      <RotaryDisclaimer locale={locale} />
+
       <footer className="mt-auto border-t border-white/10 bg-navy-dark py-6 text-center text-sm text-white/50 sm:py-8 safe-bottom">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-4 px-4 sm:gap-6">
           <Link href={`/${locale}/demo`} className="transition-colors hover:text-white">
@@ -155,6 +161,12 @@ export default async function LandingPage({
           </Link>
           <Link href={`/${locale}/login`} className="transition-colors hover:text-white">
             {t("auth.login")}
+          </Link>
+          <Link href={`/${locale}/privacy`} className="transition-colors hover:text-white">
+            {t("landing.privacyLink")}
+          </Link>
+          <Link href={`/${locale}/terms`} className="transition-colors hover:text-white">
+            {t("landing.termsLink")}
           </Link>
           <Link href={`/${locale}/status`} className="transition-colors hover:text-white">
             {t("landing.statusLink")}

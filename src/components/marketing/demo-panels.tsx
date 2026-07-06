@@ -27,6 +27,13 @@ import {
   LayoutTemplate,
   Coins,
   History,
+  Wallet,
+  CalendarRange,
+  Ticket,
+  UserCircle,
+  FolderOpen,
+  TrendingUp,
+  TrendingDown,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +48,12 @@ import {
   DEMO_EMAIL_CONTACTS,
   DEMO_DISTRICT_CLUBS,
   DEMO_MANDATES,
+  DEMO_TREASURY,
+  DEMO_CALENDAR_EVENTS,
+  DEMO_CLUB_EVENTS,
+  DEMO_DOCUMENTS,
+  DEMO_PORTAL,
+  DEMO_ACTIONS,
   getDemoData,
   getDemoDues,
 } from "@/lib/demo-data";
@@ -65,7 +78,8 @@ export function DemoDashboardPanel({ locale, onPreviewMinute, onLiveMeeting }: D
       <div className="flex flex-wrap gap-2">
         <DemoFeaturePill label="PDF + QR" />
         <DemoFeaturePill label={isFr ? "Réunion live" : "Live meeting"} />
-        <DemoFeaturePill label={isFr ? "Mode hors ligne" : "Offline mode"} />
+        <DemoFeaturePill label={isFr ? "Trésorerie" : "Treasury"} />
+        <DemoFeaturePill label={isFr ? "Calendrier unifié" : "Unified calendar"} />
         <DemoFeaturePill label="FR / EN" />
       </div>
 
@@ -173,6 +187,31 @@ export function DemoDashboardPanel({ locale, onPreviewMinute, onLiveMeeting }: D
           ))}
         </CardContent>
       </Card>
+
+      <div className="grid lg:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="py-3"><CardTitle className="text-sm">{isFr ? "Trésorerie" : "Treasury"}</CardTitle></CardHeader>
+          <CardContent className="text-sm space-y-1">
+            <p className="font-bold text-navy">{DEMO_TREASURY.balance.toLocaleString()} {DEMO_TREASURY.currency}</p>
+            <p className="text-gray-500">{isFr ? "Solde club" : "Club balance"}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="py-3"><CardTitle className="text-sm">{isFr ? "Prochain événement" : "Next event"}</CardTitle></CardHeader>
+          <CardContent className="text-sm">
+            <p className="font-medium">{DEMO_CLUB_EVENTS[0].title}</p>
+            <p className="text-gray-500">{DEMO_CLUB_EVENTS[0].registrations}/{DEMO_CLUB_EVENTS[0].capacity} {isFr ? "inscrits" : "registered"}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="py-3"><CardTitle className="text-sm">{isFr ? "Calendrier" : "Calendar"}</CardTitle></CardHeader>
+          <CardContent className="text-sm text-gray-600">
+            {DEMO_CALENDAR_EVENTS.slice(0, 2).map((e) => (
+              <p key={e.id} className="truncate">{e.date} — {e.title}</p>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
@@ -571,6 +610,20 @@ export function DemoSettingsPanel({ locale }: { locale: string }) {
           {t("bilingualFeature")}
         </CardContent>
       </Card>
+
+      <Card>
+        <CardContent className="py-4 flex items-center gap-3 text-sm text-gray-600">
+          <QrCode className="h-5 w-5 text-navy" />
+          {isFr ? "PWA : check-in QR hors ligne, consultation PV sans connexion" : "PWA: offline QR check-in, browse minutes offline"}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="py-4 flex items-center gap-3 text-sm text-gray-600">
+          <FileSpreadsheet className="h-5 w-5 text-navy" />
+          {isFr ? "Intégrations : export comptable CSV/OFX, webhooks" : "Integrations: CSV/OFX accounting export, webhooks"}
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -724,6 +777,175 @@ export function DemoDuesPanel({ locale }: { locale: string }) {
               ))}
             </tbody>
           </table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+export function DemoTreasuryPanel({ locale }: { locale: string }) {
+  const isFr = locale === "fr";
+  const t = DEMO_TREASURY;
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2">
+        <DemoLockedButton label={isFr ? "Ajouter une écriture" : "Add entry"} icon={Plus} variant="gold" />
+        <DemoLockedButton label={isFr ? "Rapport PDF trésorier" : "Treasurer PDF report"} icon={Download} />
+        <DemoLockedButton label={isFr ? "Exporter CSV" : "Export CSV"} icon={FileSpreadsheet} />
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { label: isFr ? "Recettes" : "Income", value: t.income, icon: TrendingUp },
+          { label: isFr ? "Dépenses" : "Expenses", value: t.expenses, icon: TrendingDown },
+          { label: isFr ? "Solde" : "Balance", value: t.balance, icon: Wallet },
+        ].map(({ label, value, icon: Icon }) => (
+          <Card key={label}>
+            <CardContent className="pt-4 flex items-center gap-3">
+              <Icon className="h-5 w-5 text-navy/60" />
+              <div>
+                <p className="text-lg font-bold">{value.toLocaleString()} {t.currency}</p>
+                <p className="text-xs text-gray-500">{label}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      <Card>
+        <CardHeader><CardTitle className="text-base">{isFr ? "Écritures récentes" : "Recent entries"}</CardTitle></CardHeader>
+        <CardContent className="space-y-2">
+          {t.entries.map((e) => (
+            <div key={e.id} className="flex justify-between text-sm border-b border-gray-50 pb-2">
+              <span>{e.label}</span>
+              <span className={e.type === "INCOME" ? "text-emerald-600" : "text-red-600"}>
+                {e.type === "INCOME" ? "+" : "-"}{e.amount} {t.currency}
+              </span>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+export function DemoActionsPanel({ locale }: { locale: string }) {
+  const isFr = locale === "fr";
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2">
+        <DemoLockedButton label={isFr ? "Nouvelle action" : "New action"} icon={Plus} variant="gold" />
+        <DemoLockedButton label={isFr ? "Exporter" : "Export"} icon={Download} />
+      </div>
+      <Card>
+        <CardContent className="divide-y divide-gray-50">
+          {DEMO_ACTIONS.map((a) => (
+            <div key={a.id} className="py-3 flex flex-wrap justify-between gap-2 text-sm">
+              <div>
+                <p className="font-medium">{a.title}</p>
+                <p className="text-gray-500">{a.responsible} · {a.due}</p>
+              </div>
+              <Badge variant={a.status === "COMPLETED" ? "success" : a.status === "IN_PROGRESS" ? "warning" : "muted"}>
+                {a.status}
+              </Badge>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+export function DemoCalendarPanel({ locale }: { locale: string }) {
+  const isFr = locale === "fr";
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2">
+        <DemoLockedButton label={isFr ? "Exporter ICS" : "Export ICS"} icon={CalendarPlus} />
+        <DemoLockedButton label={isFr ? "Ajouter note" : "Add note"} icon={Plus} variant="gold" />
+      </div>
+      <Card>
+        <CardHeader><CardTitle className="text-base">{isFr ? "Juillet 2026" : "July 2026"}</CardTitle></CardHeader>
+        <CardContent className="space-y-2">
+          {DEMO_CALENDAR_EVENTS.map((e) => (
+            <div key={e.id} className="flex items-center gap-3 text-sm">
+              <span className={`h-2 w-2 rounded-full ${e.color}`} />
+              <span className="text-gray-500 w-24 shrink-0">{e.date}</span>
+              <span className="font-medium">{e.title}</span>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+export function DemoEventsPanel({ locale }: { locale: string }) {
+  const isFr = locale === "fr";
+  return (
+    <div className="space-y-4">
+      <DemoLockedButton label={isFr ? "Créer un événement" : "Create event"} icon={Plus} variant="gold" />
+      <div className="grid gap-4 sm:grid-cols-2">
+        {DEMO_CLUB_EVENTS.map((ev) => (
+          <Card key={ev.id}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">{ev.title}</CardTitle>
+              <p className="text-xs text-gray-500">{ev.date} · {ev.location}</p>
+            </CardHeader>
+            <CardContent className="text-sm space-y-2">
+              <p>{ev.registrations}/{ev.capacity} {isFr ? "inscrits" : "registered"}</p>
+              <p className="text-gray-500">{ev.fee > 0 ? `${ev.fee} EUR` : isFr ? "Gratuit" : "Free"}</p>
+              <DemoLockedButton label={isFr ? "Liste participants" : "Participant list"} icon={Users} />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function DemoPortalPanel({ locale }: { locale: string }) {
+  const isFr = locale === "fr";
+  const p = DEMO_PORTAL;
+  return (
+    <Card className="max-w-lg">
+      <CardHeader>
+        <CardTitle className="text-base flex items-center gap-2">
+          <UserCircle className="h-5 w-5" />
+          {isFr ? "Mon compte" : "My account"} — {p.member}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="grid grid-cols-2 gap-4 text-sm">
+        {[
+          { label: isFr ? "Cotisation" : "Dues", value: isFr ? "À jour" : "Up to date" },
+          { label: isFr ? "Assiduité" : "Attendance", value: `${p.attendanceRate}%` },
+          { label: isFr ? "Actions en cours" : "Open actions", value: String(p.openActions) },
+          { label: isFr ? "Documents reçus" : "Documents received", value: String(p.documentsReceived) },
+        ].map((item) => (
+          <div key={item.label} className="rounded-lg border p-3">
+            <p className="text-xs text-gray-500">{item.label}</p>
+            <p className="font-semibold text-navy">{item.value}</p>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+export function DemoDocumentsPanel({ locale }: { locale: string }) {
+  const isFr = locale === "fr";
+  return (
+    <div className="space-y-4">
+      <DemoLockedButton label={isFr ? "Ajouter un document" : "Add document"} icon={Plus} variant="gold" />
+      <Card>
+        <CardContent className="divide-y divide-gray-50">
+          {DEMO_DOCUMENTS.map((d) => (
+            <div key={d.id} className="py-3 flex justify-between text-sm">
+              <div className="flex items-center gap-2">
+                <FolderOpen className="h-4 w-4 text-navy/50" />
+                <span className="font-medium">{d.title}</span>
+              </div>
+              <Badge variant="muted">{d.category}</Badge>
+            </div>
+          ))}
         </CardContent>
       </Card>
     </div>

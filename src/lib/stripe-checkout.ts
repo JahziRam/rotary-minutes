@@ -198,6 +198,9 @@ export async function activateSubscriptionFromStripe(params: {
   if (status === "ACTIVE") {
     await processReferralReward(params.clubId);
   }
+
+  const { syncClubFeaturesFromPlan } = await import("@/lib/features");
+  await syncClubFeaturesFromPlan(params.clubId, params.planKey);
 }
 
 export function mapStripeSubscriptionStatus(

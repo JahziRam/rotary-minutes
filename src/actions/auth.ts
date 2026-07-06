@@ -90,6 +90,9 @@ export async function registerClub(data: {
     });
   });
 
+  const { syncClubFeaturesFromPlan } = await import("@/lib/features");
+  await syncClubFeaturesFromPlan(createdClubId, "TRIAL");
+
   const locale = data.language === "EN" ? "en" : "fr";
   const { getAppBaseUrl } = await import("@/lib/app-url");
   const baseUrl = getAppBaseUrl();

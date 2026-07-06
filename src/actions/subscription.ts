@@ -139,6 +139,9 @@ export async function choosePlan(
     },
   });
 
+  const { syncClubFeaturesFromPlan } = await import("@/lib/features");
+  await syncClubFeaturesFromPlan(ctx.clubId, planKey);
+
   revalidateSubscriptionPaths();
 
   const intervalLabel =

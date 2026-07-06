@@ -217,6 +217,9 @@ export async function activateAddon(addonKey: AddonKey, locale: string) {
     },
   });
 
+  const { syncClubFeaturesFromPlan } = await import("@/lib/features");
+  await syncClubFeaturesFromPlan(auth.ctx.clubId, sub.plan);
+
   revalidateBillingPaths(locale);
   return { success: true as const };
 }
@@ -232,6 +235,15 @@ export async function deactivateClubAddon(
   await prisma.clubAddon.deleteMany({
     where: { clubId, addonKey },
   });
+
+  const sub = await prisma.subscription.findUnique({
+    where: { clubId },
+    select: { plan: true },
+  });
+  if (sub) {
+    const { syncClubFeaturesFromPlan } = await import("@/lib/features");
+    await syncClubFeaturesFromPlan(clubId, sub.plan);
+  }
 
   revalidateBillingPaths(locale);
   return { success: true as const };

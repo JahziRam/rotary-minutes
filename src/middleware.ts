@@ -16,6 +16,7 @@ const publicPaths = [
   "/forgot-password",
   "/verify",
   "/privacy",
+  "/terms",
   "/status",
   "/demo",
   "/case-studies",

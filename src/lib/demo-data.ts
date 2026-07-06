@@ -166,6 +166,54 @@ export const DEMO_MANDATES = [
   { role: "Trésorier", name: "Pierre Bernard", period: "2025-2026" },
 ];
 
+export const DEMO_TREASURY = {
+  balance: 12450,
+  currency: "EUR",
+  income: 8200,
+  expenses: 3150,
+  entries: [
+    { id: "b1", label: "Cotisations Q1", type: "INCOME" as const, amount: 4200, date: "2026-01-15", category: "Cotisations" },
+    { id: "b2", label: "Gala humanitaire", type: "INCOME" as const, amount: 2800, date: "2026-02-20", category: "Événements" },
+    { id: "b3", label: "Location salle mars", type: "EXPENSE" as const, amount: 850, date: "2026-03-01", category: "Réunions" },
+    { id: "b4", label: "Projet Madagascar", type: "EXPENSE" as const, amount: 1500, date: "2026-03-10", category: "Actions" },
+  ],
+};
+
+export const DEMO_CALENDAR_EVENTS = [
+  { id: "ce1", title: "Réunion statutaire", date: "2026-07-08", source: "MEETING", color: "bg-navy" },
+  { id: "ce2", title: "Échéance cotisation — Luc Moreau", date: "2026-07-15", source: "DUES", color: "bg-amber-500" },
+  { id: "ce3", title: "Gala humanitaire", date: "2026-07-22", source: "EVENT", color: "bg-emerald-500" },
+  { id: "ce4", title: "Publier calendrier 2026-2027", date: "2026-07-18", source: "ACTION", color: "bg-violet-500" },
+  { id: "ce5", title: "Anniversaire — Sophie Leroy", date: "2026-07-25", source: "BIRTHDAY", color: "bg-pink-500" },
+];
+
+export const DEMO_CLUB_EVENTS = [
+  { id: "ev1", title: "Gala humanitaire 2026", date: "2026-07-22", location: "Hôtel Lutetia", registrations: 28, capacity: 50, fee: 75, status: "OPEN" },
+  { id: "ev2", title: "Conférence Paix & éducation", date: "2026-09-12", location: "Maison de l'UNESCO", registrations: 12, capacity: 40, fee: 0, status: "OPEN" },
+];
+
+export const DEMO_DOCUMENTS = [
+  { id: "doc1", title: "Statuts du club", category: "STATUTES", updatedAt: "2024-09-01" },
+  { id: "doc2", title: "Budget 2025-2026", category: "BUDGET", updatedAt: "2025-07-15" },
+  { id: "doc3", title: "PV Réunion statutaire — 1er juillet 2026", category: "MINUTES", updatedAt: "2026-07-02" },
+  { id: "doc4", title: "Mandat président 2025-2026", category: "MANDATE", updatedAt: "2025-07-01" },
+];
+
+export const DEMO_PORTAL = {
+  member: "Marie Martin",
+  duesStatus: "PAID",
+  attendanceRate: 92,
+  openActions: 1,
+  documentsReceived: 4,
+};
+
+export const DEMO_ACTIONS = [
+  { id: "a1", title: "Publier le calendrier 2026-2027", responsible: "Sophie Leroy", due: "2026-07-18", status: "IN_PROGRESS", priority: "HIGH" },
+  { id: "a2", title: "Coordonner campagne vaccination OMS", responsible: "Pierre Bernard", due: "2026-07-30", status: "OPEN", priority: "MEDIUM" },
+  { id: "a3", title: "Valider budget commission", responsible: "Jean Dupont", due: "2026-08-01", status: "OPEN", priority: "HIGH" },
+  { id: "a4", title: "Envoyer rapport district Q2", responsible: "Marie Martin", due: "2026-07-10", status: "COMPLETED", priority: "MEDIUM" },
+];
+
 export function getDemoDues(locale: string) {
   const isFr = locale === "fr";
   return DEMO_DUES.map((d) => ({

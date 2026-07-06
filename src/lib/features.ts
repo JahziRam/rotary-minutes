@@ -1,5 +1,10 @@
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
+import type { SubscriptionPlan } from "@/generated/prisma/client";
+import {
+  getPlanFeaturePreset,
+  mergePlanFeaturesWithAddons,
+} from "@/lib/plan-features";
 
 export interface ClubFeatureSet {
   emailsEnabled: boolean;
@@ -145,5 +150,49 @@ export async function ensureClubFeatures(clubId: string) {
   } catch (e) {
     console.error("[ensureClubFeatures] upsert failed:", e);
     return null;
+  }
+}
+
+/** Applique les modules selon l'offre (+ addons actifs). Le super admin peut désactiver ensuite manuellement. */
+export async function syncClubFeaturesFromPlan(
+  clubId: string,
+  plan: SubscriptionPlan
+): Promise<void> {
+  try {
+    const [planConfig, addons, sub] = await Promise.all([
+      prisma.planConfig.findUnique({ where: { plan } }),
+      prisma.clubAddon.findMany({
+        where: {
+          clubId,
+          OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+        },
+        select: { addonKey: true },
+      }),
+      prisma.subscription.findUnique({
+        where: { clubId },
+        select: { status: true },
+      }),
+    ]);
+
+    const effectivePlan =
+      plan === "TRIAL" && sub?.status === "TRIALING" ? "TRIAL" : plan;
+
+    let preset = getPlanFeaturePreset(effectivePlan);
+    if (planConfig?.memberLimit != null) {
+      preset = { ...preset, memberLimit: planConfig.memberLimit };
+    }
+
+    const merged = mergePlanFeaturesWithAddons(
+      preset,
+      addons.map((a) => a.addonKey)
+    );
+
+    await prisma.clubFeatures.upsert({
+      where: { clubId },
+      update: merged,
+      create: { clubId, ...merged },
+    });
+  } catch (e) {
+    console.error("[syncClubFeaturesFromPlan] failed:", e);
   }
 }

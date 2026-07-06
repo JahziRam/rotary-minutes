@@ -987,9 +987,37 @@
     },
     "pricing": {
       "title": "Simple, transparent pricing",
-      "subtitle": "Choose the plan that fits your club. All plans include a 14-day free trial.",
+      "subtitle": "Choose the plan that fits your club. Modules activate automatically with your subscription.",
       "trialNote": "14-day free trial · No credit card required",
       "cta": "Start your free trial"
+    },
+    "privacyLink": "Privacy",
+    "termsLink": "Terms of use",
+    "modules": {
+      "badge": "Modules included per plan",
+      "title": "Much more than meeting minutes",
+      "subtitle": "Modular building blocks activated with your subscription — without cluttering the secretary's daily workflow.",
+      "note": "Every plan includes a solid core. Advanced modules unlock with Professional and Enterprise.",
+      "finance": {
+        "title": "Club finances",
+        "desc": "Dues, treasury and treasurer PDF reports."
+      },
+      "execution": {
+        "title": "Actions & follow-up",
+        "desc": "Meeting decisions turned into tracked tasks with reminders."
+      },
+      "calendar": {
+        "title": "Unified calendar",
+        "desc": "Meetings, deadlines, events and member birthdays."
+      },
+      "portal": {
+        "title": "Member portal",
+        "desc": "Each member views dues, attendance and shared documents."
+      },
+      "advanced": {
+        "title": "Governance & district",
+        "desc": "Archives, mandates, integrations and district view (Enterprise)."
+      }
     }
   },
   "demo": {
@@ -1286,6 +1314,57 @@
       "IN_PROGRESS": "In progress",
       "RESOLVED": "Resolved",
       "CLOSED": "Closed"
+    }
+  },
+  "legal": {
+    "disclaimer": {
+      "text": "Rotary Minutes is an independent tool. It is not affiliated with, endorsed by, or sponsored by Rotary International.",
+      "termsLink": "Terms of use"
+    }
+  },
+  "terms": {
+    "title": "Terms of use",
+    "updated": "Last updated: July 2026",
+    "intro": "These terms govern access to and use of the Rotary Minutes platform. By creating an account or using the service, you agree to them.",
+    "privacyLink": "Privacy policy",
+    "statusLink": "Service status",
+    "sections": {
+      "acceptance": {
+        "title": "Acceptance",
+        "body": "Using Rotary Minutes means you accept these terms in full. If you do not agree, do not use the service."
+      },
+      "service": {
+        "title": "Service description",
+        "body": "Rotary Minutes is a SaaS club management platform (members, meetings, minutes, communications and optional modules). The service is provided \"as is\", subject to the features enabled for your club."
+      },
+      "disclaimer": {
+        "title": "Independence from Rotary International",
+        "body": "Rotary Minutes is an independent third-party product. It is not an official Rotary International tool, nor affiliated with, endorsed by, or sponsored by Rotary International or its affiliated organizations. Rotary and Rotaract trademarks belong to their respective owners. You remain responsible for complying with your organization's rules and charters."
+      },
+      "accounts": {
+        "title": "Accounts and access",
+        "body": "You are responsible for keeping your credentials confidential and for actions taken from your account. Roles and permissions within the club are set by the club administrator."
+      },
+      "data": {
+        "title": "Data and content",
+        "body": "You retain ownership of the data you enter. You grant us a limited license to host, process and display that data to provide the service. See our privacy policy for personal data processing."
+      },
+      "billing": {
+        "title": "Subscriptions and modules",
+        "body": "Plans and pricing are set by the publisher and may change. Included modules activate automatically based on the subscribed plan; a super administrator may disable certain modules per club. Free trials and billing terms are shown at signup."
+      },
+      "liability": {
+        "title": "Limitation of liability",
+        "body": "To the extent permitted by law, Rotary Minutes shall not be liable for indirect damages, data loss due to misuse, or decisions made based on information exported from the platform."
+      },
+      "changes": {
+        "title": "Changes",
+        "body": "We may update these terms. The last updated date is shown at the top of this page. Continued use after changes constitutes acceptance."
+      },
+      "contact": {
+        "title": "Contact",
+        "body": "Questions: legal@rotaryminutes.app"
+      }
     }
   }
 }
