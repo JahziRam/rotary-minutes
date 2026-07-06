@@ -32,29 +32,34 @@ export async function checkDatabase(): Promise<StatusCheck> {
 }
 
 export async function checkResend(): Promise<StatusCheck> {
-  const enabled = await isEmailEnabled();
-  if (enabled) {
-    return { name: "resend", status: "operational", detail: "Configured" };
+  try {
+    const enabled = await isEmailEnabled();
+    if (enabled) {
+      return { name: "resend", status: "operational", detail: "Configured" };
+    }
+    const { resolveIntegrations, isResendConfigured } = await import(
+      "@/lib/platform-integrations"
+    );
+    const creds = await resolveIntegrations();
+    if (isResendConfigured(creds)) {
+      return { name: "resend", status: "degraded", detail: "API key set but disabled in settings" };
+    }
+    return { name: "resend", status: "degraded", detail: "Not configured (emails skipped)" };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Unknown error";
+    return { name: "resend", status: "down", detail: msg };
   }
-  const { resolveIntegrations, isResendConfigured } = await import(
-    "@/lib/platform-integrations"
-  );
-  const creds = await resolveIntegrations();
-  if (isResendConfigured(creds)) {
-    return { name: "resend", status: "degraded", detail: "API key set but disabled in settings" };
-  }
-  return { name: "resend", status: "degraded", detail: "Not configured (emails skipped)" };
 }
 
 export async function checkStripe(): Promise<StatusCheck> {
-  const { resolveIntegrations, isStripeConfigured, getStripe } = await import(
-    "@/lib/platform-integrations"
-  );
-  const creds = await resolveIntegrations();
-  if (!isStripeConfigured(creds)) {
-    return { name: "stripe", status: "degraded", detail: "Keys not fully configured" };
-  }
   try {
+    const { resolveIntegrations, isStripeConfigured, getStripe } = await import(
+      "@/lib/platform-integrations"
+    );
+    const creds = await resolveIntegrations();
+    if (!isStripeConfigured(creds)) {
+      return { name: "stripe", status: "degraded", detail: "Keys not fully configured" };
+    }
     const stripe = await getStripe();
     if (!stripe) {
       return { name: "stripe", status: "degraded", detail: "Client init failed" };
@@ -98,16 +103,21 @@ export async function checkCronJobs(): Promise<StatusCheck> {
   return { name: "cron", status: "degraded", detail: results.join(", ") };
 }
 
+function statusError(name: string, e: unknown): StatusCheck {
+  const msg = e instanceof Error ? e.message : "Unknown error";
+  return { name, status: "down", detail: msg };
+}
+
 export async function getSystemStatus(): Promise<{
   checks: StatusCheck[];
   overall: ServiceStatus;
   checkedAt: string;
 }> {
   const [database, resend, stripe, cron] = await Promise.all([
-    checkDatabase(),
-    checkResend(),
-    checkStripe(),
-    checkCronJobs(),
+    checkDatabase().catch((e) => statusError("database", e)),
+    checkResend().catch((e) => statusError("resend", e)),
+    checkStripe().catch((e) => statusError("stripe", e)),
+    checkCronJobs().catch((e) => statusError("cron", e)),
   ]);
 
   const checks = [database, resend, stripe, cron];

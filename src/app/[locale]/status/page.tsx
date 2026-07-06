@@ -7,6 +7,9 @@ import { getSystemStatus } from "@/lib/status-checks";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 
+/** Live checks — must not prerender at build time (needs runtime DB/env). */
+export const dynamic = "force-dynamic";
+
 const STATUS_ICON = {
   operational: CheckCircle,
   degraded: AlertTriangle,
