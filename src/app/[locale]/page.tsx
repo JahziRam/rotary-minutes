@@ -6,12 +6,16 @@ import {
   Share2,
   PenLine,
   CheckCircle,
+  Users,
+  Calendar,
 } from "lucide-react";
 import { LandingHero } from "@/components/marketing/landing-hero";
 import { HowItWorks } from "@/components/marketing/how-it-works";
 import { LandingCta } from "@/components/marketing/landing-cta";
 import { PersonasSection } from "@/components/marketing/personas-section";
 import { PricingSection } from "@/components/marketing/pricing-section";
+import { ClubSolutionSection } from "@/components/marketing/club-solution-section";
+import { LandingHeader } from "@/components/marketing/landing-header";
 
 export default async function LandingPage({
   params,
@@ -25,75 +29,65 @@ export default async function LandingPage({
 
   const features = [
     {
+      icon: Users,
+      title: t("landing.features.members"),
+      desc: t("landing.features.membersDesc"),
+      accent: "from-emerald-500/15 to-emerald-500/5",
+    },
+    {
+      icon: Calendar,
+      title: t("landing.features.meetings"),
+      desc: t("landing.features.meetingsDesc"),
+      accent: "from-blue-500/15 to-blue-500/5",
+    },
+    {
       icon: PenLine,
       title: t("landing.features.write"),
       desc: t("landing.features.writeDesc"),
       accent: "from-gold/20 to-gold/5",
     },
     {
-      icon: FileText,
-      title: t("landing.features.pdf"),
-      desc: t("landing.features.pdfDesc"),
-      accent: "from-navy/15 to-navy/5",
-    },
-    {
       icon: Share2,
       title: t("landing.features.share"),
       desc: t("landing.features.shareDesc"),
-      accent: "from-emerald-500/15 to-emerald-500/5",
+      accent: "from-navy/15 to-navy/5",
+    },
+    {
+      icon: FileText,
+      title: t("landing.features.pdf"),
+      desc: t("landing.features.pdfDesc"),
+      accent: "from-violet-500/15 to-violet-500/5",
     },
     {
       icon: Shield,
       title: t("landing.features.secure"),
       desc: t("landing.features.secureDesc"),
-      accent: "from-blue-500/15 to-blue-500/5",
+      accent: "from-slate-500/15 to-slate-500/5",
     },
   ];
 
   const highlights = [
-    t("landing.highlights.secure"),
+    t("landing.highlights.members"),
+    t("landing.highlights.onTime"),
     t("landing.highlights.bilingual"),
-    t("landing.highlights.offline"),
     t("landing.highlights.pdf"),
     t("landing.highlights.district"),
   ];
 
   return (
-    <div className="flex min-h-screen flex-col overflow-x-hidden">
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-navy-dark/95 text-white backdrop-blur-md">
-        <div className="h-1 bg-gradient-to-r from-gold via-gold-light to-gold" />
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-3 py-3 sm:px-4 sm:py-3.5">
-          <Link href={`/${locale}`} className="font-display text-lg font-bold tracking-tight sm:text-xl">
-            Rotary <span className="text-gold">Minutes</span>
-          </Link>
-          <nav className="flex items-center gap-1.5 sm:gap-3">
-            <Link
-              href={`/${locale}#pricing`}
-              className="hidden text-sm text-white/70 transition-colors hover:text-white md:inline"
-            >
-              {t("landing.pricing.title")}
-            </Link>
-            <Link
-              href={`/${otherLocale}`}
-              className="rounded-lg border border-white/15 px-2 py-1 text-[10px] font-medium uppercase tracking-wide text-white/70 transition-colors hover:border-white/30 hover:text-white sm:px-2.5 sm:text-xs"
-            >
-              {otherLocale}
-            </Link>
-            <Link
-              href={`/${locale}/login`}
-              className="hidden text-sm text-white/80 transition-colors hover:text-white xs:inline sm:inline"
-            >
-              {t("auth.login")}
-            </Link>
-            <Link
-              href={`/${locale}/register`}
-              className="inline-flex h-9 items-center justify-center rounded-lg bg-gold px-3 text-[11px] font-semibold text-navy-dark shadow-sm transition-all hover:bg-gold-light sm:h-10 sm:px-5 sm:text-sm"
-            >
-              {t("landing.cta")}
-            </Link>
-          </nav>
-        </div>
-      </header>
+    <div className="flex min-h-screen flex-col overflow-x-hidden native-scroll">
+      <LandingHeader
+        locale={locale}
+        otherLocale={otherLocale}
+        loginLabel={t("auth.login")}
+        ctaLabel={t("landing.cta")}
+        pricingLabel={t("landing.pricing.title")}
+        demoLabel={t("landing.tryDemo")}
+        navLinks={[
+          { href: `/${locale}#solution`, label: t("landing.solution.nav") },
+          { href: `/${locale}#pricing`, label: t("landing.pricing.title") },
+        ]}
+      />
 
       <LandingHero locale={locale} />
 
@@ -113,6 +107,10 @@ export default async function LandingPage({
         </div>
       </section>
 
+      <div id="solution">
+        <ClubSolutionSection />
+      </div>
+
       <section className="bg-gray-50 py-12 sm:py-16 lg:py-24">
         <div className="mx-auto max-w-6xl px-3 sm:px-4">
           <div className="mb-8 text-center sm:mb-12">
@@ -123,7 +121,7 @@ export default async function LandingPage({
               {t("landing.features.subtitle")}
             </p>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
             {features.map(({ icon: Icon, title, desc, accent }) => (
               <div
                 key={title}
@@ -150,13 +148,16 @@ export default async function LandingPage({
 
       <LandingCta locale={locale} />
 
-      <footer className="mt-auto border-t border-white/10 bg-navy-dark py-6 text-center text-sm text-white/50 sm:py-8">
+      <footer className="mt-auto border-t border-white/10 bg-navy-dark py-6 text-center text-sm text-white/50 sm:py-8 safe-bottom">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-4 px-4 sm:gap-6">
           <Link href={`/${locale}/demo`} className="transition-colors hover:text-white">
             {t("landing.tryDemo")}
           </Link>
           <Link href={`/${locale}/login`} className="transition-colors hover:text-white">
             {t("auth.login")}
+          </Link>
+          <Link href={`/${locale}/status`} className="transition-colors hover:text-white">
+            {t("landing.statusLink")}
           </Link>
         </div>
         <p className="mt-3 sm:mt-4">© {new Date().getFullYear()} Rotary Minutes</p>

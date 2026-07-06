@@ -1,6 +1,7 @@
 import { Sidebar } from "./sidebar";
 import { MobileNav } from "./mobile-nav";
-import { Header, type HeaderNotification } from "./header";
+import { AppMobileShell } from "./app-mobile-shell";
+import type { HeaderNotification } from "./header";
 import { TrialBanner } from "@/components/subscription/trial-banner";
 import { OfflineIndicator } from "./offline-indicator";
 
@@ -46,17 +47,24 @@ export function AppShell({
         subscriptionPlan={subscriptionPlan}
       />
       <div className="lg:pl-[var(--sidebar-w)]">
-        <Header
+        <AppMobileShell
           title={title}
+          clubName={clubName}
           notificationCount={notificationCount}
           notifications={notifications}
-        />
-        {trialEndsAt && (
-          <TrialBanner trialEndsAt={trialEndsAt} locale={shellLocale} />
-        )}
-        <main className="p-4 lg:p-6 pb-[calc(var(--bottom-nav-h)+1rem)] lg:pb-6 max-w-7xl mx-auto">
-          {children}
-        </main>
+          isSuperAdmin={isSuperAdmin}
+          hiddenNavKeys={hiddenNavKeys}
+          lockedNavKeys={lockedNavKeys}
+          canManageSubscription={canManageSubscription}
+          subscriptionPlan={subscriptionPlan}
+        >
+          {trialEndsAt && (
+            <TrialBanner trialEndsAt={trialEndsAt} locale={shellLocale} />
+          )}
+          <main className="p-4 lg:p-6 pb-[calc(var(--bottom-nav-h)+1rem)] lg:pb-6 max-w-7xl mx-auto">
+            {children}
+          </main>
+        </AppMobileShell>
       </div>
       <MobileNav />
       <OfflineIndicator />

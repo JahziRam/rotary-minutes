@@ -3,28 +3,27 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLocale } from "next-intl";
-import { Home, Calendar, FileText, Mail, Users, BarChart3, Settings, Bell } from "lucide-react";
+import { Home, Calendar, FileText, Users, Settings } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
 const items = [
-  { href: "/dashboard", icon: Home },
-  { href: "/notifications", icon: Bell },
-  { href: "/meetings", icon: Calendar },
-  { href: "/minutes", icon: FileText },
-  { href: "/members", icon: Users },
-  { href: "/statistics", icon: BarChart3 },
-  { href: "/emails", icon: Mail },
-  { href: "/settings", icon: Settings },
+  { key: "dashboard", href: "/dashboard", icon: Home },
+  { key: "meetings", href: "/meetings", icon: Calendar },
+  { key: "minutes", href: "/minutes", icon: FileText },
+  { key: "members", href: "/members", icon: Users },
+  { key: "settings", href: "/settings", icon: Settings },
 ] as const;
 
 export function MobileNav() {
   const pathname = usePathname();
   const locale = useLocale();
+  const t = useTranslations("nav");
 
   return (
-    <nav className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white border-t border-gray-200 safe-bottom">
-      <div className="flex items-center justify-around h-[var(--bottom-nav-h)] px-1">
-        {items.map(({ href, icon: Icon }) => {
+    <nav className="lg:hidden fixed bottom-0 inset-x-0 z-50 border-t border-gray-200/80 bg-white/95 backdrop-blur-md shadow-[0_-4px_24px_rgba(0,0,0,0.06)] safe-bottom">
+      <div className="flex items-stretch justify-around h-[var(--bottom-nav-h)] px-0.5">
+        {items.map(({ key, href, icon: Icon }) => {
           const fullHref = `/${locale}${href}`;
           const isActive = pathname.startsWith(fullHref);
           return (
@@ -32,11 +31,24 @@ export function MobileNav() {
               key={href}
               href={fullHref}
               className={cn(
-                "flex flex-col items-center gap-0.5 px-2 py-2 rounded-lg transition-colors",
+                "flex flex-1 flex-col items-center justify-center gap-0.5 min-w-0 py-1.5 transition-colors",
                 isActive ? "text-navy" : "text-gray-400"
               )}
             >
-              <Icon className={cn("h-4 w-4", isActive && "text-gold")} />
+              <Icon
+                className={cn(
+                  "h-5 w-5 shrink-0",
+                  isActive && "text-gold"
+                )}
+              />
+              <span
+                className={cn(
+                  "text-[9px] font-medium truncate max-w-full px-0.5",
+                  isActive && "text-navy"
+                )}
+              >
+                {t(key === "dashboard" ? "dashboard" : key)}
+              </span>
             </Link>
           );
         })}

@@ -38,6 +38,7 @@ export function ClubSettingsForm({ club }: { club: ClubData }) {
         hint={tSettings("clubLogoHint")}
         currentUrl={logoPreview}
         shape="square"
+        fit="contain"
         onUpload={uploadClubLogo}
         onRemove={removeClubLogo}
       />

@@ -57,6 +57,18 @@ body {
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
+/* Native-app feel on mobile */
+.native-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: none;
+}
+
+@supports (padding: max(0px)) {
+  .safe-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 0px);
+  }
+}
+
 @keyframes float {
   0%,
   100% {

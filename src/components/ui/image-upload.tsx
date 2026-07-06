@@ -12,6 +12,7 @@ export function ImageUpload({
   hint,
   currentUrl,
   shape = "square",
+  fit = "contain",
   onUpload,
   onRemove,
   disabled = false,
@@ -20,6 +21,7 @@ export function ImageUpload({
   hint?: string;
   currentUrl?: string | null;
   shape?: "square" | "circle";
+  fit?: "contain" | "cover";
   onUpload: (formData: FormData) => Promise<UploadResult>;
   onRemove?: () => Promise<UploadResult>;
   disabled?: boolean;
@@ -62,7 +64,11 @@ export function ImageUpload({
         >
           {preview ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={preview} alt="" className="h-full w-full object-cover" />
+            <img
+              src={preview}
+              alt=""
+              className={`h-full w-full ${fit === "contain" ? "object-contain p-1" : "object-cover"}`}
+            />
           ) : (
             <Camera className="h-6 w-6 text-gray-300" />
           )}

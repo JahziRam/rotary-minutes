@@ -73,7 +73,8 @@ export async function createMeeting(
       endTime: meeting.endTime,
       clubName: ctx.club.name,
     });
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+    const { getAppBaseUrl } = await import("@/lib/app-url");
+    const baseUrl = getAppBaseUrl();
     const logoUrl = resolveClubLogoUrl(ctx.club.id, ctx.club.logoUrl, baseUrl);
     const body =
       locale === "fr"

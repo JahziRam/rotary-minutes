@@ -70,7 +70,8 @@ export async function dispatchCampaign(campaignId: string) {
   let sent = 0;
   let errors = 0;
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const { getAppBaseUrl } = await import("@/lib/app-url");
+  const baseUrl = getAppBaseUrl();
   const locale = campaign.club.language === "EN" ? "en" : "fr";
 
   for (const recipient of recipientList) {

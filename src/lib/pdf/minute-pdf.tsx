@@ -21,7 +21,7 @@ const styles = StyleSheet.create({
     borderBottom: "2pt solid #0d2d52",
     paddingBottom: 15,
   },
-  logo: { width: 60, height: 60 },
+  logo: { width: 60, height: 60, objectFit: "contain" },
   clubInfo: { textAlign: "right", fontSize: 9, color: "#64748b" },
   title: {
     fontSize: 16,

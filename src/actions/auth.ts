@@ -91,7 +91,8 @@ export async function registerClub(data: {
   });
 
   const locale = data.language === "EN" ? "en" : "fr";
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const { getAppBaseUrl } = await import("@/lib/app-url");
+  const baseUrl = getAppBaseUrl();
   const welcome = welcomeClubEmail({
     clubName: data.clubName,
     locale,

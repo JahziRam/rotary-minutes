@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { isEmailEnabled } from "@/lib/email";
+import { getAppBaseUrl } from "@/lib/app-url";
 
 export type ServiceStatus = "operational" | "degraded" | "down";
 
@@ -40,8 +41,29 @@ export async function checkResend(): Promise<StatusCheck> {
   return { name: "resend", status: "degraded", detail: "Not configured (emails skipped)" };
 }
 
+export async function checkStripe(): Promise<StatusCheck> {
+  const { resolveIntegrations, isStripeConfigured, getStripe } = await import(
+    "@/lib/platform-integrations"
+  );
+  const creds = await resolveIntegrations();
+  if (!isStripeConfigured(creds)) {
+    return { name: "stripe", status: "degraded", detail: "Keys not fully configured" };
+  }
+  try {
+    const stripe = await getStripe();
+    if (!stripe) {
+      return { name: "stripe", status: "degraded", detail: "Client init failed" };
+    }
+    await stripe.balance.retrieve();
+    return { name: "stripe", status: "operational", detail: "API reachable" };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Unknown error";
+    return { name: "stripe", status: "degraded", detail: msg };
+  }
+}
+
 export async function checkCronJobs(): Promise<StatusCheck> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const baseUrl = getAppBaseUrl();
   const secret = process.env.CRON_SECRET;
   const results: string[] = [];
 
@@ -76,13 +98,14 @@ export async function getSystemStatus(): Promise<{
   overall: ServiceStatus;
   checkedAt: string;
 }> {
-  const [database, resend, cron] = await Promise.all([
+  const [database, resend, stripe, cron] = await Promise.all([
     checkDatabase(),
     checkResend(),
+    checkStripe(),
     checkCronJobs(),
   ]);
 
-  const checks = [database, resend, cron];
+  const checks = [database, resend, stripe, cron];
   const overall: ServiceStatus = checks.some((c) => c.status === "down")
     ? "down"
     : checks.some((c) => c.status === "degraded")

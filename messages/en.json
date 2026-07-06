@@ -627,14 +627,16 @@
     "services": {
       "database": "Database",
       "resend": "Email (Resend)",
+      "stripe": "Payments (Stripe)",
       "cron": "Scheduled tasks"
     }
   },
   "landing": {
-    "badge": "Built for Rotary & Rotaract",
-    "hero": "Write your meeting minutes",
-    "heroHighlight": "in 5 minutes, not 5 hours",
-    "subtitle": "The collaborative platform that transforms minute-taking: live meeting mode, authenticated PDFs, secure archiving — for clubs worldwide.",
+    "badge": "Rotary & Rotaract club management",
+    "hero": "Run your club",
+    "heroHighlight": "and deliver minutes on time",
+    "subtitle": "Members, meetings, communications and authenticated minutes — one platform so secretaries save hours and every member gets the PV quickly.",
+    "statusLink": "Service status",
     "cta": "Start free trial",
     "tryDemo": "Try the demo",
     "trialLine": "14-day free trial · No credit card · Set up in 2 minutes",
@@ -652,11 +654,34 @@
       "subtitle": "See how secretaries and presidents save hours every month."
     },
     "highlights": {
-      "secure": "Secure multi-tenant architecture",
+      "members": "Member directory & attendance",
+      "onTime": "Minutes sent in a few clicks",
       "bilingual": "Bilingual FR / EN",
-      "offline": "Offline mode",
       "pdf": "Authenticated PDF with QR Code",
-      "district": "District dashboard"
+      "district": "District view for governors"
+    },
+    "solution": {
+      "nav": "Solution",
+      "badge": "The whole club, not just minutes",
+      "title": "A complete club management solution",
+      "subtitle": "Rotary Minutes connects club life — from meeting to official minutes — so presidents, secretaries and members stay aligned without scattered tools.",
+      "outcome": "Outcome: fewer late minutes, more transparency for members, and a secretary role that breathes again.",
+      "members": {
+        "title": "Members & commissions",
+        "desc": "Up-to-date directory, photos, roles, sponsorship and attendance tracking."
+      },
+      "meetings": {
+        "title": "Meetings & attendance",
+        "desc": "Scheduling, live mode, check-in and participation stats."
+      },
+      "minutes": {
+        "title": "Minutes on time",
+        "desc": "Guided drafting, approval, authenticated PDF and bulk member delivery."
+      },
+      "comms": {
+        "title": "Communications",
+        "desc": "Branded emails, campaigns and notifications — without leaving the platform."
+      }
     },
     "howItWorks": {
       "title": "How it works",
@@ -675,22 +700,26 @@
       }
     },
     "finalCta": {
-      "title": "Ready to modernize your minutes?",
-      "subtitle": "Join clubs that left Word and paper behind. Your first minutes are 5 minutes away.",
+      "title": "Ready to simplify club life?",
+      "subtitle": "14-day free trial — members, meetings and minutes in one tool. Your next minutes can go out tonight.",
       "cta": "Start your free trial",
       "note": "No commitment · Cancel anytime"
     },
     "features": {
       "title": "Everything your club needs",
-      "subtitle": "Tools designed for secretaries, presidents and district governors.",
-      "write": "Intuitive writing",
-      "writeDesc": "Smart auto-fill, live meeting mode, zero training",
-      "pdf": "Professional PDF",
-      "pdfDesc": "Logo, QR authentication, print-ready",
-      "share": "Share & archive",
-      "shareDesc": "Versioned, searchable, accessible anywhere",
-      "secure": "Secure & multi-tenant",
-      "secureDesc": "Each club isolated, tamper-proof hash, full audit"
+      "subtitle": "From day-to-day management to official minute delivery — for secretaries, presidents and districts.",
+      "members": "Member management",
+      "membersDesc": "Profiles, commissions, birthdays and attendance history",
+      "meetings": "Structured meetings",
+      "meetingsDesc": "Agenda, live mode, QR check-in and reminders",
+      "write": "Live minutes",
+      "writeDesc": "Decisions and actions captured during the meeting",
+      "pdf": "Official PDF",
+      "pdfDesc": "Logo preserved, QR authentication, email attachment",
+      "share": "Fast distribution",
+      "shareDesc": "Send to all members, online verification link",
+      "secure": "Secure & compliant",
+      "secureDesc": "SHA-256 hash, audit trail, per-club isolation"
     },
     "personas": {
       "title": "Built for your role",

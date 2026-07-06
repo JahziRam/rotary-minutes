@@ -1,4 +1,5 @@
 import { isDataUrl } from "@/lib/image-storage";
+import { getAppBaseUrl } from "@/lib/app-url";
 
 export function resolveClubLogoUrl(
   clubId: string,
@@ -7,7 +8,7 @@ export function resolveClubLogoUrl(
 ): string | undefined {
   if (!logoUrl) return undefined;
   if (isDataUrl(logoUrl)) {
-    const origin = baseUrl ?? process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+    const origin = baseUrl ?? getAppBaseUrl();
     return `${origin}/api/media/club/${clubId}/logo`;
   }
   return logoUrl;
@@ -20,7 +21,7 @@ export function resolveMemberPhotoUrl(
 ): string | undefined {
   if (!photoUrl) return undefined;
   if (isDataUrl(photoUrl)) {
-    const origin = baseUrl ?? process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+    const origin = baseUrl ?? getAppBaseUrl();
     return `${origin}/api/media/member/${memberId}/photo`;
   }
   return photoUrl;

@@ -627,14 +627,16 @@
     "services": {
       "database": "Base de données",
       "resend": "Emails (Resend)",
+      "stripe": "Paiements (Stripe)",
       "cron": "Tâches planifiées"
     }
   },
   "landing": {
-    "badge": "Conçu pour Rotary & Rotaract",
-    "hero": "Rédigez vos procès-verbaux",
-    "heroHighlight": "en 5 minutes, pas 5 heures",
-    "subtitle": "La plateforme collaborative qui transforme la rédaction des PV : réunion en direct, PDF authentifié, archivage sécurisé — pour tous les clubs du monde.",
+    "badge": "Gestion de club Rotary & Rotaract",
+    "hero": "Pilotez votre club",
+    "heroHighlight": "et diffusez vos PV à temps",
+    "subtitle": "Membres, réunions, communications et procès-verbaux authentifiés — une seule plateforme pour que le secrétariat gagne des heures et que chaque membre reçoive le PV rapidement.",
+    "statusLink": "État du service",
     "cta": "Commencer l'essai gratuit",
     "tryDemo": "Essayer la démo",
     "trialLine": "14 jours gratuits · Sans carte bancaire · Configuration en 2 minutes",
@@ -652,11 +654,34 @@
       "subtitle": "Découvrez comment des secrétaires et présidents gagnent des heures chaque mois."
     },
     "highlights": {
-      "secure": "Multi-tenant sécurisé",
+      "members": "Annuaire membres & assiduité",
+      "onTime": "PV envoyés en quelques clics",
       "bilingual": "Bilingue FR / EN",
-      "offline": "Mode hors ligne",
       "pdf": "PDF authentifié par QR Code",
-      "district": "Tableau de bord district"
+      "district": "Vue district pour les gouverneurs"
+    },
+    "solution": {
+      "nav": "La solution",
+      "badge": "Tout le club, pas seulement le PV",
+      "title": "Une solution complète de gestion de club",
+      "subtitle": "Rotary Minutes relie la vie du club — de la réunion à la diffusion du PV — pour que président, secrétaire et membres restent alignés sans outils éparpillés.",
+      "outcome": "Résultat : moins de retard sur les PV, plus de transparence pour les membres, et un secrétariat qui respire.",
+      "members": {
+        "title": "Membres & commissions",
+        "desc": "Annuaire à jour, photos, fonctions, parrainage et suivi d'assiduité."
+      },
+      "meetings": {
+        "title": "Réunions & présences",
+        "desc": "Planification, mode live, check-in et statistiques de participation."
+      },
+      "minutes": {
+        "title": "PV à l'heure",
+        "desc": "Rédaction guidée, validation, PDF authentifié et envoi groupé aux membres."
+      },
+      "comms": {
+        "title": "Communications",
+        "desc": "Emails brandés, campagnes et notifications — sans quitter la plateforme."
+      }
     },
     "howItWorks": {
       "title": "Comment ça marche",
@@ -675,22 +700,26 @@
       }
     },
     "finalCta": {
-      "title": "Prêt à moderniser vos procès-verbaux ?",
-      "subtitle": "Rejoignez les clubs qui ont abandonné Word et le papier. Votre premier PV est à 5 minutes.",
+      "title": "Prêt à simplifier la vie de votre club ?",
+      "subtitle": "Essai gratuit 14 jours — membres, réunions et PV dans un seul outil. Votre prochain PV peut partir ce soir.",
       "cta": "Démarrer l'essai gratuit",
       "note": "Sans engagement · Annulation à tout moment"
     },
     "features": {
       "title": "Tout ce dont votre club a besoin",
-      "subtitle": "Des outils pensés pour les secrétaires, présidents et gouverneurs de district.",
-      "write": "Rédaction intuitive",
-      "writeDesc": "Auto-remplissage intelligent, réunion en direct, zéro formation",
-      "pdf": "PDF professionnel",
-      "pdfDesc": "Logo, QR code d'authentification, compatible impression",
-      "share": "Partage & archivage",
-      "shareDesc": "Versionné, recherchable, accessible partout",
-      "secure": "Sécurisé & multi-tenant",
-      "secureDesc": "Chaque club isolé, hash inviolable, audit complet"
+      "subtitle": "De la gestion quotidienne à la diffusion officielle des PV — pour secrétaires, présidents et districts.",
+      "members": "Gestion des membres",
+      "membersDesc": "Fiches, commissions, anniversaires et historique de présence",
+      "meetings": "Réunions structurées",
+      "meetingsDesc": "Agenda, mode live, check-in QR et rappels",
+      "write": "PV en direct",
+      "writeDesc": "Décisions et actions capturées pendant la réunion",
+      "pdf": "PDF officiel",
+      "pdfDesc": "Logo préservé, QR d'authentification, pièce jointe email",
+      "share": "Diffusion rapide",
+      "shareDesc": "Envoi à tous les membres, lien de vérification en ligne",
+      "secure": "Sécurisé & conforme",
+      "secureDesc": "Hash SHA-256, audit, isolation par club"
     },
     "personas": {
       "title": "Conçu pour votre rôle",

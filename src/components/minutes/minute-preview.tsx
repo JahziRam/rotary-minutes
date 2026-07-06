@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, Circle } from "lucide-react";
 import { MinutePreviewActions } from "./minute-preview-actions";
+import { ClubLogo } from "@/components/ui/club-logo";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 import { calculateAttendanceRate } from "@/lib/rotary";
@@ -141,15 +142,10 @@ export function MinutePreview({
           {/* Club header */}
           <div className="p-6 pb-4 border-b border-gray-100">
             <div className="flex items-center gap-4">
-              <div className="h-14 w-14 rounded-full bg-navy flex items-center justify-center shrink-0 overflow-hidden">
-                {data.club.logoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={data.club.logoUrl}
-                    alt=""
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
+              {data.club.logoUrl ? (
+                <ClubLogo src={data.club.logoUrl} alt={data.club.name} />
+              ) : (
+                <div className="h-14 w-14 rounded-full bg-navy flex items-center justify-center shrink-0">
                   <svg viewBox="0 0 40 40" className="h-8 w-8 text-gold" fill="currentColor">
                     <circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" strokeWidth="2" />
                     <circle cx="20" cy="20" r="6" />
@@ -158,8 +154,8 @@ export function MinutePreview({
                     <line x1="2" y1="20" x2="8" y2="20" stroke="currentColor" strokeWidth="2" />
                     <line x1="32" y1="20" x2="38" y2="20" stroke="currentColor" strokeWidth="2" />
                   </svg>
-                )}
-              </div>
+                </div>
+              )}
               <div>
                 <h2 className="font-bold text-gray-900 text-lg leading-tight">
                   {data.club.name}
@@ -276,8 +272,18 @@ export function MinutePreview({
             <div className="min-w-0">
               {data.contentHash && (
                 <p className="text-xs text-gray-400 font-mono truncate">
-                  Hash d&apos;intégrité: {data.contentHash.slice(0, 22)}
+                  Hash d&apos;intégrité: {data.contentHash.slice(0, 22)}…
                 </p>
+              )}
+              {data.verifyUrl && (
+                <a
+                  href={data.verifyUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-navy hover:underline mt-1 block truncate"
+                >
+                  {data.verifyUrl}
+                </a>
               )}
               <p className="text-xs text-gray-400 mt-0.5">
                 Le QR code pointe vers la version officielle en ligne.
