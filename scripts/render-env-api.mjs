@@ -8,6 +8,7 @@ export function createRenderApi(key) {
   async function api(path, opts = {}) {
     const res = await fetch(`${API}${path}`, {
       ...opts,
+      signal: AbortSignal.timeout(60_000),
       headers: {
         Authorization: `Bearer ${key}`,
         "Content-Type": "application/json",

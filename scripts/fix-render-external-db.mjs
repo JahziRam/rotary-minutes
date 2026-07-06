@@ -16,7 +16,8 @@ function ensureSsl(url) {
 
 const info = await api(`/postgres/${POSTGRES_ID}/connection-info`);
 const conn = info.connectionInfo || info;
-const external = ensureSsl(conn.externalConnectionString);
+// Base URL without sslmode — prisma.ts adds SSL for *.render.com hosts
+const external = conn.externalConnectionString.split("?")[0];
 console.log("External host:", external.split("@")[1]?.split("/")[0]);
 await upsertEnvVar(SERVICE_ID, "DATABASE_URL", external);
 await upsertEnvVar(SERVICE_ID, "DIRECT_URL", external);
