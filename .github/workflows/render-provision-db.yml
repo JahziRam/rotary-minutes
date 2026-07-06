@@ -1,0 +1,39 @@
+# Provision Render Postgres and fix DATABASE_URL (run once after Prisma creds die).
+# Requires repo secret: RENDER_API_KEY (https://dashboard.render.com/u/settings#api-keys)
+name: Render provision DB
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - render.yaml
+      - scripts/provision-render-postgres.mjs
+
+concurrency:
+  group: render-provision-db
+  cancel-in-progress: false
+
+jobs:
+  provision:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - run: npm ci --prefer-offline --no-audit
+
+      - name: Provision Render Postgres + redeploy
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+        run: |
+          if [ -z "$RENDER_API_KEY" ]; then
+            echo "RENDER_API_KEY secret not set — skip (add at GitHub repo Settings → Secrets)"
+            exit 0
+          fi
+          node scripts/provision-render-postgres.mjs
