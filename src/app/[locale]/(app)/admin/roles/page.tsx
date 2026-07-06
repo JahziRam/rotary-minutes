@@ -1,6 +1,8 @@
 import { setRequestLocale } from "next-intl/server";
 import { getAllRoleConfigs } from "@/lib/roles";
+import { adminQuery } from "@/lib/admin-safe";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AdminErrorBanner } from "@/components/admin/admin-error-banner";
 import { RolesEditor } from "@/components/admin/roles-editor";
 import { Shield } from "lucide-react";
 
@@ -12,7 +14,7 @@ export default async function AdminRolesPage({
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const roles = await getAllRoleConfigs();
+  const roles = await adminQuery("roleConfigs", () => getAllRoleConfigs(), []);
 
   return (
     <Card>
@@ -25,7 +27,10 @@ export default async function AdminRolesPage({
           Définissez les permissions de chaque rôle club. Le Super Admin a toujours un accès illimité.
         </p>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
+        {roles.length === 0 ? (
+          <AdminErrorBanner message="Aucun rôle chargé. Vérifiez que la base est à jour (prisma db push)." />
+        ) : null}
         <RolesEditor
           roles={roles.map((r) => ({
             role: r.role,

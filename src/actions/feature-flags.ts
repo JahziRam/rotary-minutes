@@ -14,18 +14,23 @@ function revalidateAdminPaths(locale: string) {
 }
 
 export async function listFeatureFlags() {
-  const auth = await requireSuperAdmin();
-  if ("error" in auth) return auth;
+  try {
+    const auth = await requireSuperAdmin();
+    if ("error" in auth) return auth;
 
-  await ensureFeatureFlags();
-  const flags = await prisma.featureFlag.findMany({
-    orderBy: { key: "asc" },
-    include: {
-      _count: { select: { overrides: true } },
-    },
-  });
+    await ensureFeatureFlags();
+    const flags = await prisma.featureFlag.findMany({
+      orderBy: { key: "asc" },
+      include: {
+        _count: { select: { overrides: true } },
+      },
+    });
 
-  return { success: true as const, flags };
+    return { success: true as const, flags };
+  } catch (e) {
+    console.error("[listFeatureFlags]", e);
+    return { error: "LOAD_FAILED" as const };
+  }
 }
 
 export async function updateFeatureFlag(

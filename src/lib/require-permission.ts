@@ -1,3 +1,4 @@
+import { auth } from "@/lib/auth";
 import { getClubContext } from "@/lib/club-context";
 import { hasRolePermission } from "@/lib/roles";
 import type { Permission } from "@/lib/permissions";
@@ -14,7 +15,12 @@ export async function requirePermission(permission: Permission) {
 }
 
 export async function requireSuperAdmin() {
-  const ctx = await getClubContext();
-  if (!ctx?.isSuperAdmin) return { error: "UNAUTHORIZED" as const };
-  return { ctx };
+  const session = await auth();
+  if (!session?.user?.isSuperAdmin) return { error: "UNAUTHORIZED" as const };
+  return {
+    ctx: {
+      userId: session.user.id,
+      isSuperAdmin: true as const,
+    },
+  };
 }

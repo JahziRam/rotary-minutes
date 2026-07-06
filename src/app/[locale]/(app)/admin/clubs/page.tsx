@@ -1,5 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getAdminClubs } from "@/lib/queries/admin";
+import { adminQuery } from "@/lib/admin-safe";
+import { AdminErrorBanner } from "@/components/admin/admin-error-banner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DEFAULT_FEATURES } from "@/lib/features";
 import { ClubsTable, type AdminClubRow } from "@/components/admin/clubs-table";
@@ -14,7 +16,7 @@ export default async function AdminClubsPage({
   setRequestLocale(locale);
   const t = await getTranslations("admin");
 
-  const clubs = await getAdminClubs();
+  const clubs = await adminQuery("clubs", () => getAdminClubs(), []);
   const clubRows: AdminClubRow[] = clubs.map((c) => ({
     id: c.id,
     name: c.name,
@@ -86,7 +88,10 @@ export default async function AdminClubsPage({
           {t("clubs.title")}
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
+        {clubs.length === 0 ? (
+          <AdminErrorBanner message="Aucun club chargé. Vérifiez la connexion à la base de données." />
+        ) : null}
         <ClubsTable clubs={clubRows} />
       </CardContent>
     </Card>

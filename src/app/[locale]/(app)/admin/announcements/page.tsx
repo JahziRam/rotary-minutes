@@ -1,5 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
+import { adminQuery } from "@/lib/admin-safe";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AnnouncementForm } from "@/components/admin/announcement-form";
 import { Megaphone } from "lucide-react";
@@ -15,12 +16,21 @@ export default async function AdminAnnouncementsPage({
   setRequestLocale(locale);
 
   const [clubs, history] = await Promise.all([
-    prisma.club.findMany({ where: { isActive: true }, select: { id: true, name: true } }),
-    prisma.announcement.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 10,
-      include: { author: { select: { firstName: true, lastName: true } } },
-    }),
+    adminQuery(
+      "clubs",
+      () => prisma.club.findMany({ where: { isActive: true }, select: { id: true, name: true } }),
+      []
+    ),
+    adminQuery(
+      "announcements",
+      () =>
+        prisma.announcement.findMany({
+          orderBy: { createdAt: "desc" },
+          take: 10,
+          include: { author: { select: { firstName: true, lastName: true } } },
+        }),
+      []
+    ),
   ]);
 
   return (

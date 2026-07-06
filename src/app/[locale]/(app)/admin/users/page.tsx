@@ -1,5 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
+import { adminQuery } from "@/lib/admin-safe";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DistrictAccessPanel } from "@/components/admin/district-access-panel";
 import { UsersTable } from "@/components/admin/users-table";
@@ -15,15 +16,22 @@ export default async function AdminUsersPage({
   setRequestLocale(locale);
 
   const [users, clubs, districtGrants, districts] = await Promise.all([
-    prisma.user.findMany({
-      orderBy: { createdAt: "desc" },
-      include: {
-        memberships: { include: { club: { select: { id: true, name: true } } } },
-      },
-    }),
-    prisma.club.findMany({ where: { isActive: true }, select: { id: true, name: true } }),
+    adminQuery("users", () =>
+      prisma.user.findMany({
+        orderBy: { createdAt: "desc" },
+        include: {
+          memberships: { include: { club: { select: { id: true, name: true } } } },
+        },
+      }),
+      []
+    ),
+    adminQuery(
+      "clubs",
+      () => prisma.club.findMany({ where: { isActive: true }, select: { id: true, name: true } }),
+      []
+    ),
     listDistrictAccessGrants(),
-    listDistinctDistricts(),
+    adminQuery("districts", () => listDistinctDistricts(), []),
   ]);
 
   const rows = users.map((u) => ({
@@ -34,7 +42,7 @@ export default async function AdminUsersPage({
     isSuperAdmin: u.isSuperAdmin,
     clubs: u.memberships.map((m) => ({
       clubId: m.clubId,
-      clubName: m.club.name,
+      clubName: m.club?.name ?? "—",
       role: m.role,
     })),
   }));

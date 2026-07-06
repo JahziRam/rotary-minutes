@@ -38,10 +38,7 @@ export async function getAdminSupportTickets(status?: SupportTicketStatus) {
     include: {
       user: { select: { firstName: true, lastName: true, email: true } },
       club: { select: { name: true } },
-      messages: {
-        orderBy: { createdAt: "desc" },
-        take: 1,
-      },
+      messages: { orderBy: { createdAt: "asc" } },
       _count: { select: { messages: true } },
     },
   });

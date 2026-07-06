@@ -121,17 +121,22 @@ export async function getDistrictFinalizedMinutes(district: string, limit = 50) 
 }
 
 export async function listDistrictAccessGrants() {
-  return prisma.districtAccess.findMany({
-    include: {
-      user: {
-        select: { id: true, email: true, firstName: true, lastName: true },
+  try {
+    return await prisma.districtAccess.findMany({
+      include: {
+        user: {
+          select: { id: true, email: true, firstName: true, lastName: true },
+        },
+        grantedBy: {
+          select: { id: true, email: true, firstName: true, lastName: true },
+        },
       },
-      grantedBy: {
-        select: { id: true, email: true, firstName: true, lastName: true },
-      },
-    },
-    orderBy: [{ district: "asc" }, { grantedAt: "desc" }],
-  });
+      orderBy: [{ district: "asc" }, { grantedAt: "desc" }],
+    });
+  } catch (e) {
+    console.error("[listDistrictAccessGrants]", e);
+    return [];
+  }
 }
 
 export async function listDistinctDistricts() {

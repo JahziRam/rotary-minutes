@@ -1,5 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
+import { adminQuery } from "@/lib/admin-safe";
 import { getIntegrationAdminView } from "@/lib/platform-integrations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AppSettingsForm } from "@/components/admin/app-settings-form";
@@ -15,8 +16,24 @@ export default async function AdminSettingsPage({
   setRequestLocale(locale);
 
   const [settings, integration] = await Promise.all([
-    prisma.appSettings.findUnique({ where: { id: "global" } }),
-    getIntegrationAdminView(),
+    adminQuery(
+      "appSettings",
+      () => prisma.appSettings.findUnique({ where: { id: "global" } }),
+      null
+    ),
+    adminQuery("integrations", () => getIntegrationAdminView(), {
+      stripeEnabled: false,
+      resendEnabled: false,
+      stripeSecretKeySet: false,
+      stripePublishableKeySet: false,
+      stripeWebhookSecretSet: false,
+      resendApiKeySet: false,
+      emailFrom: "",
+      stripePublishableKeyPreview: "",
+      webhookUrl: "",
+      stripeConfigured: false,
+      resendConfigured: false,
+    }),
   ]);
 
   return (

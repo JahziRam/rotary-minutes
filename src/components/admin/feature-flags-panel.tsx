@@ -41,6 +41,8 @@ export function FeatureFlagsPanel({ flags }: { flags: FlagRow[] }) {
       );
       if ("success" in result && result.success) {
         setToast("Feature flag enregistré");
+      } else if ("error" in result) {
+        setToast(`Erreur : ${result.error}`);
       }
     });
   }
