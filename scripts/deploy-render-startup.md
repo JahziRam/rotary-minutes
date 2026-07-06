@@ -1,7 +1,12 @@
 # Plan B — Render (gratuit) si Oracle échoue
 
+> **Render demande un upgrade pour « Security » ?**  
+> L'upgrade **Pro ($25/mo)** sert aux options avancées (forcer 2FA, audit logs).  
+> Pour déployer, utilisez **New → Web Service** et connectez GitHub *dans cet écran* — pas besoin de Pro.  
+> Si Render bloque quand même → voir **`deploy-vercel-startup.md`** (Vercel gratuit, Next.js natif).
+
 Oracle bloque souvent les inscriptions (Madagascar, carte bancaire, vérification anti-fraude).
-**Render** est plus simple : inscription GitHub, pas de VPS à gérer, domaine personnalisé gratuit.
+**Render** est plus simple : pas de VPS à gérer, domaine personnalisé gratuit.
 
 ## 1. Créer le compte Render
 
@@ -34,7 +39,7 @@ Oracle bloque souvent les inscriptions (Madagascar, carte bancaire, vérificatio
 
 URL temporaire : `https://rotary-minutes.onrender.com`
 
-## 3. Domaine clubminutes.api.mg
+## 4. Domaine clubminutes.api.mg
 
 1. Render → service **rotary-minutes** → **Settings** → **Custom Domains**
 2. Ajouter : `clubminutes.api.mg`
@@ -59,7 +64,7 @@ CLOUDFLARE_API_TOKEN=xxx CLOUDFLARE_ACCOUNT_ID=e3b91a2e610a05f7043060f477933d4d 
 
 4. Render → **Verify** sur le domaine custom
 
-## 4. Limites du plan gratuit Render
+## 5. Limites du plan gratuit Render
 
 - Mise en veille après **15 min** sans trafic (~1 min au réveil) — OK pour candidature Startup
 - 750 h/mois — largement suffisant pour une démo
