@@ -4,6 +4,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ArrowLeft } from "lucide-react";
 import { getCaseStudyBySlug } from "@/lib/queries/case-studies";
 
+export const dynamic = "force-dynamic";
+
 export default async function CaseStudyDetailPage({
   params,
 }: {

@@ -3,6 +3,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ArrowLeft, Building2 } from "lucide-react";
 import { getPublishedCaseStudies } from "@/lib/queries/case-studies";
 
+export const dynamic = "force-dynamic";
+
 export default async function CaseStudiesPage({
   params,
 }: {
