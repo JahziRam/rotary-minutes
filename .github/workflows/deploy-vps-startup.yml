@@ -1,0 +1,33 @@
+name: Deploy to VPS (Startup)
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "landing/**"
+      - "landing-worker/**"
+      - ".github/workflows/deploy-landing.yml"
+      - ".github/workflows/deploy-cloudflare.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: vps-startup-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script_stop: true
+          script: |
+            export APP_DIR="${{ secrets.DEPLOY_PATH || '/var/www/rotary-minutes' }}"
+            export APP_DOMAIN="clubminutes.api.mg"
+            cd "$APP_DIR"
+            bash scripts/vps-deploy.sh
