@@ -1,5 +1,6 @@
-import Stripe from "stripe";
 import { Resend } from "resend";
+
+type StripeClient = import("stripe").default;
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@/generated/prisma/client";
 
@@ -73,15 +74,16 @@ export function isResendConfigured(creds: PlatformIntegrations): boolean {
   return !!(creds.resendApiKey?.trim() && creds.emailFrom?.trim());
 }
 
-let stripeCache: { key: string; client: Stripe } | null = null;
+let stripeCache: { key: string; client: StripeClient } | null = null;
 
-export async function getStripe(): Promise<Stripe | null> {
+export async function getStripe(): Promise<StripeClient | null> {
   const creds = await resolveIntegrations();
   const key = creds.stripeSecretKey;
   if (!key) return null;
 
   if (stripeCache?.key === key) return stripeCache.client;
 
+  const { default: Stripe } = await import("stripe");
   const client = new Stripe(key, {
     apiVersion: "2026-06-24.dahlia",
     typescript: true,

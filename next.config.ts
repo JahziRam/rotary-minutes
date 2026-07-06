@@ -5,13 +5,7 @@ import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: [
-    "pg",
-    "pg-cloudflare",
-    "@react-pdf/renderer",
-    "stripe",
-    "qrcode",
-  ],
+  serverExternalPackages: ["pg", "pg-cloudflare"],
   experimental: {
     optimizePackageImports: [
       "lucide-react",

@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
-import QRCode from "qrcode";
 import { auth } from "@/lib/auth";
 import { getMinuteById } from "@/actions/minutes";
 import { getClubContext } from "@/lib/club-context";
@@ -47,9 +46,11 @@ export default async function MinuteDetailPage({
     minute.verifyUrl ??
     (minute.contentHash ? getVerifyUrl(minute.contentHash, baseUrl) : null);
 
-  const qrCodeDataUrl = verifyUrl
-    ? await QRCode.toDataURL(verifyUrl, { width: 128, margin: 1 })
-    : null;
+  let qrCodeDataUrl: string | null = null;
+  if (verifyUrl) {
+    const { default: QRCode } = await import("qrcode");
+    qrCodeDataUrl = await QRCode.toDataURL(verifyUrl, { width: 128, margin: 1 });
+  }
 
   return (
     <AppShellServer title="Aperçu du procès-verbal">

@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useLocale } from "next-intl";
-import QRCode from "qrcode";
 import { QrCode, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ensureMeetingCheckInToken } from "@/actions/check-in";
@@ -21,6 +20,7 @@ export function AttendanceQrPanel({ meetingId }: { meetingId: string }) {
         const base = window.location.origin;
         const url = `${base}/${locale}/check-in/${result.token}`;
         setCheckInUrl(url);
+        const { default: QRCode } = await import("qrcode");
         const dataUrl = await QRCode.toDataURL(url, { width: 200, margin: 2 });
         setQrDataUrl(dataUrl);
       }
