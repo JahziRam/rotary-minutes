@@ -71,10 +71,8 @@ function ensureSslConnectionString(url) {
 async function getConnectionString(postgresId) {
   const info = await api(`/postgres/${postgresId}/connection-info`);
   const conn = info.connectionInfo || info;
-  const raw =
-    conn.externalConnectionString ||
-    conn.connectionString ||
-    conn.internalConnectionString;
+  // Free web services must use external URL + SSL (private network is paid-only).
+  const raw = conn.externalConnectionString || conn.connectionString;
   if (!raw) throw new Error("No connection string in Render response");
   return ensureSslConnectionString(raw);
 }
