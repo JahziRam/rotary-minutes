@@ -1,0 +1,21 @@
+# Postgres local pour dev — npm run dev:local
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: rotary
+      POSTGRES_PASSWORD: rotary
+      POSTGRES_DB: rotary_minutes
+    volumes:
+      - rotary_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rotary -d rotary_minutes"]
+      interval: 3s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  rotary_pg_data:

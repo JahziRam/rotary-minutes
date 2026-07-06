@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:local": "node scripts/setup-local-env.mjs && docker compose up -d && npx prisma db push && npm run db:seed && next dev",
     "build": "next build",
     "start": "next start",
     "preview:cf": "opennextjs-cloudflare build && opennextjs-cloudflare preview",

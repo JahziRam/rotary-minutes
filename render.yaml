@@ -1,5 +1,12 @@
 # Render Blueprint — déploiement gratuit pour candidature Startup
-# Dashboard → New → Blueprint → connecter le repo JahziRam/rotary-minutes
+# Dashboard → Blueprint → Sync (injecte DATABASE_URL depuis la DB Render)
+databases:
+  - name: rotary-minutes-db
+    plan: free
+    region: frankfurt
+    databaseName: rotary_minutes
+    user: rotary_minutes
+
 services:
   - type: web
     name: rotary-minutes
@@ -32,9 +39,13 @@ services:
       - key: NEXT_PUBLIC_APP_NAME
         value: Rotary Minutes
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: rotary-minutes-db
+          property: connectionString
       - key: DIRECT_URL
-        sync: false
+        fromDatabase:
+          name: rotary-minutes-db
+          property: connectionString
       - key: AUTH_SECRET
         generateValue: true
       - key: CRON_SECRET
@@ -51,3 +62,5 @@ services:
         sync: false
       - key: REFERRAL_REWARD_DAYS
         value: "30"
+      - key: RUN_DB_SEED
+        value: "1"

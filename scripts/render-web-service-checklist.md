@@ -19,7 +19,8 @@ GitHub connecté ✅ — complétez ces réglages dans le dashboard Render.
 | Key | Value |
 |-----|-------|
 | `NODE_ENV` | `production` |
-| `DATABASE_URL` | *(Postgres Prisma — db.prisma.io)* |
+| `DATABASE_URL` | Auto via Blueprint (`fromDatabase: rotary-minutes-db`) |
+| `DIRECT_URL` | Idem (Render Postgres — même URL) |
 | `AUTH_SECRET` | *(générer : `openssl rand -base64 32`)* |
 | `AUTH_URL` | `https://clubminutes.api.mg` |
 | `AUTH_TRUST_HOST` | `true` |

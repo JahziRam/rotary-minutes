@@ -22,5 +22,10 @@ fi
 echo ">>> Prisma db push (schema sync)..."
 npx prisma db push --accept-data-loss
 
+if [[ "${RUN_DB_SEED:-}" == "1" ]]; then
+  echo ">>> Seeding database..."
+  npx tsx prisma/seed.ts
+fi
+
 echo ">>> Building Next.js..."
 NEXT_TELEMETRY_DISABLED=1 npm run build
