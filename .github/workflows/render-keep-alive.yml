@@ -1,0 +1,29 @@
+# Keeps the Render free-tier web service awake (spins down after ~15 min idle).
+# Schedule: every 5 min (GitHub minimum). First request after sleep may take ~50s — curl allows 120s.
+name: Render keep-alive
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: render-keep-alive
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Wake Render instance
+        env:
+          APP_URL: ${{ vars.RENDER_APP_URL || 'https://clubminutes.api.mg' }}
+        run: |
+          set -euo pipefail
+          echo "Pinging ${APP_URL}/api/health"
+          curl -fsS --max-time 120 \
+            -H "Accept: application/json" \
+            -w "\nHTTP %{http_code} in %{time_total}s\n" \
+            "${APP_URL}/api/health"
+          echo "Keep-alive OK"

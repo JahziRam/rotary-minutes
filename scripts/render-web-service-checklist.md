@@ -40,11 +40,22 @@ Stripe / Resend : optionnels pour la démo Startup.
 4. Supprimer la route Worker `clubminutes.api.mg` (conflit Cloudflare Workers)
 5. Render → **Verify** le domaine
 
+## Keep-alive (plan Free — éviter spin-down)
+
+Render Free dort après ~15 min sans trafic → cold start ~50 s.
+
+1. **Push** le workflow `.github/workflows/render-keep-alive.yml` (ping `/api/health` toutes les 5 min)
+2. GitHub → **Actions** → vérifier que le workflow tourne (repo public = gratuit)
+3. Option : variable `RENDER_APP_URL` = `https://clubminutes.api.mg`
+4. Render → **Health Check Path** = `/api/health`
+
+Détails : `scripts/render-keep-alive.md`
+
 ## Test
 
 ```bash
-curl -sI https://VOTRE-SERVICE.onrender.com/en
+curl -sS https://clubminutes.api.mg/api/health
 curl -sI https://clubminutes.api.mg/en
 ```
 
-Attendu : `HTTP/2 200` (ou 307 vers `/fr` ou `/en`).
+Attendu health : `{"ok":true,...}` — page : `HTTP/2 200` (ou 307 vers `/fr` ou `/en`).

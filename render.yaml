@@ -17,7 +17,7 @@ services:
         - next.config.ts
         - scripts/render-build.sh
     startCommand: npm run start
-    healthCheckPath: /en
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
