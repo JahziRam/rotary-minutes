@@ -9,8 +9,6 @@ import {
   handleSubscriptionUpdated,
 } from "@/lib/stripe-webhooks";
 
-export const runtime = "nodejs";
-
 export async function POST(request: Request) {
   const stripe = await getStripe();
   if (!stripe) {

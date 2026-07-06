@@ -1,19 +1,36 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@/generated/prisma/client";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 /** Incrémenter quand le schéma Prisma change (invalide le cache dev). */
-const PRISMA_SCHEMA_VERSION = 10;
+const PRISMA_SCHEMA_VERSION = 11;
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
   prismaSchemaVersion?: number;
 };
 
-function createPrismaClient() {
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) {
+function resolveConnectionString(): string {
+  const fromEnv = process.env.DATABASE_URL;
+  if (!fromEnv) {
     throw new Error("DATABASE_URL is not set");
   }
+
+  try {
+    const { env } = getCloudflareContext();
+    const hyperdrive = (env as CloudflareEnv).HYPERDRIVE;
+    if (hyperdrive?.connectionString) {
+      return hyperdrive.connectionString;
+    }
+  } catch {
+    // next dev, build, ou environnement Node classique
+  }
+
+  return fromEnv;
+}
+
+function createPrismaClient() {
+  const connectionString = resolveConnectionString();
   const adapter = new PrismaPg({ connectionString });
   return new PrismaClient({ adapter });
 }
@@ -54,10 +71,8 @@ function getPrismaClient() {
   }
 
   const client = createPrismaClient();
-  if (process.env.NODE_ENV !== "production") {
-    globalForPrisma.prisma = client;
-    globalForPrisma.prismaSchemaVersion = PRISMA_SCHEMA_VERSION;
-  }
+  globalForPrisma.prisma = client;
+  globalForPrisma.prismaSchemaVersion = PRISMA_SCHEMA_VERSION;
   return client;
 }
 
@@ -66,7 +81,7 @@ function readClientProperty(client: PrismaClient, prop: string | symbol, receive
   return typeof value === "function" ? value.bind(client) : value;
 }
 
-/** Proxy pour survivre au hot-reload Turbopack sans singleton périmé. */
+/** Proxy pour survivre au hot-reload et réutiliser le client par isolate Worker. */
 export const prisma: PrismaClient = new Proxy({} as PrismaClient, {
   get(_target, prop, receiver) {
     const client = getPrismaClient();
