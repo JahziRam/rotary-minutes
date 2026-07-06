@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import { renderToBuffer } from "@react-pdf/renderer";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getAdminStats } from "@/lib/queries/admin";
-import { StatsPDFDocument } from "@/lib/pdf/stats-pdf";
+import { renderStatsPdf } from "@/lib/pdf/render";
 
 export async function GET() {
   const session = await auth();
@@ -43,7 +42,7 @@ export async function GET() {
     })),
   };
 
-  const buffer = await renderToBuffer(StatsPDFDocument({ data: pdfData }));
+  const buffer = await renderStatsPdf(pdfData);
   const filename = `rotary-minutes-stats-${exportedAt.split("T")[0]}.pdf`;
 
   return new NextResponse(new Uint8Array(buffer), {

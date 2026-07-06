@@ -2,7 +2,6 @@
 interface CloudflareEnv {
   ASSETS: Fetcher;
   HYPERDRIVE: Hyperdrive;
-  IMAGES: ImagesBinding;
   WORKER_SELF_REFERENCE: Fetcher;
 }
 

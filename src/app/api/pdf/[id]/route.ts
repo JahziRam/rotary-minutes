@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import { renderToBuffer } from "@react-pdf/renderer";
-import QRCode from "qrcode";
-import { MinutePDFDocument } from "@/lib/pdf/minute-pdf";
+import { renderMinutePdf } from "@/lib/pdf/render";
 import { generateMinuteHash, getVerifyUrl } from "@/lib/hash";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -74,6 +72,7 @@ export async function GET(
     });
 
   const verifyUrl = minute.verifyUrl ?? getVerifyUrl(hash, baseUrl, locale);
+  const { default: QRCode } = await import("qrcode");
   const qrCodeDataUrl = await QRCode.toDataURL(verifyUrl, { width: 200 });
 
   const present = minute.meeting.attendances.filter((a) => a.category === "PRESENT").length;
@@ -106,7 +105,7 @@ export async function GET(
     verifyUrl,
   };
 
-  const buffer = await renderToBuffer(MinutePDFDocument({ data: pdfData }));
+  const buffer = await renderMinutePdf(pdfData);
 
   return new NextResponse(new Uint8Array(buffer), {
     headers: {

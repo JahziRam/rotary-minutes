@@ -24,9 +24,6 @@
       "id": "4e62da21af3c4b36b8ab1ba679fc24bb"
     }
   ],
-  "images": {
-    "binding": "IMAGES"
-  },
   "routes": [
     {
       "pattern": "clubminutes.api.mg",

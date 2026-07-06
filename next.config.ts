@@ -5,9 +5,21 @@ import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["pg", "pg-cloudflare"],
+  serverExternalPackages: [
+    "pg",
+    "pg-cloudflare",
+    "@react-pdf/renderer",
+    "stripe",
+    "qrcode",
+  ],
   experimental: {
-    optimizePackageImports: ["lucide-react", "date-fns", "@tanstack/react-query"],
+    optimizePackageImports: [
+      "lucide-react",
+      "date-fns",
+      "@tanstack/react-query",
+      "react-hook-form",
+      "@hookform/resolvers",
+    ],
   },
   images: {
     remotePatterns: [{ protocol: "https", hostname: "**" }],
