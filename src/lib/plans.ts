@@ -118,23 +118,49 @@ export async function getAllPlanConfigs(): Promise<PlanConfigData[]> {
   return rows.map(mapPlanRow);
 }
 
+const FALLBACK_BILLING: BillingSettings = {
+  annualDiscountPercent: 20,
+  currency: "EUR",
+  stripeEnabled: false,
+};
+
+function defaultPlanRows(): PlanConfigData[] {
+  return PLAN_KEYS.map((plan, i) => ({
+    plan,
+    ...DEFAULT_PLANS[i],
+  }));
+}
+
 export async function getActivePublicPlans(locale: string): Promise<{
   plans: PublicPlan[];
   billing: BillingSettings;
 }> {
-  await ensurePlanConfigs();
-  const [rows, billing] = await Promise.all([
-    prisma.planConfig.findMany({
-      where: { isActive: true },
-      orderBy: { sortOrder: "asc" },
-    }),
-    getBillingSettings(),
-  ]);
+  try {
+    await ensurePlanConfigs();
+    const [rows, billing] = await Promise.all([
+      prisma.planConfig.findMany({
+        where: { isActive: true },
+        orderBy: { sortOrder: "asc" },
+      }),
+      getBillingSettings(),
+    ]);
 
-  return {
-    billing,
-    plans: rows.map((row) => toPublicPlan(mapPlanRow(row), locale, billing.annualDiscountPercent)),
-  };
+    return {
+      billing,
+      plans: rows.map((row) =>
+        toPublicPlan(mapPlanRow(row), locale, billing.annualDiscountPercent)
+      ),
+    };
+  } catch (e) {
+    console.error("[getActivePublicPlans] DB unavailable, using defaults:", e);
+    const billing = FALLBACK_BILLING;
+    return {
+      billing,
+      plans: defaultPlanRows().map((row) =>
+        toPublicPlan(row, locale, billing.annualDiscountPercent)
+      ),
+    };
+  }
 }
 
 function mapPlanRow(row: {
