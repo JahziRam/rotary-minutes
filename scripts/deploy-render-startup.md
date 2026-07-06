@@ -33,7 +33,9 @@ Oracle bloque souvent les inscriptions (Madagascar, carte bancaire, vérificatio
 2. Sélectionner le repo `rotary-minutes`
 3. Render lit `render.yaml` automatiquement
 4. Renseigner les variables marquées **sync: false** :
-   - `DATABASE_URL` — Postgres Prisma (`db.prisma.io`)
+   - `DATABASE_URL` — connexion **pooled** Prisma Postgres (`pooled.db.prisma.io`) — runtime app
+   - `DIRECT_URL` — connexion **directe** (`db.prisma.io`) — `prisma db push` au build
+   - Générer les deux URLs dans [Prisma Console](https://console.prisma.io) → votre base → **Connect**
    - `STRIPE_*`, `RESEND_API_KEY`, `EMAIL_FROM` (optionnel pour la démo)
 5. **Apply** → premier build (~5–10 min)
 

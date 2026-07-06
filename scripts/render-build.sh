@@ -15,6 +15,10 @@ fi
 echo ">>> Prisma generate..."
 npx prisma generate
 
+if [[ -z "${DIRECT_URL:-}" ]]; then
+  echo ">>> WARNING: DIRECT_URL not set — db push will use DATABASE_URL (use db.prisma.io for migrations)"
+fi
+
 echo ">>> Prisma db push (schema sync)..."
 npx prisma db push --accept-data-loss
 

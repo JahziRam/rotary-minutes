@@ -9,6 +9,7 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    // CLI (db push, migrate, studio) needs the direct hostname (db.prisma.io).
+    url: process.env["DIRECT_URL"] ?? process.env["DATABASE_URL"],
   },
 });
