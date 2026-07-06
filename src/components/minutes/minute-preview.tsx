@@ -83,6 +83,7 @@ export function MinutePreview({
   pdfVisible = true,
   emailsEnabled = true,
   emailsVisible = true,
+  memberEmailCount = 0,
   hideBackLink = false,
 }: {
   data: MinutePreviewData;
@@ -92,6 +93,7 @@ export function MinutePreview({
   pdfVisible?: boolean;
   emailsEnabled?: boolean;
   emailsVisible?: boolean;
+  memberEmailCount?: number;
   hideBackLink?: boolean;
 }) {
   const dateLocale = locale === "fr" ? fr : enUS;
@@ -308,6 +310,7 @@ export function MinutePreview({
               pdfVisible={pdfVisible}
               emailsEnabled={emailsEnabled}
               emailsVisible={emailsVisible}
+              memberEmailCount={memberEmailCount}
             />
           </div>
 

@@ -6,9 +6,14 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { getClubContext } from "@/lib/club-context";
 import { canViewDistrictMinutes } from "@/lib/district-access";
-import { generateMinuteHash, getVerifyUrl } from "@/lib/hash";
+import { generateMinuteHash, getVerifyUrl, resolveMinuteVerifyUrl } from "@/lib/hash";
+import { getAppBaseUrl } from "@/lib/app-url";
 import { requirePermission } from "@/lib/require-permission";
 import { sendEmail, minuteFinalizedEmail } from "@/lib/email";
+import {
+  buildMinutePdfBuffer,
+  minutePdfInclude,
+} from "@/lib/pdf/build-minute-pdf";
 import type { MinuteStatus, Prisma } from "@/generated/prisma/client";
 
 function revalidateMinutePaths(minuteId: string, locale?: string) {
@@ -122,7 +127,7 @@ async function doFinalizeMinute(
     attendances: minute.meeting.attendances,
   });
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const baseUrl = getAppBaseUrl();
   const verifyUrl = getVerifyUrl(hash, baseUrl, locale);
   const now = new Date();
 
@@ -152,7 +157,6 @@ async function doFinalizeMinute(
   const clubEmail = minute.club.email;
   if (clubEmail) {
     const { resolveClubLogoUrl } = await import("@/lib/media-url");
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
     const mail = minuteFinalizedEmail({
       clubName: minute.club.name,
       minuteTitle: minute.title,
@@ -160,7 +164,13 @@ async function doFinalizeMinute(
       locale,
       logoUrl: resolveClubLogoUrl(minute.club.id, minute.club.logoUrl, baseUrl),
     });
-    await sendEmail({ to: clubEmail, subject: mail.subject, html: mail.html });
+    const { buffer, filename } = await buildMinutePdfBuffer(minute, locale);
+    await sendEmail({
+      to: clubEmail,
+      subject: mail.subject,
+      html: mail.html,
+      attachments: [{ filename, content: buffer }],
+    });
   }
 
   const { dispatchClubWebhook } = await import("@/lib/club-webhooks");
@@ -440,6 +450,65 @@ export async function archiveMinute(minuteId: string, locale: string) {
   return { success: true };
 }
 
+export async function getMinuteMemberEmailCount(minuteId: string) {
+  const ctx = await getClubContext();
+  if (!ctx) return 0;
+
+  const minute = await prisma.minute.findFirst({
+    where: { id: minuteId, clubId: ctx.clubId },
+    select: { id: true },
+  });
+  if (!minute) return 0;
+
+  const members = await prisma.member.findMany({
+    where: {
+      clubId: ctx.clubId,
+      isActive: true,
+      email: { not: null },
+    },
+    select: { email: true },
+  });
+
+  return new Set(
+    members
+      .map((m) => m.email?.trim().toLowerCase())
+      .filter((e): e is string => !!e && e.includes("@"))
+  ).size;
+}
+
+async function dispatchMinuteEmail(
+  minute: {
+    id: string;
+    title: string;
+    contentHash: string | null;
+    verifyUrl: string | null;
+    club: { id: string; name: string; logoUrl: string | null };
+  },
+  recipientEmail: string,
+  locale: string,
+  pdf: { buffer: Buffer; filename: string },
+  verifyUrl: string
+) {
+  const { resolveClubLogoUrl } = await import("@/lib/media-url");
+  const mail = minuteFinalizedEmail({
+    clubName: minute.club.name,
+    minuteTitle: minute.title,
+    verifyUrl,
+    locale,
+    logoUrl: resolveClubLogoUrl(
+      minute.club.id,
+      minute.club.logoUrl,
+      getAppBaseUrl()
+    ),
+  });
+  return sendEmail({
+    to: recipientEmail,
+    subject: mail.subject,
+    html: mail.html,
+    attachments: [{ filename: pdf.filename, content: pdf.buffer }],
+  });
+}
+
 export async function sendMinuteByEmail(
   minuteId: string,
   recipientEmail: string,
@@ -450,7 +519,7 @@ export async function sendMinuteByEmail(
 
   const minute = await prisma.minute.findFirst({
     where: { id: minuteId, clubId: ctx.clubId },
-    include: { club: true },
+    include: minutePdfInclude,
   });
   if (!minute) return { error: "NOT_FOUND" };
 
@@ -458,22 +527,21 @@ export async function sendMinuteByEmail(
     return { error: "INVALID_EMAIL" };
   }
 
-  if (!minute.verifyUrl) return { error: "NOT_FINALIZED" };
+  if (minute.status !== "FINALIZED" || !minute.contentHash) {
+    return { error: "NOT_FINALIZED" };
+  }
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const { resolveClubLogoUrl } = await import("@/lib/media-url");
-  const mail = minuteFinalizedEmail({
-    clubName: minute.club.name,
-    minuteTitle: minute.title,
-    verifyUrl: minute.verifyUrl,
+  const verifyUrl = resolveMinuteVerifyUrl(minute, locale);
+  if (!verifyUrl) return { error: "NOT_FINALIZED" };
+
+  const pdf = await buildMinutePdfBuffer(minute, locale);
+  const sent = await dispatchMinuteEmail(
+    minute,
+    recipientEmail,
     locale,
-    logoUrl: resolveClubLogoUrl(minute.club.id, minute.club.logoUrl, baseUrl),
-  });
-  const sent = await sendEmail({
-    to: recipientEmail,
-    subject: mail.subject,
-    html: mail.html,
-  });
+    pdf,
+    verifyUrl
+  );
 
   await prisma.notification.create({
     data: {
@@ -493,7 +561,7 @@ export async function sendMinuteByEmail(
       action: "MINUTE_EMAILED",
       entity: "Minute",
       entityId: minuteId,
-      metadata: { recipient: recipientEmail },
+      metadata: { recipient: recipientEmail, pdfAttached: true },
     },
   });
 
@@ -502,6 +570,96 @@ export async function sendMinuteByEmail(
     message: sent.ok
       ? `PV envoyé à ${recipientEmail}`
       : `Notification enregistrée (email désactivé) — ${recipientEmail}`,
+  };
+}
+
+export async function sendMinuteToAllMembers(minuteId: string, locale: string) {
+  const ctx = await getClubContext();
+  if (!ctx) return { error: "UNAUTHORIZED" };
+
+  const minute = await prisma.minute.findFirst({
+    where: { id: minuteId, clubId: ctx.clubId },
+    include: minutePdfInclude,
+  });
+  if (!minute) return { error: "NOT_FOUND" };
+
+  if (minute.status !== "FINALIZED" || !minute.contentHash) {
+    return { error: "NOT_FINALIZED" };
+  }
+
+  const verifyUrl = resolveMinuteVerifyUrl(minute, locale);
+  if (!verifyUrl) return { error: "NOT_FINALIZED" };
+
+  const members = await prisma.member.findMany({
+    where: {
+      clubId: ctx.clubId,
+      isActive: true,
+      email: { not: null },
+    },
+    select: { email: true },
+  });
+
+  const emails = [
+    ...new Set(
+      members
+        .map((m) => m.email?.trim())
+        .filter((e): e is string => !!e && e.includes("@"))
+    ),
+  ];
+
+  if (emails.length === 0) {
+    return { error: "NO_MEMBER_EMAILS" };
+  }
+
+  const pdf = await buildMinutePdfBuffer(minute, locale);
+  let sentCount = 0;
+
+  for (const email of emails) {
+    const result = await dispatchMinuteEmail(
+      minute,
+      email,
+      locale,
+      pdf,
+      verifyUrl
+    );
+    if (result.ok) sentCount++;
+  }
+
+  await prisma.notification.create({
+    data: {
+      userId: ctx.userId,
+      clubId: ctx.clubId,
+      type: "NEW_MINUTE",
+      title: "PV envoyé aux membres",
+      message: `${minute.title} → ${sentCount}/${emails.length} membre(s)`,
+      link: `/${locale}/minutes/${minuteId}`,
+    },
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      clubId: ctx.clubId,
+      userId: ctx.userId,
+      action: "MINUTE_EMAILED",
+      entity: "Minute",
+      entityId: minuteId,
+      metadata: {
+        bulk: true,
+        recipients: emails.length,
+        sent: sentCount,
+        pdfAttached: true,
+      },
+    },
+  });
+
+  return {
+    success: true,
+    sent: sentCount,
+    total: emails.length,
+    message:
+      sentCount > 0
+        ? `PV envoyé à ${sentCount} membre(s) sur ${emails.length}`
+        : `Aucun email envoyé (${emails.length} destinataire(s), Resend désactivé)`,
   };
 }
 

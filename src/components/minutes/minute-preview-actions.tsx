@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useLocale } from "next-intl";
-import { Download, Mail, Copy, Archive } from "lucide-react";
+import { Download, Mail, Users, Copy, Archive } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Toast } from "@/components/ui/toast";
@@ -12,6 +12,7 @@ import {
   duplicateMinute,
   archiveMinute,
   sendMinuteByEmail,
+  sendMinuteToAllMembers,
 } from "@/actions/minutes";
 
 export function MinutePreviewActions({
@@ -20,12 +21,14 @@ export function MinutePreviewActions({
   pdfVisible = true,
   emailsEnabled = true,
   emailsVisible = true,
+  memberEmailCount = 0,
 }: {
   minuteId: string;
   pdfEnabled?: boolean;
   pdfVisible?: boolean;
   emailsEnabled?: boolean;
   emailsVisible?: boolean;
+  memberEmailCount?: number;
 }) {
   const locale = useLocale();
   const router = useRouter();
@@ -65,14 +68,61 @@ export function MinutePreviewActions({
             {locale === "fr" ? "Email — changer d'offre" : "Email — upgrade plan"}
           </Link>
         ) : !showEmail ? (
-          <button
-            type="button"
-            className={btnClass}
-            onClick={() => setShowEmail(true)}
-          >
-            <Mail className="h-4 w-4 text-gray-500" />
-            Envoyer par email
-          </button>
+          <>
+            <button
+              type="button"
+              className={btnClass}
+              onClick={() => setShowEmail(true)}
+            >
+              <Mail className="h-4 w-4 text-gray-500" />
+              {locale === "fr" ? "Envoyer par email" : "Send by email"}
+            </button>
+            {memberEmailCount > 0 && (
+              <button
+                type="button"
+                className={btnClass}
+                disabled={pending}
+                onClick={() => {
+                  const msg =
+                    locale === "fr"
+                      ? `Envoyer le PV (PDF joint) à ${memberEmailCount} membre(s) actif(s) ?`
+                      : `Send minutes (PDF attached) to ${memberEmailCount} active member(s)?`;
+                  if (!window.confirm(msg)) return;
+                  startTransition(async () => {
+                    const result = await sendMinuteToAllMembers(minuteId, locale);
+                    if (result.error === "NO_MEMBER_EMAILS") {
+                      setToast({
+                        message:
+                          locale === "fr"
+                            ? "Aucun membre avec email"
+                            : "No members with email",
+                        type: "error",
+                      });
+                    } else if (result.error) {
+                      setToast({
+                        message:
+                          locale === "fr"
+                            ? "Envoi impossible"
+                            : "Could not send",
+                        type: "error",
+                      });
+                    } else {
+                      setToast({
+                        message: result.message ?? "Envoyé",
+                        type: "success",
+                      });
+                      router.refresh();
+                    }
+                  });
+                }}
+              >
+                <Users className="h-4 w-4 text-gray-500" />
+                {locale === "fr"
+                  ? `Envoyer à tous les membres (${memberEmailCount})`
+                  : `Send to all members (${memberEmailCount})`}
+              </button>
+            )}
+          </>
         ) : (
           <div className="space-y-2 p-3 rounded-xl border border-gray-200 bg-gray-50">
             <Input

@@ -5,8 +5,10 @@ import { getMinuteById } from "@/actions/minutes";
 import { getClubContext } from "@/lib/club-context";
 import { canViewDistrictMinutes } from "@/lib/district-access";
 import { isFeatureEnabled, isFeatureVisibleInUi } from "@/lib/feature-gate";
-import { getVerifyUrl } from "@/lib/hash";
+import { resolveMinuteVerifyUrl } from "@/lib/hash";
+import { getAppBaseUrl } from "@/lib/app-url";
 import { resolveClubLogoUrl } from "@/lib/media-url";
+import { getMinuteMemberEmailCount } from "@/actions/minutes";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { MinutePreview } from "@/components/minutes/minute-preview";
 
@@ -42,10 +44,12 @@ export default async function MinuteDetailPage({
     ? isFeatureVisibleInUi(ctx.features, "emailsEnabled", ctx.isSuperAdmin)
     : true;
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const verifyUrl =
-    minute.verifyUrl ??
-    (minute.contentHash ? getVerifyUrl(minute.contentHash, baseUrl) : null);
+  const baseUrl = getAppBaseUrl();
+  const verifyUrl = resolveMinuteVerifyUrl(minute, locale);
+  const memberEmailCount =
+    minute.status === "FINALIZED" && isOwnClubMinute
+      ? await getMinuteMemberEmailCount(id)
+      : 0;
 
   let qrCodeDataUrl: string | null = null;
   if (verifyUrl) {
@@ -64,6 +68,7 @@ export default async function MinuteDetailPage({
         pdfVisible={pdfVisible && !isDistrictReadOnly}
         emailsEnabled={emailsEnabled && !isDistrictReadOnly}
         emailsVisible={emailsVisible && !isDistrictReadOnly}
+        memberEmailCount={memberEmailCount}
         data={{
           id: minute.id,
           title: minute.title,

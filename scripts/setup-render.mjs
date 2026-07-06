@@ -93,7 +93,7 @@ async function createService(ownerId, env) {
       numInstances: 1,
       healthCheckPath: "/en",
       envSpecificDetails: {
-        buildCommand: "npm ci --include=dev && npx prisma generate && npm run build",
+        buildCommand: "bash scripts/render-build.sh",
         startCommand: "npm run start",
       },
     },

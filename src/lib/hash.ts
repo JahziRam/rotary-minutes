@@ -1,4 +1,5 @@
 import { createHash } from "crypto";
+import { getAppBaseUrl } from "@/lib/app-url";
 
 export function generateContentHash(content: string): string {
   return createHash("sha256").update(content, "utf8").digest("hex");
@@ -42,8 +43,22 @@ export function generateMinuteHash(minute: {
 
 export function getVerifyUrl(
   hash: string,
-  baseUrl: string,
+  baseUrl?: string,
   locale: string = "fr"
 ): string {
-  return `${baseUrl}/${locale}/verify/${hash}`;
+  const origin = (baseUrl ?? getAppBaseUrl()).replace(/\/$/, "");
+  return `${origin}/${locale}/verify/${hash}`;
+}
+
+/** Always use production URL from contentHash (stored verifyUrl may be stale). */
+export function resolveMinuteVerifyUrl(
+  minute: { contentHash?: string | null; verifyUrl?: string | null },
+  locale: string = "fr"
+): string | null {
+  if (minute.contentHash) {
+    return getVerifyUrl(minute.contentHash, getAppBaseUrl(), locale);
+  }
+  const stored = minute.verifyUrl?.trim();
+  if (stored && !stored.includes("localhost")) return stored;
+  return null;
 }

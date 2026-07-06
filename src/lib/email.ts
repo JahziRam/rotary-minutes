@@ -102,8 +102,8 @@ export function minuteFinalizedEmail(opts: {
 }) {
   const isFr = opts.locale === "fr";
   const body = isFr
-    ? `<p>Le procès-verbal <strong>${opts.minuteTitle}</strong> de ${opts.clubName} a été finalisé.</p><p><a href="${opts.verifyUrl}">Vérifier l'authenticité</a></p>`
-    : `<p>The minutes <strong>${opts.minuteTitle}</strong> for ${opts.clubName} have been finalized.</p><p><a href="${opts.verifyUrl}">Verify authenticity</a></p>`;
+    ? `<p>Le procès-verbal <strong>${opts.minuteTitle}</strong> de ${opts.clubName} est disponible.</p><p>Le PDF officiel est joint à cet email.</p><p><a href="${opts.verifyUrl}">Vérifier l'authenticité en ligne</a></p>`
+    : `<p>The minutes <strong>${opts.minuteTitle}</strong> for ${opts.clubName} are available.</p><p>The official PDF is attached to this email.</p><p><a href="${opts.verifyUrl}">Verify authenticity online</a></p>`;
   return {
     subject: isFr
       ? `PV finalisé — ${opts.minuteTitle}`

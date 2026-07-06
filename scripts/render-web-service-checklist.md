@@ -9,7 +9,8 @@ GitHub connecté ✅ — complétez ces réglages dans le dashboard Render.
 | **Branch** | `main` |
 | **Root Directory** | *(vide)* |
 | **Runtime** | Node |
-| **Build Command** | `npm ci --include=dev && npx prisma generate && npm run build` |
+| **Build Command** | `bash scripts/render-build.sh` |
+| **Build Cache** | Activé (Settings → Build & Deploy) — réutilise `node_modules` et `.next/cache` |
 | **Start Command** | `npm run start` |
 | **Instance Type** | **Free** |
 
