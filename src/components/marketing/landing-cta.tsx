@@ -6,7 +6,7 @@ export async function LandingCta({ locale }: { locale: string }) {
   const t = await getTranslations("landing.finalCta");
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-r from-navy to-navy-dark py-16 text-white lg:py-20">
+    <section className="relative overflow-hidden bg-gradient-to-r from-navy to-navy-dark py-12 text-white sm:py-16 lg:py-20">
       <div
         className="pointer-events-none absolute inset-0 opacity-40"
         style={{
@@ -15,8 +15,8 @@ export async function LandingCta({ locale }: { locale: string }) {
         }}
         aria-hidden
       />
-      <div className="relative mx-auto max-w-3xl px-4 text-center">
-        <h2 className="font-display text-3xl font-bold sm:text-4xl">{t("title")}</h2>
+      <div className="relative mx-auto max-w-3xl px-3 text-center sm:px-4">
+        <h2 className="font-display text-2xl font-bold sm:text-3xl md:text-4xl">{t("title")}</h2>
         <p className="mx-auto mt-4 max-w-xl text-lg text-white/75">{t("subtitle")}</p>
         <Link
           href={`/${locale}/register`}

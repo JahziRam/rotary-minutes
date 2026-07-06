@@ -8,8 +8,8 @@ export async function HowItWorks() {
   const steps = ["step1", "step2", "step3"] as const;
 
   return (
-    <section className="border-y border-gray-100 bg-white py-16 lg:py-20">
-      <div className="mx-auto max-w-6xl px-4">
+    <section className="border-y border-gray-100 bg-white py-12 sm:py-16 lg:py-20">
+      <div className="mx-auto max-w-6xl px-3 sm:px-4">
         <div className="mb-12 text-center">
           <h2 className="font-display text-3xl font-bold text-gray-900">{t("title")}</h2>
           <p className="mx-auto mt-3 max-w-2xl text-gray-500">{t("subtitle")}</p>

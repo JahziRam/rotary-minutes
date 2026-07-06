@@ -164,6 +164,8 @@
     "commission": "Commission",
     "bio": "Biographie",
     "photoUrl": "URL photo",
+    "profilePhoto": "Photo de profil",
+    "profilePhotoHint": "JPEG, PNG ou WebP — max 512 Ko.",
     "backToList": "Retour à la liste"
   },
   "emails": {
@@ -340,7 +342,18 @@
     "users": "Utilisateurs",
     "subscription": "Abonnement",
     "language": "Langue",
-    "timezone": "Fuseau horaire"
+    "timezone": "Fuseau horaire",
+    "clubLogo": "Logo du club",
+    "clubLogoHint": "JPEG, PNG ou WebP — max 512 Ko. Visible sur les PV et les emails.",
+    "clubName": "Nom du club",
+    "district": "District",
+    "country": "Pays",
+    "city": "Ville",
+    "meetingLocation": "Lieu de réunion",
+    "meetingDay": "Jour",
+    "meetingTime": "Heure",
+    "website": "Site web",
+    "saved": "Paramètres enregistrés"
   },
   "subscription": {
     "monthly": "Mensuel",
@@ -732,7 +745,12 @@
     "president": "Président",
     "secretary": "Secrétaire",
     "meetingDay": "Réunion",
-    "location": "Lieu"
+    "location": "Lieu",
+    "interactiveNotice": "Explorez l'interface réelle : tableau de bord, membres, PV et emails. Cliquez sur un PV pour voir l'aperçu complet.",
+    "backToDemo": "Retour à la démo",
+    "minutesList": "Liste des procès-verbaux",
+    "previewMinute": "Voir l'aperçu du PV",
+    "emailPreview": "Aperçu email avec logo du club"
   },
   "caseStudies": {
     "title": "Témoignages clients",

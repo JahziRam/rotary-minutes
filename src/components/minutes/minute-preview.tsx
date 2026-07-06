@@ -83,6 +83,7 @@ export function MinutePreview({
   pdfVisible = true,
   emailsEnabled = true,
   emailsVisible = true,
+  hideBackLink = false,
 }: {
   data: MinutePreviewData;
   locale: string;
@@ -91,6 +92,7 @@ export function MinutePreview({
   pdfVisible?: boolean;
   emailsEnabled?: boolean;
   emailsVisible?: boolean;
+  hideBackLink?: boolean;
 }) {
   const dateLocale = locale === "fr" ? fr : enUS;
   const meetingDate = new Date(data.meeting.date);
@@ -120,13 +122,15 @@ export function MinutePreview({
           </h1>
           <p className="text-gray-500 mt-1">{subtitle}</p>
         </div>
-        <Link
-          href={backHref}
-          className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-white border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 shadow-sm transition-colors shrink-0"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Retour
-        </Link>
+        {!hideBackLink && (
+          <Link
+            href={backHref}
+            className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-white border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 shadow-sm transition-colors shrink-0"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Retour
+          </Link>
+        )}
       </div>
 
       <div className="grid lg:grid-cols-[1fr_280px] gap-6 items-start">

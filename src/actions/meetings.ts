@@ -7,6 +7,8 @@ import { requirePermission } from "@/lib/require-permission";
 import type { MeetingType } from "@/generated/prisma/client";
 import { getAgendaTemplateForMeeting } from "@/lib/minute-templates";
 import { sendEmail } from "@/lib/email";
+import { wrapBrandedEmail } from "@/lib/email-branding";
+import { resolveClubLogoUrl } from "@/lib/media-url";
 import { icsAttachment } from "@/lib/ics";
 
 export async function createMeeting(
@@ -71,16 +73,19 @@ export async function createMeeting(
       endTime: meeting.endTime,
       clubName: ctx.club.name,
     });
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+    const logoUrl = resolveClubLogoUrl(ctx.club.id, ctx.club.logoUrl, baseUrl);
+    const body =
+      locale === "fr"
+        ? `<p>Réunion planifiée le ${new Date(data.date).toLocaleDateString("fr-FR")}.</p>`
+        : `<p>Meeting scheduled on ${new Date(data.date).toLocaleDateString("en-GB")}.</p>`;
     await sendEmail({
       to: ctx.club.email,
       subject:
         locale === "fr"
           ? `Convocation — ${ctx.club.name}`
           : `Meeting invitation — ${ctx.club.name}`,
-      html:
-        locale === "fr"
-          ? `<p>Réunion planifiée le ${new Date(data.date).toLocaleDateString("fr-FR")}.</p>`
-          : `<p>Meeting scheduled on ${new Date(data.date).toLocaleDateString("en-GB")}.</p>`,
+      html: wrapBrandedEmail(body, { clubName: ctx.club.name, logoUrl }),
       attachments: [ics],
     });
   }

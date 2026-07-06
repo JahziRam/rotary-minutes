@@ -5,9 +5,13 @@ import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Toast } from "@/components/ui/toast";
+import { ImageUpload } from "@/components/ui/image-upload";
 import { updateClubSettings } from "@/actions/settings";
+import { uploadClubLogo, removeClubLogo } from "@/actions/uploads";
+import { resolveClubLogoUrl } from "@/lib/media-url";
 
 interface ClubData {
+  id: string;
   name: string;
   district?: string | null;
   country: string;
@@ -17,15 +21,27 @@ interface ClubData {
   meetingTime?: string | null;
   email?: string | null;
   website?: string | null;
+  logoUrl?: string | null;
 }
 
 export function ClubSettingsForm({ club }: { club: ClubData }) {
   const t = useTranslations("common");
+  const tSettings = useTranslations("settings");
   const [pending, startTransition] = useTransition();
   const [toast, setToast] = useState<string | null>(null);
+  const logoPreview = resolveClubLogoUrl(club.id, club.logoUrl) ?? club.logoUrl;
 
   return (
     <>
+      <ImageUpload
+        label={tSettings("clubLogo")}
+        hint={tSettings("clubLogoHint")}
+        currentUrl={logoPreview}
+        shape="square"
+        onUpload={uploadClubLogo}
+        onRemove={removeClubLogo}
+      />
+
       <form
         action={(formData) => {
           startTransition(async () => {
@@ -40,24 +56,24 @@ export function ClubSettingsForm({ club }: { club: ClubData }) {
               email: formData.get("email") as string,
               website: formData.get("website") as string,
             });
-            if (result.success) setToast("Paramètres enregistrés");
+            if (result.success) setToast(tSettings("saved"));
           });
         }}
-        className="space-y-4"
+        className="space-y-4 mt-6"
       >
-        <Input name="name" label="Nom du club" defaultValue={club.name} required />
+        <Input name="name" label={tSettings("clubName")} defaultValue={club.name} required />
         <div className="grid sm:grid-cols-2 gap-4">
-          <Input name="district" label="District" defaultValue={club.district ?? ""} />
-          <Input name="country" label="Pays" defaultValue={club.country} required />
+          <Input name="district" label={tSettings("district")} defaultValue={club.district ?? ""} />
+          <Input name="country" label={tSettings("country")} defaultValue={club.country} required />
         </div>
-        <Input name="city" label="Ville" defaultValue={club.city} required />
-        <Input name="meetingLocation" label="Lieu de réunion" defaultValue={club.meetingLocation ?? ""} />
+        <Input name="city" label={tSettings("city")} defaultValue={club.city} required />
+        <Input name="meetingLocation" label={tSettings("meetingLocation")} defaultValue={club.meetingLocation ?? ""} />
         <div className="grid sm:grid-cols-2 gap-4">
-          <Input name="meetingDay" label="Jour" defaultValue={club.meetingDay ?? ""} />
-          <Input name="meetingTime" label="Heure" defaultValue={club.meetingTime ?? ""} />
+          <Input name="meetingDay" label={tSettings("meetingDay")} defaultValue={club.meetingDay ?? ""} />
+          <Input name="meetingTime" label={tSettings("meetingTime")} defaultValue={club.meetingTime ?? ""} />
         </div>
         <Input name="email" type="email" label="Email" defaultValue={club.email ?? ""} />
-        <Input name="website" type="url" label="Site web" defaultValue={club.website ?? ""} />
+        <Input name="website" type="url" label={tSettings("website")} defaultValue={club.website ?? ""} />
         <Button type="submit" variant="gold" disabled={pending}>
           {pending ? "..." : t("save")}
         </Button>

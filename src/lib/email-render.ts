@@ -10,6 +10,7 @@ export function renderEmailContent(
 export function buildClubEmailVars(opts: {
   clubName: string;
   locale: string;
+  clubLogo?: string;
   firstName?: string;
   lastName?: string;
   meetingDate?: string;
@@ -21,6 +22,7 @@ export function buildClubEmailVars(opts: {
   const name = [opts.firstName, opts.lastName].filter(Boolean).join(" ");
   return {
     clubName: opts.clubName,
+    clubLogo: opts.clubLogo ?? "",
     firstName: opts.firstName ?? "",
     lastName: opts.lastName ?? "",
     memberName: name || (opts.locale === "fr" ? "Membre" : "Member"),

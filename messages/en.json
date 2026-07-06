@@ -164,6 +164,8 @@
     "commission": "Commission",
     "bio": "Bio",
     "photoUrl": "Photo URL",
+    "profilePhoto": "Profile photo",
+    "profilePhotoHint": "JPEG, PNG or WebP — max 512 KB.",
     "backToList": "Back to list"
   },
   "emails": {
@@ -340,7 +342,18 @@
     "users": "Users",
     "subscription": "Subscription",
     "language": "Language",
-    "timezone": "Timezone"
+    "timezone": "Timezone",
+    "clubLogo": "Club logo",
+    "clubLogoHint": "JPEG, PNG or WebP — max 512 KB. Shown on minutes PDFs and emails.",
+    "clubName": "Club name",
+    "district": "District",
+    "country": "Country",
+    "city": "City",
+    "meetingLocation": "Meeting location",
+    "meetingDay": "Day",
+    "meetingTime": "Time",
+    "website": "Website",
+    "saved": "Settings saved"
   },
   "subscription": {
     "monthly": "Monthly",
@@ -732,7 +745,12 @@
     "president": "President",
     "secretary": "Secretary",
     "meetingDay": "Meeting schedule",
-    "location": "Location"
+    "location": "Location",
+    "interactiveNotice": "Explore the real interface: dashboard, members, minutes and emails. Click a minute to see the full preview.",
+    "backToDemo": "Back to demo",
+    "minutesList": "Minutes list",
+    "previewMinute": "View minute preview",
+    "emailPreview": "Email preview with club logo"
   },
   "caseStudies": {
     "title": "Customer stories",

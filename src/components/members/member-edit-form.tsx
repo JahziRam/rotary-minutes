@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { ImageUpload } from "@/components/ui/image-upload";
 import { updateMember } from "@/actions/members";
+import { uploadMemberPhoto, removeMemberPhoto } from "@/actions/uploads";
+import { resolveMemberPhotoUrl } from "@/lib/media-url";
 
 export function MemberEditForm({
   member,
@@ -47,6 +50,9 @@ export function MemberEditForm({
     );
   }
 
+  const photoPreview =
+    resolveMemberPhotoUrl(member.id, member.photoUrl) ?? member.photoUrl;
+
   return (
     <form
       className="space-y-4"
@@ -61,7 +67,6 @@ export function MemberEditForm({
             sponsorName: (fd.get("sponsorName") as string) || undefined,
             commissionId: (fd.get("commissionId") as string) || null,
             bio: (fd.get("bio") as string) || undefined,
-            photoUrl: (fd.get("photoUrl") as string) || undefined,
             birthday: (fd.get("birthday") as string) || undefined,
             joinDate: (fd.get("joinDate") as string) || undefined,
             isActive: fd.get("isActive") === "on",
@@ -70,6 +75,15 @@ export function MemberEditForm({
         });
       }}
     >
+      <ImageUpload
+        label={t("profilePhoto")}
+        hint={t("profilePhotoHint")}
+        currentUrl={photoPreview}
+        shape="circle"
+        onUpload={(formData) => uploadMemberPhoto(member.id, formData)}
+        onRemove={() => removeMemberPhoto(member.id)}
+      />
+
       <div className="grid sm:grid-cols-2 gap-3">
         <Input name="firstName" label={t("firstName")} defaultValue={member.firstName} required />
         <Input name="lastName" label={t("lastName")} defaultValue={member.lastName} required />
@@ -89,7 +103,6 @@ export function MemberEditForm({
           label={t("joinDate")}
           defaultValue={member.joinDate ? member.joinDate.toISOString().split("T")[0] : ""}
         />
-        <Input name="photoUrl" label={t("photoUrl")} defaultValue={member.photoUrl ?? ""} />
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-gray-700">{t("commission")}</label>
           <select

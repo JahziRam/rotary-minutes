@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/require-permission";
 import { sendEmail, isEmailEnabled } from "@/lib/email";
 import { buildClubEmailVars, renderEmailContent } from "@/lib/email-render";
+import { wrapBrandedEmail } from "@/lib/email-branding";
+import { resolveClubLogoUrl } from "@/lib/media-url";
 
 function revalidateEmails() {
   for (const loc of ["fr", "en"]) {
@@ -75,15 +77,21 @@ export async function dispatchCampaign(campaignId: string) {
     const contact = await prisma.emailContact.findFirst({
       where: { clubId: campaign.clubId, email: recipient },
     });
+    const clubLogo = resolveClubLogoUrl(campaign.club.id, campaign.club.logoUrl, baseUrl);
     const vars = buildClubEmailVars({
       clubName: campaign.club.name,
       locale,
+      clubLogo,
       firstName: contact?.firstName ?? undefined,
       lastName: contact?.lastName ?? undefined,
       dashboardUrl: `${baseUrl}/${locale}/dashboard`,
     });
     const subject = renderEmailContent(campaign.subject, vars);
-    const html = renderEmailContent(campaign.body, vars);
+    const bodyHtml = renderEmailContent(campaign.body, vars);
+    const html = wrapBrandedEmail(bodyHtml, {
+      clubName: campaign.club.name,
+      logoUrl: clubLogo,
+    });
 
     let status = "skipped";
     let error: string | undefined;

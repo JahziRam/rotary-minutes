@@ -15,6 +15,7 @@ import { AddMemberForm } from "@/components/members/add-member-form";
 import { BirthdayBanner } from "@/components/members/birthday-banner";
 import { MandatesPanel } from "@/components/members/mandates-panel";
 import { OnboardingChecklist } from "@/components/members/onboarding-checklist";
+import { resolveMemberPhotoUrl } from "@/lib/media-url";
 
 export default async function MembersPage({
   params,
@@ -69,7 +70,7 @@ export default async function MembersPage({
                 <CardContent className="p-4 flex items-center gap-3">
                   {member.photoUrl ? (
                     <Image
-                      src={member.photoUrl}
+                      src={resolveMemberPhotoUrl(member.id, member.photoUrl) ?? member.photoUrl}
                       alt=""
                       width={40}
                       height={40}

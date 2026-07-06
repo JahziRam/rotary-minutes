@@ -6,6 +6,7 @@ import { getClubContext } from "@/lib/club-context";
 import { canViewDistrictMinutes } from "@/lib/district-access";
 import { isFeatureEnabled, isFeatureVisibleInUi } from "@/lib/feature-gate";
 import { getVerifyUrl } from "@/lib/hash";
+import { resolveClubLogoUrl } from "@/lib/media-url";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { MinutePreview } from "@/components/minutes/minute-preview";
 
@@ -75,7 +76,9 @@ export default async function MinuteDetailPage({
             address: minute.club.address,
             district: minute.club.district,
             country: minute.club.country,
-            logoUrl: minute.club.logoUrl,
+            logoUrl:
+              resolveClubLogoUrl(minute.club.id, minute.club.logoUrl, baseUrl) ??
+              minute.club.logoUrl,
           },
           meeting: {
             date: minute.meeting.date,

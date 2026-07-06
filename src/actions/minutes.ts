@@ -151,11 +151,14 @@ async function doFinalizeMinute(
 
   const clubEmail = minute.club.email;
   if (clubEmail) {
+    const { resolveClubLogoUrl } = await import("@/lib/media-url");
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
     const mail = minuteFinalizedEmail({
       clubName: minute.club.name,
       minuteTitle: minute.title,
       verifyUrl,
       locale,
+      logoUrl: resolveClubLogoUrl(minute.club.id, minute.club.logoUrl, baseUrl),
     });
     await sendEmail({ to: clubEmail, subject: mail.subject, html: mail.html });
   }
@@ -457,11 +460,14 @@ export async function sendMinuteByEmail(
 
   if (!minute.verifyUrl) return { error: "NOT_FINALIZED" };
 
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const { resolveClubLogoUrl } = await import("@/lib/media-url");
   const mail = minuteFinalizedEmail({
     clubName: minute.club.name,
     minuteTitle: minute.title,
     verifyUrl: minute.verifyUrl,
     locale,
+    logoUrl: resolveClubLogoUrl(minute.club.id, minute.club.logoUrl, baseUrl),
   });
   const sent = await sendEmail({
     to: recipientEmail,

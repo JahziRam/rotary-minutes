@@ -8,6 +8,7 @@ import { getClubFeatures } from "@/lib/features";
 import { isFeatureEnabled } from "@/lib/feature-gate";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
+import { resolveClubLogoUrl } from "@/lib/media-url";
 
 export async function GET(
   request: Request,
@@ -83,7 +84,10 @@ export async function GET(
     club: {
       name: minute.club.name,
       address: minute.club.address ?? minute.club.meetingLocation ?? undefined,
-      logoUrl: minute.club.logoUrl ?? undefined,
+      logoUrl:
+        resolveClubLogoUrl(minute.club.id, minute.club.logoUrl, baseUrl) ??
+        minute.club.logoUrl ??
+        undefined,
     },
     meeting: {
       date: format(minute.meeting.date, "d MMMM yyyy", { locale: dateLocale }),

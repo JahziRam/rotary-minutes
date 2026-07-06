@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { addDays, differenceInCalendarDays } from "date-fns";
 import { prisma } from "@/lib/prisma";
 import { sendEmail, trialReminderEmail } from "@/lib/email";
+import { resolveClubLogoUrl } from "@/lib/media-url";
 
 const REMINDER_DAYS = [7, 3, 1] as const;
 
@@ -41,6 +42,7 @@ export async function GET(request: Request) {
       daysLeft,
       locale,
       upgradeUrl: `${baseUrl}/${locale}/settings/subscription`,
+      logoUrl: resolveClubLogoUrl(sub.club.id, sub.club.logoUrl, baseUrl),
     });
 
     for (const m of sub.club.memberships) {
