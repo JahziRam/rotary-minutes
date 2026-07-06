@@ -11,10 +11,10 @@
 import { readFileSync, existsSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createRenderApi } from "./render-env-api.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
-const API = "https://api.render.com/v1";
 const SERVICE_NAME = "rotary-minutes";
 
 const key = process.env.RENDER_API_KEY;
@@ -22,6 +22,8 @@ if (!key) {
   console.error("Set RENDER_API_KEY (https://dashboard.render.com/u/settings#api-keys)");
   process.exit(1);
 }
+
+const { getOwnerId, findService, upsertEnvVar, triggerDeploy } = createRenderApi(key);
 
 function loadDotEnv() {
   const path = resolve(ROOT, ".env");
@@ -81,71 +83,6 @@ function resolveDbUrls(dotenv) {
   return { databaseUrl, directUrl };
 }
 
-async function api(path, opts = {}) {
-  const res = await fetch(`${API}${path}`, {
-    ...opts,
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-      ...(opts.headers || {}),
-    },
-  });
-  const text = await res.text();
-  let body;
-  try {
-    body = text ? JSON.parse(text) : null;
-  } catch {
-    body = text;
-  }
-  if (!res.ok) {
-    throw new Error(`${opts.method || "GET"} ${path} → ${res.status}: ${JSON.stringify(body)}`);
-  }
-  return body;
-}
-
-async function getOwnerId() {
-  const owners = await api("/owners?limit=20");
-  const entry = owners?.[0]?.owner || owners?.[0];
-  const id = entry?.id || entry?.owner?.id;
-  if (!id) throw new Error("No Render workspace found on this API key.");
-  return id;
-}
-
-async function findService(ownerId) {
-  const list = await api(`/services?ownerId=${ownerId}&limit=50`);
-  for (const row of list || []) {
-    const s = row.service || row;
-    if (s.name === SERVICE_NAME) return s;
-  }
-  return null;
-}
-
-async function getEnvVars(serviceId) {
-  const rows = await api(`/services/${serviceId}/env-vars`);
-  const map = {};
-  for (const row of rows || []) {
-    const v = row.envVar || row;
-    map[v.key] = v.value ?? "";
-  }
-  return map;
-}
-
-async function setEnvVars(serviceId, env) {
-  await api(`/services/${serviceId}/env-vars`, {
-    method: "PUT",
-    body: JSON.stringify(
-      Object.entries(env).map(([key, value]) => ({ key, value }))
-    ),
-  });
-}
-
-async function triggerDeploy(serviceId) {
-  return api(`/services/${serviceId}/deploys`, {
-    method: "POST",
-    body: JSON.stringify({ clearCache: "do_not_clear" }),
-  });
-}
-
 async function testConnection(connectionString) {
   const { Client } = await import("pg");
   const client = new Client({
@@ -184,18 +121,12 @@ if (!service) {
 
 console.log(`Service: ${service.name} (${service.id})`);
 
-const current = await getEnvVars(service.id);
-const patch = {
-  ...current,
-  DATABASE_URL: databaseUrl,
-  DIRECT_URL: directUrl,
-};
-
-console.log("Updating Render env:");
+console.log("Updating Render env (single-key updates only):");
 console.log(`  DATABASE_URL → ${hostOf(databaseUrl)}`);
 console.log(`  DIRECT_URL   → ${hostOf(directUrl)}`);
 
-await setEnvVars(service.id, patch);
+await upsertEnvVar(service.id, "DATABASE_URL", databaseUrl);
+await upsertEnvVar(service.id, "DIRECT_URL", directUrl);
 await triggerDeploy(service.id);
 
 console.log("\nDeploy triggered. After ~2-5 min, verify:");

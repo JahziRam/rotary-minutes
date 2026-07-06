@@ -4,6 +4,16 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+function connectionHost(url: string | undefined): string | null {
+  if (!url?.trim()) return null;
+  try {
+    const normalized = url.replace(/^prisma\+postgres:\/\//, "postgresql://");
+    return new URL(normalized).hostname;
+  } catch {
+    return "invalid";
+  }
+}
+
 /**
  * Lightweight liveness probe for Render health checks and external keep-alive pings.
  * ?deep=1 runs a DB ping (for diagnostics).
@@ -17,6 +27,10 @@ export async function GET(request: Request) {
   };
 
   if (deep) {
+    body.databaseUrlHost = connectionHost(process.env.DATABASE_URL);
+    body.directUrlHost = connectionHost(process.env.DIRECT_URL);
+    body.databaseUrlSet = !!process.env.DATABASE_URL?.trim();
+
     try {
       await prisma.$queryRaw`SELECT 1`;
       body.database = "ok";

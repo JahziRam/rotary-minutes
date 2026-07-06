@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 /**
  * Corrige les variables NextAuth sur Render (UntrustedHost / MissingSecret).
+ * Met à jour uniquement les clés auth — ne touche pas DATABASE_URL ni les autres secrets.
  *
  * Usage:
  *   $env:RENDER_API_KEY = "rnd_..."
  *   node scripts/fix-render-auth-env.mjs
  */
 import { randomBytes } from "node:crypto";
+import { createRenderApi } from "./render-env-api.mjs";
 
-const API = "https://api.render.com/v1";
 const SERVICE_NAME = "rotary-minutes";
 const APP_URL = "https://clubminutes.api.mg";
 
@@ -18,73 +19,19 @@ if (!key) {
   process.exit(1);
 }
 
-async function api(path, opts = {}) {
-  const res = await fetch(`${API}${path}`, {
-    ...opts,
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-      ...(opts.headers || {}),
-    },
-  });
-  const text = await res.text();
-  let body;
-  try {
-    body = text ? JSON.parse(text) : null;
-  } catch {
-    body = text;
-  }
-  if (!res.ok) {
-    throw new Error(`${opts.method || "GET"} ${path} → ${res.status}: ${JSON.stringify(body)}`);
-  }
-  return body;
-}
+const { api, getOwnerId, findService, upsertEnvVar, triggerDeploy } = createRenderApi(key);
 
-async function getOwnerId() {
-  const owners = await api("/owners?limit=20");
-  const entry = owners?.[0]?.owner || owners?.[0];
-  const id = entry?.id || entry?.owner?.id;
-  if (!id) throw new Error("No Render workspace found on this API key.");
-  return id;
-}
-
-async function findService(ownerId) {
-  const list = await api(`/services?ownerId=${ownerId}&limit=50`);
-  for (const row of list || []) {
-    const s = row.service || row;
-    if (s.name === SERVICE_NAME) return s;
-  }
-  return null;
-}
-
-async function getEnvVars(serviceId) {
+async function getEnvVar(serviceId, name) {
   const rows = await api(`/services/${serviceId}/env-vars`);
-  const map = {};
   for (const row of rows || []) {
     const v = row.envVar || row;
-    map[v.key] = v.value ?? "";
+    if (v.key === name) return v.value ?? "";
   }
-  return map;
-}
-
-async function setEnvVars(serviceId, env) {
-  await api(`/services/${serviceId}/env-vars`, {
-    method: "PUT",
-    body: JSON.stringify(
-      Object.entries(env).map(([key, value]) => ({ key, value }))
-    ),
-  });
-}
-
-async function triggerDeploy(serviceId) {
-  return api(`/services/${serviceId}/deploys`, {
-    method: "POST",
-    body: JSON.stringify({ clearCache: "do_not_clear" }),
-  });
+  return "";
 }
 
 const ownerId = await getOwnerId();
-const service = await findService(ownerId);
+const service = await findService(ownerId, SERVICE_NAME);
 if (!service) {
   console.error(`Service "${SERVICE_NAME}" not found.`);
   process.exit(1);
@@ -92,28 +39,25 @@ if (!service) {
 
 console.log(`Service: ${service.name} (${service.id})`);
 
-const current = await getEnvVars(service.id);
-const secret =
-  current.AUTH_SECRET?.trim() ||
-  current.NEXTAUTH_SECRET?.trim() ||
+const existingSecret =
+  (await getEnvVar(service.id, "AUTH_SECRET"))?.trim() ||
+  (await getEnvVar(service.id, "NEXTAUTH_SECRET"))?.trim() ||
   randomBytes(32).toString("base64");
 
-const patch = {
-  ...current,
-  AUTH_SECRET: secret,
+const updates = {
+  AUTH_SECRET: existingSecret,
   AUTH_URL: APP_URL,
   AUTH_TRUST_HOST: "true",
   NEXTAUTH_URL: APP_URL,
   NEXT_PUBLIC_APP_URL: APP_URL,
 };
 
-console.log("Updating auth env vars:");
-console.log(`  AUTH_SECRET: ${current.AUTH_SECRET ? "kept existing" : "generated new"}`);
-console.log(`  AUTH_URL: ${APP_URL}`);
-console.log(`  AUTH_TRUST_HOST: true`);
-console.log(`  NEXTAUTH_URL: ${APP_URL}`);
+console.log("Updating auth env vars (single-key updates only):");
+for (const [k, v] of Object.entries(updates)) {
+  console.log(`  ${k}`);
+  await upsertEnvVar(service.id, k, v);
+}
 
-await setEnvVars(service.id, patch);
 await triggerDeploy(service.id);
 
 console.log("\nDeploy triggered. After ~2-5 min, verify:");
