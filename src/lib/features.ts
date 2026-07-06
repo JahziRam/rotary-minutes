@@ -39,10 +39,9 @@ export const DEFAULT_FEATURES: ClubFeatureSet = {
   memberLimit: null,
 };
 
-export const getClubFeatures = cache(async (clubId: string): Promise<ClubFeatureSet> => {
-  if (!prisma.clubFeatures) return DEFAULT_FEATURES;
-  const features = await prisma.clubFeatures.findUnique({ where: { clubId } });
-  if (!features) return DEFAULT_FEATURES;
+function mapClubFeatures(
+  features: NonNullable<Awaited<ReturnType<typeof prisma.clubFeatures.findUnique>>>
+): ClubFeatureSet {
   return {
     emailsEnabled: features.emailsEnabled,
     statisticsEnabled: features.statisticsEnabled,
@@ -57,16 +56,33 @@ export const getClubFeatures = cache(async (clubId: string): Promise<ClubFeature
     districtMenuVisible: features.districtMenuVisible,
     offlineMenuVisible: features.offlineMenuVisible,
     apiAccessEnabled: features.apiAccessEnabled,
-    duesEnabled: features.duesEnabled,
-    duesMenuVisible: features.duesMenuVisible,
+    duesEnabled: features.duesEnabled ?? DEFAULT_FEATURES.duesEnabled,
+    duesMenuVisible: features.duesMenuVisible ?? DEFAULT_FEATURES.duesMenuVisible,
     memberLimit: features.memberLimit,
   };
+}
+
+export const getClubFeatures = cache(async (clubId: string): Promise<ClubFeatureSet> => {
+  if (!prisma.clubFeatures) return DEFAULT_FEATURES;
+  try {
+    const features = await prisma.clubFeatures.findUnique({ where: { clubId } });
+    if (!features) return DEFAULT_FEATURES;
+    return mapClubFeatures(features);
+  } catch (e) {
+    console.error("[getClubFeatures] schema mismatch, using defaults:", e);
+    return DEFAULT_FEATURES;
+  }
 });
 
 export async function ensureClubFeatures(clubId: string) {
-  return prisma.clubFeatures.upsert({
-    where: { clubId },
-    update: {},
-    create: { clubId, ...DEFAULT_FEATURES },
-  });
+  try {
+    return await prisma.clubFeatures.upsert({
+      where: { clubId },
+      update: {},
+      create: { clubId, ...DEFAULT_FEATURES },
+    });
+  } catch (e) {
+    console.error("[ensureClubFeatures] upsert failed:", e);
+    return null;
+  }
 }

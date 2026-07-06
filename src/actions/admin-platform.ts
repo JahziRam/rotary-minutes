@@ -446,7 +446,8 @@ export async function updateClubFeatures(
   const user = await admin();
   if (!user) return { error: "UNAUTHORIZED" };
 
-  await ensureClubFeatures(clubId);
+  const ensured = await ensureClubFeatures(clubId);
+  if (!ensured) return { error: "FEATURES_SCHEMA_MISMATCH" };
   await prisma.clubFeatures.update({
     where: { clubId },
     data: features,

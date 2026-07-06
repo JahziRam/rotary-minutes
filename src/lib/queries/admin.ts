@@ -60,17 +60,27 @@ export async function getAdminStats() {
   };
 }
 
+const adminClubsInclude = {
+  subscription: true,
+  _count: {
+    select: { members: true, meetings: true, minutes: true, memberships: true },
+  },
+} as const;
+
 export async function getAdminClubs() {
-  return prisma.club.findMany({
-    orderBy: { createdAt: "desc" },
-    include: {
-      subscription: true,
-      features: true,
-      _count: {
-        select: { members: true, meetings: true, minutes: true, memberships: true },
-      },
-    },
-  });
+  try {
+    return await prisma.club.findMany({
+      orderBy: { createdAt: "desc" },
+      include: { ...adminClubsInclude, features: true },
+    });
+  } catch (e) {
+    console.error("[getAdminClubs] features query failed, falling back:", e);
+    const clubs = await prisma.club.findMany({
+      orderBy: { createdAt: "desc" },
+      include: adminClubsInclude,
+    });
+    return clubs.map((club) => ({ ...club, features: null }));
+  }
 }
 
 export async function getExpiringTrials() {
