@@ -1,6 +1,12 @@
 name: Deploy landing page (clubminutes.api.mg)
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "landing/**"
+      - "landing-worker/**"
+      - ".github/workflows/deploy-landing.yml"
   workflow_dispatch:
 
 jobs:
