@@ -11,7 +11,7 @@ import { createRenderApi } from "./render-env-api.mjs";
 
 const SERVICE_NAME = "rotary-minutes";
 const DB_NAME = "rotary-minutes-db";
-const REGION = "frankfurt";
+const REGION = "oregon";
 const HEALTH_URL = "https://clubminutes.api.mg/api/health?deep=1";
 
 const key = process.env.RENDER_API_KEY;

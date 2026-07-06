@@ -3,7 +3,7 @@
 databases:
   - name: rotary-minutes-db
     plan: free
-    region: frankfurt
+    region: oregon
     databaseName: rotary_minutes
     user: rotary_minutes
 
@@ -11,7 +11,7 @@ services:
   - type: web
     name: rotary-minutes
     runtime: node
-    region: frankfurt
+    region: oregon
     plan: free
     buildCommand: bash scripts/render-build.sh
     buildFilter:
