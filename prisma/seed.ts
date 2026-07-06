@@ -1,7 +1,7 @@
 import "dotenv/config";
 import bcrypt from "bcryptjs";
-import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
+import { createPgAdapter } from "../src/lib/pg-adapter";
 import { generateMinuteHash, getVerifyUrl } from "../src/lib/hash";
 import { ensureRoleConfigs } from "../src/lib/roles";
 import { ensureClubFeatures } from "../src/lib/features";
@@ -29,8 +29,7 @@ async function main() {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) throw new Error("DATABASE_URL is not set");
 
-  const adapter = new PrismaPg({ connectionString });
-  const prisma = new PrismaClient({ adapter });
+  const prisma = new PrismaClient({ adapter: createPgAdapter(connectionString) });
 
   const passwordHash = await bcrypt.hash(SUPER_ADMIN_PASSWORD, 12);
 
