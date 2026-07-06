@@ -19,7 +19,7 @@ import {
   nextInvoiceNumber,
   nextReceiptNumber,
 } from "@/lib/dues";
-import type { DuesPaymentPlan, DuesStatus } from "@/generated/prisma/client";
+import type { DuesPaymentPlan, DuesStatus, PaymentMethod } from "@/generated/prisma/client";
 
 function revalidateDues() {
   for (const loc of ["fr", "en"]) {
@@ -299,9 +299,23 @@ export async function bulkCreateDuesForYear(opts?: {
   return { success: true, created: toCreate.length };
 }
 
+const PAYMENT_METHODS: PaymentMethod[] = [
+  "CASH",
+  "CHECK",
+  "BANK_TRANSFER",
+  "STRIPE",
+  "MOBILE_MONEY",
+  "OTHER",
+];
+
 export async function markDuesPaid(
   duesId: string,
-  opts?: { notes?: string; method?: string; sendReceipt?: boolean },
+  opts?: {
+    notes?: string;
+    method?: string;
+    paymentMethod?: PaymentMethod;
+    sendReceipt?: boolean;
+  },
   locale = "fr"
 ) {
   const auth = await requireDuesManage();
@@ -318,9 +332,14 @@ export async function markDuesPaid(
   const receiptNumber =
     existing.receiptNumber ?? (await nextReceiptNumber(ctx.clubId, existing.fiscalYear));
   const paidAt = new Date();
+  const paymentMethod =
+    opts?.paymentMethod ??
+    (opts?.method && PAYMENT_METHODS.includes(opts.method as PaymentMethod)
+      ? (opts.method as PaymentMethod)
+      : undefined);
 
-  await prisma.$transaction([
-    prisma.memberDues.update({
+  const payment = await prisma.$transaction(async (tx) => {
+    await tx.memberDues.update({
       where: { id: duesId },
       data: {
         status: "PAID" as DuesStatus,
@@ -328,8 +347,8 @@ export async function markDuesPaid(
         receiptNumber,
         ...(opts?.notes !== undefined && { notes: opts.notes || null }),
       },
-    }),
-    prisma.duesPayment.create({
+    });
+    return tx.duesPayment.create({
       data: {
         clubId: ctx.clubId,
         memberId: existing.memberId,
@@ -337,13 +356,14 @@ export async function markDuesPaid(
         amount: existing.amount,
         currency: existing.currency,
         paidAt,
-        method: opts?.method || null,
+        method: paymentMethod ?? opts?.method ?? null,
+        paymentMethod: paymentMethod ?? null,
         receiptNumber,
         notes: opts?.notes || null,
         recordedById: ctx.userId,
       },
-    }),
-  ]);
+    });
+  });
 
   const club = await prisma.club.findUnique({
     where: { id: ctx.clubId },
@@ -363,12 +383,26 @@ export async function markDuesPaid(
       action: "DUES_MARKED_PAID",
       entity: "MemberDues",
       entityId: duesId,
-      metadata: { receiptNumber, method: opts?.method },
+      metadata: { receiptNumber, method: paymentMethod ?? opts?.method },
     },
   });
 
+  const { dispatchDuesPaidWebhook } = await import("@/lib/club-webhooks");
+  dispatchDuesPaidWebhook(ctx.clubId, {
+    duesId,
+    memberId: existing.memberId,
+    amount: Number(existing.amount),
+    currency: existing.currency,
+    paymentMethod: paymentMethod ?? opts?.method ?? null,
+    receiptNumber,
+    paidAt: paidAt.toISOString(),
+  });
+
+  const { syncDuesPayment } = await import("@/actions/treasury");
+  void syncDuesPayment(payment.id, ctx.clubId, ctx.userId);
+
   revalidateDues();
-  return { success: true, receiptNumber };
+  return { success: true, receiptNumber, paymentId: payment.id };
 }
 
 export async function updateDuesStatus(

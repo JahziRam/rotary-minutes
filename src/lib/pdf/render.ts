@@ -47,3 +47,23 @@ export async function renderDuesHistoryPdf(
   ]);
   return renderToBuffer(DuesHistoryPDFDocument({ data }));
 }
+
+export async function renderTreasuryReportPdf(
+  data: import("@/lib/pdf/treasury-report-pdf").TreasuryReportPDFData
+): Promise<Buffer> {
+  const [{ renderToBuffer }, { TreasuryReportPDFDocument }] = await Promise.all([
+    import("@react-pdf/renderer"),
+    import("@/lib/pdf/treasury-report-pdf"),
+  ]);
+  return renderToBuffer(TreasuryReportPDFDocument({ data }));
+}
+
+export async function renderAttendanceReportPdf(
+  data: import("@/lib/pdf/attendance-report-pdf").AttendanceReportPDFData
+): Promise<Buffer> {
+  const [{ renderToBuffer }, { AttendanceReportPDFDocument }] = await Promise.all([
+    import("@react-pdf/renderer"),
+    import("@/lib/pdf/attendance-report-pdf"),
+  ]);
+  return renderToBuffer(AttendanceReportPDFDocument({ data }));
+}

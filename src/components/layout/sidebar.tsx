@@ -17,6 +17,13 @@ import {
   Lock,
   CreditCard,
   LifeBuoy,
+  UserCircle,
+  ClipboardList,
+  PartyPopper,
+  FolderOpen,
+  Wallet,
+  CheckSquare,
+  CalendarDays,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { SignOutButton } from "@/components/auth/sign-out-button";
@@ -29,6 +36,13 @@ const navItems = [
   { key: "minutes", href: "/minutes", icon: FileText },
   { key: "emails", href: "/emails", icon: Mail },
   { key: "members", href: "/members", icon: Users },
+  { key: "treasury", href: "/treasury", icon: Wallet },
+  { key: "actions", href: "/actions", icon: CheckSquare },
+  { key: "calendar", href: "/calendar", icon: CalendarDays },
+  { key: "myAccount", href: "/my-account", icon: UserCircle },
+  { key: "attendanceReports", href: "/attendance-reports", icon: ClipboardList },
+  { key: "events", href: "/events", icon: PartyPopper },
+  { key: "documents", href: "/documents", icon: FolderOpen },
   { key: "statistics", href: "/statistics", icon: BarChart3 },
   { key: "district", href: "/district", icon: Map },
   { key: "settings", href: "/settings", icon: Settings },

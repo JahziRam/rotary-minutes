@@ -20,5 +20,31 @@
       "type": "image/svg+xml",
       "purpose": "maskable"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Calendrier",
+      "short_name": "Calendrier",
+      "url": "/fr/calendar",
+      "description": "Voir le calendrier du club"
+    },
+    {
+      "name": "Actions",
+      "short_name": "Actions",
+      "url": "/fr/actions",
+      "description": "Suivre les actions du club"
+    },
+    {
+      "name": "Mon compte",
+      "short_name": "Compte",
+      "url": "/fr/my-account",
+      "description": "Espace membre"
+    },
+    {
+      "name": "Cotisations",
+      "short_name": "Cotisations",
+      "url": "/fr/members/dues",
+      "description": "Suivi des cotisations"
+    }
   ]
 }

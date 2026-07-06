@@ -10,6 +10,8 @@ function signPayload(secret: string, body: string): string {
   return createHmac("sha256", secret).update(body).digest("hex");
 }
 
+export { CLUB_WEBHOOK_EVENTS } from "@/lib/webhook-events";
+
 export async function dispatchClubWebhook(
   clubId: string,
   event: WebhookEvent,
@@ -74,4 +76,58 @@ export async function dispatchClubWebhook(
       });
     })
   );
+}
+
+export function dispatchDuesPaidWebhook(
+  clubId: string,
+  payload: {
+    duesId: string;
+    memberId: string;
+    amount: number;
+    currency: string;
+    paymentMethod?: string | null;
+    receiptNumber?: string | null;
+    paidAt: string;
+  }
+): void {
+  void dispatchClubWebhook(clubId, "DUES_PAID", payload);
+}
+
+export function dispatchActionCompletedWebhook(
+  clubId: string,
+  payload: {
+    actionId: string;
+    title: string;
+    completedAt: string;
+    responsibleMemberId?: string | null;
+  }
+): void {
+  void dispatchClubWebhook(clubId, "ACTION_COMPLETED", payload);
+}
+
+export function dispatchEventCreatedWebhook(
+  clubId: string,
+  payload: {
+    eventId: string;
+    title: string;
+    startAt: string;
+    status: string;
+  }
+): void {
+  void dispatchClubWebhook(clubId, "EVENT_CREATED", payload);
+}
+
+export function dispatchBudgetEntryCreatedWebhook(
+  clubId: string,
+  payload: {
+    entryId: string;
+    type: string;
+    amount: number;
+    currency: string;
+    date: string;
+    description: string;
+    paymentMethod?: string | null;
+  }
+): void {
+  void dispatchClubWebhook(clubId, "BUDGET_ENTRY_CREATED", payload);
 }

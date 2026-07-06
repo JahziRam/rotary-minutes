@@ -10,6 +10,14 @@ const NAV_PERMISSIONS: Record<string, Permission | null> = {
   emails: "emails.send",
   members: "members.manage",
   dues: "dues.view",
+  treasury: "treasury.view",
+  actions: "actions.view",
+  calendar: "calendar.view",
+  myAccount: null,
+  attendanceReports: "attendance.view",
+  events: "events.view",
+  documents: "documents.view",
+  governance: "governance.view",
   statistics: "minutes.view",
   district: "minutes.view",
   settings: "settings.manage",
@@ -22,15 +30,30 @@ const NAV_FEATURES: Partial<
   statistics: { enabled: "statisticsEnabled", menuVisible: "statisticsMenuVisible" },
   district: { enabled: "districtDashboard", menuVisible: "districtMenuVisible" },
   dues: { enabled: "duesEnabled", menuVisible: "duesMenuVisible" },
+  treasury: { enabled: "treasuryEnabled", menuVisible: "treasuryMenuVisible" },
+  actions: { enabled: "actionsEnabled", menuVisible: "actionsMenuVisible" },
+  calendar: { enabled: "calendarEnabled", menuVisible: "calendarMenuVisible" },
+  myAccount: { enabled: "memberPortalEnabled", menuVisible: "memberPortalMenuVisible" },
+  attendanceReports: { enabled: "attendanceReportsEnabled", menuVisible: "attendanceReportsMenuVisible" },
+  events: { enabled: "eventsEnabled", menuVisible: "eventsMenuVisible" },
+  documents: { enabled: "documentsEnabled", menuVisible: "documentsMenuVisible" },
+  governance: { enabled: "governanceEnabled", menuVisible: "governanceMenuVisible" },
 };
 
-/** Routes directes → feature requise (garde-fou pages) */
 export const ROUTE_FEATURES: Record<string, keyof ClubFeatureSet> = {
   "/emails": "emailsEnabled",
   "/statistics": "statisticsEnabled",
   "/meetings": "liveMeetings",
   "/district": "districtDashboard",
   "/members/dues": "duesEnabled",
+  "/treasury": "treasuryEnabled",
+  "/actions": "actionsEnabled",
+  "/calendar": "calendarEnabled",
+  "/my-account": "memberPortalEnabled",
+  "/attendance-reports": "attendanceReportsEnabled",
+  "/events": "eventsEnabled",
+  "/documents": "documentsEnabled",
+  "/governance": "governanceEnabled",
 };
 
 export function shouldShowDistrictNav(
@@ -39,10 +62,7 @@ export function shouldShowDistrictNav(
   isSuperAdmin: boolean
 ): boolean {
   if (isSuperAdmin || hasDistrictAccess) return true;
-  return (
-    features.districtDashboard ||
-    features.districtMenuVisible
-  );
+  return features.districtDashboard || features.districtMenuVisible;
 }
 
 export function isDistrictNavLocked(
@@ -77,7 +97,6 @@ export function getHiddenNavKeys(
   return hidden;
 }
 
-/** Modules visibles dans le menu mais désactivés (incitation upgrade). */
 export function getLockedNavKeys(
   role: ClubRoleType,
   features: ClubFeatureSet,

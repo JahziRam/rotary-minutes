@@ -102,6 +102,88 @@ enum NotificationType {
   SYSTEM
   ANNOUNCEMENT
   DUES_REMINDER
+  BIRTHDAY_REMINDER
+  EVENT_REMINDER
+  GOVERNANCE_UPDATE
+}
+
+enum BudgetEntryType {
+  INCOME
+  EXPENSE
+}
+
+enum PaymentMethod {
+  CASH
+  CHECK
+  BANK_TRANSFER
+  STRIPE
+  MOBILE_MONEY
+  OTHER
+}
+
+enum ClubActionStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  DEFERRED
+}
+
+enum ClubActionPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum ClubEventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+  COMPLETED
+}
+
+enum EventRegistrationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  WAITLIST
+}
+
+enum DocumentCategory {
+  STATUTES
+  BUDGET
+  MANDATE
+  MINUTE
+  REPORT
+  TREASURY
+  OTHER
+}
+
+enum GovernanceRecordType {
+  MANDATE_START
+  MANDATE_END
+  COLLAR_TRANSFER
+  MINUTE_SUBMITTED
+  MINUTE_APPROVED
+  MINUTE_FINALIZED
+  OFFICER_CHANGE
+}
+
+enum NotificationFrequency {
+  IMMEDIATE
+  DAILY
+  WEEKLY
+  OFF
+}
+
+enum CalendarEventSource {
+  MEETING
+  EVENT
+  DUES
+  ACTION
+  BIRTHDAY
+  CUSTOM
 }
 
 enum DuesStatus {
@@ -240,6 +322,11 @@ model User {
   minutesApproved  Minute[] @relation("MinuteApprover")
   memberProfile    Member?
   duesPaymentsRecorded DuesPayment[]
+  budgetEntriesRecorded BudgetEntry[]
+  clubActionsCreated ClubAction[] @relation("ActionCreator")
+  clubDocumentsUploaded ClubDocument[]
+  governanceRecordsCreated GovernanceRecord[]
+  notificationPreferences NotificationPreference[]
   supportTickets   SupportTicket[]
   dataExportRequests DataExportRequest[]
   deletionRequests   DeletionRequest[]
@@ -300,6 +387,13 @@ model Club {
   webhooks        ClubWebhook[]
   memberDues      MemberDues[]
   duesPayments    DuesPayment[]
+  budgetCategories BudgetCategory[]
+  budgetEntries   BudgetEntry[]
+  clubActions     ClubAction[]
+  clubEvents      ClubEvent[]
+  clubDocuments   ClubDocument[]
+  governanceRecords GovernanceRecord[]
+  calendarNotes   ClubCalendarNote[]
 }
 
 model ClubMembership {
@@ -346,6 +440,8 @@ model Member {
   officerMandates OfficerMandate[]
   memberDues   MemberDues[]
   duesPayments DuesPayment[]
+  assignedActions ClubAction[] @relation("MemberAssignedActions")
+  eventRegistrations EventRegistration[]
 
   @@index([clubId])
 }
@@ -388,6 +484,7 @@ model DuesPayment {
   currency      String   @default("EUR")
   paidAt        DateTime @default(now())
   method        String?
+  paymentMethod PaymentMethod?
   reference     String?
   notes         String?
   receiptNumber String?
@@ -399,6 +496,7 @@ model DuesPayment {
   member     Member      @relation(fields: [memberId], references: [id], onDelete: Cascade)
   dues       MemberDues? @relation(fields: [duesId], references: [id], onDelete: SetNull)
   recordedBy User?       @relation(fields: [recordedById], references: [id], onDelete: SetNull)
+  budgetEntries BudgetEntry[]
 
   @@index([clubId, memberId])
   @@index([duesId])
@@ -487,6 +585,9 @@ model Minute {
   approvedBy      User?        @relation("MinuteApprover", fields: [approvedById], references: [id], onDelete: SetNull)
   agendaItems     AgendaItem[]
   versions        MinuteVersion[]
+  clubActions     ClubAction[]
+  clubDocuments   ClubDocument[]
+  governanceRecords GovernanceRecord[]
 
   @@index([clubId, status])
   @@index([clubId, createdAt])
@@ -508,6 +609,7 @@ model AgendaItem {
   remarks      String?          @db.Text
 
   minute       Minute           @relation(fields: [minuteId], references: [id], onDelete: Cascade)
+  clubActions  ClubAction[]
 
   @@index([minuteId])
 }
@@ -762,6 +864,26 @@ model ClubFeatures {
   apiAccessEnabled        Boolean  @default(false)
   duesEnabled             Boolean  @default(true)
   duesMenuVisible         Boolean  @default(true)
+  treasuryEnabled         Boolean  @default(true)
+  treasuryMenuVisible     Boolean  @default(true)
+  actionsEnabled          Boolean  @default(true)
+  actionsMenuVisible      Boolean  @default(true)
+  calendarEnabled         Boolean  @default(true)
+  calendarMenuVisible     Boolean  @default(true)
+  memberPortalEnabled     Boolean  @default(true)
+  memberPortalMenuVisible Boolean  @default(true)
+  attendanceReportsEnabled Boolean @default(true)
+  attendanceReportsMenuVisible Boolean @default(false)
+  eventsEnabled           Boolean  @default(true)
+  eventsMenuVisible       Boolean  @default(true)
+  documentsEnabled        Boolean  @default(true)
+  documentsMenuVisible    Boolean  @default(true)
+  governanceEnabled       Boolean  @default(true)
+  governanceMenuVisible   Boolean  @default(false)
+  smartNotificationsEnabled Boolean @default(true)
+  integrationsEnabled     Boolean  @default(false)
+  integrationsMenuVisible Boolean  @default(false)
+  pwaEnhancedEnabled      Boolean  @default(true)
   memberLimit             Int?
   updatedAt               DateTime @updatedAt
 
@@ -887,6 +1009,7 @@ model OfficerMandate {
 
   club       Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
   member     Member?  @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  governanceRecords GovernanceRecord[]
 
   @@index([clubId, startDate])
 }
@@ -1034,6 +1157,10 @@ enum WebhookEvent {
   MINUTE_FINALIZED
   MEETING_CREATED
   MEMBER_CREATED
+  DUES_PAID
+  ACTION_COMPLETED
+  EVENT_CREATED
+  BUDGET_ENTRY_CREATED
 }
 
 model ClubApiKey {
@@ -1085,4 +1212,207 @@ model WebhookDelivery {
   webhook     ClubWebhook   @relation(fields: [webhookId], references: [id], onDelete: Cascade)
 
   @@index([webhookId, createdAt])
+}
+
+// ─── Club Management Modules ─────────────────────────────────────────────────
+
+model BudgetCategory {
+  id        String           @id @default(cuid())
+  clubId    String
+  name      String
+  type      BudgetEntryType
+  isActive  Boolean          @default(true)
+  sortOrder Int              @default(0)
+  createdAt DateTime         @default(now())
+
+  club      Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  entries   BudgetEntry[]
+
+  @@index([clubId, type])
+}
+
+model BudgetEntry {
+  id            String           @id @default(cuid())
+  clubId        String
+  categoryId    String?
+  type          BudgetEntryType
+  amount        Decimal          @db.Decimal(10, 2)
+  currency      String           @default("EUR")
+  date          DateTime
+  description   String
+  eventId       String?
+  duesPaymentId String?
+  actionId      String?
+  paymentMethod PaymentMethod?
+  reference     String?
+  recordedById  String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  club          Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  category      BudgetCategory?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  event         ClubEvent?       @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  duesPayment   DuesPayment?     @relation(fields: [duesPaymentId], references: [id], onDelete: SetNull)
+  action        ClubAction?      @relation(fields: [actionId], references: [id], onDelete: SetNull)
+  recordedBy    User?            @relation(fields: [recordedById], references: [id], onDelete: SetNull)
+
+  @@index([clubId, date])
+  @@index([clubId, type])
+}
+
+model ClubAction {
+  id                 String             @id @default(cuid())
+  clubId             String
+  title              String
+  description        String?            @db.Text
+  responsibleMemberId String?
+  responsibleName    String?
+  dueDate            DateTime?
+  status             ClubActionStatus   @default(OPEN)
+  priority           ClubActionPriority @default(NORMAL)
+  minuteId           String?
+  agendaItemId       String?
+  lastRemindedAt     DateTime?
+  completedAt        DateTime?
+  createdById        String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  club               Club               @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  responsibleMember  Member?            @relation("MemberAssignedActions", fields: [responsibleMemberId], references: [id], onDelete: SetNull)
+  minute             Minute?            @relation(fields: [minuteId], references: [id], onDelete: SetNull)
+  agendaItem         AgendaItem?        @relation(fields: [agendaItemId], references: [id], onDelete: SetNull)
+  createdBy          User?              @relation("ActionCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  budgetEntries      BudgetEntry[]
+
+  @@index([clubId, status])
+  @@index([clubId, dueDate])
+  @@index([responsibleMemberId])
+}
+
+model ClubCalendarNote {
+  id          String              @id @default(cuid())
+  clubId      String
+  title       String
+  description String?
+  startAt     DateTime
+  endAt       DateTime?
+  source      CalendarEventSource @default(CUSTOM)
+  color       String?
+  createdAt   DateTime            @default(now())
+
+  club        Club                @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@index([clubId, startAt])
+}
+
+model ClubEvent {
+  id              String           @id @default(cuid())
+  clubId          String
+  title           String
+  description     String?          @db.Text
+  location        String?
+  startAt         DateTime
+  endAt           DateTime?
+  status          ClubEventStatus  @default(DRAFT)
+  maxAttendees    Int?
+  price           Decimal?         @db.Decimal(10, 2)
+  currency        String           @default("EUR")
+  requiresPayment Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  club            Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  registrations   EventRegistration[]
+  budgetEntries   BudgetEntry[]
+
+  @@index([clubId, startAt])
+  @@index([clubId, status])
+}
+
+model EventRegistration {
+  id            String                  @id @default(cuid())
+  eventId       String
+  memberId      String?
+  guestName     String?
+  email         String?
+  status        EventRegistrationStatus @default(PENDING)
+  paidAt        DateTime?
+  paymentMethod PaymentMethod?
+  amount        Decimal?                @db.Decimal(10, 2)
+  notes         String?
+  createdAt     DateTime                @default(now())
+
+  event         ClubEvent               @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  member        Member?                 @relation(fields: [memberId], references: [id], onDelete: SetNull)
+
+  @@index([eventId])
+  @@index([memberId])
+}
+
+model ClubDocument {
+  id           String           @id @default(cuid())
+  clubId       String
+  title        String
+  category     DocumentCategory @default(OTHER)
+  description  String?
+  fileUrl      String?
+  fileName     String?
+  mimeType     String?
+  minuteId     String?
+  isArchived   Boolean          @default(false)
+  tags         String[]
+  uploadedById String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  club         Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  minute       Minute?          @relation(fields: [minuteId], references: [id], onDelete: SetNull)
+  uploadedBy   User?            @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  @@index([clubId, category])
+  @@index([clubId, createdAt])
+}
+
+model GovernanceRecord {
+  id          String               @id @default(cuid())
+  clubId      String
+  type        GovernanceRecordType
+  title       String
+  description String?              @db.Text
+  holderName  String?
+  memberId    String?
+  minuteId    String?
+  mandateId   String?
+  effectiveAt DateTime
+  createdById String?
+  createdAt   DateTime             @default(now())
+
+  club        Club                 @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  minute      Minute?              @relation(fields: [minuteId], references: [id], onDelete: SetNull)
+  mandate     OfficerMandate?      @relation(fields: [mandateId], references: [id], onDelete: SetNull)
+  createdBy   User?                @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([clubId, effectiveAt])
+  @@index([clubId, type])
+}
+
+model NotificationPreference {
+  id                String                @id @default(cuid())
+  userId            String
+  clubId            String?
+  emailEnabled      Boolean               @default(true)
+  inAppEnabled      Boolean               @default(true)
+  meetingReminders  NotificationFrequency @default(IMMEDIATE)
+  duesReminders     NotificationFrequency @default(IMMEDIATE)
+  actionReminders   NotificationFrequency @default(IMMEDIATE)
+  birthdayReminders NotificationFrequency @default(WEEKLY)
+  eventReminders    NotificationFrequency @default(IMMEDIATE)
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+
+  user              User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, clubId])
+  @@index([userId])
 }

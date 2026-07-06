@@ -190,6 +190,9 @@ async function doFinalizeMinute(
     },
   });
 
+  const { syncFromMinuteWorkflow } = await import("@/actions/governance");
+  void syncFromMinuteWorkflow(minuteId, "finalize", ctx.userId);
+
   const clubEmail = minute.club.email;
   if (clubEmail) {
     const mail = minuteFinalizedEmail({
@@ -222,6 +225,12 @@ async function doFinalizeMinute(
     finalizedAt: now.toISOString(),
     meetingId: minute.meetingId,
   });
+
+  const { linkMinuteAsDocument } = await import("@/actions/documents");
+  void linkMinuteAsDocument(minuteId, ctx.clubId, ctx.userId, minute.title);
+
+  const { syncFromAgendaItems } = await import("@/actions/club-actions");
+  void syncFromAgendaItems(minuteId, ctx.clubId);
 
   revalidateMinutePaths(minuteId, locale);
   return { success: true as const, hash, verifyUrl };
@@ -260,6 +269,9 @@ export async function submitMinuteForReview(minuteId: string, locale: string) {
     },
   });
 
+  const { syncFromMinuteWorkflow } = await import("@/actions/governance");
+  void syncFromMinuteWorkflow(minuteId, "submit", ctx.userId);
+
   revalidateMinutePaths(minuteId, locale);
   return { success: true };
 }
@@ -274,6 +286,9 @@ export async function approveMinute(minuteId: string, locale: string) {
   });
   if (!minute) return { error: "NOT_FOUND" };
   if (minute.status !== "REVIEW") return { error: "INVALID_STATUS" };
+
+  const { syncFromMinuteWorkflow } = await import("@/actions/governance");
+  void syncFromMinuteWorkflow(minuteId, "approve", ctx.userId);
 
   return doFinalizeMinute(minuteId, ctx, locale, ctx.userId);
 }

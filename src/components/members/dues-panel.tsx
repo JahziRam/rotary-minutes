@@ -26,7 +26,16 @@ import {
   sendMemberDuesHistoryEmail,
   updateDuesStatus,
 } from "@/actions/dues";
-import type { DuesPaymentPlan, DuesStatus } from "@/generated/prisma/client";
+import type { DuesPaymentPlan, DuesStatus, PaymentMethod } from "@/generated/prisma/client";
+
+const PAYMENT_METHODS: PaymentMethod[] = [
+  "CASH",
+  "CHECK",
+  "BANK_TRANSFER",
+  "STRIPE",
+  "MOBILE_MONEY",
+  "OTHER",
+];
 
 type PeriodRow = {
   id: string;
@@ -82,6 +91,7 @@ export function DuesPanel({
   const [pending, startTransition] = useTransition();
   const [toast, setToast] = useState<string | null>(null);
   const [expandedMember, setExpandedMember] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("CASH");
   const dateLocale = locale === "fr" ? fr : enUS;
 
   function run<T extends { success?: boolean; error?: string; created?: number; message?: string }>(
@@ -133,16 +143,30 @@ export function DuesPanel({
             )}
           </div>
           {canManage && (
-            <Button
-              size="sm"
-              variant="gold"
-              disabled={pending}
-              onClick={() =>
-                run(() => bulkCreateDuesForYear({ fiscalYear }), t("bulkCreated", { count: 0 }))
-              }
-            >
-              {t("createForYear")}
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
+                className="h-8 rounded-lg border border-gray-200 px-2 text-xs"
+                title={t("paymentMethod")}
+              >
+                {PAYMENT_METHODS.map((m) => (
+                  <option key={m} value={m}>
+                    {t(`paymentMethods.${m}`)}
+                  </option>
+                ))}
+              </select>
+              <Button
+                size="sm"
+                variant="gold"
+                disabled={pending}
+                onClick={() =>
+                  run(() => bulkCreateDuesForYear({ fiscalYear }), t("bulkCreated", { count: 0 }))
+                }
+              >
+                {t("createForYear")}
+              </Button>
+            </div>
           )}
         </div>
 
@@ -262,7 +286,12 @@ export function DuesPanel({
                                   disabled={pending}
                                   onClick={() =>
                                     run(
-                                      () => markDuesPaid(displayPeriod.id, {}, locale),
+                                      () =>
+                                        markDuesPaid(
+                                          displayPeriod.id,
+                                          { paymentMethod },
+                                          locale
+                                        ),
                                       t("markedPaid")
                                     )
                                   }
@@ -365,7 +394,12 @@ export function DuesPanel({
                                         disabled={pending}
                                         onClick={() =>
                                           run(
-                                            () => markDuesPaid(period.id, {}, locale),
+                                            () =>
+                                              markDuesPaid(
+                                                period.id,
+                                                { paymentMethod },
+                                                locale
+                                              ),
                                             t("markedPaid")
                                           )
                                         }

@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   Home,
   Calendar,
+  CalendarDays,
   FileText,
   Mail,
   Users,
@@ -15,6 +16,12 @@ import {
   LifeBuoy,
   CreditCard,
   Menu,
+  Wallet,
+  CheckSquare,
+  UserCircle,
+  ClipboardList,
+  PartyPopper,
+  FolderOpen,
 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
@@ -29,6 +36,13 @@ const navItems = [
   { key: "minutes", href: "/minutes", icon: FileText },
   { key: "emails", href: "/emails", icon: Mail },
   { key: "members", href: "/members", icon: Users },
+  { key: "myAccount", href: "/my-account", icon: UserCircle },
+  { key: "attendanceReports", href: "/attendance-reports", icon: ClipboardList },
+  { key: "events", href: "/events", icon: PartyPopper },
+  { key: "documents", href: "/documents", icon: FolderOpen },
+  { key: "treasury", href: "/treasury", icon: Wallet },
+  { key: "actions", href: "/actions", icon: CheckSquare },
+  { key: "calendar", href: "/calendar", icon: CalendarDays },
   { key: "statistics", href: "/statistics", icon: BarChart3 },
   { key: "district", href: "/district", icon: Map },
   { key: "settings", href: "/settings", icon: Settings },

@@ -47,7 +47,9 @@ export async function upsertOfficerMandate(data: {
   if (data.id) {
     await prisma.officerMandate.update({ where: { id: data.id }, data: payload });
   } else {
-    await prisma.officerMandate.create({ data: payload });
+    const created = await prisma.officerMandate.create({ data: payload });
+    const { syncMandateRecord } = await import("@/actions/governance");
+    void syncMandateRecord(created.id, "start", ctx.userId);
   }
 
   for (const loc of ["fr", "en"]) {

@@ -1,0 +1,79 @@
+import { prisma } from "@/lib/prisma";
+import type { BudgetEntryType } from "@/generated/prisma/client";
+
+export type TreasuryFilters = {
+  eventId?: string;
+  type?: BudgetEntryType;
+  from?: Date;
+  to?: Date;
+};
+
+export async function getTreasuryEntries(clubId: string, filters?: TreasuryFilters) {
+  const where: {
+    clubId: string;
+    eventId?: string;
+    type?: BudgetEntryType;
+    date?: { gte?: Date; lte?: Date };
+  } = { clubId };
+
+  if (filters?.eventId) where.eventId = filters.eventId;
+  if (filters?.type) where.type = filters.type;
+  if (filters?.from || filters?.to) {
+    where.date = {};
+    if (filters.from) where.date.gte = filters.from;
+    if (filters.to) where.date.lte = filters.to;
+  }
+
+  return prisma.budgetEntry.findMany({
+    where,
+    orderBy: [{ date: "desc" }, { createdAt: "desc" }],
+    include: {
+      category: { select: { id: true, name: true, type: true } },
+      event: { select: { id: true, title: true } },
+      duesPayment: {
+        select: {
+          id: true,
+          receiptNumber: true,
+          member: { select: { firstName: true, lastName: true } },
+        },
+      },
+      action: { select: { id: true, title: true } },
+      recordedBy: { select: { firstName: true, lastName: true } },
+    },
+  });
+}
+
+export async function getTreasuryCategories(clubId: string) {
+  return prisma.budgetCategory.findMany({
+    where: { clubId, isActive: true },
+    orderBy: [{ type: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
+  });
+}
+
+export async function getTreasuryEvents(clubId: string) {
+  return prisma.clubEvent.findMany({
+    where: { clubId, status: { in: ["PUBLISHED", "COMPLETED"] } },
+    orderBy: { startAt: "desc" },
+    select: { id: true, title: true, startAt: true },
+    take: 50,
+  });
+}
+
+export async function getTreasurySummary(clubId: string, filters?: TreasuryFilters) {
+  const entries = await getTreasuryEntries(clubId, filters);
+  let income = 0;
+  let expense = 0;
+  for (const e of entries) {
+    const amt = Number(e.amount);
+    if (e.type === "INCOME") income += amt;
+    else expense += amt;
+  }
+  return { income, expense, balance: income - expense, count: entries.length };
+}
+
+export async function getTreasuryClubMeta(clubId: string) {
+  return prisma.club.findUnique({
+    where: { id: clubId },
+    select: { currency: true, name: true },
+  });
+}

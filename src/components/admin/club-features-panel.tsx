@@ -21,6 +21,17 @@ const FEATURE_MODULES: Array<{
   { enabled: "districtDashboard", menuVisible: "districtMenuVisible", label: "Tableau district", inNav: false },
   { enabled: "offlineMode", menuVisible: "offlineMenuVisible", label: "Mode hors-ligne", inNav: false },
   { enabled: "duesEnabled", menuVisible: "duesMenuVisible", label: "Cotisations", inNav: true },
+  { enabled: "treasuryEnabled", menuVisible: "treasuryMenuVisible", label: "Trésorerie", inNav: true },
+  { enabled: "actionsEnabled", menuVisible: "actionsMenuVisible", label: "Actions", inNav: true },
+  { enabled: "calendarEnabled", menuVisible: "calendarMenuVisible", label: "Calendrier", inNav: true },
+  { enabled: "memberPortalEnabled", menuVisible: "memberPortalMenuVisible", label: "Portail membre", inNav: true },
+  { enabled: "attendanceReportsEnabled", menuVisible: "attendanceReportsMenuVisible", label: "Rapports d'assiduité", inNav: true },
+  { enabled: "eventsEnabled", menuVisible: "eventsMenuVisible", label: "Événements", inNav: true },
+  { enabled: "documentsEnabled", menuVisible: "documentsMenuVisible", label: "Documents", inNav: true },
+  { enabled: "governanceEnabled", menuVisible: "governanceMenuVisible", label: "Gouvernance", inNav: true },
+  { enabled: "smartNotificationsEnabled", menuVisible: "smartNotificationsEnabled", label: "Notifications intelligentes", inNav: false },
+  { enabled: "integrationsEnabled", menuVisible: "integrationsMenuVisible", label: "Intégrations", inNav: true },
+  { enabled: "pwaEnhancedEnabled", menuVisible: "pwaEnhancedEnabled", label: "PWA avancée", inNav: false },
 ];
 
 const API_ACCESS_KEY = "apiAccessEnabled" as const;
@@ -57,6 +68,7 @@ export function ClubFeaturesPanel({
       <div className="space-y-3">
         {FEATURE_MODULES.map(({ enabled, menuVisible, label, inNav }) => {
           const isEnabled = !!state[enabled];
+          const hasMenuToggle = menuVisible !== enabled;
           return (
             <div
               key={enabled}
@@ -71,7 +83,7 @@ export function ClubFeaturesPanel({
                     setState((s) => ({
                       ...s,
                       [enabled]: e.target.checked,
-                      ...(e.target.checked ? { [menuVisible]: false } : {}),
+                      ...(e.target.checked && hasMenuToggle ? { [menuVisible]: false } : {}),
                     }))
                   }
                   className="rounded border-gray-300"
@@ -81,7 +93,7 @@ export function ClubFeaturesPanel({
                   {isEnabled ? "Activé" : "Désactivé"}
                 </span>
               </label>
-              {!isEnabled && (
+              {!isEnabled && hasMenuToggle && (
                 <label className="flex items-center gap-2 text-xs text-gray-600 pl-6">
                   <input
                     type="checkbox"

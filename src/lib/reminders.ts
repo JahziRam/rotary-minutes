@@ -19,6 +19,7 @@ import {
 } from "@/lib/email-system-templates";
 
 import type { NotificationType } from "@/generated/prisma/client";
+import { createInAppReminder, shouldDispatchReminder } from "@/lib/smart-reminders";
 
 const MEETING_REMINDER_DAYS = [7, 3, 1] as const;
 const PV_REMINDER_DAYS_AGO = [1, 2, 3] as const;
@@ -71,21 +72,15 @@ async function notifyUser(opts: {
   message: string;
   link: string;
 }): Promise<"created" | "skipped"> {
-  if (await wasRecentlyNotified(opts.userId, opts.type, opts.link)) {
-    return "skipped";
-  }
-
-  await prisma.notification.create({
-    data: {
-      userId: opts.userId,
-      clubId: opts.clubId,
-      type: opts.type,
-      title: opts.title,
-      message: opts.message,
-      link: opts.link,
-    },
+  return createInAppReminder({
+    userId: opts.userId,
+    clubId: opts.clubId,
+    category: "meetingReminders",
+    type: opts.type,
+    title: opts.title,
+    message: opts.message,
+    link: opts.link,
   });
-  return "created";
 }
 
 export async function processMeetingReminders(): Promise<ReminderRunResult> {
@@ -157,7 +152,14 @@ export async function processMeetingReminders(): Promise<ReminderRunResult> {
       }
       notifications++;
 
-      if (emailOn && membership.user.email) {
+      const emailAllowed = await shouldDispatchReminder({
+        userId: membership.userId,
+        clubId: meeting.clubId,
+        category: "meetingReminders",
+        channel: "email",
+      });
+
+      if (emailOn && emailAllowed && membership.user.email) {
         const emailLogo = resolveLogoForEmail(
           meeting.club.id,
           meeting.club.logoUrl,

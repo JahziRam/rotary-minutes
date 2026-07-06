@@ -17,6 +17,26 @@ export interface ClubFeatureSet {
   apiAccessEnabled: boolean;
   duesEnabled: boolean;
   duesMenuVisible: boolean;
+  treasuryEnabled: boolean;
+  treasuryMenuVisible: boolean;
+  actionsEnabled: boolean;
+  actionsMenuVisible: boolean;
+  calendarEnabled: boolean;
+  calendarMenuVisible: boolean;
+  memberPortalEnabled: boolean;
+  memberPortalMenuVisible: boolean;
+  attendanceReportsEnabled: boolean;
+  attendanceReportsMenuVisible: boolean;
+  eventsEnabled: boolean;
+  eventsMenuVisible: boolean;
+  documentsEnabled: boolean;
+  documentsMenuVisible: boolean;
+  governanceEnabled: boolean;
+  governanceMenuVisible: boolean;
+  smartNotificationsEnabled: boolean;
+  integrationsEnabled: boolean;
+  integrationsMenuVisible: boolean;
+  pwaEnhancedEnabled: boolean;
   memberLimit: number | null;
 }
 
@@ -36,12 +56,33 @@ export const DEFAULT_FEATURES: ClubFeatureSet = {
   apiAccessEnabled: false,
   duesEnabled: true,
   duesMenuVisible: true,
+  treasuryEnabled: true,
+  treasuryMenuVisible: true,
+  actionsEnabled: true,
+  actionsMenuVisible: true,
+  calendarEnabled: true,
+  calendarMenuVisible: true,
+  memberPortalEnabled: true,
+  memberPortalMenuVisible: true,
+  attendanceReportsEnabled: true,
+  attendanceReportsMenuVisible: false,
+  eventsEnabled: true,
+  eventsMenuVisible: true,
+  documentsEnabled: true,
+  documentsMenuVisible: true,
+  governanceEnabled: true,
+  governanceMenuVisible: false,
+  smartNotificationsEnabled: true,
+  integrationsEnabled: false,
+  integrationsMenuVisible: false,
+  pwaEnhancedEnabled: true,
   memberLimit: null,
 };
 
 function mapClubFeatures(
   features: NonNullable<Awaited<ReturnType<typeof prisma.clubFeatures.findUnique>>>
 ): ClubFeatureSet {
+  const d = DEFAULT_FEATURES;
   return {
     emailsEnabled: features.emailsEnabled,
     statisticsEnabled: features.statisticsEnabled,
@@ -56,8 +97,28 @@ function mapClubFeatures(
     districtMenuVisible: features.districtMenuVisible,
     offlineMenuVisible: features.offlineMenuVisible,
     apiAccessEnabled: features.apiAccessEnabled,
-    duesEnabled: features.duesEnabled ?? DEFAULT_FEATURES.duesEnabled,
-    duesMenuVisible: features.duesMenuVisible ?? DEFAULT_FEATURES.duesMenuVisible,
+    duesEnabled: features.duesEnabled ?? d.duesEnabled,
+    duesMenuVisible: features.duesMenuVisible ?? d.duesMenuVisible,
+    treasuryEnabled: features.treasuryEnabled ?? d.treasuryEnabled,
+    treasuryMenuVisible: features.treasuryMenuVisible ?? d.treasuryMenuVisible,
+    actionsEnabled: features.actionsEnabled ?? d.actionsEnabled,
+    actionsMenuVisible: features.actionsMenuVisible ?? d.actionsMenuVisible,
+    calendarEnabled: features.calendarEnabled ?? d.calendarEnabled,
+    calendarMenuVisible: features.calendarMenuVisible ?? d.calendarMenuVisible,
+    memberPortalEnabled: features.memberPortalEnabled ?? d.memberPortalEnabled,
+    memberPortalMenuVisible: features.memberPortalMenuVisible ?? d.memberPortalMenuVisible,
+    attendanceReportsEnabled: features.attendanceReportsEnabled ?? d.attendanceReportsEnabled,
+    attendanceReportsMenuVisible: features.attendanceReportsMenuVisible ?? d.attendanceReportsMenuVisible,
+    eventsEnabled: features.eventsEnabled ?? d.eventsEnabled,
+    eventsMenuVisible: features.eventsMenuVisible ?? d.eventsMenuVisible,
+    documentsEnabled: features.documentsEnabled ?? d.documentsEnabled,
+    documentsMenuVisible: features.documentsMenuVisible ?? d.documentsMenuVisible,
+    governanceEnabled: features.governanceEnabled ?? d.governanceEnabled,
+    governanceMenuVisible: features.governanceMenuVisible ?? d.governanceMenuVisible,
+    smartNotificationsEnabled: features.smartNotificationsEnabled ?? d.smartNotificationsEnabled,
+    integrationsEnabled: features.integrationsEnabled ?? d.integrationsEnabled,
+    integrationsMenuVisible: features.integrationsMenuVisible ?? d.integrationsMenuVisible,
+    pwaEnhancedEnabled: features.pwaEnhancedEnabled ?? d.pwaEnhancedEnabled,
     memberLimit: features.memberLimit,
   };
 }

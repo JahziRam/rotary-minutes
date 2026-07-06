@@ -5,6 +5,7 @@ import type { HeaderNotification } from "./header";
 import { TrialBanner } from "@/components/subscription/trial-banner";
 import { OfflineIndicator } from "./offline-indicator";
 import { NotificationSound } from "@/components/notifications/notification-sound";
+import { PwaInstallPrompt } from "@/components/pwa/pwa-install-prompt";
 
 export function AppShell({
   children,
@@ -20,6 +21,7 @@ export function AppShell({
   subscriptionPlan,
   trialEndsAt = null,
   shellLocale = "fr",
+  pwaEnhanced = true,
 }: {
   children: React.ReactNode;
   title: string;
@@ -34,6 +36,7 @@ export function AppShell({
   subscriptionPlan?: string;
   trialEndsAt?: Date | string | null;
   shellLocale?: string;
+  pwaEnhanced?: boolean;
 }) {
   return (
     <div className="min-h-screen bg-gray-50">
@@ -70,6 +73,7 @@ export function AppShell({
       </div>
       <MobileNav />
       <OfflineIndicator />
+      {pwaEnhanced && <PwaInstallPrompt />}
     </div>
   );
 }

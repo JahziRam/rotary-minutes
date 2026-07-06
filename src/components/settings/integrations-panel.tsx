@@ -12,6 +12,12 @@ import {
   deleteWebhook,
   testWebhook,
 } from "@/actions/integrations";
+import {
+  exportTreasuryCsv,
+  exportTreasuryOfx,
+  syncEmailContacts,
+} from "@/actions/accounting-export";
+import { CLUB_WEBHOOK_EVENTS } from "@/lib/webhook-events";
 import type { ApiKeyScope, WebhookEvent } from "@/generated/prisma/client";
 
 type ApiKeyView = {
@@ -40,11 +46,7 @@ const ALL_SCOPES: ApiKeyScope[] = [
   "READ_MEMBERS",
 ];
 
-const ALL_EVENTS: WebhookEvent[] = [
-  "MINUTE_FINALIZED",
-  "MEETING_CREATED",
-  "MEMBER_CREATED",
-];
+const ALL_EVENTS: WebhookEvent[] = CLUB_WEBHOOK_EVENTS;
 
 export function IntegrationsPanel({
   apiKeys,
@@ -236,6 +238,76 @@ export function IntegrationsPanel({
           </Button>
         </div>
       )}
+
+      <section className="space-y-4">
+        <h3 className="font-semibold text-gray-900">{t("accounting.title")}</h3>
+        <p className="text-sm text-gray-600">{t("accounting.description")}</p>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={pending}
+            onClick={() =>
+              startTransition(async () => {
+                const result = await exportTreasuryCsv({ locale });
+                if ("content" in result && result.content) {
+                  const blob = new Blob([result.content], { type: result.mimeType });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = result.filename;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  setToast(t("accounting.csvDownloaded"));
+                }
+              })
+            }
+          >
+            {t("accounting.exportCsv")}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={pending}
+            onClick={() =>
+              startTransition(async () => {
+                const result = await exportTreasuryOfx();
+                if ("content" in result && result.content) {
+                  const blob = new Blob([result.content], { type: result.mimeType });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = result.filename;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  setToast(t("accounting.ofxDownloaded"));
+                }
+              })
+            }
+          >
+            {t("accounting.exportOfx")}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={pending}
+            onClick={() =>
+              startTransition(async () => {
+                const result = await syncEmailContacts();
+                if ("synced" in result) {
+                  setToast(t("accounting.contactsSynced", { count: result.synced }));
+                }
+              })
+            }
+          >
+            {t("accounting.syncContacts")}
+          </Button>
+        </div>
+        <p className="text-xs text-gray-500">{t("accounting.paymentMethodsHint")}</p>
+      </section>
 
       <section className="space-y-4">
         <h3 className="font-semibold text-gray-900">{t("webhooks.title")}</h3>

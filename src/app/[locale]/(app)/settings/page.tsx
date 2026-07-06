@@ -11,6 +11,8 @@ import { PrivacyPanel } from "@/components/settings/privacy-panel";
 import { AuditExportButton } from "@/components/settings/audit-export-button";
 import { getGdprRequests } from "@/actions/gdpr";
 import { clubHasApiAccess } from "@/lib/api-auth";
+import { getPreferences } from "@/actions/notification-preferences";
+import { NotificationPreferencesForm } from "@/components/settings/notification-preferences-form";
 
 export default async function SettingsPage({
   params,
@@ -37,6 +39,10 @@ export default async function SettingsPage({
       : false;
   const duesEnabled =
     club && isFeatureEnabled(ctx!.features, "duesEnabled", ctx!.isSuperAdmin);
+  const smartNotificationsEnabled =
+    club &&
+    isFeatureEnabled(ctx!.features, "smartNotificationsEnabled", ctx!.isSuperAdmin);
+  const prefsResult = smartNotificationsEnabled ? await getPreferences() : null;
 
   return (
     <AppShellServer title={t("settings.title")}>
@@ -104,6 +110,16 @@ export default async function SettingsPage({
                       {t("integrations.manage")}
                     </Link>
                   </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {smartNotificationsEnabled && prefsResult && "preferences" in prefsResult && prefsResult.preferences && (
+              <Card>
+                <CardHeader><CardTitle>{t("notificationPreferences.title")}</CardTitle></CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-500 mb-4">{t("notificationPreferences.description")}</p>
+                  <NotificationPreferencesForm preferences={prefsResult.preferences} />
                 </CardContent>
               </Card>
             )}

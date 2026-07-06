@@ -5,6 +5,7 @@ import { useLocale } from "next-intl";
 import { QrCode, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ensureMeetingCheckInToken } from "@/actions/check-in";
+import { OfflineCheckinCache } from "@/components/pwa/offline-checkin-cache";
 
 export function AttendanceQrPanel({ meetingId }: { meetingId: string }) {
   const locale = useLocale();
@@ -38,6 +39,11 @@ export function AttendanceQrPanel({ meetingId }: { meetingId: string }) {
           ? "Les membres scannent ce code pour s'enregistrer présents."
           : "Members scan this code to check in as present."}
       </p>
+      <p className="text-[10px] text-amber-700 bg-amber-50 rounded px-2 py-1">
+        {isFr
+          ? "Astuce PWA : ce QR reste affichable hors ligne si la page a été visitée récemment."
+          : "PWA tip: this QR stays available offline if the page was visited recently."}
+      </p>
       {pending && !qrDataUrl ? (
         <p className="text-sm text-gray-400">…</p>
       ) : qrDataUrl ? (
@@ -56,6 +62,7 @@ export function AttendanceQrPanel({ meetingId }: { meetingId: string }) {
           )}
         </div>
       ) : null}
+      <OfflineCheckinCache meetingId={meetingId} />
     </div>
   );
 }

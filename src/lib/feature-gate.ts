@@ -9,6 +9,17 @@ export type GatedFeature = keyof Pick<
   | "offlineMode"
   | "liveMeetings"
   | "duesEnabled"
+  | "treasuryEnabled"
+  | "actionsEnabled"
+  | "calendarEnabled"
+  | "memberPortalEnabled"
+  | "attendanceReportsEnabled"
+  | "eventsEnabled"
+  | "documentsEnabled"
+  | "governanceEnabled"
+  | "smartNotificationsEnabled"
+  | "integrationsEnabled"
+  | "pwaEnhancedEnabled"
 >;
 
 export const GATED_FEATURE_KEYS: GatedFeature[] = [
@@ -19,6 +30,17 @@ export const GATED_FEATURE_KEYS: GatedFeature[] = [
   "districtDashboard",
   "offlineMode",
   "duesEnabled",
+  "treasuryEnabled",
+  "actionsEnabled",
+  "calendarEnabled",
+  "memberPortalEnabled",
+  "attendanceReportsEnabled",
+  "eventsEnabled",
+  "documentsEnabled",
+  "governanceEnabled",
+  "smartNotificationsEnabled",
+  "integrationsEnabled",
+  "pwaEnhancedEnabled",
 ];
 
 export function isFeatureEnabled(
@@ -38,9 +60,17 @@ const FEATURE_MENU_VISIBLE: Partial<Record<GatedFeature, keyof ClubFeatureSet>> 
   districtDashboard: "districtMenuVisible",
   offlineMode: "offlineMenuVisible",
   duesEnabled: "duesMenuVisible",
+  treasuryEnabled: "treasuryMenuVisible",
+  actionsEnabled: "actionsMenuVisible",
+  calendarEnabled: "calendarMenuVisible",
+  memberPortalEnabled: "memberPortalMenuVisible",
+  attendanceReportsEnabled: "attendanceReportsMenuVisible",
+  eventsEnabled: "eventsMenuVisible",
+  documentsEnabled: "documentsMenuVisible",
+  governanceEnabled: "governanceMenuVisible",
+  integrationsEnabled: "integrationsMenuVisible",
 };
 
-/** Afficher un module désactivé dans l'UI (menu, boutons) si le super admin l'a autorisé. */
 export function isFeatureVisibleInUi(
   features: ClubFeatureSet,
   feature: GatedFeature,

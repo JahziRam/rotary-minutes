@@ -10,6 +10,10 @@ import { sendEmail, duesInvoiceEmail } from "@/lib/email";
 import { buildDuesInvoicePdfBuffer } from "@/lib/pdf/build-dues-pdf";
 import { nextInvoiceNumber } from "@/lib/dues";
 import { getClubFeatures } from "@/lib/features";
+import {
+  createInAppReminder,
+  shouldDispatchReminder,
+} from "@/lib/smart-reminders";
 
 import { format } from "date-fns";
 import { enUS, fr } from "date-fns/locale";
@@ -65,7 +69,17 @@ export async function GET(request: Request) {
     const locale = dues.club.language === "EN" ? "en" : "fr";
     const dateLocale = locale === "fr" ? fr : enUS;
 
-    if (dues.member.email) {
+    const emailAllowed = dues.member.userId
+      ? await shouldDispatchReminder({
+          userId: dues.member.userId,
+          clubId: dues.clubId,
+          category: "duesReminders",
+          channel: "email",
+          lastSentAt: dues.lastRemindedAt,
+        })
+      : true;
+
+    if (dues.member.email && emailAllowed) {
       let invoiceNumber = dues.invoiceNumber;
       if (!invoiceNumber) {
         invoiceNumber = await nextInvoiceNumber(dues.clubId, dues.fiscalYear);
@@ -135,17 +149,17 @@ export async function GET(request: Request) {
             ? `Your ${dues.fiscalYear}-${dues.fiscalYear + 1} dues are overdue.`
             : `Your ${dues.fiscalYear}-${dues.fiscalYear + 1} dues are due on ${dues.dueDate.toLocaleDateString("en-US")}.`;
 
-      await prisma.notification.create({
-        data: {
-          userId: dues.member.userId,
-          clubId: dues.clubId,
-          type: "DUES_REMINDER",
-          title,
-          message,
-          link: `/${locale}/members/dues`,
-        },
+      const result = await createInAppReminder({
+        userId: dues.member.userId,
+        clubId: dues.clubId,
+        category: "duesReminders",
+        type: "DUES_REMINDER",
+        title,
+        message,
+        link: `/${locale}/members/dues`,
+        lastSentAt: dues.lastRemindedAt,
       });
-      notificationsCreated++;
+      if (result === "created") notificationsCreated++;
     }
 
     await prisma.memberDues.update({

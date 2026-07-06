@@ -66,6 +66,7 @@ export async function AppShellServer({
       subscriptionPlan={subscriptionPlan}
       trialEndsAt={showTrialBanner ? subscription!.trialEndsAt! : null}
       shellLocale={shellLocale}
+      pwaEnhanced={features.pwaEnhancedEnabled || isSuperAdmin}
     >
       {children}
     </AppShell>

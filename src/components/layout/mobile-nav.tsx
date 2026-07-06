@@ -3,14 +3,31 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLocale } from "next-intl";
-import { Home, Calendar, FileText, Users, Settings } from "lucide-react";
+import {
+  Home,
+  Calendar,
+  FileText,
+  Users,
+  Settings,
+  Wallet,
+  CheckSquare,
+  CalendarDays,
+  UserCircle,
+  PartyPopper,
+  FolderOpen,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
 const items = [
   { key: "dashboard", href: "/dashboard", icon: Home },
   { key: "meetings", href: "/meetings", icon: Calendar },
-  { key: "minutes", href: "/minutes", icon: FileText },
+  { key: "myAccount", href: "/my-account", icon: UserCircle },
+  { key: "events", href: "/events", icon: PartyPopper },
+  { key: "documents", href: "/documents", icon: FolderOpen },
+  { key: "treasury", href: "/treasury", icon: Wallet },
+  { key: "actions", href: "/actions", icon: CheckSquare },
+  { key: "calendar", href: "/calendar", icon: CalendarDays },
   { key: "members", href: "/members", icon: Users },
   { key: "settings", href: "/settings", icon: Settings },
 ] as const;
