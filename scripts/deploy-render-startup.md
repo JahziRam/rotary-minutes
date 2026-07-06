@@ -12,7 +12,17 @@ Oracle bloque souvent les inscriptions (Madagascar, carte bancaire, vérificatio
    - Autoriser l'accès au repo `JahziRam/rotary-minutes` (privé)
    - Si le repo n'apparaît pas : https://github.com/apps/render/installations/new → **Repository access** → inclure `rotary-minutes`
 
-## 2. Déployer via Blueprint
+## 2. Clé API (pour déploiement automatique par l'agent)
+
+1. https://dashboard.render.com/u/settings#api-keys → **Create API Key**
+2. Coller la clé dans le terminal :
+   ```powershell
+   $env:RENDER_API_KEY = "rnd_..."
+   cd C:\Users\jahaz\Documents\GitHub\rotary-minutes
+   node scripts/setup-render.mjs
+   ```
+
+## 3. Déployer via Blueprint (manuel)
 
 1. Dashboard → **New +** → **Blueprint**
 2. Sélectionner le repo `rotary-minutes`
