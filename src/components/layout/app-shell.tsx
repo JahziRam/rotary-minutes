@@ -4,6 +4,7 @@ import { AppMobileShell } from "./app-mobile-shell";
 import type { HeaderNotification } from "./header";
 import { TrialBanner } from "@/components/subscription/trial-banner";
 import { OfflineIndicator } from "./offline-indicator";
+import { NotificationSound } from "@/components/notifications/notification-sound";
 
 export function AppShell({
   children,
@@ -36,6 +37,7 @@ export function AppShell({
 }) {
   return (
     <div className="min-h-screen bg-gray-50">
+      <NotificationSound notificationCount={notificationCount} />
       <Sidebar
         clubName={clubName}
         isSuperAdmin={isSuperAdmin}

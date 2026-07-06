@@ -15,5 +15,8 @@ fi
 echo ">>> Prisma generate..."
 npx prisma generate
 
+echo ">>> Prisma db push (schema sync)..."
+npx prisma db push
+
 echo ">>> Building Next.js..."
 NEXT_TELEMETRY_DISABLED=1 npm run build

@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getResend, getEmailFrom } from "@/lib/platform-integrations";
-import { wrapBrandedEmail } from "@/lib/email-branding";
+import { prepareBrandedEmail } from "@/lib/email-branding";
 
 export interface SendEmailOptions {
   to: string | string[];
@@ -10,7 +10,7 @@ export interface SendEmailOptions {
   cc?: string | string[];
   bcc?: string | string[];
   replyTo?: string;
-  attachments?: Array<{ filename: string; content: Buffer | string }>;
+  attachments?: Array<{ filename: string; content: Buffer | string; cid?: string }>;
 }
 
 export async function isEmailEnabled(): Promise<boolean> {
@@ -47,6 +47,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<{ ok: boolea
       attachments: options.attachments?.map((a) => ({
         filename: a.filename,
         content: typeof a.content === "string" ? Buffer.from(a.content) : a.content,
+        ...(a.cid ? { content_id: a.cid } : {}),
       })),
     });
     if (error) return { ok: false, error: error.message };
@@ -59,6 +60,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<{ ok: boolea
 
 export function trialReminderEmail(opts: {
   clubName: string;
+  clubId?: string;
   daysLeft: number;
   locale: string;
   upgradeUrl: string;
@@ -69,32 +71,46 @@ export function trialReminderEmail(opts: {
     ? `Votre essai Rotary Minutes expire dans ${opts.daysLeft} jour${opts.daysLeft > 1 ? "s" : ""}`
     : `Your Rotary Minutes trial expires in ${opts.daysLeft} day${opts.daysLeft > 1 ? "s" : ""}`;
   const body = isFr
-    ? `<p>Bonjour,</p><p>L'essai gratuit de <strong>${opts.clubName}</strong> sur Rotary Minutes expire dans <strong>${opts.daysLeft} jour(s)</strong>.</p><p><a href="${opts.upgradeUrl}">Choisir une offre</a> pour continuer à rédiger vos procès-verbaux sans interruption.</p>`
-    : `<p>Hello,</p><p>The free trial for <strong>${opts.clubName}</strong> on Rotary Minutes expires in <strong>${opts.daysLeft} day(s)</strong>.</p><p><a href="${opts.upgradeUrl}">Choose a plan</a> to keep writing your minutes without interruption.</p>`;
+    ? `<p>Bonjour,</p><p>L'essai gratuit de <strong>${opts.clubName}</strong> sur Rotary Minutes expire dans <strong>${opts.daysLeft} jour(s)</strong>.</p><p><a class="cta-button" href="${opts.upgradeUrl}">Choisir une offre</a></p><p style="font-size:14px;color:#64748b">Continuez à rédiger vos procès-verbaux sans interruption.</p>`
+    : `<p>Hello,</p><p>The free trial for <strong>${opts.clubName}</strong> on Rotary Minutes expires in <strong>${opts.daysLeft} day(s)</strong>.</p><p><a class="cta-button" href="${opts.upgradeUrl}">Choose a plan</a></p><p style="font-size:14px;color:#64748b">Keep writing your minutes without interruption.</p>`;
+  const branded = prepareBrandedEmail(body, {
+    clubName: opts.clubName,
+    clubId: opts.clubId,
+    logoUrl: opts.logoUrl,
+  });
   return {
     subject,
-    html: wrapBrandedEmail(body, { clubName: opts.clubName, logoUrl: opts.logoUrl }),
+    html: branded.html,
+    attachments: branded.attachments,
   };
 }
 
 export function welcomeClubEmail(opts: {
   clubName: string;
+  clubId?: string;
   locale: string;
   dashboardUrl: string;
   logoUrl?: string;
 }) {
   const isFr = opts.locale === "fr";
   const body = isFr
-    ? `<p>Félicitations ! <strong>${opts.clubName}</strong> est prêt sur Rotary Minutes.</p><p><a href="${opts.dashboardUrl}">Accéder au tableau de bord</a></p>`
-    : `<p>Congratulations! <strong>${opts.clubName}</strong> is ready on Rotary Minutes.</p><p><a href="${opts.dashboardUrl}">Go to dashboard</a></p>`;
+    ? `<p>Félicitations ! <strong>${opts.clubName}</strong> est prêt sur Rotary Minutes.</p><p><a class="cta-button" href="${opts.dashboardUrl}">Accéder au tableau de bord</a></p>`
+    : `<p>Congratulations! <strong>${opts.clubName}</strong> is ready on Rotary Minutes.</p><p><a class="cta-button" href="${opts.dashboardUrl}">Go to dashboard</a></p>`;
+  const branded = prepareBrandedEmail(body, {
+    clubName: opts.clubName,
+    clubId: opts.clubId,
+    logoUrl: opts.logoUrl,
+  });
   return {
     subject: isFr ? `Bienvenue sur Rotary Minutes — ${opts.clubName}` : `Welcome to Rotary Minutes — ${opts.clubName}`,
-    html: wrapBrandedEmail(body, { clubName: opts.clubName, logoUrl: opts.logoUrl }),
+    html: branded.html,
+    attachments: branded.attachments,
   };
 }
 
 export function minuteFinalizedEmail(opts: {
   clubName: string;
+  clubId?: string;
   minuteTitle: string;
   verifyUrl: string;
   locale: string;
@@ -102,12 +118,18 @@ export function minuteFinalizedEmail(opts: {
 }) {
   const isFr = opts.locale === "fr";
   const body = isFr
-    ? `<p>Le procès-verbal <strong>${opts.minuteTitle}</strong> de ${opts.clubName} est disponible.</p><p>Le PDF officiel est joint à cet email.</p><p><a href="${opts.verifyUrl}">Vérifier l'authenticité en ligne</a></p>`
-    : `<p>The minutes <strong>${opts.minuteTitle}</strong> for ${opts.clubName} are available.</p><p>The official PDF is attached to this email.</p><p><a href="${opts.verifyUrl}">Verify authenticity online</a></p>`;
+    ? `<p>Le procès-verbal <strong>${opts.minuteTitle}</strong> de ${opts.clubName} est disponible.</p><p>Le PDF officiel est joint à cet email.</p><p><a class="cta-button" href="${opts.verifyUrl}">Vérifier l'authenticité en ligne</a></p>`
+    : `<p>The minutes <strong>${opts.minuteTitle}</strong> for ${opts.clubName} are available.</p><p>The official PDF is attached to this email.</p><p><a class="cta-button" href="${opts.verifyUrl}">Verify authenticity online</a></p>`;
+  const branded = prepareBrandedEmail(body, {
+    clubName: opts.clubName,
+    clubId: opts.clubId,
+    logoUrl: opts.logoUrl,
+  });
   return {
     subject: isFr
       ? `PV finalisé — ${opts.minuteTitle}`
       : `Minutes finalized — ${opts.minuteTitle}`,
-    html: wrapBrandedEmail(body, { clubName: opts.clubName, logoUrl: opts.logoUrl }),
+    html: branded.html,
+    attachments: branded.attachments,
   };
 }

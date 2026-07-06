@@ -4,13 +4,13 @@ import { useState, useCallback, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
-import { Plus, GripVertical, Save, Download } from "lucide-react";
+import { Plus, GripVertical, Save, Download, LayoutTemplate } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { saveMinute } from "@/actions/minutes";
+import { applyAgendaTemplate, saveMinute } from "@/actions/minutes";
 import {
   saveDraftOffline,
   getUnsyncedDrafts,
@@ -150,6 +150,51 @@ export function MinuteEditor({
     setItems((prev) => prev.map((item) => (item.id === id ? { ...item, [field]: value } : item)));
   }
 
+  function itemsHaveContent(): boolean {
+    return items.some(
+      (item) =>
+        item.description.trim() ||
+        item.decisions.trim() ||
+        item.actions.trim() ||
+        item.responsible.trim() ||
+        item.dueDate.trim()
+    );
+  }
+
+  async function handleApplyTemplate() {
+    if (readOnly) return;
+
+    const confirmMsg =
+      locale === "fr"
+        ? itemsHaveContent()
+          ? "Des points contiennent déjà du contenu. Remplacer par le modèle d'ordre du jour ?"
+          : "Appliquer le modèle d'ordre du jour pour ce type de réunion ?"
+        : itemsHaveContent()
+          ? "Some items already have content. Replace with the agenda template?"
+          : "Apply the agenda template for this meeting type?";
+
+    if (!window.confirm(confirmMsg)) return;
+
+    const result = await applyAgendaTemplate(minute.id, locale);
+    if (result?.error) return;
+
+    if (result.items) {
+      setItems(
+        result.items.map((item, i) => ({
+          id: `${Date.now()}-${i}`,
+          title: item.title,
+          description: item.description ?? "",
+          decisions: "",
+          actions: "",
+          responsible: "",
+          dueDate: "",
+          status: item.status ?? "OPEN",
+        }))
+      );
+    }
+    startTransition(() => router.refresh());
+  }
+
   const meetingDate = new Date(minute.meeting.date);
   const statusLabel =
     status === "FINALIZED"
@@ -234,12 +279,23 @@ export function MinuteEditor({
       </Card>
 
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <h3 className="font-semibold text-gray-900">{t("agenda")}</h3>
-          <Button variant="outline" size="sm" onClick={addItem} disabled={readOnly}>
-            <Plus className="h-4 w-4" />
-            {tMeetings("addAgendaItem")}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleApplyTemplate}
+              disabled={readOnly}
+            >
+              <LayoutTemplate className="h-4 w-4" />
+              {locale === "fr" ? "Appliquer le modèle" : "Apply template"}
+            </Button>
+            <Button variant="outline" size="sm" onClick={addItem} disabled={readOnly}>
+              <Plus className="h-4 w-4" />
+              {tMeetings("addAgendaItem")}
+            </Button>
+          </div>
         </div>
 
         {items.map((item, index) => (

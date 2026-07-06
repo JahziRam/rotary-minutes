@@ -18,6 +18,7 @@ import {
   LifeBuoy,
   Menu,
   X,
+  Coins,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { MinutePreview } from "@/components/minutes/minute-preview";
@@ -38,6 +39,7 @@ import {
   DemoSettingsPanel,
   DemoSupportPanel,
   DemoMinuteEditorPanel,
+  DemoDuesPanel,
 } from "./demo-panels";
 
 export type DemoTab =
@@ -47,6 +49,7 @@ export type DemoTab =
   | "minutes"
   | "emails"
   | "members"
+  | "dues"
   | "statistics"
   | "district"
   | "settings"
@@ -61,6 +64,7 @@ const NAV: { id: DemoTab; icon: typeof Home; labelKey: string }[] = [
   { id: "minutes", icon: FileText, labelKey: "minutes" },
   { id: "emails", icon: Mail, labelKey: "emails" },
   { id: "members", icon: Users, labelKey: "members" },
+  { id: "dues", icon: Coins, labelKey: "dues" },
   { id: "statistics", icon: BarChart3, labelKey: "statistics" },
   { id: "district", icon: Map, labelKey: "district" },
   { id: "settings", icon: Settings, labelKey: "settings" },
@@ -132,6 +136,8 @@ export function DemoApp({ locale }: { locale: string }) {
         return <DemoEmailsPanel locale={locale} />;
       case "members":
         return <DemoMembersPanel locale={locale} />;
+      case "dues":
+        return <DemoDuesPanel locale={locale} />;
       case "statistics":
         return <DemoStatisticsPanel locale={locale} />;
       case "district":

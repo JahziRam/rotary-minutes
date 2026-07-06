@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { User } from "lucide-react";
+import { User, Wallet } from "lucide-react";
 import { getClubContext } from "@/lib/club-context";
 import { hasRolePermission } from "@/lib/roles";
 import { prisma } from "@/lib/prisma";
@@ -11,6 +11,7 @@ import { getClubOnboarding } from "@/actions/onboarding";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+
 import { AddMemberForm } from "@/components/members/add-member-form";
 import { BirthdayBanner } from "@/components/members/birthday-banner";
 import { MandatesPanel } from "@/components/members/mandates-panel";
@@ -54,13 +55,22 @@ export default async function MembersPage({
         <BirthdayBanner birthdays={birthdays} locale={locale} />
         <MandatesPanel mandates={mandates} canManage={canManage} />
 
-        <div className="flex justify-between items-center">
+        <div className="flex flex-wrap justify-between items-center gap-3">
           <p className="text-sm text-gray-500">
             {active.length} {t("members.active").toLowerCase()}
             {members.length > active.length &&
               ` · ${members.length - active.length} ${t("members.inactive").toLowerCase()}`}
           </p>
-          {canManage && <AddMemberForm />}
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/${locale}/members/dues`}
+              className="inline-flex items-center justify-center gap-2 h-8 rounded-md px-3 text-xs font-medium border border-gray-200 bg-white hover:bg-gray-50 text-gray-900 transition-all"
+            >
+              <Wallet className="h-4 w-4" />
+              {t("dues.title")}
+            </Link>
+            {canManage && <AddMemberForm />}
+          </div>
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">

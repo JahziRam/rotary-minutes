@@ -2,6 +2,8 @@ import { setRequestLocale } from "next-intl/server";
 import { DemoView } from "@/components/marketing/demo-view";
 import { getDemoClubData } from "@/lib/queries/demo";
 
+export const dynamic = "force-dynamic";
+
 export default async function DemoPage({
   params,
 }: {

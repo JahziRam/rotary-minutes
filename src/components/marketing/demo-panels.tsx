@@ -22,6 +22,10 @@ import {
   QrCode,
   WifiOff,
   Globe,
+  CalendarPlus,
+  FileSpreadsheet,
+  LayoutTemplate,
+  Coins,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +41,7 @@ import {
   DEMO_DISTRICT_CLUBS,
   DEMO_MANDATES,
   getDemoData,
+  getDemoDues,
 } from "@/lib/demo-data";
 import { DemoLockedButton, DemoFeaturePill } from "./demo-ui";
 
@@ -148,6 +153,25 @@ export function DemoDashboardPanel({ locale, onPreviewMinute, onLiveMeeting }: D
           </ul>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader className="flex-row justify-between items-center">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Bell className="h-4 w-4" />
+            {t("recentNotifications")}
+          </CardTitle>
+          <Badge variant="gold">{DEMO_STATS.notificationCount}</Badge>
+        </CardHeader>
+        <CardContent className="divide-y divide-gray-100">
+          {data.notifications.slice(0, 3).map((n) => (
+            <div key={n.id} className="py-3 first:pt-0 last:pb-0">
+              <p className="font-medium text-gray-900 text-sm">{n.title}</p>
+              <p className="text-sm text-gray-600 mt-0.5">{n.message}</p>
+              <p className="text-xs text-gray-400 mt-1">{n.time}</p>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -181,10 +205,12 @@ export function DemoMeetingsPanel({ locale, onLiveMeeting }: DemoPanelProps) {
       <div className="flex flex-wrap gap-2">
         <DemoLockedButton label={t("newMeeting")} icon={Plus} variant="gold" />
         <DemoLockedButton label={t("importAgenda")} />
+        <DemoLockedButton label={t("exportIcs")} icon={CalendarPlus} />
+        <DemoLockedButton label={t("googleCalendar")} icon={Calendar} />
       </div>
       {DEMO_MEETINGS.map((m) => (
         <Card key={m.id}>
-          <CardContent className="pt-4">
+          <CardContent className="pt-4 space-y-3">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <p className="font-semibold text-gray-900">{m.title}</p>
@@ -207,6 +233,10 @@ export function DemoMeetingsPanel({ locale, onLiveMeeting }: DemoPanelProps) {
               ) : (
                 <Badge variant="success">{locale === "fr" ? "Terminée" : "Completed"}</Badge>
               )}
+            </div>
+            <div className="flex flex-wrap gap-2 pt-1 border-t border-gray-50">
+              <DemoLockedButton label={t("exportIcs")} icon={FileSpreadsheet} />
+              <DemoLockedButton label={t("googleCalendar")} icon={CalendarPlus} />
             </div>
           </CardContent>
         </Card>
@@ -607,10 +637,86 @@ export function DemoMinuteEditorPanel({ locale, onPreviewMinute }: { locale: str
       ))}
 
       <div className="flex flex-wrap gap-2">
-        <DemoLockedButton label={isFr ? "Enregistrer" : "Save"} variant="gold" />
+        <DemoLockedButton label={t("applyTemplate")} icon={LayoutTemplate} variant="gold" />
+        <DemoLockedButton label={isFr ? "Enregistrer" : "Save"} />
         <DemoLockedButton label={isFr ? "Soumettre en révision" : "Submit for review"} />
         <DemoLockedButton label={isFr ? "Finaliser" : "Finalize"} />
       </div>
+    </div>
+  );
+}
+
+export function DemoDuesPanel({ locale }: { locale: string }) {
+  const t = useTranslations("demo");
+  const isFr = locale === "fr";
+  const dues = getDemoDues(locale);
+  const paid = dues.filter((d) => d.status === "PAID").length;
+  const pending = dues.filter((d) => d.status === "PENDING").length;
+  const overdue = dues.filter((d) => d.status === "OVERDUE").length;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2">
+        <DemoLockedButton label={t("recordPayment")} icon={Plus} variant="gold" />
+        <DemoLockedButton label={t("sendDuesReminder")} icon={Mail} />
+        <DemoLockedButton label={t("exportDues")} icon={Download} />
+      </div>
+
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { label: t("duesPaid"), value: paid },
+          { label: t("duesPending"), value: pending },
+          { label: t("duesOverdue"), value: overdue },
+        ].map(({ label, value }) => (
+          <Card key={label}>
+            <CardContent className="pt-4 text-center">
+              <p className="text-2xl font-bold text-navy">{value}</p>
+              <p className="text-xs text-gray-500">{label}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Coins className="h-4 w-4" />
+            {t("duesTable")} — {DEMO_CLUB.name}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-gray-500 border-b">
+                <th className="pb-2 font-medium">{isFr ? "Membre" : "Member"}</th>
+                <th className="pb-2 font-medium">{t("fiscalYear")}</th>
+                <th className="pb-2 font-medium">{t("duesAmount")}</th>
+                <th className="pb-2 font-medium">{t("duesDueDate")}</th>
+                <th className="pb-2 font-medium">{isFr ? "Statut" : "Status"}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {dues.map((d) => (
+                <tr key={d.id} className="border-b border-gray-50">
+                  <td className="py-2.5 font-medium text-gray-800">{d.member}</td>
+                  <td className="py-2.5">{d.fiscalYear}</td>
+                  <td className="py-2.5">{d.amount} {d.currency}</td>
+                  <td className="py-2.5">{d.dueDateLabel}</td>
+                  <td className="py-2.5">
+                    <Badge
+                      variant={
+                        d.status === "PAID" ? "success" : d.status === "OVERDUE" ? "warning" : "muted"
+                      }
+                    >
+                      {d.statusLabel}
+                    </Badge>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
     </div>
   );
 }

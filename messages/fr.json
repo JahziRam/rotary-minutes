@@ -9,6 +9,7 @@
     "minutes": "Procès-verbaux",
     "emails": "Emails",
     "members": "Membres",
+    "dues": "Cotisations",
     "statistics": "Statistiques",
     "district": "District",
     "settings": "Paramètres",
@@ -170,6 +171,32 @@
     "profilePhoto": "Photo de profil",
     "profilePhotoHint": "JPEG, PNG ou WebP — max 512 Ko.",
     "backToList": "Retour à la liste"
+  },
+  "dues": {
+    "title": "Cotisations",
+    "backToMembers": "Retour aux membres",
+    "member": "Membre",
+    "amount": "Montant",
+    "dueDate": "Échéance",
+    "status": "Statut",
+    "actions": "Actions",
+    "markPaid": "Marquer payé",
+    "markedPaid": "Cotisation marquée comme payée",
+    "alreadyPaid": "Déjà payée",
+    "createForYear": "Créer les cotisations de l'année",
+    "bulkCreated": "{count, plural, =0 {Aucune nouvelle cotisation} one {# cotisation créée} other {# cotisations créées}}",
+    "noDefaultAmount": "Définissez d'abord un montant annuel par défaut dans les paramètres du club",
+    "fiscalYear": "Année fiscale {year}",
+    "summary": "{paid} payées · {pending} en attente · {total} membres",
+    "defaultAmount": "Montant par défaut : {amount}",
+    "notAssigned": "Non assignée",
+    "noMembers": "Aucun membre actif",
+    "statuses": {
+      "PENDING": "En attente",
+      "PAID": "Payée",
+      "OVERDUE": "En retard",
+      "WAIVED": "Exonérée"
+    }
   },
   "emails": {
     "title": "Emails",
@@ -817,7 +844,21 @@
     "offlineFeature": "Mode hors ligne — rédigez vos PV sans connexion, synchronisation automatique.",
     "bilingualFeature": "Interface bilingue FR/EN native pour clubs internationaux.",
     "support": "Support",
-    "sendTicket": "Envoyer le ticket"
+    "sendTicket": "Envoyer le ticket",
+    "recentNotifications": "Notifications récentes",
+    "exportIcs": "Exporter .ics",
+    "googleCalendar": "Google Calendar",
+    "applyTemplate": "Appliquer le modèle",
+    "duesTable": "Suivi des cotisations",
+    "duesAmount": "Montant",
+    "duesDueDate": "Échéance",
+    "fiscalYear": "Exercice",
+    "duesPaid": "Payées",
+    "duesPending": "En attente",
+    "duesOverdue": "En retard",
+    "recordPayment": "Enregistrer un paiement",
+    "sendDuesReminder": "Rappel cotisation",
+    "exportDues": "Exporter les cotisations"
   },
   "caseStudies": {
     "title": "Témoignages clients",

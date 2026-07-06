@@ -14,6 +14,7 @@ import {
   buildMinutePdfBuffer,
   minutePdfInclude,
 } from "@/lib/pdf/build-minute-pdf";
+import { getAgendaTemplateForMeeting } from "@/lib/minute-templates";
 import type { MinuteStatus, Prisma } from "@/generated/prisma/client";
 
 function revalidateMinutePaths(minuteId: string, locale?: string) {
@@ -103,6 +104,41 @@ export async function saveMinute(
   return { success: true };
 }
 
+export async function applyAgendaTemplate(minuteId: string, locale: string) {
+  const auth = await requirePermission("minutes.edit");
+  if (auth.error) return { error: auth.error };
+  const { ctx } = auth;
+
+  const minute = await prisma.minute.findFirst({
+    where: { id: minuteId, clubId: ctx.clubId },
+    include: { meeting: true, agendaItems: true },
+  });
+  if (!minute) return { error: "NOT_FOUND" };
+  if (["FINALIZED", "ARCHIVED", "REVIEW"].includes(minute.status)) {
+    return { error: "LOCKED" };
+  }
+
+  const templateItems = await getAgendaTemplateForMeeting(
+    minute.meeting.type,
+    locale,
+    ctx.clubId
+  );
+
+  await prisma.agendaItem.deleteMany({ where: { minuteId } });
+  await prisma.agendaItem.createMany({
+    data: templateItems.map((item, i) => ({
+      minuteId,
+      sortOrder: i,
+      title: item.title,
+      description: item.description ?? null,
+      status: (item.status ?? "OPEN") as "OPEN",
+    })),
+  });
+
+  revalidateMinutePaths(minuteId, locale);
+  return { success: true, items: templateItems };
+}
+
 async function doFinalizeMinute(
   minuteId: string,
   ctx: { clubId: string; userId: string },
@@ -156,20 +192,23 @@ async function doFinalizeMinute(
 
   const clubEmail = minute.club.email;
   if (clubEmail) {
-    const { resolveClubLogoUrl } = await import("@/lib/media-url");
     const mail = minuteFinalizedEmail({
       clubName: minute.club.name,
+      clubId: minute.club.id,
       minuteTitle: minute.title,
       verifyUrl,
       locale,
-      logoUrl: resolveClubLogoUrl(minute.club.id, minute.club.logoUrl, baseUrl),
+      logoUrl: minute.club.logoUrl ?? undefined,
     });
     const { buffer, filename } = await buildMinutePdfBuffer(minute, locale);
     await sendEmail({
       to: clubEmail,
       subject: mail.subject,
       html: mail.html,
-      attachments: [{ filename, content: buffer }],
+      attachments: [
+        ...(mail.attachments ?? []),
+        { filename, content: buffer },
+      ],
     });
   }
 
@@ -489,23 +528,22 @@ async function dispatchMinuteEmail(
   pdf: { buffer: Buffer; filename: string },
   verifyUrl: string
 ) {
-  const { resolveClubLogoUrl } = await import("@/lib/media-url");
   const mail = minuteFinalizedEmail({
     clubName: minute.club.name,
+    clubId: minute.club.id,
     minuteTitle: minute.title,
     verifyUrl,
     locale,
-    logoUrl: resolveClubLogoUrl(
-      minute.club.id,
-      minute.club.logoUrl,
-      getAppBaseUrl()
-    ),
+    logoUrl: minute.club.logoUrl ?? undefined,
   });
   return sendEmail({
     to: recipientEmail,
     subject: mail.subject,
     html: mail.html,
-    attachments: [{ filename: pdf.filename, content: pdf.buffer }],
+    attachments: [
+      ...(mail.attachments ?? []),
+      { filename: pdf.filename, content: pdf.buffer },
+    ],
   });
 }
 

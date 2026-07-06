@@ -8,6 +8,7 @@ import { getClubContext } from "@/lib/club-context";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { MobileAttendanceSheet } from "@/components/meetings/mobile-attendance-sheet";
 import { AttendanceQrPanel } from "@/components/meetings/attendance-qr-panel";
+import { CalendarExport } from "@/components/meetings/calendar-export";
 
 export default async function MeetingAttendancePage({
   params,
@@ -22,7 +23,7 @@ export default async function MeetingAttendancePage({
 
   const meeting = await prisma.meeting.findFirst({
     where: { id, clubId: ctx.clubId },
-    include: { attendances: true },
+    include: { attendances: true, club: { select: { name: true } } },
   });
   if (!meeting) notFound();
 
@@ -55,7 +56,21 @@ export default async function MeetingAttendancePage({
               <p className="text-sm text-gray-500">{meeting.location}</p>
             )}
           </div>
-          <AttendanceQrPanel meetingId={meeting.id} />
+          <div className="flex flex-col items-end gap-2">
+            <CalendarExport
+              meeting={{
+                id: meeting.id,
+                title: meeting.title,
+                date: meeting.date,
+                location: meeting.location,
+                startTime: meeting.startTime,
+                endTime: meeting.endTime,
+                clubName: meeting.club.name,
+              }}
+              locale={locale}
+            />
+            <AttendanceQrPanel meetingId={meeting.id} />
+          </div>
         </div>
         <MobileAttendanceSheet
           members={members}

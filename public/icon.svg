@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Rotary Minutes">
+  <rect width="512" height="512" rx="96" fill="#071a30"/>
+  <rect x="32" y="32" width="448" height="8" rx="4" fill="#f5a623"/>
+  <text x="256" y="220" text-anchor="middle" font-family="Georgia, serif" font-size="120" font-weight="700" fill="#f5a623">R</text>
+  <text x="256" y="340" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="52" font-weight="600" fill="#ffffff">Minutes</text>
+</svg>

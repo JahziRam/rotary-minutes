@@ -101,6 +101,14 @@ enum NotificationType {
   NEW_MINUTE
   SYSTEM
   ANNOUNCEMENT
+  DUES_REMINDER
+}
+
+enum DuesStatus {
+  PENDING
+  PAID
+  OVERDUE
+  WAIVED
 }
 
 enum AnnouncementTarget {
@@ -252,7 +260,8 @@ model Club {
   secretaryName   String?
   memberCount     Int       @default(0)
   foundedAt       DateTime?
-  currency        String    @default("EUR")
+  currency           String    @default("EUR")
+  defaultAnnualDues  Decimal?  @db.Decimal(10, 2)
   description     String?   @db.Text
   timezone        String    @default("Europe/Paris")
   language        Language  @default(FR)
@@ -281,6 +290,7 @@ model Club {
   featureFlagOverrides ClubFeatureFlagOverride[]
   apiKeys         ClubApiKey[]
   webhooks        ClubWebhook[]
+  memberDues      MemberDues[]
 }
 
 model ClubMembership {
@@ -324,8 +334,30 @@ model Member {
   user         User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
   attendances  MeetingAttendance[]
   officerMandates OfficerMandate[]
+  memberDues   MemberDues[]
 
   @@index([clubId])
+}
+
+model MemberDues {
+  id              String     @id @default(cuid())
+  clubId          String
+  memberId        String
+  fiscalYear      Int
+  amount          Decimal    @db.Decimal(10, 2)
+  currency        String     @default("EUR")
+  dueDate         DateTime
+  paidAt          DateTime?
+  status          DuesStatus @default(PENDING)
+  lastRemindedAt  DateTime?
+  notes           String?
+
+  club            Club       @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  member          Member     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, fiscalYear])
+  @@index([clubId, fiscalYear])
+  @@index([status, dueDate])
 }
 
 model Commission {

@@ -1,9 +1,10 @@
-const CACHE_NAME = "rotary-minutes-v1";
+const CACHE_NAME = "rotary-minutes-v2";
 const SHELL_URLS = [
   "/",
   "/fr/dashboard",
   "/en/dashboard",
   "/manifest.json",
+  "/icon.svg",
 ];
 
 self.addEventListener("install", (event) => {

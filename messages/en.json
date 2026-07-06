@@ -9,6 +9,7 @@
     "minutes": "Minutes",
     "emails": "Emails",
     "members": "Members",
+    "dues": "Dues",
     "statistics": "Statistics",
     "district": "District",
     "settings": "Settings",
@@ -170,6 +171,32 @@
     "profilePhoto": "Profile photo",
     "profilePhotoHint": "JPEG, PNG or WebP — max 512 KB.",
     "backToList": "Back to list"
+  },
+  "dues": {
+    "title": "Member dues",
+    "backToMembers": "Back to members",
+    "member": "Member",
+    "amount": "Amount",
+    "dueDate": "Due date",
+    "status": "Status",
+    "actions": "Actions",
+    "markPaid": "Mark paid",
+    "markedPaid": "Dues marked as paid",
+    "alreadyPaid": "Already paid",
+    "createForYear": "Create dues for current year",
+    "bulkCreated": "{count, plural, =0 {No new dues created} one {# dues record created} other {# dues records created}}",
+    "noDefaultAmount": "Set a default annual dues amount in club settings first",
+    "fiscalYear": "Fiscal year {year}",
+    "summary": "{paid} paid · {pending} pending · {total} members",
+    "defaultAmount": "Default amount: {amount}",
+    "notAssigned": "Not assigned",
+    "noMembers": "No active members",
+    "statuses": {
+      "PENDING": "Pending",
+      "PAID": "Paid",
+      "OVERDUE": "Overdue",
+      "WAIVED": "Waived"
+    }
   },
   "emails": {
     "title": "Emails",
@@ -817,7 +844,21 @@
     "offlineFeature": "Offline mode — draft minutes without connectivity, auto-sync when back online.",
     "bilingualFeature": "Native FR/EN bilingual interface for international clubs.",
     "support": "Support",
-    "sendTicket": "Send ticket"
+    "sendTicket": "Send ticket",
+    "recentNotifications": "Recent notifications",
+    "exportIcs": "Export .ics",
+    "googleCalendar": "Google Calendar",
+    "applyTemplate": "Apply template",
+    "duesTable": "Dues tracking",
+    "duesAmount": "Amount",
+    "duesDueDate": "Due date",
+    "fiscalYear": "Fiscal year",
+    "duesPaid": "Paid",
+    "duesPending": "Pending",
+    "duesOverdue": "Overdue",
+    "recordPayment": "Record payment",
+    "sendDuesReminder": "Dues reminder",
+    "exportDues": "Export dues"
   },
   "caseStudies": {
     "title": "Customer stories",

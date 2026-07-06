@@ -14,6 +14,9 @@ const CRON_ENDPOINTS = [
   "/api/cron/trial-reminders",
   "/api/cron/trial-expiry",
   "/api/cron/email-campaigns",
+  "/api/cron/meeting-reminders",
+  "/api/cron/pv-reminders",
+  "/api/cron/dues-reminders",
 ] as const;
 
 export async function checkDatabase(): Promise<StatusCheck> {

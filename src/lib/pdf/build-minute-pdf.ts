@@ -3,6 +3,7 @@ import { fr, enUS } from "date-fns/locale";
 import { getAppBaseUrl } from "@/lib/app-url";
 import { generateMinuteHash, getVerifyUrl } from "@/lib/hash";
 import { computeRecordedAttendanceRate } from "@/lib/rotary";
+import { isDataUrl } from "@/lib/image-storage";
 import { resolveClubLogoUrl } from "@/lib/media-url";
 import { renderMinutePdf } from "@/lib/pdf/render";
 import type { MinutePDFData } from "@/lib/pdf/minute-pdf";
@@ -67,14 +68,17 @@ export async function buildMinutePdfData(
   const total = minute.meeting.attendances.length;
   const rate = computeRecordedAttendanceRate(minute.meeting.attendances) ?? 0;
 
+  const logoUrl = minute.club.logoUrl
+    ? isDataUrl(minute.club.logoUrl)
+      ? minute.club.logoUrl
+      : resolveClubLogoUrl(minute.club.id, minute.club.logoUrl, baseUrl) ?? minute.club.logoUrl
+    : undefined;
+
   return {
     club: {
       name: minute.club.name,
       address: minute.club.address ?? minute.club.meetingLocation ?? undefined,
-      logoUrl:
-        resolveClubLogoUrl(minute.club.id, minute.club.logoUrl, baseUrl) ??
-        minute.club.logoUrl ??
-        undefined,
+      logoUrl,
     },
     meeting: {
       date: format(minute.meeting.date, "d MMMM yyyy", { locale: dateLocale }),

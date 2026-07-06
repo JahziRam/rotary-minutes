@@ -11,6 +11,18 @@
     {
       "path": "/api/cron/email-campaigns",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/dues-reminders",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/meeting-reminders",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/pv-reminders",
+      "schedule": "0 9 * * *"
     }
   ]
 }

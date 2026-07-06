@@ -7,8 +7,7 @@ import { requirePermission } from "@/lib/require-permission";
 import type { MeetingType } from "@/generated/prisma/client";
 import { getAgendaTemplateForMeeting } from "@/lib/minute-templates";
 import { sendEmail } from "@/lib/email";
-import { wrapBrandedEmail } from "@/lib/email-branding";
-import { resolveClubLogoUrl } from "@/lib/media-url";
+import { prepareBrandedEmail } from "@/lib/email-branding";
 import { icsAttachment } from "@/lib/ics";
 
 export async function createMeeting(
@@ -75,19 +74,24 @@ export async function createMeeting(
     });
     const { getAppBaseUrl } = await import("@/lib/app-url");
     const baseUrl = getAppBaseUrl();
-    const logoUrl = resolveClubLogoUrl(ctx.club.id, ctx.club.logoUrl, baseUrl);
     const body =
       locale === "fr"
         ? `<p>Réunion planifiée le ${new Date(data.date).toLocaleDateString("fr-FR")}.</p>`
         : `<p>Meeting scheduled on ${new Date(data.date).toLocaleDateString("en-GB")}.</p>`;
+    const branded = prepareBrandedEmail(body, {
+      clubName: ctx.club.name,
+      clubId: ctx.club.id,
+      logoUrl: ctx.club.logoUrl,
+      baseUrl,
+    });
     await sendEmail({
       to: ctx.club.email,
       subject:
         locale === "fr"
           ? `Convocation — ${ctx.club.name}`
           : `Meeting invitation — ${ctx.club.name}`,
-      html: wrapBrandedEmail(body, { clubName: ctx.club.name, logoUrl }),
-      attachments: [ics],
+      html: branded.html,
+      attachments: [...(branded.attachments ?? []), ics],
     });
   }
 

@@ -43,6 +43,7 @@ const TYPE_LABELS: Record<string, { fr: string; en: string }> = {
   NEW_MINUTE: { fr: "Nouveau PV", en: "New minute" },
   SYSTEM: { fr: "Système", en: "System" },
   ANNOUNCEMENT: { fr: "Annonce", en: "Announcement" },
+  DUES_REMINDER: { fr: "Cotisation", en: "Dues" },
 };
 
 export function NotificationsView({

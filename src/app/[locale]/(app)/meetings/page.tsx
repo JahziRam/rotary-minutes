@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 import { computeRecordedAttendanceRate } from "@/lib/rotary";
+import { CalendarExport } from "@/components/meetings/calendar-export";
 
 
 export default async function MeetingsPage({
@@ -25,7 +26,11 @@ export default async function MeetingsPage({
   const meetings = ctx
     ? await prisma.meeting.findMany({
         where: { clubId: ctx.clubId },
-        include: { attendances: true, minute: { select: { id: true } } },
+        include: {
+          attendances: true,
+          minute: { select: { id: true } },
+          club: { select: { name: true } },
+        },
         orderBy: { date: "desc" },
       })
     : [];
@@ -63,9 +68,9 @@ export default async function MeetingsPage({
               const href = `/${locale}/meetings/${meeting.id}/attendance`;
 
               return (
-                <Link key={meeting.id} href={href}>
-                  <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                    <CardContent className="p-4 flex items-center gap-4">
+                <Card key={meeting.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-4 flex items-center gap-4">
+                    <Link href={href} className="flex items-center gap-4 flex-1 min-w-0">
                       <div className="h-14 w-14 rounded-xl bg-navy text-white flex flex-col items-center justify-center shrink-0">
                         <Calendar className="h-5 w-5 mb-0.5 opacity-70" />
                         <span className="text-xs font-bold">
@@ -80,10 +85,25 @@ export default async function MeetingsPage({
                           {meeting.location} · {meeting.presidedBy}
                         </p>
                       </div>
+                    </Link>
+                    <div className="flex flex-col items-end gap-2 shrink-0">
                       {rate !== null && <Badge variant="success">{rate}%</Badge>}
-                    </CardContent>
-                  </Card>
-                </Link>
+                      <CalendarExport
+                        meeting={{
+                          id: meeting.id,
+                          title: meeting.title,
+                          date: meeting.date,
+                          location: meeting.location,
+                          startTime: meeting.startTime,
+                          endTime: meeting.endTime,
+                          clubName: meeting.club.name,
+                        }}
+                        locale={locale}
+                        compact
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
               );
             })
           )}

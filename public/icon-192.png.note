@@ -1,0 +1,2 @@
+Placeholder: export public/icon.svg to PNG at 192x192 and 512x512 for legacy PWA installs.
+Recommended filenames: icon-192.png, icon-512.png

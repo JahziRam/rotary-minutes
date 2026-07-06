@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import { addDays, differenceInCalendarDays } from "date-fns";
 import { prisma } from "@/lib/prisma";
 import { sendEmail, trialReminderEmail } from "@/lib/email";
-import { resolveClubLogoUrl } from "@/lib/media-url";
-
 const REMINDER_DAYS = [7, 3, 1] as const;
 
 export async function GET(request: Request) {
@@ -39,10 +37,11 @@ export async function GET(request: Request) {
     const locale = sub.club.language === "EN" ? "en" : "fr";
     const mail = trialReminderEmail({
       clubName: sub.club.name,
+      clubId: sub.club.id,
       daysLeft,
       locale,
       upgradeUrl: `${baseUrl}/${locale}/settings/subscription`,
-      logoUrl: resolveClubLogoUrl(sub.club.id, sub.club.logoUrl, baseUrl),
+      logoUrl: sub.club.logoUrl ?? undefined,
     });
 
     for (const m of sub.club.memberships) {
@@ -50,6 +49,7 @@ export async function GET(request: Request) {
         to: m.user.email,
         subject: mail.subject,
         html: mail.html,
+        attachments: mail.attachments,
       });
       if (result.ok) sent++;
     }

@@ -75,7 +75,7 @@ export default async function LandingPage({
   ];
 
   return (
-    <div className="flex min-h-screen flex-col overflow-x-hidden native-scroll">
+    <div className="flex min-h-screen flex-col">
       <LandingHeader
         locale={locale}
         otherLocale={otherLocale}

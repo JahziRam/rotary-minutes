@@ -95,10 +95,16 @@ export async function registerClub(data: {
   const baseUrl = getAppBaseUrl();
   const welcome = welcomeClubEmail({
     clubName: data.clubName,
+    clubId: createdClubId,
     locale,
     dashboardUrl: `${baseUrl}/${locale}/dashboard`,
   });
-  await sendEmail({ to: data.email, subject: welcome.subject, html: welcome.html });
+  await sendEmail({
+    to: data.email,
+    subject: welcome.subject,
+    html: welcome.html,
+    attachments: welcome.attachments,
+  });
 
   if (createdClubId && data.referredByCode?.trim()) {
     await linkClubReferral(createdClubId, data.referredByCode);

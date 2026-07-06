@@ -60,11 +60,13 @@ export const SYSTEM_EMAIL_TEMPLATES: SystemEmailTemplate[] = [
     },
     body: {
       fr: `<p>Bonjour {{memberName}},</p>
-<p>Ceci est un rappel concernant votre cotisation au <strong>{{clubName}}</strong>.</p>
-<p>Merci de régulariser votre situation auprès du Trésorier.</p>`,
+<p>Ceci est un rappel concernant votre cotisation <strong>{{duesAmount}}</strong> pour l'exercice <strong>{{fiscalYear}}</strong> au <strong>{{clubName}}</strong>.</p>
+<p>Échéance : <strong>{{duesDueDate}}</strong></p>
+<p><a class="cta-button" href="{{dashboardUrl}}">Voir mes cotisations</a></p>`,
       en: `<p>Hello {{memberName}},</p>
-<p>This is a reminder about your dues for <strong>{{clubName}}</strong>.</p>
-<p>Please contact the Treasurer to settle your membership fees.</p>`,
+<p>This is a reminder about your <strong>{{duesAmount}}</strong> dues for fiscal year <strong>{{fiscalYear}}</strong> at <strong>{{clubName}}</strong>.</p>
+<p>Due date: <strong>{{duesDueDate}}</strong></p>
+<p><a class="cta-button" href="{{dashboardUrl}}">View my dues</a></p>`,
     },
   },
   {
@@ -91,10 +93,64 @@ export const SYSTEM_EMAIL_TEMPLATES: SystemEmailTemplate[] = [
     body: {
       fr: `<p>Bonjour,</p>
 <p>Le procès-verbal <strong>{{minuteTitle}}</strong> du club <strong>{{clubName}}</strong> a été finalisé.</p>
-<p><a href="{{verifyUrl}}">Vérifier l'authenticité du PV</a></p>`,
+<p><a class="cta-button" href="{{verifyUrl}}">Vérifier l'authenticité du PV</a></p>`,
       en: `<p>Hello,</p>
 <p>The minute <strong>{{minuteTitle}}</strong> for <strong>{{clubName}}</strong> has been finalized.</p>
-<p><a href="{{verifyUrl}}">Verify minute authenticity</a></p>`,
+<p><a class="cta-button" href="{{verifyUrl}}">Verify minute authenticity</a></p>`,
+    },
+  },
+  {
+    slug: "action-deadline-reminder",
+    name: { fr: "Rappel échéance action", en: "Action deadline reminder" },
+    subject: {
+      fr: "Échéance proche — {{actionTitle}}",
+      en: "Deadline approaching — {{actionTitle}}",
+    },
+    body: {
+      fr: `<p>Bonjour {{memberName}},</p>
+<p>L'action <strong>{{actionTitle}}</strong> du club <strong>{{clubName}}</strong> arrive à échéance le <strong>{{actionDueDate}}</strong>.</p>
+<p>Responsable : {{actionResponsible}}</p>
+<p><a class="cta-button" href="{{dashboardUrl}}">Voir le tableau de bord</a></p>`,
+      en: `<p>Hello {{memberName}},</p>
+<p>The action <strong>{{actionTitle}}</strong> for <strong>{{clubName}}</strong> is due on <strong>{{actionDueDate}}</strong>.</p>
+<p>Owner: {{actionResponsible}}</p>
+<p><a class="cta-button" href="{{dashboardUrl}}">View dashboard</a></p>`,
+    },
+  },
+  {
+    slug: "pv-draft-reminder",
+    name: { fr: "Rappel PV brouillon", en: "Draft minutes reminder" },
+    subject: {
+      fr: "PV en attente — {{minuteTitle}}",
+      en: "Minutes pending — {{minuteTitle}}",
+    },
+    body: {
+      fr: `<p>Bonjour {{memberName}},</p>
+<p>Le procès-verbal <strong>{{minuteTitle}}</strong> est encore en brouillon pour <strong>{{clubName}}</strong>.</p>
+<p>Merci de finaliser la rédaction avant la prochaine réunion.</p>
+<p><a class="cta-button" href="{{dashboardUrl}}">Ouvrir le PV</a></p>`,
+      en: `<p>Hello {{memberName}},</p>
+<p>The minutes <strong>{{minuteTitle}}</strong> are still in draft for <strong>{{clubName}}</strong>.</p>
+<p>Please complete them before the next meeting.</p>
+<p><a class="cta-button" href="{{dashboardUrl}}">Open minutes</a></p>`,
+    },
+  },
+  {
+    slug: "meeting-followup",
+    name: { fr: "Suivi après réunion", en: "Meeting follow-up" },
+    subject: {
+      fr: "Suivi réunion — {{clubName}} — {{meetingDate}}",
+      en: "Meeting follow-up — {{clubName}} — {{meetingDate}}",
+    },
+    body: {
+      fr: `<p>Bonjour {{memberName}},</p>
+<p>Merci pour votre participation à la réunion du <strong>{{meetingDate}}</strong> à <strong>{{meetingLocation}}</strong>.</p>
+<p>Le PV sera disponible prochainement. Consultez les actions ouvertes sur le tableau de bord.</p>
+<p><a class="cta-button" href="{{dashboardUrl}}">Accéder au club</a></p>`,
+      en: `<p>Hello {{memberName}},</p>
+<p>Thank you for attending the meeting on <strong>{{meetingDate}}</strong> at <strong>{{meetingLocation}}</strong>.</p>
+<p>Minutes will be available soon. Review open actions on the dashboard.</p>
+<p><a class="cta-button" href="{{dashboardUrl}}">Go to club portal</a></p>`,
     },
   },
 ];

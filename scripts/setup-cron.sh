@@ -14,7 +14,12 @@ TMP="$(mktemp)"
 cat >> "$TMP" <<EOF
 0 6 * * * curl -fsS -H "Authorization: Bearer ${CRON_SECRET}" "${APP_URL}/api/cron/trial-expiry" >/dev/null 2>&1 ${MARKER}
 0 7 * * * curl -fsS -H "Authorization: Bearer ${CRON_SECRET}" "${APP_URL}/api/cron/trial-reminders" >/dev/null 2>&1 ${MARKER}
+0 8 * * * curl -fsS -H "Authorization: Bearer ${CRON_SECRET}" "${APP_URL}/api/cron/meeting-reminders" >/dev/null 2>&1 ${MARKER}
+0 9 * * * curl -fsS -H "Authorization: Bearer ${CRON_SECRET}" "${APP_URL}/api/cron/pv-reminders" >/dev/null 2>&1 ${MARKER}
 */15 * * * * curl -fsS -H "Authorization: Bearer ${CRON_SECRET}" "${APP_URL}/api/cron/email-campaigns" >/dev/null 2>&1 ${MARKER}
+0 8 * * * curl -fsS -H "Authorization: Bearer ${CRON_SECRET}" "${APP_URL}/api/cron/dues-reminders" >/dev/null 2>&1 ${MARKER}
+0 8 * * * curl -fsS -H "Authorization: Bearer ${CRON_SECRET}" "${APP_URL}/api/cron/meeting-reminders" >/dev/null 2>&1 ${MARKER}
+0 9 * * * curl -fsS -H "Authorization: Bearer ${CRON_SECRET}" "${APP_URL}/api/cron/pv-reminders" >/dev/null 2>&1 ${MARKER}
 EOF
 
 crontab "$TMP"

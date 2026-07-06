@@ -18,6 +18,12 @@ export function buildClubEmailVars(opts: {
   minuteTitle?: string;
   verifyUrl?: string;
   dashboardUrl?: string;
+  duesAmount?: string;
+  duesDueDate?: string;
+  fiscalYear?: string;
+  actionTitle?: string;
+  actionDueDate?: string;
+  actionResponsible?: string;
 }): EmailTemplateVars {
   const name = [opts.firstName, opts.lastName].filter(Boolean).join(" ");
   return {
@@ -31,5 +37,11 @@ export function buildClubEmailVars(opts: {
     minuteTitle: opts.minuteTitle ?? "",
     verifyUrl: opts.verifyUrl ?? "",
     dashboardUrl: opts.dashboardUrl ?? "",
+    duesAmount: opts.duesAmount ?? "",
+    duesDueDate: opts.duesDueDate ?? "",
+    fiscalYear: opts.fiscalYear ?? "",
+    actionTitle: opts.actionTitle ?? "",
+    actionDueDate: opts.actionDueDate ?? "",
+    actionResponsible: opts.actionResponsible ?? "",
   };
 }

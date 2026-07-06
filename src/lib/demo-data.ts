@@ -104,6 +104,15 @@ export const DEMO_NOTIFICATIONS = [
   { id: "n3", title: "Action assignée", message: "Publier le calendrier des événements — Sophie Leroy", time: "Il y a 3 j", type: "action" },
 ];
 
+export const DEMO_DUES = [
+  { id: "d1", member: "Jean Dupont", amount: 250, currency: "EUR", fiscalYear: "2025-2026", dueDate: "2026-03-31", status: "PAID", paidAt: "2026-01-15" },
+  { id: "d2", member: "Marie Martin", amount: 250, currency: "EUR", fiscalYear: "2025-2026", dueDate: "2026-03-31", status: "PAID", paidAt: "2026-02-02" },
+  { id: "d3", member: "Pierre Bernard", amount: 250, currency: "EUR", fiscalYear: "2025-2026", dueDate: "2026-03-31", status: "PENDING", paidAt: null },
+  { id: "d4", member: "Sophie Leroy", amount: 250, currency: "EUR", fiscalYear: "2025-2026", dueDate: "2026-03-31", status: "PENDING", paidAt: null },
+  { id: "d5", member: "Luc Moreau", amount: 250, currency: "EUR", fiscalYear: "2025-2026", dueDate: "2026-03-31", status: "OVERDUE", paidAt: null },
+  { id: "d6", member: "Camille Petit", amount: 250, currency: "EUR", fiscalYear: "2025-2026", dueDate: "2026-03-31", status: "PENDING", paidAt: null },
+];
+
 export const DEMO_OPEN_ACTIONS = [
   { id: "a1", title: "Publier le calendrier 2026-2027", responsible: "Sophie Leroy", due: "15 mars 2026" },
   { id: "a2", title: "Coordonner campagne vaccination OMS", responsible: "Pierre Bernard", due: "30 mars 2026" },
@@ -156,6 +165,30 @@ export const DEMO_MANDATES = [
   { role: "Secrétaire", name: "Marie Martin", period: "2025-2026" },
   { role: "Trésorier", name: "Pierre Bernard", period: "2025-2026" },
 ];
+
+export function getDemoDues(locale: string) {
+  const isFr = locale === "fr";
+  return DEMO_DUES.map((d) => ({
+    ...d,
+    dueDateLabel: isFr
+      ? d.dueDate === "2026-03-31"
+        ? "31 mars 2026"
+        : d.dueDate
+      : "Mar 31, 2026",
+    statusLabel:
+      d.status === "PAID"
+        ? isFr
+          ? "Payée"
+          : "Paid"
+        : d.status === "OVERDUE"
+          ? isFr
+            ? "En retard"
+            : "Overdue"
+          : isFr
+            ? "En attente"
+            : "Pending",
+  }));
+}
 
 export function getDemoData(locale: string) {
   const isFr = locale === "fr";
