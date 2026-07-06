@@ -3,7 +3,7 @@ import { PrismaClient } from "@/generated/prisma/client";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 /** Incrémenter quand le schéma Prisma change (invalide le cache dev). */
-const PRISMA_SCHEMA_VERSION = 11;
+const PRISMA_SCHEMA_VERSION = 12;
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;

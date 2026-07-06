@@ -45,10 +45,35 @@ export default async function SuperAdminPage({
 
   const [stats, expiringTrials, subscriptionBreakdown, auditLogs, health, analytics] =
     await Promise.all([
-      getAdminStats(),
-      getExpiringTrials(),
-      getSubscriptionBreakdown(),
-      getAdminAuditLogs(),
+      getAdminStats().catch((e) => {
+        console.error("[admin] getAdminStats:", e);
+        return {
+          clubsActive: 0,
+          clubsInactive: 0,
+          usersCount: 0,
+          activeSubscriptions: 0,
+          trialingCount: 0,
+          trialsExpiringSoon: 0,
+          minutesThisMonth: 0,
+          finalizedThisMonth: 0,
+          finalizedMinutes: 0,
+          newClubsThisMonth: 0,
+          totalMeetings: 0,
+          totalMembers: 0,
+        };
+      }),
+      getExpiringTrials().catch((e) => {
+        console.error("[admin] getExpiringTrials:", e);
+        return [];
+      }),
+      getSubscriptionBreakdown().catch((e) => {
+        console.error("[admin] getSubscriptionBreakdown:", e);
+        return { byPlan: [], byStatus: [] };
+      }),
+      getAdminAuditLogs().catch((e) => {
+        console.error("[admin] getAdminAuditLogs:", e);
+        return [];
+      }),
       getHealthChecks(),
       getProductAnalytics(),
     ]);

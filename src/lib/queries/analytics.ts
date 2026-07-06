@@ -32,7 +32,29 @@ const FEATURE_ACTIONS = [
   "MEMBER_CREATED",
 ] as const;
 
+const EMPTY_ANALYTICS: ProductAnalytics = {
+  dauEstimate: 0,
+  wauEstimate: 0,
+  activeSessionsToday: 0,
+  featureUsage: [],
+  churnRisk: {
+    expiringTrials: 0,
+    expiredTrials: 0,
+    pastDue: 0,
+    atRiskClubs: [],
+  },
+};
+
 export async function getProductAnalytics(): Promise<ProductAnalytics> {
+  try {
+    return await loadProductAnalytics();
+  } catch (e) {
+    console.error("[getProductAnalytics] failed:", e);
+    return EMPTY_ANALYTICS;
+  }
+}
+
+async function loadProductAnalytics(): Promise<ProductAnalytics> {
   const now = new Date();
   const dayStart = startOfDay(now);
   const weekStart = subDays(dayStart, 7);
@@ -52,11 +74,13 @@ export async function getProductAnalytics(): Promise<ProductAnalytics> {
       where: { createdAt: { gte: dayStart }, userId: { not: null } },
       select: { userId: true },
       distinct: ["userId"],
+      orderBy: { userId: "asc" },
     }),
     prisma.auditLog.findMany({
       where: { createdAt: { gte: weekStart }, userId: { not: null } },
       select: { userId: true },
       distinct: ["userId"],
+      orderBy: { userId: "asc" },
     }),
     prisma.session.count({
       where: { expires: { gte: now } },
@@ -106,6 +130,7 @@ export async function getProductAnalytics(): Promise<ProductAnalytics> {
     where: { expires: { gte: dayStart } },
     select: { userId: true },
     distinct: ["userId"],
+    orderBy: { userId: "asc" },
   });
 
   const dauEstimate = Math.max(auditUsersToday.length, dauFromSessions.length);

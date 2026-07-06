@@ -19,7 +19,27 @@ export interface HealthCheckResult {
   envChecks: { requiredOk: number; requiredTotal: number; recommendedOk: number; recommendedTotal: number };
 }
 
+const EMPTY_HEALTH: HealthCheckResult = {
+  database: { ok: false, latencyMs: null, error: "Check failed" },
+  resendConfigured: false,
+  emailEnabled: false,
+  trialsExpiringCount: 0,
+  maintenanceMode: false,
+  stripeEnabled: false,
+  stripeConfigured: false,
+  envChecks: { requiredOk: 0, requiredTotal: 2, recommendedOk: 0, recommendedTotal: 5 },
+};
+
 export async function getHealthChecks(): Promise<HealthCheckResult> {
+  try {
+    return await loadHealthChecks();
+  } catch (e) {
+    console.error("[getHealthChecks] failed:", e);
+    return EMPTY_HEALTH;
+  }
+}
+
+async function loadHealthChecks(): Promise<HealthCheckResult> {
   const trialDeadline = addDays(new Date(), 7);
 
   let database: HealthCheckResult["database"] = { ok: false, latencyMs: null };

@@ -31,10 +31,15 @@ export default async function AdminSubscriptionsPage({
       getBillingSettings(),
       prisma.promoCode.findMany({ orderBy: { createdAt: "desc" } }),
       prisma.addonConfig.findMany({ orderBy: { key: "asc" } }),
-      prisma.clubAddon.findMany({
-        include: { club: { select: { id: true, name: true, city: true } } },
-        orderBy: { activatedAt: "desc" },
-      }),
+      prisma.clubAddon
+        .findMany({
+          include: { club: { select: { id: true, name: true, city: true } } },
+          orderBy: { activatedAt: "desc" },
+        })
+        .catch((e) => {
+          console.error("[admin/subscriptions] clubAddon:", e);
+          return [];
+        }),
     ]);
 
   return (

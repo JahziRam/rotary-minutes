@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
-import type { SubscriptionPlan } from "@/generated/prisma/client";
+import type { AddonKey, SubscriptionPlan } from "@/generated/prisma/client";
 import {
   getPlanFeaturePreset,
   mergePlanFeaturesWithAddons,
@@ -159,20 +159,26 @@ export async function syncClubFeaturesFromPlan(
   plan: SubscriptionPlan
 ): Promise<void> {
   try {
-    const [planConfig, addons, sub] = await Promise.all([
+    const [planConfig, sub] = await Promise.all([
       prisma.planConfig.findUnique({ where: { plan } }),
-      prisma.clubAddon.findMany({
-        where: {
-          clubId,
-          OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
-        },
-        select: { addonKey: true },
-      }),
       prisma.subscription.findUnique({
         where: { clubId },
         select: { status: true },
       }),
     ]);
+
+    let addons: { addonKey: AddonKey }[] = [];
+    try {
+      addons = await prisma.clubAddon.findMany({
+        where: {
+          clubId,
+          OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+        },
+        select: { addonKey: true },
+      });
+    } catch (addonErr) {
+      console.error("[syncClubFeaturesFromPlan] clubAddon query failed:", addonErr);
+    }
 
     const effectivePlan =
       plan === "TRIAL" && sub?.status === "TRIALING" ? "TRIAL" : plan;
