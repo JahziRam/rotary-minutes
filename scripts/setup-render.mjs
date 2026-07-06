@@ -139,9 +139,23 @@ async function triggerDeploy(serviceId) {
 }
 
 const dotenv = loadDotEnv();
+function swapHost(url, from, to) {
+  return url.includes(from) ? url.replace(from, to) : url;
+}
+
+let databaseUrl = (dotenv.DATABASE_URL || process.env.DATABASE_URL || "").trim();
+let directUrl = (dotenv.DIRECT_URL || process.env.DIRECT_URL || "").trim();
+if (databaseUrl && !directUrl) {
+  directUrl = swapHost(databaseUrl, "pooled.db.prisma.io", "db.prisma.io");
+}
+if (directUrl && !databaseUrl) {
+  databaseUrl = swapHost(directUrl, "db.prisma.io", "pooled.db.prisma.io");
+}
+
 const env = {
   NODE_ENV: "production",
-  DATABASE_URL: dotenv.DATABASE_URL || process.env.DATABASE_URL || "",
+  DATABASE_URL: databaseUrl,
+  DIRECT_URL: directUrl,
   AUTH_SECRET: dotenv.AUTH_SECRET?.includes("dev-secret")
     ? randomBytes(32).toString("base64")
     : dotenv.AUTH_SECRET || randomBytes(32).toString("base64"),
@@ -154,8 +168,8 @@ const env = {
   REFERRAL_REWARD_DAYS: "30",
 };
 
-if (!env.DATABASE_URL) {
-  console.error("DATABASE_URL missing in .env or environment.");
+if (!env.DATABASE_URL || !env.DIRECT_URL) {
+  console.error("DATABASE_URL and DIRECT_URL missing in .env (generate both in Prisma Console).");
   process.exit(1);
 }
 
