@@ -1,7 +1,15 @@
 name: Deploy to Cloudflare Workers
 
+# Full OpenNext app (~4.7 MiB gzip) exceeds Workers free tier (3 MiB).
+# Re-enable after Workers Paid or Startup Program credits.
 on:
   workflow_dispatch:
+    inputs:
+      confirm_paid_plan:
+        description: "I have Workers Paid (10 MiB) or Startup credits on this account"
+        required: true
+        type: boolean
+        default: false
 
 concurrency:
   group: cloudflare-production
@@ -10,6 +18,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    if: ${{ inputs.confirm_paid_plan }}
     steps:
       - uses: actions/checkout@v4
 
@@ -23,7 +32,9 @@ jobs:
       - name: Build and deploy
         run: |
           npm run deploy:cf || {
-            echo "::error::Deploy failed. If logs show code 10027, upgrade Workers Paid (10 MiB limit): https://dash.cloudflare.com/?to=/:account/workers/plans"
+            echo "::error::Deploy failed."
+            echo "::error::Code 10027 = Worker exceeds free tier (3 MiB gzip). Upgrade: https://dash.cloudflare.com/?to=/:account/workers/plans"
+            echo "::error::Zone error on clubminutes.api.mg = api.mg is on account e3b91a2e..., not the Atlas account."
             exit 1
           }
         env:
@@ -34,3 +45,15 @@ jobs:
           AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
           NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
           NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+
+  blocked:
+    runs-on: ubuntu-latest
+    if: ${{ !inputs.confirm_paid_plan }}
+    steps:
+      - name: Explain why deploy is paused
+        run: |
+          echo "::warning::Full app deploy is paused until Workers Paid or Startup credits."
+          echo "Bundle size is ~4.7 MiB gzip (free tier limit: 3 MiB)."
+          echo "Landing page deploys automatically via 'Deploy landing page' workflow."
+          echo "Live landing: https://rotary-minutes-landing.pages.dev"
+          exit 1
