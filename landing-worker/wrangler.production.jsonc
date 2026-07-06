@@ -1,0 +1,16 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "rotary-minutes",
+  "main": "src/index.js",
+  "compatibility_date": "2026-07-06",
+  "assets": {
+    "directory": "../landing",
+    "binding": "ASSETS"
+  },
+  "routes": [
+    {
+      "pattern": "clubminutes.api.mg",
+      "custom_domain": true
+    }
+  ]
+}
