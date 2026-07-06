@@ -9,6 +9,7 @@ const NAV_PERMISSIONS: Record<string, Permission | null> = {
   minutes: "minutes.view",
   emails: "emails.send",
   members: "members.manage",
+  dues: "dues.view",
   statistics: "minutes.view",
   district: "minutes.view",
   settings: "settings.manage",
@@ -20,6 +21,7 @@ const NAV_FEATURES: Partial<
   emails: { enabled: "emailsEnabled", menuVisible: "emailsMenuVisible" },
   statistics: { enabled: "statisticsEnabled", menuVisible: "statisticsMenuVisible" },
   district: { enabled: "districtDashboard", menuVisible: "districtMenuVisible" },
+  dues: { enabled: "duesEnabled", menuVisible: "duesMenuVisible" },
 };
 
 /** Routes directes → feature requise (garde-fou pages) */
@@ -28,6 +30,7 @@ export const ROUTE_FEATURES: Record<string, keyof ClubFeatureSet> = {
   "/statistics": "statisticsEnabled",
   "/meetings": "liveMeetings",
   "/district": "districtDashboard",
+  "/members/dues": "duesEnabled",
 };
 
 export function shouldShowDistrictNav(

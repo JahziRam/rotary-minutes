@@ -1,15 +1,45 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { Fragment, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
+import {
+  FileText,
+  Mail,
+  History,
+  CheckCircle,
+  Download,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Toast } from "@/components/ui/toast";
-import { bulkCreateDuesForYear, markDuesPaid } from "@/actions/dues";
-import type { DuesStatus } from "@/generated/prisma/client";
+import {
+  bulkCreateDuesForYear,
+  markDuesPaid,
+  updateMemberDuesPlan,
+  sendDuesInvoiceEmail,
+  sendDuesReceiptEmail,
+  sendMemberDuesHistoryEmail,
+  updateDuesStatus,
+} from "@/actions/dues";
+import type { DuesPaymentPlan, DuesStatus } from "@/generated/prisma/client";
+
+type PeriodRow = {
+  id: string;
+  periodIndex: number;
+  periodLabel: string | null;
+  amount: number;
+  currency: string;
+  dueDate: string;
+  paidAt: string | null;
+  status: DuesStatus;
+  invoiceNumber: string | null;
+  receiptNumber: string | null;
+};
 
 type DuesRow = {
   member: {
@@ -17,15 +47,10 @@ type DuesRow = {
     firstName: string;
     lastName: string;
     email: string | null;
+    duesPaymentPlan: DuesPaymentPlan;
   };
-  dues: {
-    id: string;
-    amount: number;
-    currency: string;
-    dueDate: string;
-    paidAt: string | null;
-    status: DuesStatus;
-  } | null;
+  periods: PeriodRow[];
+  nextDue: PeriodRow | null;
 };
 
 const STATUS_VARIANT: Record<DuesStatus, "success" | "warning" | "danger" | "muted"> = {
@@ -41,6 +66,7 @@ export function DuesPanel({
   currency,
   defaultAnnualDues,
   canManage,
+  myMemberId,
   locale,
 }: {
   rows: DuesRow[];
@@ -48,34 +74,44 @@ export function DuesPanel({
   currency: string;
   defaultAnnualDues: number | null;
   canManage: boolean;
+  myMemberId: string | null;
   locale: string;
 }) {
   const t = useTranslations("dues");
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [toast, setToast] = useState<string | null>(null);
+  const [expandedMember, setExpandedMember] = useState<string | null>(null);
   const dateLocale = locale === "fr" ? fr : enUS;
 
-  function run(
-    action: () => Promise<{ success?: boolean; error?: string; created?: number }>,
+  function run<T extends { success?: boolean; error?: string; created?: number; message?: string }>(
+    action: () => Promise<T>,
     okMsg: string
   ) {
     startTransition(async () => {
       const result = await action();
       if (result.success) {
-        setToast(result.created != null ? t("bulkCreated", { count: result.created }) : okMsg);
+        setToast(
+          result.created != null
+            ? t("bulkCreated", { count: result.created })
+            : result.message ?? okMsg
+        );
         router.refresh();
       } else if (result.error === "NO_DEFAULT_AMOUNT") {
         setToast(t("noDefaultAmount"));
       } else if (result.error === "ALREADY_PAID") {
         setToast(t("alreadyPaid"));
+      } else if (result.error === "NO_EMAIL") {
+        setToast(t("noEmail"));
       }
     });
   }
 
-  const paidCount = rows.filter((r) => r.dues?.status === "PAID").length;
-  const pendingCount = rows.filter(
-    (r) => r.dues && ["PENDING", "OVERDUE"].includes(r.dues.status)
+  const paidCount = rows.filter((r) =>
+    r.periods.length > 0 && r.periods.every((p) => p.status === "PAID" || p.status === "WAIVED")
+  ).length;
+  const pendingCount = rows.filter((r) =>
+    r.periods.some((p) => ["PENDING", "OVERDUE"].includes(p.status))
   ).length;
 
   return (
@@ -90,7 +126,9 @@ export function DuesPanel({
             </p>
             {defaultAnnualDues != null && (
               <p className="text-xs text-gray-400 mt-0.5">
-                {t("defaultAmount", { amount: formatMoney(defaultAnnualDues, currency, locale) })}
+                {t("defaultAmount", {
+                  amount: formatMoney(defaultAnnualDues, currency, locale),
+                })}
               </p>
             )}
           </div>
@@ -109,70 +147,310 @@ export function DuesPanel({
         </div>
 
         <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm min-w-[800px]">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50 text-left text-xs text-gray-500 uppercase tracking-wide">
                 <th className="px-4 py-3 font-medium">{t("member")}</th>
+                <th className="px-4 py-3 font-medium">{t("paymentPlan")}</th>
                 <th className="px-4 py-3 font-medium">{t("amount")}</th>
                 <th className="px-4 py-3 font-medium">{t("dueDate")}</th>
                 <th className="px-4 py-3 font-medium">{t("status")}</th>
-                {canManage && <th className="px-4 py-3 font-medium text-right">{t("actions")}</th>}
+                <th className="px-4 py-3 font-medium text-right">{t("actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {rows.length === 0 ? (
                 <tr>
-                  <td colSpan={canManage ? 5 : 4} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
                     {t("noMembers")}
                   </td>
                 </tr>
               ) : (
-                rows.map(({ member, dues }) => (
-                  <tr key={member.id} className="hover:bg-gray-50/50">
-                    <td className="px-4 py-3">
-                      <p className="font-medium text-gray-900">
-                        {member.firstName} {member.lastName}
-                      </p>
-                      {member.email && (
-                        <p className="text-xs text-gray-400 truncate max-w-[200px]">{member.email}</p>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-gray-700">
-                      {dues ? formatMoney(dues.amount, dues.currency, locale) : "—"}
-                    </td>
-                    <td className="px-4 py-3 text-gray-700">
-                      {dues ? format(new Date(dues.dueDate), "PP", { locale: dateLocale }) : "—"}
-                    </td>
-                    <td className="px-4 py-3">
-                      {dues ? (
-                        <Badge variant={STATUS_VARIANT[dues.status]}>
-                          {t(`statuses.${dues.status}`)}
-                        </Badge>
-                      ) : (
-                        <Badge variant="muted">{t("notAssigned")}</Badge>
-                      )}
-                    </td>
-                    {canManage && (
-                      <td className="px-4 py-3 text-right">
-                        {dues && dues.status !== "PAID" && dues.status !== "WAIVED" && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={pending}
-                            onClick={() => run(() => markDuesPaid(dues.id), t("markedPaid"))}
-                          >
-                            {t("markPaid")}
-                          </Button>
-                        )}
-                        {dues?.status === "PAID" && dues.paidAt && (
-                          <span className="text-xs text-gray-400">
-                            {format(new Date(dues.paidAt), "PP", { locale: dateLocale })}
-                          </span>
-                        )}
-                      </td>
-                    )}
-                  </tr>
-                ))
+                rows.map(({ member, periods, nextDue }) => {
+                  const canEditPlan = canManage || myMemberId === member.id;
+                  const isExpanded = expandedMember === member.id;
+                  const displayPeriod = nextDue ?? periods[periods.length - 1] ?? null;
+
+                  return (
+                    <Fragment key={member.id}>
+                      <tr className="hover:bg-gray-50/50">
+                        <td className="px-4 py-3">
+                          <p className="font-medium text-gray-900">
+                            {member.firstName} {member.lastName}
+                          </p>
+                          {member.email && (
+                            <p className="text-xs text-gray-400 truncate max-w-[180px]">
+                              {member.email}
+                            </p>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          {canEditPlan ? (
+                            <select
+                              value={member.duesPaymentPlan}
+                              disabled={pending}
+                              onChange={(e) =>
+                                run(
+                                  () =>
+                                    updateMemberDuesPlan(
+                                      member.id,
+                                      e.target.value as DuesPaymentPlan,
+                                      locale
+                                    ),
+                                  t("planUpdated")
+                                )
+                              }
+                              className="text-xs border border-gray-200 rounded-md px-2 py-1 bg-white"
+                            >
+                              <option value="ANNUAL">{t("plans.ANNUAL")}</option>
+                              <option value="MONTHLY">{t("plans.MONTHLY")}</option>
+                            </select>
+                          ) : (
+                            <span className="text-gray-700 text-xs">
+                              {t(`plans.${member.duesPaymentPlan}`)}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-gray-700">
+                          {displayPeriod
+                            ? formatMoney(displayPeriod.amount, displayPeriod.currency, locale)
+                            : "—"}
+                          {periods.length > 1 && (
+                            <span className="text-xs text-gray-400 ml-1">
+                              ({periods.filter((p) => p.status === "PAID").length}/{periods.length})
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-gray-700">
+                          {displayPeriod
+                            ? format(new Date(displayPeriod.dueDate), "PP", { locale: dateLocale })
+                            : "—"}
+                        </td>
+                        <td className="px-4 py-3">
+                          {displayPeriod ? (
+                            <Badge variant={STATUS_VARIANT[displayPeriod.status]}>
+                              {t(`statuses.${displayPeriod.status}`)}
+                            </Badge>
+                          ) : (
+                            <Badge variant="muted">{t("notAssigned")}</Badge>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-end gap-1 flex-wrap">
+                            {periods.length > 0 && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 px-2"
+                                onClick={() =>
+                                  setExpandedMember(isExpanded ? null : member.id)
+                                }
+                              >
+                                {isExpanded ? (
+                                  <ChevronUp className="h-3.5 w-3.5" />
+                                ) : (
+                                  <ChevronDown className="h-3.5 w-3.5" />
+                                )}
+                              </Button>
+                            )}
+                            {canManage && displayPeriod && displayPeriod.status !== "PAID" && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 text-xs"
+                                  disabled={pending}
+                                  onClick={() =>
+                                    run(
+                                      () => markDuesPaid(displayPeriod.id, {}, locale),
+                                      t("markedPaid")
+                                    )
+                                  }
+                                >
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  {t("markPaid")}
+                                </Button>
+                                {member.email && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 text-xs"
+                                    disabled={pending}
+                                    onClick={() =>
+                                      run(
+                                        () => sendDuesInvoiceEmail(displayPeriod.id, undefined, locale),
+                                        t("invoiceSent")
+                                      )
+                                    }
+                                  >
+                                    <Mail className="h-3 w-3" />
+                                  </Button>
+                                )}
+                              </>
+                            )}
+                            {canManage && displayPeriod?.status === "PAID" && member.email && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 text-xs"
+                                disabled={pending}
+                                onClick={() =>
+                                  run(
+                                    () => sendDuesReceiptEmail(displayPeriod.id, locale),
+                                    t("receiptSent")
+                                  )
+                                }
+                              >
+                                <FileText className="h-3 w-3" />
+                              </Button>
+                            )}
+                            {canManage && member.email && periods.length > 0 && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 text-xs"
+                                disabled={pending}
+                                onClick={() =>
+                                  run(
+                                    () =>
+                                      sendMemberDuesHistoryEmail(member.id, fiscalYear, locale),
+                                    t("historySent")
+                                  )
+                                }
+                              >
+                                <History className="h-3 w-3" />
+                              </Button>
+                            )}
+                            {periods.length > 0 && (
+                              <a
+                                href={`/api/dues/history/${member.id}?fiscalYear=${fiscalYear}&locale=${locale}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center justify-center h-7 w-7 rounded-md hover:bg-gray-100 text-gray-500"
+                                title={t("downloadHistory")}
+                              >
+                                <Download className="h-3.5 w-3.5" />
+                              </a>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                      {isExpanded &&
+                        periods.map((period) => (
+                          <tr key={period.id} className="bg-gray-50/80 text-xs">
+                            <td className="px-4 py-2 pl-8 text-gray-500">
+                              {period.periodLabel ?? `#${period.periodIndex}`}
+                            </td>
+                            <td />
+                            <td className="px-4 py-2">
+                              {formatMoney(period.amount, period.currency, locale)}
+                            </td>
+                            <td className="px-4 py-2">
+                              {format(new Date(period.dueDate), "PP", { locale: dateLocale })}
+                            </td>
+                            <td className="px-4 py-2">
+                              <Badge variant={STATUS_VARIANT[period.status]} className="text-[10px]">
+                                {t(`statuses.${period.status}`)}
+                              </Badge>
+                            </td>
+                            <td className="px-4 py-2 text-right">
+                              {canManage && (
+                                <div className="flex justify-end gap-1">
+                                  {period.status !== "PAID" && period.status !== "WAIVED" && (
+                                    <>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-6 text-[10px] px-2"
+                                        disabled={pending}
+                                        onClick={() =>
+                                          run(
+                                            () => markDuesPaid(period.id, {}, locale),
+                                            t("markedPaid")
+                                          )
+                                        }
+                                      >
+                                        {t("markPaid")}
+                                      </Button>
+                                      <a
+                                        href={`/api/dues/invoice/${period.id}?locale=${locale}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center h-6 px-2 text-[10px] text-navy hover:underline"
+                                      >
+                                        PDF
+                                      </a>
+                                      {member.email && (
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          className="h-6 text-[10px] px-1"
+                                          disabled={pending}
+                                          onClick={() =>
+                                            run(
+                                              () =>
+                                                sendDuesInvoiceEmail(period.id, undefined, locale),
+                                              t("invoiceSent")
+                                            )
+                                          }
+                                        >
+                                          <Mail className="h-3 w-3" />
+                                        </Button>
+                                      )}
+                                    </>
+                                  )}
+                                  {period.status === "PAID" && (
+                                    <>
+                                      <a
+                                        href={`/api/dues/receipt/${period.id}?locale=${locale}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center h-6 px-2 text-[10px] text-navy hover:underline"
+                                      >
+                                        PDF
+                                      </a>
+                                      {member.email && (
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          className="h-6 text-[10px] px-1"
+                                          disabled={pending}
+                                          onClick={() =>
+                                            run(
+                                              () => sendDuesReceiptEmail(period.id, locale),
+                                              t("receiptSent")
+                                            )
+                                          }
+                                        >
+                                          <Mail className="h-3 w-3" />
+                                        </Button>
+                                      )}
+                                    </>
+                                  )}
+                                  {period.status === "PENDING" && (
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-6 text-[10px] px-2 text-gray-400"
+                                      disabled={pending}
+                                      onClick={() =>
+                                        run(
+                                          () => updateDuesStatus(period.id, "WAIVED"),
+                                          t("waived")
+                                        )
+                                      }
+                                    >
+                                      {t("waive")}
+                                    </Button>
+                                  )}
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                    </Fragment>
+                  );
+                })
               )}
             </tbody>
           </table>

@@ -15,6 +15,8 @@ export interface ClubFeatureSet {
   districtMenuVisible: boolean;
   offlineMenuVisible: boolean;
   apiAccessEnabled: boolean;
+  duesEnabled: boolean;
+  duesMenuVisible: boolean;
   memberLimit: number | null;
 }
 
@@ -32,6 +34,8 @@ export const DEFAULT_FEATURES: ClubFeatureSet = {
   districtMenuVisible: false,
   offlineMenuVisible: false,
   apiAccessEnabled: false,
+  duesEnabled: true,
+  duesMenuVisible: true,
   memberLimit: null,
 };
 
@@ -53,6 +57,8 @@ export const getClubFeatures = cache(async (clubId: string): Promise<ClubFeature
     districtMenuVisible: features.districtMenuVisible,
     offlineMenuVisible: features.offlineMenuVisible,
     apiAccessEnabled: features.apiAccessEnabled,
+    duesEnabled: features.duesEnabled,
+    duesMenuVisible: features.duesMenuVisible,
     memberLimit: features.memberLimit,
   };
 });

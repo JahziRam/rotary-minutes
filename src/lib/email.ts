@@ -108,6 +108,88 @@ export function welcomeClubEmail(opts: {
   };
 }
 
+export function duesInvoiceEmail(opts: {
+  clubName: string;
+  clubId?: string;
+  memberName: string;
+  periodLabel: string;
+  amount: string;
+  dueDate: string;
+  locale: string;
+  logoUrl?: string;
+}) {
+  const isFr = opts.locale === "fr";
+  const body = isFr
+    ? `<p>Bonjour <strong>${opts.memberName}</strong>,</p><p>Veuillez trouver ci-joint votre facture de cotisation pour la période <strong>${opts.periodLabel}</strong> au <strong>${opts.clubName}</strong>.</p><p>Montant : <strong>${opts.amount}</strong><br/>Échéance : <strong>${opts.dueDate}</strong></p>`
+    : `<p>Hello <strong>${opts.memberName}</strong>,</p><p>Please find attached your dues invoice for <strong>${opts.periodLabel}</strong> at <strong>${opts.clubName}</strong>.</p><p>Amount: <strong>${opts.amount}</strong><br/>Due date: <strong>${opts.dueDate}</strong></p>`;
+  const branded = prepareBrandedEmail(body, {
+    clubName: opts.clubName,
+    clubId: opts.clubId,
+    logoUrl: opts.logoUrl,
+  });
+  return {
+    subject: isFr
+      ? `Facture de cotisation — ${opts.clubName}`
+      : `Dues invoice — ${opts.clubName}`,
+    html: branded.html,
+    attachments: branded.attachments,
+  };
+}
+
+export function duesReceiptEmail(opts: {
+  clubName: string;
+  clubId?: string;
+  memberName: string;
+  periodLabel: string;
+  amount: string;
+  receiptNumber: string;
+  locale: string;
+  logoUrl?: string;
+}) {
+  const isFr = opts.locale === "fr";
+  const body = isFr
+    ? `<p>Bonjour <strong>${opts.memberName}</strong>,</p><p>Nous confirmons la réception de votre paiement de cotisation pour <strong>${opts.periodLabel}</strong>.</p><p>Montant : <strong>${opts.amount}</strong><br/>Référence : <strong>${opts.receiptNumber}</strong></p><p>Le reçu officiel est joint à cet email.</p>`
+    : `<p>Hello <strong>${opts.memberName}</strong>,</p><p>We confirm receipt of your dues payment for <strong>${opts.periodLabel}</strong>.</p><p>Amount: <strong>${opts.amount}</strong><br/>Reference: <strong>${opts.receiptNumber}</strong></p><p>The official receipt is attached to this email.</p>`;
+  const branded = prepareBrandedEmail(body, {
+    clubName: opts.clubName,
+    clubId: opts.clubId,
+    logoUrl: opts.logoUrl,
+  });
+  return {
+    subject: isFr
+      ? `Reçu de paiement — ${opts.clubName}`
+      : `Payment receipt — ${opts.clubName}`,
+    html: branded.html,
+    attachments: branded.attachments,
+  };
+}
+
+export function duesHistoryEmail(opts: {
+  clubName: string;
+  clubId?: string;
+  memberName: string;
+  fiscalYear: string;
+  locale: string;
+  logoUrl?: string;
+}) {
+  const isFr = opts.locale === "fr";
+  const body = isFr
+    ? `<p>Bonjour <strong>${opts.memberName}</strong>,</p><p>Veuillez trouver ci-joint l'historique de vos cotisations pour l'exercice <strong>${opts.fiscalYear}</strong> au <strong>${opts.clubName}</strong>.</p>`
+    : `<p>Hello <strong>${opts.memberName}</strong>,</p><p>Please find attached your dues payment history for fiscal year <strong>${opts.fiscalYear}</strong> at <strong>${opts.clubName}</strong>.</p>`;
+  const branded = prepareBrandedEmail(body, {
+    clubName: opts.clubName,
+    clubId: opts.clubId,
+    logoUrl: opts.logoUrl,
+  });
+  return {
+    subject: isFr
+      ? `Historique des cotisations — ${opts.fiscalYear}`
+      : `Dues history — ${opts.fiscalYear}`,
+    html: branded.html,
+    attachments: branded.attachments,
+  };
+}
+
 export function minuteFinalizedEmail(opts: {
   clubName: string;
   clubId?: string;

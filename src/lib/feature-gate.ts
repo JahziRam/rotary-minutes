@@ -8,6 +8,7 @@ export type GatedFeature = keyof Pick<
   | "pdfExport"
   | "offlineMode"
   | "liveMeetings"
+  | "duesEnabled"
 >;
 
 export const GATED_FEATURE_KEYS: GatedFeature[] = [
@@ -17,6 +18,7 @@ export const GATED_FEATURE_KEYS: GatedFeature[] = [
   "pdfExport",
   "districtDashboard",
   "offlineMode",
+  "duesEnabled",
 ];
 
 export function isFeatureEnabled(
@@ -35,6 +37,7 @@ const FEATURE_MENU_VISIBLE: Partial<Record<GatedFeature, keyof ClubFeatureSet>> 
   liveMeetings: "liveMeetingsMenuVisible",
   districtDashboard: "districtMenuVisible",
   offlineMode: "offlineMenuVisible",
+  duesEnabled: "duesMenuVisible",
 };
 
 /** Afficher un module désactivé dans l'UI (menu, boutons) si le super admin l'a autorisé. */

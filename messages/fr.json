@@ -191,6 +191,27 @@
     "defaultAmount": "Montant par défaut : {amount}",
     "notAssigned": "Non assignée",
     "noMembers": "Aucun membre actif",
+    "paymentPlan": "Mode de paiement",
+    "plans": {
+      "MONTHLY": "Mensuel",
+      "ANNUAL": "Annuel"
+    },
+    "planUpdated": "Mode de paiement mis à jour",
+    "invoiceSent": "Facture envoyée par email",
+    "receiptSent": "Reçu envoyé par email",
+    "historySent": "Historique envoyé par email",
+    "downloadHistory": "Télécharger l'historique PDF",
+    "noEmail": "Ce membre n'a pas d'adresse email",
+    "waive": "Exonérer",
+    "waived": "Cotisation exonérée",
+    "settings": {
+      "title": "Paramètres des cotisations",
+      "defaultAnnualDues": "Montant annuel par défaut",
+      "currency": "Devise",
+      "autoInvoiceEmail": "Envoyer automatiquement les factures par email à la création",
+      "autoReceiptEmail": "Envoyer automatiquement le reçu par email au paiement",
+      "saved": "Paramètres des cotisations enregistrés"
+    },
     "statuses": {
       "PENDING": "En attente",
       "PAID": "Payée",

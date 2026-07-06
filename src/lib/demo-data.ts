@@ -105,12 +105,12 @@ export const DEMO_NOTIFICATIONS = [
 ];
 
 export const DEMO_DUES = [
-  { id: "d1", member: "Jean Dupont", amount: 250, currency: "EUR", fiscalYear: "2025-2026", dueDate: "2026-03-31", status: "PAID", paidAt: "2026-01-15" },
-  { id: "d2", member: "Marie Martin", amount: 250, currency: "EUR", fiscalYear: "2025-2026", dueDate: "2026-03-31", status: "PAID", paidAt: "2026-02-02" },
-  { id: "d3", member: "Pierre Bernard", amount: 250, currency: "EUR", fiscalYear: "2025-2026", dueDate: "2026-03-31", status: "PENDING", paidAt: null },
-  { id: "d4", member: "Sophie Leroy", amount: 250, currency: "EUR", fiscalYear: "2025-2026", dueDate: "2026-03-31", status: "PENDING", paidAt: null },
-  { id: "d5", member: "Luc Moreau", amount: 250, currency: "EUR", fiscalYear: "2025-2026", dueDate: "2026-03-31", status: "OVERDUE", paidAt: null },
-  { id: "d6", member: "Camille Petit", amount: 250, currency: "EUR", fiscalYear: "2025-2026", dueDate: "2026-03-31", status: "PENDING", paidAt: null },
+  { id: "d1", member: "Jean Dupont", amount: 250, currency: "EUR", fiscalYear: "2025-2026", dueDate: "2026-03-31", status: "PAID", paidAt: "2026-01-15", plan: "ANNUAL" as const, invoiceNumber: "INV-2025-0001", receiptNumber: "REC-2025-0001" },
+  { id: "d2", member: "Marie Martin", amount: 20.83, currency: "EUR", fiscalYear: "2025-2026", dueDate: "2026-03-01", status: "PAID", paidAt: "2026-03-01", plan: "MONTHLY" as const, periodLabel: "mars 2026", invoiceNumber: "INV-2025-0012", receiptNumber: "REC-2025-0012" },
+  { id: "d3", member: "Pierre Bernard", amount: 250, currency: "EUR", fiscalYear: "2025-2026", dueDate: "2026-03-31", status: "PENDING", paidAt: null, plan: "ANNUAL" as const, invoiceNumber: "INV-2025-0003", receiptNumber: null },
+  { id: "d4", member: "Sophie Leroy", amount: 20.83, currency: "EUR", fiscalYear: "2025-2026", dueDate: "2026-04-01", status: "PENDING", paidAt: null, plan: "MONTHLY" as const, periodLabel: "avril 2026", invoiceNumber: "INV-2025-0015", receiptNumber: null },
+  { id: "d5", member: "Luc Moreau", amount: 250, currency: "EUR", fiscalYear: "2025-2026", dueDate: "2026-03-31", status: "OVERDUE", paidAt: null, plan: "ANNUAL" as const, invoiceNumber: "INV-2025-0005", receiptNumber: null },
+  { id: "d6", member: "Camille Petit", amount: 20.83, currency: "EUR", fiscalYear: "2025-2026", dueDate: "2026-03-01", status: "PENDING", paidAt: null, plan: "MONTHLY" as const, periodLabel: "mars 2026", invoiceNumber: "INV-2025-0018", receiptNumber: null },
 ];
 
 export const DEMO_OPEN_ACTIONS = [

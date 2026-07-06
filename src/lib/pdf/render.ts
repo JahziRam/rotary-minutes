@@ -17,3 +17,33 @@ export async function renderStatsPdf(data: StatsPDFData): Promise<Buffer> {
   ]);
   return renderToBuffer(StatsPDFDocument({ data }));
 }
+
+export async function renderDuesInvoicePdf(
+  data: import("@/lib/pdf/dues-invoice-pdf").DuesInvoicePDFData
+): Promise<Buffer> {
+  const [{ renderToBuffer }, { DuesInvoicePDFDocument }] = await Promise.all([
+    import("@react-pdf/renderer"),
+    import("@/lib/pdf/dues-invoice-pdf"),
+  ]);
+  return renderToBuffer(DuesInvoicePDFDocument({ data }));
+}
+
+export async function renderDuesReceiptPdf(
+  data: import("@/lib/pdf/dues-receipt-pdf").DuesReceiptPDFData
+): Promise<Buffer> {
+  const [{ renderToBuffer }, { DuesReceiptPDFDocument }] = await Promise.all([
+    import("@react-pdf/renderer"),
+    import("@/lib/pdf/dues-receipt-pdf"),
+  ]);
+  return renderToBuffer(DuesReceiptPDFDocument({ data }));
+}
+
+export async function renderDuesHistoryPdf(
+  data: import("@/lib/pdf/dues-history-pdf").DuesHistoryPDFData
+): Promise<Buffer> {
+  const [{ renderToBuffer }, { DuesHistoryPDFDocument }] = await Promise.all([
+    import("@react-pdf/renderer"),
+    import("@/lib/pdf/dues-history-pdf"),
+  ]);
+  return renderToBuffer(DuesHistoryPDFDocument({ data }));
+}

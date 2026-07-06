@@ -51,6 +51,8 @@ export default async function AdminClubsPage({
           districtMenuVisible: c.features.districtMenuVisible,
           offlineMenuVisible: c.features.offlineMenuVisible,
           apiAccessEnabled: c.features.apiAccessEnabled,
+          duesEnabled: c.features.duesEnabled ?? DEFAULT_FEATURES.duesEnabled,
+          duesMenuVisible: c.features.duesMenuVisible ?? DEFAULT_FEATURES.duesMenuVisible,
           memberLimit: c.features.memberLimit,
         }
       : DEFAULT_FEATURES,

@@ -3,6 +3,7 @@ import Image from "next/image";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { User, Wallet } from "lucide-react";
 import { getClubContext } from "@/lib/club-context";
+import { isFeatureEnabled } from "@/lib/feature-gate";
 import { hasRolePermission } from "@/lib/roles";
 import { prisma } from "@/lib/prisma";
 import { getUpcomingBirthdays } from "@/lib/queries/members";
@@ -42,6 +43,7 @@ export default async function MembersPage({
   ]);
 
   const active = members.filter((m) => m.isActive);
+  const showDues = isFeatureEnabled(ctx.features, "duesEnabled", ctx.isSuperAdmin);
 
   return (
     <AppShellServer title={t("members.title")}>
@@ -62,13 +64,15 @@ export default async function MembersPage({
               ` · ${members.length - active.length} ${t("members.inactive").toLowerCase()}`}
           </p>
           <div className="flex items-center gap-2">
-            <Link
-              href={`/${locale}/members/dues`}
-              className="inline-flex items-center justify-center gap-2 h-8 rounded-md px-3 text-xs font-medium border border-gray-200 bg-white hover:bg-gray-50 text-gray-900 transition-all"
-            >
-              <Wallet className="h-4 w-4" />
-              {t("dues.title")}
-            </Link>
+            {showDues && (
+              <Link
+                href={`/${locale}/members/dues`}
+                className="inline-flex items-center justify-center gap-2 h-8 rounded-md px-3 text-xs font-medium border border-gray-200 bg-white hover:bg-gray-50 text-gray-900 transition-all"
+              >
+                <Wallet className="h-4 w-4" />
+                {t("dues.title")}
+              </Link>
+            )}
             {canManage && <AddMemberForm />}
           </div>
         </div>

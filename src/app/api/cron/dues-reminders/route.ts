@@ -6,11 +6,11 @@ import {
   subDays,
 } from "date-fns";
 import { prisma } from "@/lib/prisma";
-import { sendEmail } from "@/lib/email";
-import { getAppBaseUrl } from "@/lib/app-url";
-import { buildClubEmailVars, renderEmailContent } from "@/lib/email-render";
-import { prepareBrandedEmail } from "@/lib/email-branding";
-import { logoSrcFromResult, resolveLogoForEmail } from "@/lib/email-logo";
+import { sendEmail, duesInvoiceEmail } from "@/lib/email";
+import { buildDuesInvoicePdfBuffer } from "@/lib/pdf/build-dues-pdf";
+import { nextInvoiceNumber } from "@/lib/dues";
+import { getClubFeatures } from "@/lib/features";
+
 import { format } from "date-fns";
 import { enUS, fr } from "date-fns/locale";
 
@@ -32,8 +32,6 @@ export async function GET(request: Request) {
   const now = new Date();
   const today = startOfDay(now);
   const cooldownCutoff = subDays(now, REMIND_COOLDOWN_DAYS);
-  const baseUrl = getAppBaseUrl();
-
   await prisma.memberDues.updateMany({
     where: {
       status: "PENDING",
@@ -61,38 +59,58 @@ export async function GET(request: Request) {
   for (const dues of candidates) {
     if (!shouldRemind(dues.dueDate, now)) continue;
 
+    const features = await getClubFeatures(dues.clubId);
+    if (!features.duesEnabled) continue;
+
     const locale = dues.club.language === "EN" ? "en" : "fr";
     const dateLocale = locale === "fr" ? fr : enUS;
-    const emailLogo = resolveLogoForEmail(dues.club.id, dues.club.logoUrl, baseUrl);
-    const vars = buildClubEmailVars({
-      clubName: dues.club.name,
-      locale,
-      clubLogo: logoSrcFromResult(emailLogo) ?? "",
-      firstName: dues.member.firstName,
-      lastName: dues.member.lastName,
-      dashboardUrl: `${baseUrl}/${locale}/members/dues`,
-      duesAmount: `${Number(dues.amount)} ${dues.currency}`,
-      duesDueDate: format(dues.dueDate, "d MMMM yyyy", { locale: dateLocale }),
-      fiscalYear: String(dues.fiscalYear),
-    });
 
-    const template = await prisma.emailTemplate.findFirst({
-      where: { slug: `dues-reminder-${locale}`, clubId: null, isSystem: true },
-    });
+    if (dues.member.email) {
+      let invoiceNumber = dues.invoiceNumber;
+      if (!invoiceNumber) {
+        invoiceNumber = await nextInvoiceNumber(dues.clubId, dues.fiscalYear);
+        await prisma.memberDues.update({
+          where: { id: dues.id },
+          data: { invoiceNumber },
+        });
+      }
 
-    if (dues.member.email && template) {
-      const subject = renderEmailContent(template.subject, vars);
-      const bodyHtml = renderEmailContent(template.body, vars);
-      const branded = prepareBrandedEmail(bodyHtml, {
+      const clubFull = await prisma.club.findUnique({
+        where: { id: dues.clubId },
+        select: {
+          id: true,
+          name: true,
+          address: true,
+          meetingLocation: true,
+          logoUrl: true,
+          language: true,
+        },
+      });
+
+      const duesWithInvoice = { ...dues, invoiceNumber };
+      const pdf =
+        clubFull &&
+        (await buildDuesInvoicePdfBuffer(clubFull, dues.member, duesWithInvoice, locale));
+
+      const mail = duesInvoiceEmail({
         clubName: dues.club.name,
-        logo: emailLogo,
+        clubId: dues.club.id,
+        memberName: `${dues.member.firstName} ${dues.member.lastName}`,
+        periodLabel: dues.periodLabel ?? `${dues.fiscalYear}-${dues.fiscalYear + 1}`,
+        amount: `${Number(dues.amount)} ${dues.currency}`,
+        dueDate: format(dues.dueDate, "d MMMM yyyy", { locale: dateLocale }),
+        locale,
+        logoUrl: dues.club.logoUrl ?? undefined,
       });
 
       const result = await sendEmail({
         to: dues.member.email,
-        subject,
-        html: branded.html,
-        attachments: branded.attachments,
+        subject: mail.subject,
+        html: mail.html,
+        attachments: [
+          ...(mail.attachments ?? []),
+          ...(pdf ? [{ filename: pdf.filename, content: pdf.buffer }] : []),
+        ],
       });
       if (result.ok) emailsSent++;
     }

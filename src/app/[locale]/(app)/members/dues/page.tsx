@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { redirect } from "next/navigation";
 import { getClubContext } from "@/lib/club-context";
-import { hasRolePermission } from "@/lib/roles";
+import { isFeatureEnabled } from "@/lib/feature-gate";
 import { listMemberDues } from "@/actions/dues";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { DuesPanel } from "@/components/members/dues-panel";
@@ -17,10 +18,12 @@ export default async function MemberDuesPage({
   const ctx = await getClubContext();
   if (!ctx) return null;
 
+  if (!isFeatureEnabled(ctx.features, "duesEnabled", ctx.isSuperAdmin)) {
+    redirect(`/${locale}/members`);
+  }
+
   const data = await listMemberDues();
   if ("error" in data) return null;
-
-  const canManage = await hasRolePermission(ctx.role, "members.manage", ctx.isSuperAdmin);
 
   return (
     <AppShellServer title={t("title")}>
@@ -29,28 +32,46 @@ export default async function MemberDuesPage({
           ← {t("backToMembers")}
         </Link>
         <DuesPanel
-          rows={data.rows.map(({ member, dues }) => ({
+          rows={data.rows.map(({ member, periods, nextDue }) => ({
             member: {
               id: member.id,
               firstName: member.firstName,
               lastName: member.lastName,
               email: member.email,
+              duesPaymentPlan: member.duesPaymentPlan,
             },
-            dues: dues
+            periods: periods.map((p) => ({
+              id: p.id,
+              periodIndex: p.periodIndex,
+              periodLabel: p.periodLabel,
+              amount: Number(p.amount),
+              currency: p.currency,
+              dueDate: p.dueDate.toISOString(),
+              paidAt: p.paidAt?.toISOString() ?? null,
+              status: p.status,
+              invoiceNumber: p.invoiceNumber,
+              receiptNumber: p.receiptNumber,
+            })),
+            nextDue: nextDue
               ? {
-                  id: dues.id,
-                  amount: Number(dues.amount),
-                  currency: dues.currency,
-                  dueDate: dues.dueDate.toISOString(),
-                  paidAt: dues.paidAt?.toISOString() ?? null,
-                  status: dues.status,
+                  id: nextDue.id,
+                  periodIndex: nextDue.periodIndex,
+                  periodLabel: nextDue.periodLabel,
+                  amount: Number(nextDue.amount),
+                  currency: nextDue.currency,
+                  dueDate: nextDue.dueDate.toISOString(),
+                  paidAt: nextDue.paidAt?.toISOString() ?? null,
+                  status: nextDue.status,
+                  invoiceNumber: nextDue.invoiceNumber,
+                  receiptNumber: nextDue.receiptNumber,
                 }
               : null,
           }))}
           fiscalYear={data.fiscalYear}
           currency={data.currency}
           defaultAnnualDues={data.defaultAnnualDues}
-          canManage={canManage}
+          canManage={data.canManage}
+          myMemberId={data.myMemberId}
           locale={locale}
         />
       </div>

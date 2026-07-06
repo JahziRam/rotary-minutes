@@ -20,6 +20,7 @@ const FEATURE_MODULES: Array<{
   { enabled: "liveMeetings", menuVisible: "liveMeetingsMenuVisible", label: "Réunions en direct", inNav: false },
   { enabled: "districtDashboard", menuVisible: "districtMenuVisible", label: "Tableau district", inNav: false },
   { enabled: "offlineMode", menuVisible: "offlineMenuVisible", label: "Mode hors-ligne", inNav: false },
+  { enabled: "duesEnabled", menuVisible: "duesMenuVisible", label: "Cotisations", inNav: true },
 ];
 
 const API_ACCESS_KEY = "apiAccessEnabled" as const;

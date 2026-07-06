@@ -26,6 +26,7 @@ import {
   FileSpreadsheet,
   LayoutTemplate,
   Coins,
+  History,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -659,6 +660,9 @@ export function DemoDuesPanel({ locale }: { locale: string }) {
       <div className="flex flex-wrap gap-2">
         <DemoLockedButton label={t("recordPayment")} icon={Plus} variant="gold" />
         <DemoLockedButton label={t("sendDuesReminder")} icon={Mail} />
+        <DemoLockedButton label={isFr ? "Envoyer facture PDF" : "Send invoice PDF"} icon={Mail} />
+        <DemoLockedButton label={isFr ? "Envoyer reçu PDF" : "Send receipt PDF"} icon={FileText} />
+        <DemoLockedButton label={isFr ? "Historique par email" : "Email history"} icon={History} />
         <DemoLockedButton label={t("exportDues")} icon={Download} />
       </div>
 
@@ -689,6 +693,7 @@ export function DemoDuesPanel({ locale }: { locale: string }) {
             <thead>
               <tr className="text-left text-gray-500 border-b">
                 <th className="pb-2 font-medium">{isFr ? "Membre" : "Member"}</th>
+                <th className="pb-2 font-medium">{isFr ? "Mode" : "Plan"}</th>
                 <th className="pb-2 font-medium">{t("fiscalYear")}</th>
                 <th className="pb-2 font-medium">{t("duesAmount")}</th>
                 <th className="pb-2 font-medium">{t("duesDueDate")}</th>
@@ -699,6 +704,10 @@ export function DemoDuesPanel({ locale }: { locale: string }) {
               {dues.map((d) => (
                 <tr key={d.id} className="border-b border-gray-50">
                   <td className="py-2.5 font-medium text-gray-800">{d.member}</td>
+                  <td className="py-2.5 text-xs">
+                    {d.plan === "MONTHLY" ? (isFr ? "Mensuel" : "Monthly") : isFr ? "Annuel" : "Annual"}
+                    {"periodLabel" in d && d.periodLabel ? ` · ${d.periodLabel}` : ""}
+                  </td>
                   <td className="py-2.5">{d.fiscalYear}</td>
                   <td className="py-2.5">{d.amount} {d.currency}</td>
                   <td className="py-2.5">{d.dueDateLabel}</td>

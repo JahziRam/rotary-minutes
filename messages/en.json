@@ -191,6 +191,27 @@
     "defaultAmount": "Default amount: {amount}",
     "notAssigned": "Not assigned",
     "noMembers": "No active members",
+    "paymentPlan": "Payment plan",
+    "plans": {
+      "MONTHLY": "Monthly",
+      "ANNUAL": "Annual"
+    },
+    "planUpdated": "Payment plan updated",
+    "invoiceSent": "Invoice sent by email",
+    "receiptSent": "Receipt sent by email",
+    "historySent": "History sent by email",
+    "downloadHistory": "Download history PDF",
+    "noEmail": "This member has no email address",
+    "waive": "Waive",
+    "waived": "Dues waived",
+    "settings": {
+      "title": "Dues settings",
+      "defaultAnnualDues": "Default annual amount",
+      "currency": "Currency",
+      "autoInvoiceEmail": "Automatically email invoices when created",
+      "autoReceiptEmail": "Automatically email receipt when payment is recorded",
+      "saved": "Dues settings saved"
+    },
     "statuses": {
       "PENDING": "Pending",
       "PAID": "Paid",

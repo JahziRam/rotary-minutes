@@ -111,6 +111,11 @@ enum DuesStatus {
   WAIVED
 }
 
+enum DuesPaymentPlan {
+  MONTHLY
+  ANNUAL
+}
+
 enum AnnouncementTarget {
   ALL_CLUBS
   CLUB
@@ -234,6 +239,7 @@ model User {
   minutesSubmitted Minute[] @relation("MinuteSubmitter")
   minutesApproved  Minute[] @relation("MinuteApprover")
   memberProfile    Member?
+  duesPaymentsRecorded DuesPayment[]
   supportTickets   SupportTicket[]
   dataExportRequests DataExportRequest[]
   deletionRequests   DeletionRequest[]
@@ -260,8 +266,10 @@ model Club {
   secretaryName   String?
   memberCount     Int       @default(0)
   foundedAt       DateTime?
-  currency           String    @default("EUR")
-  defaultAnnualDues  Decimal?  @db.Decimal(10, 2)
+  currency              String    @default("EUR")
+  defaultAnnualDues     Decimal?  @db.Decimal(10, 2)
+  duesAutoInvoiceEmail  Boolean   @default(false)
+  duesAutoReceiptEmail  Boolean   @default(true)
   description     String?   @db.Text
   timezone        String    @default("Europe/Paris")
   language        Language  @default(FR)
@@ -291,6 +299,7 @@ model Club {
   apiKeys         ClubApiKey[]
   webhooks        ClubWebhook[]
   memberDues      MemberDues[]
+  duesPayments    DuesPayment[]
 }
 
 model ClubMembership {
@@ -325,9 +334,10 @@ model Member {
   bio          String?   @db.Text
   commissionId String?
   sponsorName  String?
-  userId       String?   @unique
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  userId           String?          @unique
+  duesPaymentPlan  DuesPaymentPlan  @default(ANNUAL)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 
   club         Club      @relation(fields: [clubId], references: [id], onDelete: Cascade)
   commission   Commission? @relation(fields: [commissionId], references: [id], onDelete: SetNull)
@@ -335,29 +345,63 @@ model Member {
   attendances  MeetingAttendance[]
   officerMandates OfficerMandate[]
   memberDues   MemberDues[]
+  duesPayments DuesPayment[]
 
   @@index([clubId])
 }
 
 model MemberDues {
-  id              String     @id @default(cuid())
+  id              String           @id @default(cuid())
   clubId          String
   memberId        String
   fiscalYear      Int
-  amount          Decimal    @db.Decimal(10, 2)
-  currency        String     @default("EUR")
+  periodIndex     Int              @default(0)
+  periodLabel     String?
+  paymentPlan     DuesPaymentPlan  @default(ANNUAL)
+  amount          Decimal          @db.Decimal(10, 2)
+  currency        String           @default("EUR")
   dueDate         DateTime
   paidAt          DateTime?
-  status          DuesStatus @default(PENDING)
+  status          DuesStatus       @default(PENDING)
   lastRemindedAt  DateTime?
+  invoiceNumber   String?
+  invoiceSentAt   DateTime?
+  receiptNumber   String?
+  receiptSentAt   DateTime?
   notes           String?
 
-  club            Club       @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  member          Member     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  club            Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  member          Member           @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  payments        DuesPayment[]
 
-  @@unique([memberId, fiscalYear])
+  @@unique([memberId, fiscalYear, periodIndex])
   @@index([clubId, fiscalYear])
   @@index([status, dueDate])
+}
+
+model DuesPayment {
+  id            String   @id @default(cuid())
+  clubId        String
+  memberId      String
+  duesId        String?
+  amount        Decimal  @db.Decimal(10, 2)
+  currency      String   @default("EUR")
+  paidAt        DateTime @default(now())
+  method        String?
+  reference     String?
+  notes         String?
+  receiptNumber String?
+  receiptSentAt DateTime?
+  recordedById  String?
+  createdAt     DateTime @default(now())
+
+  club       Club        @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  member     Member      @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  dues       MemberDues? @relation(fields: [duesId], references: [id], onDelete: SetNull)
+  recordedBy User?       @relation(fields: [recordedById], references: [id], onDelete: SetNull)
+
+  @@index([clubId, memberId])
+  @@index([duesId])
 }
 
 model Commission {
@@ -716,6 +760,8 @@ model ClubFeatures {
   districtMenuVisible     Boolean  @default(false)
   offlineMenuVisible      Boolean  @default(false)
   apiAccessEnabled        Boolean  @default(false)
+  duesEnabled             Boolean  @default(true)
+  duesMenuVisible         Boolean  @default(true)
   memberLimit             Int?
   updatedAt               DateTime @updatedAt
 

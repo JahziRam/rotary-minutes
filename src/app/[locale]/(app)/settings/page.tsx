@@ -5,6 +5,8 @@ import { hasRolePermission } from "@/lib/roles";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClubSettingsForm } from "@/components/settings/club-settings-form";
+import { DuesSettingsForm } from "@/components/settings/dues-settings-form";
+import { isFeatureEnabled } from "@/lib/feature-gate";
 import { PrivacyPanel } from "@/components/settings/privacy-panel";
 import { AuditExportButton } from "@/components/settings/audit-export-button";
 import { getGdprRequests } from "@/actions/gdpr";
@@ -33,6 +35,8 @@ export default async function SettingsPage({
     club && canManageSettings
       ? await clubHasApiAccess(club.id)
       : false;
+  const duesEnabled =
+    club && isFeatureEnabled(ctx!.features, "duesEnabled", ctx!.isSuperAdmin);
 
   return (
     <AppShellServer title={t("settings.title")}>
@@ -100,6 +104,24 @@ export default async function SettingsPage({
                       {t("integrations.manage")}
                     </Link>
                   </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {canManageSettings && duesEnabled && (
+              <Card>
+                <CardHeader><CardTitle>{t("dues.settings.title")}</CardTitle></CardHeader>
+                <CardContent>
+                  <DuesSettingsForm
+                    settings={{
+                      defaultAnnualDues: club.defaultAnnualDues
+                        ? Number(club.defaultAnnualDues)
+                        : null,
+                      currency: club.currency,
+                      duesAutoInvoiceEmail: club.duesAutoInvoiceEmail,
+                      duesAutoReceiptEmail: club.duesAutoReceiptEmail,
+                    }}
+                  />
                 </CardContent>
               </Card>
             )}
