@@ -52,7 +52,10 @@
     "clubName": "Club name",
     "noAccount": "Don't have an account?",
     "hasAccount": "Already have an account?",
-    "trialInfo": "14-day free trial, no credit card required"
+    "trialInfo": "14-day free trial, no credit card required",
+    "invalidCredentials": "Incorrect email or password",
+    "loginError": "Sign-in failed. Please try again or contact support.",
+    "loggingIn": "Signing in…"
   },
   "dashboard": {
     "welcome": "Welcome",

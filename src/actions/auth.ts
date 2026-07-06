@@ -133,11 +133,31 @@ export async function logoutUser(formData: FormData) {
 
 export async function loginUser(email: string, password: string) {
   try {
-    await signIn("credentials", { email, password, redirect: false });
-    return { success: true };
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+
+    if (typeof result === "string" && result.includes("error=")) {
+      return { error: "INVALID_CREDENTIALS" as const };
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { isSuperAdmin: true },
+    });
+    if (!user) {
+      return { error: "INVALID_CREDENTIALS" as const };
+    }
+
+    return { success: true as const, isSuperAdmin: user.isSuperAdmin };
   } catch (error) {
     if (error instanceof AuthError) {
-      return { error: "INVALID_CREDENTIALS" };
+      if (error.type === "CredentialsSignin") {
+        return { error: "INVALID_CREDENTIALS" as const };
+      }
+      return { error: "AUTH_ERROR" as const };
     }
     throw error;
   }

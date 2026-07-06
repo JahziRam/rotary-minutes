@@ -147,6 +147,8 @@ const env = {
     : dotenv.AUTH_SECRET || randomBytes(32).toString("base64"),
   CRON_SECRET: dotenv.CRON_SECRET || randomBytes(32).toString("base64"),
   NEXTAUTH_URL: `https://${CUSTOM_DOMAIN}`,
+  AUTH_URL: `https://${CUSTOM_DOMAIN}`,
+  AUTH_TRUST_HOST: "true",
   NEXT_PUBLIC_APP_URL: `https://${CUSTOM_DOMAIN}`,
   NEXT_PUBLIC_APP_NAME: "Rotary Minutes",
   REFERRAL_REWARD_DAYS: "30",

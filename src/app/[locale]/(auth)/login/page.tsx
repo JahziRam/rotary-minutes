@@ -19,22 +19,33 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    const form = new FormData(e.currentTarget);
-    const result = await loginUser(
-      form.get("email") as string,
-      form.get("password") as string
-    );
-    if (result.error) {
-      setError(
-        result.error === "INVALID_CREDENTIALS"
-          ? "Email ou mot de passe incorrect"
-          : "Erreur de connexion"
+
+    try {
+      const form = new FormData(e.currentTarget);
+      const result = await loginUser(
+        form.get("email") as string,
+        form.get("password") as string
       );
+
+      if (result.error) {
+        setError(
+          result.error === "INVALID_CREDENTIALS"
+            ? t("invalidCredentials")
+            : t("loginError")
+        );
+        return;
+      }
+
+      const dest = result.isSuperAdmin
+        ? `/${locale}/admin`
+        : `/${locale}/dashboard`;
+      router.push(dest);
+      router.refresh();
+    } catch {
+      setError(t("loginError"));
+    } finally {
       setLoading(false);
-      return;
     }
-    router.push(`/${locale}/dashboard`);
-    router.refresh();
   }
 
   return (
@@ -75,7 +86,7 @@ export default function LoginPage() {
                 </p>
               )}
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "..." : t("login")}
+                {loading ? t("loggingIn") : t("login")}
               </Button>
             </form>
             <div className="mt-4 text-center space-y-2">

@@ -20,6 +20,8 @@ GitHub connecté ✅ — complétez ces réglages dans le dashboard Render.
 | `NODE_ENV` | `production` |
 | `DATABASE_URL` | *(Postgres Prisma — db.prisma.io)* |
 | `AUTH_SECRET` | *(générer : `openssl rand -base64 32`)* |
+| `AUTH_URL` | `https://clubminutes.api.mg` |
+| `AUTH_TRUST_HOST` | `true` |
 | `CRON_SECRET` | *(générer : `openssl rand -base64 32`)* |
 | `NEXTAUTH_URL` | `https://clubminutes.api.mg` |
 | `NEXT_PUBLIC_APP_URL` | `https://clubminutes.api.mg` |

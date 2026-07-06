@@ -52,7 +52,10 @@
     "clubName": "Nom du club",
     "noAccount": "Pas encore de compte ?",
     "hasAccount": "Déjà un compte ?",
-    "trialInfo": "Essai gratuit de 14 jours, sans carte bancaire"
+    "trialInfo": "Essai gratuit de 14 jours, sans carte bancaire",
+    "invalidCredentials": "Email ou mot de passe incorrect",
+    "loginError": "Erreur de connexion. Réessayez ou contactez le support.",
+    "loggingIn": "Connexion en cours…"
   },
   "dashboard": {
     "welcome": "Bienvenue",
