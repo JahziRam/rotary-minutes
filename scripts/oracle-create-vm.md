@@ -1,5 +1,20 @@
 # Oracle Cloud Always Free — VM pour clubminutes.api.mg
 
+> **Inscription Oracle bloquée ?** Utilisez le **Plan B Render** : `scripts/deploy-render-startup.md` (gratuit, ~10 min, sans VPS).
+
+## Dépannage erreur création compte Oracle
+
+Erreurs fréquentes (surtout hors US/EU) :
+- Carte refusée / vérification anti-fraude
+- Région Madagascar non supportée pour Always Free
+- Numéro de téléphone / adresse rejetés
+
+**Solutions :**
+1. **Plan B Render** (recommandé) — voir `deploy-render-startup.md`
+2. Réessayer avec une carte Visa/Mastercard internationale
+3. Contacter support Oracle : https://www.oracle.com/corporate/contact/
+4. **Hetzner** (~5 €/mois) — inscription plus fiable : https://www.hetzner.com/cloud
+
 ## 1. Créer le compte (gratuit, carte requise)
 
 1. https://www.oracle.com/cloud/free/

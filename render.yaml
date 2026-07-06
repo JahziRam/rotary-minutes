@@ -1,0 +1,38 @@
+# Render Blueprint — déploiement gratuit pour candidature Startup
+# Dashboard → New → Blueprint → connecter le repo JahziRam/rotary-minutes
+services:
+  - type: web
+    name: rotary-minutes
+    runtime: node
+    region: frankfurt
+    plan: free
+    buildCommand: npm ci && npx prisma generate && npx prisma migrate deploy && npm run build
+    startCommand: npm run start
+    healthCheckPath: /en
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXTAUTH_URL
+        value: https://clubminutes.api.mg
+      - key: NEXT_PUBLIC_APP_URL
+        value: https://clubminutes.api.mg
+      - key: NEXT_PUBLIC_APP_NAME
+        value: Rotary Minutes
+      - key: DATABASE_URL
+        sync: false
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: CRON_SECRET
+        generateValue: true
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: REFERRAL_REWARD_DAYS
+        value: "30"
