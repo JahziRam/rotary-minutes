@@ -5,6 +5,7 @@ import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ["pg", "pg-cloudflare", "@prisma/client", "@prisma/adapter-pg"],
   images: {
     remotePatterns: [{ protocol: "https", hostname: "**" }],
   },
