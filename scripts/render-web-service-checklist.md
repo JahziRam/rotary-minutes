@@ -9,7 +9,7 @@ GitHub connecté ✅ — complétez ces réglages dans le dashboard Render.
 | **Branch** | `main` |
 | **Root Directory** | *(vide)* |
 | **Runtime** | Node |
-| **Build Command** | `npm ci && npx prisma generate && npm run build` |
+| **Build Command** | `npm ci --include=dev && npx prisma generate && npm run build` |
 | **Start Command** | `npm run start` |
 | **Instance Type** | **Free** |
 
