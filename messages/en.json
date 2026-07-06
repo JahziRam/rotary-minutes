@@ -615,11 +615,26 @@
     }
   },
   "landing": {
-    "hero": "Write your minutes in 5 minutes",
-    "subtitle": "The collaborative platform for Rotary and Rotaract clubs worldwide",
+    "badge": "Built for Rotary & Rotaract",
+    "hero": "Write your meeting minutes",
+    "heroHighlight": "in 5 minutes, not 5 hours",
+    "subtitle": "The collaborative platform that transforms minute-taking: live meeting mode, authenticated PDFs, secure archiving — for clubs worldwide.",
     "cta": "Start free trial",
     "tryDemo": "Try the demo",
+    "trialLine": "14-day free trial · No credit card · Set up in 2 minutes",
+    "stats": {
+      "time": "5 min",
+      "timeLabel": "to draft complete minutes",
+      "trial": "14 days",
+      "trialLabel": "free trial included",
+      "lang": "FR / EN",
+      "langLabel": "native bilingual interface"
+    },
     "caseStudiesLink": "Customer stories",
+    "caseStudies": {
+      "title": "Clubs already on board",
+      "subtitle": "See how secretaries and presidents save hours every month."
+    },
     "highlights": {
       "secure": "Secure multi-tenant architecture",
       "bilingual": "Bilingual FR / EN",
@@ -627,7 +642,31 @@
       "pdf": "Authenticated PDF with QR Code",
       "district": "District dashboard"
     },
+    "howItWorks": {
+      "title": "How it works",
+      "subtitle": "From meeting to authenticated PDF in three simple steps.",
+      "step1": {
+        "title": "Write live",
+        "desc": "Follow the agenda, capture decisions and assign action items during the meeting."
+      },
+      "step2": {
+        "title": "Review together",
+        "desc": "President and members read, comment and approve before finalization."
+      },
+      "step3": {
+        "title": "Share & archive",
+        "desc": "Export a PDF with QR authentication and keep a versioned history."
+      }
+    },
+    "finalCta": {
+      "title": "Ready to modernize your minutes?",
+      "subtitle": "Join clubs that left Word and paper behind. Your first minutes are 5 minutes away.",
+      "cta": "Start your free trial",
+      "note": "No commitment · Cancel anytime"
+    },
     "features": {
+      "title": "Everything your club needs",
+      "subtitle": "Tools designed for secretaries, presidents and district governors.",
       "write": "Intuitive writing",
       "writeDesc": "Smart auto-fill, live meeting mode, zero training",
       "pdf": "Professional PDF",

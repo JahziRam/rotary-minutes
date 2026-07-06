@@ -615,11 +615,26 @@
     }
   },
   "landing": {
-    "hero": "Rédigez vos procès-verbaux en 5 minutes",
-    "subtitle": "La plateforme collaborative pour les clubs Rotary et Rotaract du monde entier",
+    "badge": "Conçu pour Rotary & Rotaract",
+    "hero": "Rédigez vos procès-verbaux",
+    "heroHighlight": "en 5 minutes, pas 5 heures",
+    "subtitle": "La plateforme collaborative qui transforme la rédaction des PV : réunion en direct, PDF authentifié, archivage sécurisé — pour tous les clubs du monde.",
     "cta": "Commencer l'essai gratuit",
     "tryDemo": "Essayer la démo",
+    "trialLine": "14 jours gratuits · Sans carte bancaire · Configuration en 2 minutes",
+    "stats": {
+      "time": "5 min",
+      "timeLabel": "pour rédiger un PV complet",
+      "trial": "14 jours",
+      "trialLabel": "d'essai gratuit inclus",
+      "lang": "FR / EN",
+      "langLabel": "interface bilingue native"
+    },
     "caseStudiesLink": "Témoignages clients",
+    "caseStudies": {
+      "title": "Ils ont adopté Rotary Minutes",
+      "subtitle": "Découvrez comment des secrétaires et présidents gagnent des heures chaque mois."
+    },
     "highlights": {
       "secure": "Multi-tenant sécurisé",
       "bilingual": "Bilingue FR / EN",
@@ -627,7 +642,31 @@
       "pdf": "PDF authentifié par QR Code",
       "district": "Tableau de bord district"
     },
+    "howItWorks": {
+      "title": "Comment ça marche",
+      "subtitle": "De la réunion au PDF authentifié en trois étapes simples.",
+      "step1": {
+        "title": "Rédigez en direct",
+        "desc": "Suivez l'ordre du jour, capturez les décisions et assignez les actions pendant la réunion."
+      },
+      "step2": {
+        "title": "Validez en équipe",
+        "desc": "Le président et les membres relisent, commentent et approuvent avant finalisation."
+      },
+      "step3": {
+        "title": "Partagez & archivez",
+        "desc": "Exportez un PDF avec QR code d'authentification et conservez l'historique versionné."
+      }
+    },
+    "finalCta": {
+      "title": "Prêt à moderniser vos procès-verbaux ?",
+      "subtitle": "Rejoignez les clubs qui ont abandonné Word et le papier. Votre premier PV est à 5 minutes.",
+      "cta": "Démarrer l'essai gratuit",
+      "note": "Sans engagement · Annulation à tout moment"
+    },
     "features": {
+      "title": "Tout ce dont votre club a besoin",
+      "subtitle": "Des outils pensés pour les secrétaires, présidents et gouverneurs de district.",
       "write": "Rédaction intuitive",
       "writeDesc": "Auto-remplissage intelligent, réunion en direct, zéro formation",
       "pdf": "PDF professionnel",

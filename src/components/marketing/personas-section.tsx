@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { PenLine, Crown, Map } from "lucide-react";
+import { PenLine, Crown, Map, CheckCircle2 } from "lucide-react";
 
 const personaIcons = {
   secretary: PenLine,
@@ -13,38 +13,40 @@ export async function PersonasSection() {
   const t = await getTranslations("landing.personas");
 
   return (
-    <section className="py-16 lg:py-24 bg-white">
-      <div className="max-w-6xl mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="font-display text-3xl font-bold text-gray-900 mb-3">
-            {t("title")}
-          </h2>
-          <p className="text-gray-500 max-w-2xl mx-auto">{t("subtitle")}</p>
+    <section className="bg-gradient-to-b from-white to-gray-50 py-16 lg:py-24">
+      <div className="mx-auto max-w-6xl px-4">
+        <div className="mb-12 text-center">
+          <h2 className="font-display text-3xl font-bold text-gray-900">{t("title")}</h2>
+          <p className="mx-auto mt-3 max-w-2xl text-gray-500">{t("subtitle")}</p>
         </div>
-        <div className="grid md:grid-cols-3 gap-6">
-          {personaKeys.map((key) => {
+        <div className="grid gap-6 md:grid-cols-3">
+          {personaKeys.map((key, i) => {
             const Icon = personaIcons[key];
             return (
               <div
                 key={key}
-                className="rounded-xl border border-gray-200 bg-gray-50 p-6 hover:shadow-md transition-shadow"
+                className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-gold/40 hover:shadow-xl hover:shadow-navy/5"
               >
-                <div className="h-11 w-11 rounded-lg bg-navy/10 flex items-center justify-center mb-4">
-                  <Icon className="h-5 w-5 text-navy" />
+                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-gold to-gold-light opacity-0 transition-opacity group-hover:opacity-100" />
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-navy text-gold">
+                  <Icon className="h-5 w-5" />
                 </div>
-                <h3 className="font-semibold text-lg text-gray-900 mb-2">
+                <span className="mb-2 inline-block text-xs font-bold uppercase tracking-widest text-gold-dark">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <h3 className="mb-2 text-lg font-semibold text-gray-900">
                   {t(`${key}.title`)}
                 </h3>
-                <p className="text-sm text-gray-500 leading-relaxed mb-4">
+                <p className="mb-4 text-sm leading-relaxed text-gray-500">
                   {t(`${key}.description`)}
                 </p>
-                <ul className="space-y-2">
+                <ul className="space-y-2.5">
                   {(t.raw(`${key}.benefits`) as string[]).map((benefit) => (
                     <li
                       key={benefit}
-                      className="text-sm text-gray-600 flex items-start gap-2"
+                      className="flex items-start gap-2 text-sm text-gray-600"
                     >
-                      <span className="text-gold mt-0.5">•</span>
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
                       {benefit}
                     </li>
                   ))}
