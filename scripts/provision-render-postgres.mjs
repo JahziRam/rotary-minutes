@@ -61,13 +61,22 @@ async function waitForPostgres(id, maxMs = 300_000) {
   throw new Error("Timeout waiting for Postgres");
 }
 
+function ensureSslConnectionString(url) {
+  if (!url) return url;
+  if (/sslmode=|ssl=true/i.test(url)) return url;
+  const sep = url.includes("?") ? "&" : "?";
+  return `${url}${sep}sslmode=require`;
+}
+
 async function getConnectionString(postgresId) {
   const info = await api(`/postgres/${postgresId}/connection-info`);
   const conn = info.connectionInfo || info;
-  if (conn.connectionString) return conn.connectionString;
-  if (conn.externalConnectionString) return conn.externalConnectionString;
-  if (conn.internalConnectionString) return conn.internalConnectionString;
-  throw new Error("No connection string in Render response");
+  const raw =
+    conn.externalConnectionString ||
+    conn.connectionString ||
+    conn.internalConnectionString;
+  if (!raw) throw new Error("No connection string in Render response");
+  return ensureSslConnectionString(raw);
 }
 
 function sleep(ms) {

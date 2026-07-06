@@ -10,6 +10,13 @@ const globalForPrisma = globalThis as unknown as {
   prismaSchemaVersion?: number;
 };
 
+function ensureSslForRemotePostgres(url: string): string {
+  if (!/render\.com|prisma\.io/i.test(url)) return url;
+  if (/sslmode=|ssl=true/i.test(url)) return url;
+  const sep = url.includes("?") ? "&" : "?";
+  return `${url}${sep}sslmode=require`;
+}
+
 function resolveConnectionString(): string {
   const fromEnv = process.env.DATABASE_URL;
   if (!fromEnv) {
@@ -20,18 +27,23 @@ function resolveConnectionString(): string {
     const { env } = getCloudflareContext();
     const hyperdrive = (env as CloudflareEnv).HYPERDRIVE;
     if (hyperdrive?.connectionString) {
-      return hyperdrive.connectionString;
+      return ensureSslForRemotePostgres(hyperdrive.connectionString);
     }
   } catch {
     // next dev, build, ou environnement Node classique
   }
 
-  return fromEnv;
+  return ensureSslForRemotePostgres(fromEnv);
 }
 
 function createPrismaClient() {
   const connectionString = resolveConnectionString();
-  const adapter = new PrismaPg({ connectionString });
+  const needsSsl = /render\.com|prisma\.io/i.test(connectionString);
+  const adapter = new PrismaPg(
+    needsSsl
+      ? { connectionString, ssl: { rejectUnauthorized: false } }
+      : { connectionString }
+  );
   return new PrismaClient({ adapter });
 }
 
