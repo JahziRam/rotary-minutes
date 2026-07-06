@@ -25,5 +25,11 @@
   ],
   "images": {
     "binding": "IMAGES"
-  }
+  },
+  "routes": [
+    {
+      "pattern": "clubminutes.api.mg",
+      "custom_domain": true
+    }
+  ]
 }
