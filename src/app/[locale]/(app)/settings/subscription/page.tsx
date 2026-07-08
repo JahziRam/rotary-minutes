@@ -3,6 +3,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { SubscriptionPlans } from "@/components/settings/subscription-plans";
 
+export const dynamic = "force-dynamic";
+
 export default async function SubscriptionPage({
   params,
   searchParams,

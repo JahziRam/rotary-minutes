@@ -355,3 +355,110 @@ export async function exportCsv(opts?: { from?: string; to?: string; eventId?: s
 
   return { success: true, csv: header + rows.join("\n") };
 }
+
+// ─── Budget categories ─────────────────────────────────────────────────────────
+
+export async function createBudgetCategory(data: {
+  name: string;
+  type: BudgetEntryType;
+}) {
+  const auth = await requireTreasuryManage();
+  if (auth.error) return auth;
+  const { ctx } = auth;
+
+  const name = data.name.trim();
+  if (!name) return { error: "INVALID_NAME" as const };
+
+  const maxOrder = await prisma.budgetCategory.aggregate({
+    where: { clubId: ctx.clubId, type: data.type },
+    _max: { sortOrder: true },
+  });
+
+  const category = await prisma.budgetCategory.create({
+    data: {
+      clubId: ctx.clubId,
+      name,
+      type: data.type,
+      sortOrder: (maxOrder._max.sortOrder ?? 0) + 1,
+    },
+  });
+
+  revalidateTreasury();
+  return { success: true, category };
+}
+
+export async function toggleBudgetCategory(categoryId: string, isActive: boolean) {
+  const auth = await requireTreasuryManage();
+  if (auth.error) return auth;
+  const { ctx } = auth;
+
+  const existing = await prisma.budgetCategory.findFirst({
+    where: { id: categoryId, clubId: ctx.clubId },
+  });
+  if (!existing) return { error: "NOT_FOUND" as const };
+
+  await prisma.budgetCategory.update({
+    where: { id: categoryId },
+    data: { isActive },
+  });
+
+  revalidateTreasury();
+  return { success: true };
+}
+
+// ─── Accounting exports (treasury module) ────────────────────────────────────
+
+export async function exportTreasuryAccountingCsv(opts?: {
+  from?: string;
+  to?: string;
+  locale?: string;
+}) {
+  const auth = await requireTreasuryView();
+  if ("error" in auth && auth.error) return { error: auth.error as string };
+  const { ctx } = auth;
+
+  const { loadTreasuryRows } = await import("@/actions/accounting-export");
+  const { generateTreasuryCsv } = await import("@/lib/accounting-export");
+
+  const locale = opts?.locale === "en" ? "en" : "fr";
+  const rows = await loadTreasuryRows(
+    ctx.clubId,
+    opts?.from ? new Date(opts.from) : undefined,
+    opts?.to ? new Date(opts.to) : undefined
+  );
+
+  return {
+    success: true,
+    csv: generateTreasuryCsv(rows, locale),
+    filename: `treasury-journal-${new Date().toISOString().slice(0, 10)}.csv`,
+  };
+}
+
+export async function exportTreasuryAccountingOfx(opts?: { from?: string; to?: string }) {
+  const auth = await requireTreasuryView();
+  if ("error" in auth && auth.error) return { error: auth.error as string };
+  const { ctx } = auth;
+
+  const { loadTreasuryRows } = await import("@/actions/accounting-export");
+  const { generateTreasuryOfx } = await import("@/lib/accounting-export");
+
+  const club = await prisma.club.findUnique({
+    where: { id: ctx.clubId },
+    select: { currency: true, slug: true },
+  });
+
+  const rows = await loadTreasuryRows(
+    ctx.clubId,
+    opts?.from ? new Date(opts.from) : undefined,
+    opts?.to ? new Date(opts.to) : undefined
+  );
+
+  return {
+    success: true,
+    ofx: generateTreasuryOfx(rows, {
+      accountId: club?.slug ?? ctx.clubId,
+      currency: club?.currency ?? "EUR",
+    }),
+    filename: `treasury-${club?.slug ?? "club"}-${new Date().toISOString().slice(0, 10)}.ofx`,
+  };
+}

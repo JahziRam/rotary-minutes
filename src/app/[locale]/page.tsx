@@ -14,10 +14,14 @@ import { HowItWorks } from "@/components/marketing/how-it-works";
 import { LandingCta } from "@/components/marketing/landing-cta";
 import { PersonasSection } from "@/components/marketing/personas-section";
 import { PricingSection } from "@/components/marketing/pricing-section";
+import { AddonsSection } from "@/components/marketing/addons-section";
 import { ClubSolutionSection } from "@/components/marketing/club-solution-section";
 import { LandingHeader } from "@/components/marketing/landing-header";
 import { ModulesTeaserSection } from "@/components/marketing/modules-teaser-section";
 import { RotaryDisclaimer } from "@/components/marketing/rotary-disclaimer";
+import { ManageCookiesButton } from "@/components/analytics/manage-cookies-button";
+
+export const dynamic = "force-dynamic";
 
 export default async function LandingPage({
   params,
@@ -150,6 +154,8 @@ export default async function LandingPage({
 
       <PricingSection locale={locale} />
 
+      <AddonsSection locale={locale} />
+
       <LandingCta locale={locale} />
 
       <RotaryDisclaimer locale={locale} />
@@ -171,6 +177,9 @@ export default async function LandingPage({
           <Link href={`/${locale}/status`} className="transition-colors hover:text-white">
             {t("landing.statusLink")}
           </Link>
+          <ManageCookiesButton className="transition-colors hover:text-white">
+            {t("cookies.manage")}
+          </ManageCookiesButton>
         </div>
         <p className="mt-3 sm:mt-4">© {new Date().getFullYear()} Rotary Minutes</p>
       </footer>

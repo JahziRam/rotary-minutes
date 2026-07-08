@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Toast } from "@/components/ui/toast";
@@ -21,12 +22,15 @@ export function PlansEditor({
   plans,
   annualDiscountPercent,
   currency,
+  stripeEnabled,
 }: {
   plans: PlanConfigData[];
   annualDiscountPercent: number;
   currency: string;
+  stripeEnabled: boolean;
 }) {
   const locale = useLocale();
+  const t = useTranslations("admin.plans");
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [toast, setToast] = useState<string | null>(null);
@@ -40,7 +44,7 @@ export function PlansEditor({
         locale
       );
       if (result.success) {
-        setToast("Paramètres de facturation enregistrés");
+        setToast(t("billingSaved"));
         router.refresh();
       }
     });
@@ -70,7 +74,9 @@ export function PlansEditor({
         locale
       );
       if (result.success) {
-        setToast(`Offre ${plan} enregistrée`);
+        setToast(
+          result.stripePriceWarning ? t("stripePriceChanged") : t("planSaved", { plan })
+        );
         router.refresh();
       }
     });
@@ -78,14 +84,19 @@ export function PlansEditor({
 
   return (
     <div className="space-y-6">
+      {stripeEnabled && (
+        <div className="flex gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600" />
+          <p>{t("stripeWarning")}</p>
+        </div>
+      )}
+
       <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-4">
-        <h3 className="font-semibold text-gray-900">Facturation annuelle</h3>
-        <p className="text-sm text-gray-500">
-          Réduction appliquée au paiement annuel (en % du total 12 mois).
-        </p>
+        <h3 className="font-semibold text-gray-900">{t("billingTitle")}</h3>
+        <p className="text-sm text-gray-500">{t("billingHint")}</p>
         <div className="grid sm:grid-cols-3 gap-4">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-gray-700">Réduction annuelle (%)</label>
+            <label className="text-sm font-medium text-gray-700">{t("discountLabel")}</label>
             <input
               type="number"
               min={0}
@@ -97,7 +108,7 @@ export function PlansEditor({
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-gray-700">Devise</label>
+            <label className="text-sm font-medium text-gray-700">{t("currencyLabel")}</label>
             <input
               type="text"
               value={currencyVal}
@@ -108,12 +119,15 @@ export function PlansEditor({
           </div>
           <div className="flex items-end">
             <Button variant="gold" disabled={pending} onClick={saveBilling}>
-              Enregistrer la réduction
+              {t("saveBilling")}
             </Button>
           </div>
         </div>
         <p className="text-xs text-gray-400">
-          Exemple : 39€/mois → {computeAnnualPrice(39, discount)}€/an (−{discount}%)
+          {t("billingExample", {
+            annual: computeAnnualPrice(39, discount),
+            discount,
+          })}
         </p>
       </div>
 
@@ -128,24 +142,32 @@ export function PlansEditor({
             <div className="flex gap-3 text-sm">
               <label className="flex items-center gap-1.5">
                 <input type="checkbox" name="isActive" defaultChecked={plan.isActive} />
-                Actif
+                {t("active")}
               </label>
               <label className="flex items-center gap-1.5">
                 <input type="checkbox" name="isPopular" defaultChecked={plan.isPopular} />
-                Populaire
+                {t("popular")}
               </label>
             </div>
           </div>
 
           <div className="grid sm:grid-cols-2 gap-3">
-            <Input name="nameFr" label="Nom (FR)" defaultValue={plan.nameFr} required />
-            <Input name="nameEn" label="Nom (EN)" defaultValue={plan.nameEn} required />
-            <Input name="descriptionFr" label="Description (FR)" defaultValue={plan.descriptionFr ?? ""} />
-            <Input name="descriptionEn" label="Description (EN)" defaultValue={plan.descriptionEn ?? ""} />
+            <Input name="nameFr" label={t("nameFr")} defaultValue={plan.nameFr} required />
+            <Input name="nameEn" label={t("nameEn")} defaultValue={plan.nameEn} required />
+            <Input
+              name="descriptionFr"
+              label={t("descriptionFr")}
+              defaultValue={plan.descriptionFr ?? ""}
+            />
+            <Input
+              name="descriptionEn"
+              label={t("descriptionEn")}
+              defaultValue={plan.descriptionEn ?? ""}
+            />
             <Input
               name="priceMonthly"
               type="number"
-              label="Prix mensuel"
+              label={t("priceMonthly")}
               defaultValue={String(plan.priceMonthly)}
               min={0}
               required
@@ -153,25 +175,30 @@ export function PlansEditor({
             <Input
               name="memberLimit"
               type="number"
-              label="Limite membres (vide = illimité)"
+              label={t("memberLimit")}
               defaultValue={plan.memberLimit != null ? String(plan.memberLimit) : ""}
             />
-            <Input name="sortOrder" type="number" label="Ordre" defaultValue={String(plan.sortOrder)} />
+            <Input
+              name="sortOrder"
+              type="number"
+              label={t("sortOrder")}
+              defaultValue={String(plan.sortOrder)}
+            />
             <Input
               name="stripePriceIdMonthly"
-              label="Stripe Price ID (mensuel)"
+              label={t("stripeMonthly")}
               defaultValue={plan.stripePriceIdMonthly ?? ""}
             />
             <Input
               name="stripePriceIdAnnual"
-              label="Stripe Price ID (annuel)"
+              label={t("stripeAnnual")}
               defaultValue={plan.stripePriceIdAnnual ?? ""}
             />
           </div>
 
           <div className="grid sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700">Fonctionnalités (FR, une par ligne)</label>
+              <label className="text-sm font-medium text-gray-700">{t("featuresFr")}</label>
               <textarea
                 name="featuresFr"
                 rows={4}
@@ -180,7 +207,7 @@ export function PlansEditor({
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700">Fonctionnalités (EN, une par ligne)</label>
+              <label className="text-sm font-medium text-gray-700">{t("featuresEn")}</label>
               <textarea
                 name="featuresEn"
                 rows={4}
@@ -192,7 +219,7 @@ export function PlansEditor({
 
           <div className="flex justify-end">
             <Button type="submit" variant="gold" disabled={pending}>
-              Enregistrer {plan.plan}
+              {t("savePlan", { plan: plan.plan })}
             </Button>
           </div>
         </form>

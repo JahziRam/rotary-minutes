@@ -10,7 +10,7 @@ import {
   type TreasuryExportRow,
 } from "@/lib/accounting-export";
 
-async function loadTreasuryRows(clubId: string, from?: Date, to?: Date) {
+export async function loadTreasuryRows(clubId: string, from?: Date, to?: Date) {
   const entries = await prisma.budgetEntry.findMany({
     where: {
       clubId,

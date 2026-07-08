@@ -13,6 +13,8 @@ import {
   PromoCodeForm,
   type AppliedPromo,
 } from "@/components/subscription/promo-code-form";
+import { ANALYTICS_EVENTS } from "@/lib/analytics-events";
+import { trackEvent } from "@/lib/analytics";
 
 export function PlanSelector({
   plans,
@@ -51,6 +53,11 @@ export function PlanSelector({
   }, [appliedPromo, billing.currency, locale]);
 
   function selectPlan(planKey: SubscriptionPlan) {
+    trackEvent(ANALYTICS_EVENTS.SELECT_PLAN, {
+      plan: planKey,
+      interval,
+    });
+
     startTransition(async () => {
       const result = await choosePlan(
         planKey,
@@ -60,6 +67,10 @@ export function PlanSelector({
       );
       if ("success" in result && result.success) {
         if ("checkoutUrl" in result && result.checkoutUrl) {
+          trackEvent(ANALYTICS_EVENTS.BEGIN_CHECKOUT, {
+            plan: planKey,
+            interval,
+          });
           window.location.href = result.checkoutUrl;
           return;
         }

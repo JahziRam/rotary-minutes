@@ -84,7 +84,9 @@
     "newMeeting": "New meeting",
     "newMinute": "New minutes",
     "meetingsThisMonth": "Meetings this month",
-    "pastMeetings": "Past meetings"
+    "pastMeetings": "Past meetings",
+    "treasuryBalance": "Treasury balance",
+    "treasuryOverdue": "{count} overdue dues"
   },
   "meetings": {
     "title": "Meetings",
@@ -269,7 +271,45 @@
     "entryDeleted": "Entry deleted",
     "noEntries": "No treasury entries yet",
     "dues": "Dues",
-    "action": "Action"
+    "action": "Action",
+    "fiscalYear": "Fiscal year",
+    "monthlyChart": "Monthly breakdown",
+    "byCategory": "By category",
+    "duesCollection": "Dues collected",
+    "searchTransactions": "Search…",
+    "editTransaction": "Edit entry",
+    "saveEdit": "Save",
+    "cancelEdit": "Cancel",
+    "entryUpdated": "Entry updated",
+    "entryCount": "{count} entries",
+    "memberPortal": {
+      "title": "Membership dues",
+      "viewDues": "Manage dues",
+      "paymentHistory": "Payment history"
+    },
+    "membersWidget": {
+      "title": "Current year dues",
+      "collection": "{rate}% collected",
+      "paid": "paid",
+      "pending": "pending",
+      "overdue": "overdue",
+      "manage": "Manage dues"
+    },
+    "statisticsSection": {
+      "title": "Treasury",
+      "viewAll": "Treasury module",
+      "overdue": "{count} overdue dues"
+    },
+    "exportSection": "Accounting exports",
+    "exportAccounting": "Journal CSV",
+    "exportAccountingHint": "Export for accounting software (dues + ledger entries for the filtered fiscal year).",
+    "exportSuccess": "Export downloaded",
+    "customCategories": "Custom categories",
+    "categoryNameFr": "Category name",
+    "addCategory": "Add",
+    "activateCategory": "Active",
+    "deactivateCategory": "Inactive",
+    "saved": "Saved"
   },
   "actions": {
     "title": "Club actions",
@@ -487,6 +527,48 @@
       "maintenance": "Maintenance mode is ON",
       "stripeKeysMissing": "Stripe keys missing in .env",
       "envStatus": "Required env: {requiredOk}/{requiredTotal} · recommended: {recommendedOk}/{recommendedTotal}"
+    },
+    "plans": {
+      "billingTitle": "Annual billing",
+      "billingHint": "Discount applied to annual payment (as % of the 12-month total).",
+      "discountLabel": "Annual discount (%)",
+      "currencyLabel": "Currency",
+      "saveBilling": "Save discount settings",
+      "billingExample": "Example: €39/month → €{annual}/year (−{discount}%)",
+      "stripeWarning": "Stripe is enabled: if you change a price, create a new Price in Stripe and update the Price IDs below. Otherwise the billed amount won't match what's displayed.",
+      "stripePriceChanged": "Price updated — verify Stripe Price IDs match the new amount.",
+      "planSaved": "Plan {plan} saved",
+      "billingSaved": "Billing settings saved",
+      "active": "Active",
+      "popular": "Popular",
+      "nameFr": "Name (FR)",
+      "nameEn": "Name (EN)",
+      "descriptionFr": "Description (FR)",
+      "descriptionEn": "Description (EN)",
+      "priceMonthly": "Monthly price",
+      "memberLimit": "Member limit (empty = unlimited)",
+      "sortOrder": "Sort order",
+      "stripeMonthly": "Stripe Price ID (monthly)",
+      "stripeAnnual": "Stripe Price ID (annual)",
+      "featuresFr": "Features (FR, one per line)",
+      "featuresEn": "Features (EN, one per line)",
+      "savePlan": "Save {plan}"
+    },
+    "appSettings": {
+      "saved": "Settings saved",
+      "invalidGaId": "Invalid Google Analytics ID (expected format: G-XXXXXXXXXX)",
+      "gaConfigured": "Google Analytics is configured. Tracking starts after cookie consent (GDPR).",
+      "gaNotConfigured": "Paste the GA4 measurement ID to enable audience tracking on clubminutes.api.mg.",
+      "appName": "Application name",
+      "tagline": "Tagline",
+      "supportEmail": "Support email",
+      "trialDays": "Free trial days",
+      "maintenanceMode": "Maintenance mode",
+      "gaTitle": "Google Analytics 4",
+      "gaHint": "Create a web stream on",
+      "gaUrlHint": "with URL",
+      "gaIdLabel": "Measurement ID (G-XXXXXXXXXX)",
+      "save": "Save"
     },
     "analytics": {
       "title": "Product analytics",
@@ -807,11 +889,20 @@
       "EXPORT_FAILED": "Export failed"
     }
   },
+  "cookies": {
+    "title": "We respect your privacy",
+    "description": "We use strictly necessary cookies for the service to work and, with your consent, Google Analytics to measure traffic and improve the product. See our",
+    "privacyLink": "privacy policy",
+    "accept": "Accept all",
+    "reject": "Reject optional cookies",
+    "manage": "Manage cookies"
+  },
   "privacy": {
     "title": "Privacy policy",
     "updated": "Last updated: July 2026",
     "intro": "Rotary Minutes is committed to protecting your personal data in accordance with the General Data Protection Regulation (GDPR).",
     "statusLink": "Service status",
+    "manageCookies": "Manage cookies",
     "sections": {
       "controller": {
         "title": "Data controller",
@@ -819,11 +910,15 @@
       },
       "data": {
         "title": "Data collected",
-        "body": "We collect: identity (name, email), club data (members, meetings, minutes), audit logs and consent preferences."
+        "body": "We collect: identity (name, email), club data (members, meetings, minutes), audit logs and consent preferences.\n\nWith your consent, we also collect anonymized browsing data via Google Analytics (pages visited, device type, country)."
       },
       "purpose": {
         "title": "Purposes",
-        "body": "SaaS service delivery, minute authentication, billing, customer support and product improvement."
+        "body": "SaaS service delivery, minute authentication, billing, customer support and product improvement.\n\nAudience data is used solely to understand site usage and improve the user experience."
+      },
+      "cookies": {
+        "title": "Cookies and audience measurement",
+        "body": "Strictly necessary cookies: authentication session, language preferences and cookie consent. They do not require your consent.\n\nOptional cookies: Google Analytics (audience measurement). They are only set after your explicit consent via the cookie banner. You can withdraw consent at any time via \"Manage cookies\" at the bottom of the page.\n\nGoogle Analytics may process data in the United States. We use Google Consent Mode v2 and only enable measurement after your consent.\n\nConsent choice retention: 12 months."
       },
       "retention": {
         "title": "Retention",
@@ -990,6 +1085,12 @@
       "subtitle": "Choose the plan that fits your club. Modules activate automatically with your subscription.",
       "trialNote": "14-day free trial · No credit card required",
       "cta": "Start your free trial"
+    },
+    "addons": {
+      "title": "Optional modules",
+      "subtitle": "Extend your plan with à la carte modules, activatable from club settings.",
+      "perMonth": "mo",
+      "note": "Prices are indicative and may be adjusted by the platform administrator."
     },
     "privacyLink": "Privacy",
     "termsLink": "Terms of use",

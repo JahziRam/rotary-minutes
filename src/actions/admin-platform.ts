@@ -8,6 +8,8 @@ import { ensureRoleConfigs } from "@/lib/roles";
 import { ensureClubFeatures, DEFAULT_FEATURES, type ClubFeatureSet } from "@/lib/features";
 import type { ClubRole, SubscriptionPlan, SubscriptionStatus } from "@/generated/prisma/client";
 import type { Permission } from "@/lib/permissions";
+import { getBillingSettings } from "@/lib/plans";
+import { shouldWarnStripePriceChange } from "@/lib/plans-stripe";
 
 async function admin() {
   const session = await auth();
@@ -23,6 +25,14 @@ function revalidateAdmin(locale: string) {
     }
   }
   revalidatePath(`/${locale}/admin`);
+}
+
+/** Invalidate landing pricing and in-app plan selection after tariff changes. */
+function revalidatePublicPricing() {
+  for (const loc of ["fr", "en"]) {
+    revalidatePath(`/${loc}`);
+    revalidatePath(`/${loc}/settings/subscription`);
+  }
 }
 
 // ─── Utilisateurs ────────────────────────────────────────────────────────────
@@ -228,9 +238,7 @@ export async function updateBillingSettings(
   });
 
   revalidateAdmin(locale);
-  for (const loc of ["fr", "en"]) {
-    revalidatePath(`/${loc}/settings/subscription`);
-  }
+  revalidatePublicPricing();
   return { success: true };
 }
 
@@ -255,6 +263,11 @@ export async function updatePlanConfig(
 ) {
   const user = await admin();
   if (!user) return { error: "UNAUTHORIZED" };
+
+  const [existing, billing] = await Promise.all([
+    prisma.planConfig.findUnique({ where: { plan } }),
+    getBillingSettings(),
+  ]);
 
   await prisma.planConfig.upsert({
     where: { plan },
@@ -302,10 +315,19 @@ export async function updatePlanConfig(
   });
 
   revalidateAdmin(locale);
-  for (const loc of ["fr", "en"]) {
-    revalidatePath(`/${loc}/settings/subscription`);
-  }
-  return { success: true };
+  revalidatePublicPricing();
+
+  const stripePriceWarning = existing
+    ? shouldWarnStripePriceChange({
+        stripeEnabled: billing.stripeEnabled,
+        previousPriceMonthly: existing.priceMonthly,
+        nextPriceMonthly: data.priceMonthly,
+        stripePriceIdMonthly: data.stripePriceIdMonthly ?? existing.stripePriceIdMonthly,
+        stripePriceIdAnnual: data.stripePriceIdAnnual ?? existing.stripePriceIdAnnual,
+      })
+    : false;
+
+  return { success: true, stripePriceWarning };
 }
 
 export async function updateAppSettings(
@@ -315,17 +337,29 @@ export async function updateAppSettings(
     supportEmail?: string;
     trialDays: number;
     maintenanceMode: boolean;
+    gaMeasurementId?: string;
   },
   locale: string
 ) {
   const user = await admin();
   if (!user) return { error: "UNAUTHORIZED" };
 
+  const { gaMeasurementId, ...appData } = data;
+
   await prisma.appSettings.upsert({
     where: { id: "global" },
-    update: data,
-    create: { id: "global", ...data },
+    update: appData,
+    create: { id: "global", ...appData },
   });
+
+  if (gaMeasurementId !== undefined) {
+    const normalized = gaMeasurementId.trim();
+    if (normalized && !normalized.startsWith("G-")) {
+      return { error: "INVALID_GA_ID" as const };
+    }
+    const { saveGaMeasurementId } = await import("@/lib/analytics-config-store");
+    await saveGaMeasurementId(normalized || null);
+  }
 
   await prisma.auditLog.create({
     data: {
@@ -333,10 +367,16 @@ export async function updateAppSettings(
       action: "APP_SETTINGS_UPDATED",
       entity: "AppSettings",
       entityId: "global",
+      metadata: {
+        gaUpdated: gaMeasurementId !== undefined,
+      },
     },
   });
 
   revalidateAdmin(locale);
+  for (const loc of ["fr", "en"]) {
+    revalidatePath(`/${loc}`, "layout");
+  }
   return { success: true };
 }
 

@@ -7,6 +7,8 @@ import { useTranslations, useLocale } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { registerClub } from "@/actions/auth";
+import { ANALYTICS_EVENTS } from "@/lib/analytics-events";
+import { trackEvent } from "@/lib/analytics";
 
 export function RegisterForm({ referredByCode }: { referredByCode?: string }) {
   const t = useTranslations("auth");
@@ -51,6 +53,10 @@ export function RegisterForm({ referredByCode }: { referredByCode?: string }) {
       setLoading(false);
       return;
     }
+
+    trackEvent(ANALYTICS_EVENTS.SIGN_UP, { method: "email" });
+    trackEvent(ANALYTICS_EVENTS.TRIAL_START);
+
     router.push(`/${locale}/onboarding`);
     router.refresh();
   }

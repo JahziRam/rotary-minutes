@@ -3,6 +3,8 @@ import { getTranslations } from "next-intl/server";
 import { getActivePublicPlans } from "@/lib/plans";
 import { PricingSectionClient } from "./pricing-section-client";
 
+export const dynamic = "force-dynamic";
+
 export async function PricingSection({ locale }: { locale: string }) {
   const t = await getTranslations("landing.pricing");
   const { plans, billing } = await getActivePublicPlans(locale);

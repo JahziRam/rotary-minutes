@@ -7,9 +7,12 @@ import { isFeatureEnabled } from "@/lib/feature-gate";
 import { hasRolePermission } from "@/lib/roles";
 import { prisma } from "@/lib/prisma";
 import { getUpcomingBirthdays } from "@/lib/queries/members";
+import { getMembersDuesOverview } from "@/lib/queries/dues-overview";
 import { getOfficerMandates } from "@/actions/mandates";
 import { getClubOnboarding } from "@/actions/onboarding";
 import { AppShellServer } from "@/components/layout/app-shell-server";
+import { MembersDuesSummary } from "@/components/treasury/members-dues-summary";
+import { MemberDuesBadge } from "@/components/treasury/member-dues-badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -30,20 +33,26 @@ export default async function MembersPage({
   const ctx = await getClubContext();
   if (!ctx) return null;
 
-  const [members, birthdays, mandates, onboarding, canManage] = await Promise.all([
-    prisma.member.findMany({
-      where: { clubId: ctx.clubId },
-      include: { commission: true },
-      orderBy: [{ isActive: "desc" }, { lastName: "asc" }],
-    }),
-    getUpcomingBirthdays(ctx.clubId),
-    getOfficerMandates(),
-    getClubOnboarding(),
-    hasRolePermission(ctx.role, "members.manage", ctx.isSuperAdmin),
-  ]);
+  const showDues = isFeatureEnabled(ctx.features, "duesEnabled", ctx.isSuperAdmin);
+  const canViewDues =
+    showDues &&
+    (await hasRolePermission(ctx.role, "dues.view", ctx.isSuperAdmin));
+
+  const [members, birthdays, mandates, onboarding, canManage, duesOverview] =
+    await Promise.all([
+      prisma.member.findMany({
+        where: { clubId: ctx.clubId },
+        include: { commission: true },
+        orderBy: [{ isActive: "desc" }, { lastName: "asc" }],
+      }),
+      getUpcomingBirthdays(ctx.clubId),
+      getOfficerMandates(),
+      getClubOnboarding(),
+      hasRolePermission(ctx.role, "members.manage", ctx.isSuperAdmin),
+      canViewDues ? getMembersDuesOverview(ctx.clubId) : Promise.resolve(null),
+    ]);
 
   const active = members.filter((m) => m.isActive);
-  const showDues = isFeatureEnabled(ctx.features, "duesEnabled", ctx.isSuperAdmin);
 
   return (
     <AppShellServer title={t("members.title")}>
@@ -55,6 +64,13 @@ export default async function MembersPage({
           />
         )}
         <BirthdayBanner birthdays={birthdays} locale={locale} />
+        {duesOverview && (
+          <MembersDuesSummary
+            overview={duesOverview}
+            locale={locale}
+            currency={ctx.club.currency}
+          />
+        )}
         <MandatesPanel mandates={mandates} canManage={canManage} />
 
         <div className="flex flex-wrap justify-between items-center gap-3">
@@ -104,9 +120,14 @@ export default async function MembersPage({
                       {member.position || member.commission?.name || "—"}
                     </p>
                   </div>
-                  <Badge variant={member.isActive ? "success" : "muted"}>
-                    {member.isActive ? t("members.active") : t("members.inactive")}
-                  </Badge>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    {duesOverview && member.isActive && (
+                      <MemberDuesBadge dues={duesOverview.duesByMemberId[member.id]} />
+                    )}
+                    <Badge variant={member.isActive ? "success" : "muted"}>
+                      {member.isActive ? t("members.active") : t("members.inactive")}
+                    </Badge>
+                  </div>
                 </CardContent>
               </Card>
             </Link>

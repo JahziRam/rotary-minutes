@@ -84,7 +84,9 @@
     "newMeeting": "Nouvelle réunion",
     "newMinute": "Nouveau PV",
     "meetingsThisMonth": "Réunions ce mois",
-    "pastMeetings": "Réunions passées"
+    "pastMeetings": "Réunions passées",
+    "treasuryBalance": "Solde trésorerie",
+    "treasuryOverdue": "{count} cotisation(s) en retard"
   },
   "meetings": {
     "title": "Réunions",
@@ -269,7 +271,45 @@
     "entryDeleted": "Opération supprimée",
     "noEntries": "Aucune opération enregistrée",
     "dues": "Cotisation",
-    "action": "Action"
+    "action": "Action",
+    "fiscalYear": "Exercice",
+    "monthlyChart": "Évolution mensuelle",
+    "byCategory": "Par catégorie",
+    "duesCollection": "Cotisations collectées",
+    "searchTransactions": "Rechercher…",
+    "editTransaction": "Modifier l'opération",
+    "saveEdit": "Enregistrer",
+    "cancelEdit": "Annuler",
+    "entryUpdated": "Opération mise à jour",
+    "entryCount": "{count} opération(s)",
+    "memberPortal": {
+      "title": "Cotisations",
+      "viewDues": "Gérer les cotisations",
+      "paymentHistory": "Historique des paiements"
+    },
+    "membersWidget": {
+      "title": "Cotisations de l'exercice",
+      "collection": "{rate} % collectés",
+      "paid": "à jour",
+      "pending": "en attente",
+      "overdue": "en retard",
+      "manage": "Gérer les cotisations"
+    },
+    "statisticsSection": {
+      "title": "Trésorerie",
+      "viewAll": "Module trésorerie",
+      "overdue": "{count} cotisation(s) en retard"
+    },
+    "exportSection": "Exports comptables",
+    "exportAccounting": "Journal CSV",
+    "exportAccountingHint": "Export compatible logiciel comptable (cotisations + opérations de l'exercice filtré).",
+    "exportSuccess": "Export téléchargé",
+    "customCategories": "Catégories personnalisées",
+    "categoryNameFr": "Nom de la catégorie",
+    "addCategory": "Ajouter",
+    "activateCategory": "Actif",
+    "deactivateCategory": "Inactif",
+    "saved": "Enregistré"
   },
   "actions": {
     "title": "Actions du club",
@@ -487,6 +527,48 @@
       "maintenance": "Mode maintenance ACTIVÉ",
       "stripeKeysMissing": "Clés Stripe manquantes dans .env",
       "envStatus": "Env requis : {requiredOk}/{requiredTotal} · recommandé : {recommendedOk}/{recommendedTotal}"
+    },
+    "plans": {
+      "billingTitle": "Facturation annuelle",
+      "billingHint": "Réduction appliquée au paiement annuel (en % du total 12 mois).",
+      "discountLabel": "Réduction annuelle (%)",
+      "currencyLabel": "Devise",
+      "saveBilling": "Enregistrer la réduction",
+      "billingExample": "Exemple : 39€/mois → {annual}€/an (−{discount}%)",
+      "stripeWarning": "Stripe est activé : si vous modifiez un prix, créez un nouveau Price dans Stripe et mettez à jour les Price ID ci-dessous. Sinon le montant facturé ne correspondra pas à l'affichage.",
+      "stripePriceChanged": "Prix modifié — vérifiez que les Price ID Stripe correspondent au nouveau montant.",
+      "planSaved": "Offre {plan} enregistrée",
+      "billingSaved": "Paramètres de facturation enregistrés",
+      "active": "Actif",
+      "popular": "Populaire",
+      "nameFr": "Nom (FR)",
+      "nameEn": "Nom (EN)",
+      "descriptionFr": "Description (FR)",
+      "descriptionEn": "Description (EN)",
+      "priceMonthly": "Prix mensuel",
+      "memberLimit": "Limite membres (vide = illimité)",
+      "sortOrder": "Ordre",
+      "stripeMonthly": "Stripe Price ID (mensuel)",
+      "stripeAnnual": "Stripe Price ID (annuel)",
+      "featuresFr": "Fonctionnalités (FR, une par ligne)",
+      "featuresEn": "Fonctionnalités (EN, une par ligne)",
+      "savePlan": "Enregistrer {plan}"
+    },
+    "appSettings": {
+      "saved": "Paramètres enregistrés",
+      "invalidGaId": "ID Google Analytics invalide (format attendu : G-XXXXXXXXXX)",
+      "gaConfigured": "Google Analytics est configuré. Le tracking démarre après consentement cookies (RGPD).",
+      "gaNotConfigured": "Collez l'ID de mesure GA4 pour activer le suivi d'audience sur clubminutes.api.mg.",
+      "appName": "Nom de l'application",
+      "tagline": "Slogan",
+      "supportEmail": "Email support",
+      "trialDays": "Jours d'essai gratuit",
+      "maintenanceMode": "Mode maintenance",
+      "gaTitle": "Google Analytics 4",
+      "gaHint": "Flux web à créer sur",
+      "gaUrlHint": "avec l'URL",
+      "gaIdLabel": "ID de mesure (G-XXXXXXXXXX)",
+      "save": "Enregistrer"
     },
     "analytics": {
       "title": "Analytique produit",
@@ -807,11 +889,20 @@
       "EXPORT_FAILED": "Échec de l'export"
     }
   },
+  "cookies": {
+    "title": "Nous respectons votre vie privée",
+    "description": "Nous utilisons des cookies strictement nécessaires au fonctionnement du service et, avec votre accord, Google Analytics pour mesurer l'audience et améliorer le produit. Consultez notre",
+    "privacyLink": "politique de confidentialité",
+    "accept": "Tout accepter",
+    "reject": "Refuser les cookies optionnels",
+    "manage": "Gérer les cookies"
+  },
   "privacy": {
     "title": "Politique de confidentialité",
     "updated": "Dernière mise à jour : juillet 2026",
     "intro": "Rotary Minutes s'engage à protéger vos données personnelles conformément au Règlement Général sur la Protection des Données (RGPD).",
     "statusLink": "État des services",
+    "manageCookies": "Gérer les cookies",
     "sections": {
       "controller": {
         "title": "Responsable du traitement",
@@ -819,11 +910,15 @@
       },
       "data": {
         "title": "Données collectées",
-        "body": "Nous collectons : identité (nom, email), données de club (membres, réunions, procès-verbaux), journaux d'audit et préférences de consentement."
+        "body": "Nous collectons : identité (nom, email), données de club (membres, réunions, procès-verbaux), journaux d'audit et préférences de consentement.\n\nAvec votre consentement, nous collectons également des données de navigation anonymisées via Google Analytics (pages visitées, type d'appareil, pays)."
       },
       "purpose": {
         "title": "Finalités",
-        "body": "Fourniture du service SaaS, authentification des PV, facturation, support client et amélioration du produit."
+        "body": "Fourniture du service SaaS, authentification des PV, facturation, support client et amélioration du produit.\n\nLes données d'audience servent uniquement à comprendre l'utilisation du site et à améliorer l'expérience utilisateur."
+      },
+      "cookies": {
+        "title": "Cookies et mesure d'audience",
+        "body": "Cookies strictement nécessaires : session d'authentification, préférences de langue et consentement cookies. Ils ne requièrent pas votre accord.\n\nCookies optionnels : Google Analytics (mesure d'audience). Ils ne sont déposés qu'après votre consentement explicite via le bandeau cookies. Vous pouvez retirer votre consentement à tout moment via « Gérer les cookies » en bas de page.\n\nGoogle Analytics peut traiter des données aux États-Unis. Nous utilisons le mode Consentement de Google (Consent Mode v2) et n'activons la mesure qu'après votre accord.\n\nDurée de conservation du choix : 12 mois."
       },
       "retention": {
         "title": "Conservation",
@@ -990,6 +1085,12 @@
       "subtitle": "Choisissez l'offre adaptée à votre club. Les modules s'activent automatiquement selon votre formule.",
       "trialNote": "Essai gratuit 14 jours · Sans carte bancaire",
       "cta": "Commencer l'essai gratuit"
+    },
+    "addons": {
+      "title": "Modules optionnels",
+      "subtitle": "Complétez votre formule avec des modules à la carte, activables depuis les paramètres du club.",
+      "perMonth": "mois",
+      "note": "Les prix sont indicatifs et peuvent être ajustés par l'administrateur de la plateforme."
     },
     "privacyLink": "Confidentialité",
     "termsLink": "Conditions d'utilisation",

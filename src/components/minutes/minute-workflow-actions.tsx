@@ -11,6 +11,8 @@ import {
   approveMinute,
   rejectMinute,
 } from "@/actions/minutes";
+import { ANALYTICS_EVENTS } from "@/lib/analytics-events";
+import { trackEvent } from "@/lib/analytics";
 
 export function MinuteWorkflowActions({
   minuteId,
@@ -75,6 +77,7 @@ export function MinuteWorkflowActions({
                 startTransition(async () => {
                   const r = await approveMinute(minuteId, locale);
                   if ("success" in r && r.success) {
+                    trackEvent(ANALYTICS_EVENTS.MINUTE_FINALIZED, { minute_id: minuteId });
                     setToast(isFr ? "PV approuvé et finalisé" : "Minute approved and finalized");
                     router.push(`/${locale}/minutes/${minuteId}`);
                     router.refresh();

@@ -79,6 +79,7 @@ export default async function AdminSubscriptionsPage({
             plans={plans}
             annualDiscountPercent={billing.annualDiscountPercent}
             currency={billing.currency}
+            stripeEnabled={billing.stripeEnabled}
           />
         </CardContent>
       </Card>

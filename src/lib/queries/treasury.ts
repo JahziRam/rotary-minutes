@@ -1,4 +1,11 @@
 import { prisma } from "@/lib/prisma";
+import {
+  computeMonthlyBreakdown,
+  currentMandateRange,
+  listFiscalYearOptions,
+  mandateRangeForYear,
+} from "@/lib/budget-utils";
+import { currentFiscalYear } from "@/lib/dues";
 import type { BudgetEntryType } from "@/generated/prisma/client";
 
 export type TreasuryFilters = {
@@ -50,6 +57,13 @@ export async function getTreasuryCategories(clubId: string) {
   });
 }
 
+export async function getTreasuryCategoriesAll(clubId: string) {
+  return prisma.budgetCategory.findMany({
+    where: { clubId },
+    orderBy: [{ type: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
+  });
+}
+
 export async function getTreasuryEvents(clubId: string) {
   return prisma.clubEvent.findMany({
     where: { clubId, status: { in: ["PUBLISHED", "COMPLETED"] } },
@@ -76,4 +90,74 @@ export async function getTreasuryClubMeta(clubId: string) {
     where: { id: clubId },
     select: { currency: true, name: true },
   });
+}
+
+export async function getTreasuryDashboardData(
+  clubId: string,
+  locale: string,
+  fiscalYear?: number
+) {
+  const year = fiscalYear ?? currentFiscalYear();
+  const range = mandateRangeForYear(year);
+  const filters = { from: range.from, to: range.to };
+
+  const [entries, categories, summary, club] = await Promise.all([
+    getTreasuryEntries(clubId, filters),
+    getTreasuryCategories(clubId),
+    getTreasurySummary(clubId, filters),
+    getTreasuryClubMeta(clubId),
+  ]);
+
+  const numericEntries = entries.map((e) => ({
+    type: e.type,
+    amount: Number(e.amount),
+    date: e.date,
+    categoryId: e.categoryId,
+    categoryName: e.category?.name ?? null,
+  }));
+
+  const incomeByCategory = categories
+    .filter((c) => c.type === "INCOME")
+    .map((c) => ({
+      id: c.id,
+      label: c.name,
+      total: numericEntries
+        .filter((e) => e.categoryId === c.id)
+        .reduce((s, e) => s + e.amount, 0),
+    }))
+    .filter((c) => c.total > 0);
+
+  const expensesByCategory = categories
+    .filter((c) => c.type === "EXPENSE")
+    .map((c) => ({
+      id: c.id,
+      label: c.name,
+      total: numericEntries
+        .filter((e) => e.categoryId === c.id)
+        .reduce((s, e) => s + e.amount, 0),
+    }))
+    .filter((c) => c.total > 0);
+
+  return {
+    fiscalYear: year,
+    fiscalYearLabel: range.label,
+    fiscalYearOptions: listFiscalYearOptions(),
+    exportFrom: range.from.toISOString(),
+    exportTo: range.to.toISOString(),
+    currency: club?.currency ?? "EUR",
+    summary,
+    monthlyBreakdown: computeMonthlyBreakdown(numericEntries, range.from, locale),
+    incomeByCategory,
+    expensesByCategory,
+    entryCount: entries.length,
+  };
+}
+
+export async function getTreasuryDashboardSummary(clubId: string) {
+  const mandate = currentMandateRange();
+  const summary = await getTreasurySummary(clubId, {
+    from: mandate.from,
+    to: mandate.to,
+  });
+  return { ...summary, fiscalYearLabel: mandate.label };
 }

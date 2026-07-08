@@ -1,12 +1,16 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Calendar, FileText, Users, Mail, Plus, ArrowRight, CheckSquare } from "lucide-react";
+import { Calendar, FileText, Users, Mail, Plus, ArrowRight, CheckSquare, Wallet } from "lucide-react";
 import { getSession } from "@/lib/cached-auth";
 import { getClubContext } from "@/lib/club-context";
 import { prisma } from "@/lib/prisma";
-import { isFeatureVisibleInUi } from "@/lib/feature-gate";
+import { isFeatureEnabled, isFeatureVisibleInUi } from "@/lib/feature-gate";
 import { getDashboardStats } from "@/lib/queries/dashboard";
+import { getTreasuryDashboardSummary } from "@/lib/queries/treasury";
+import { getMembersDuesOverview } from "@/lib/queries/dues-overview";
+import { formatBudgetMoney } from "@/lib/budget-utils";
+import { hasRolePermission } from "@/lib/roles";
 import { getMinuteStatusLabel, getMinuteStatusVariant } from "@/lib/minute-status";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -46,6 +50,23 @@ export default async function DashboardPage({
     ctx && session?.user?.id
       ? await getDashboardStats(ctx.clubId, session.user.id)
       : null;
+
+  const treasuryOn = ctx
+    ? isFeatureEnabled(ctx.features, "treasuryEnabled", ctx.isSuperAdmin)
+    : false;
+  const canViewTreasury =
+    ctx && treasuryOn
+      ? await hasRolePermission(ctx.role, "treasury.view", ctx.isSuperAdmin)
+      : false;
+  const treasurySummary =
+    ctx && canViewTreasury ? await getTreasuryDashboardSummary(ctx.clubId) : null;
+  const duesOverview =
+    ctx && isFeatureEnabled(ctx.features, "duesEnabled", ctx.isSuperAdmin)
+      ? await hasRolePermission(ctx.role, "dues.view", ctx.isSuperAdmin).then((ok) =>
+          ok ? getMembersDuesOverview(ctx.clubId) : null
+        )
+      : null;
+
   const clubName = ctx?.clubName ?? "Rotary Minutes";
   const liveVisible = ctx
     ? isFeatureVisibleInUi(ctx.features, "liveMeetings", ctx.isSuperAdmin)
@@ -78,7 +99,24 @@ export default async function DashboardPage({
           </Link>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div
+          className={`grid sm:grid-cols-2 ${treasurySummary ? "lg:grid-cols-5" : "lg:grid-cols-4"} gap-4`}
+        >
+          {treasurySummary && ctx && (
+            <Link href={`/${locale}/treasury`}>
+              <StatCard
+                title={t("dashboard.treasuryBalance")}
+                value={formatBudgetMoney(treasurySummary.balance, ctx.club.currency, locale)}
+                subtitle={
+                  duesOverview && duesOverview.overdueCount > 0
+                    ? t("dashboard.treasuryOverdue", { count: duesOverview.overdueCount })
+                    : treasurySummary.fiscalYearLabel
+                }
+                icon={Wallet}
+                className="hover:shadow-md transition-shadow cursor-pointer h-full"
+              />
+            </Link>
+          )}
           <Link href={`/${locale}/statistics`}>
             <StatCard
               title={t("dashboard.attendanceRate")}

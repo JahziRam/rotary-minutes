@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import type { PrismaClient, SubscriptionPlan } from "@/generated/prisma/client";
+import { ensureAddonConfigs } from "@/lib/billing";
+import type { AddonKey, PrismaClient, SubscriptionPlan } from "@/generated/prisma/client";
 import {
   type PlanConfigData,
   type BillingSettings,
@@ -194,5 +195,34 @@ function mapPlanRow(row: {
     isActive: row.isActive,
     isPopular: row.isPopular,
     sortOrder: row.sortOrder,
+  };
+}
+
+export type PublicAddon = {
+  key: AddonKey;
+  name: string;
+  priceMonthly: number;
+};
+
+export async function getActivePublicAddons(locale: string): Promise<{
+  addons: PublicAddon[];
+  billing: BillingSettings;
+}> {
+  await ensureAddonConfigs();
+  const [rows, billing] = await Promise.all([
+    prisma.addonConfig.findMany({
+      where: { isActive: true },
+      orderBy: { key: "asc" },
+    }),
+    getBillingSettings(),
+  ]);
+  const isFr = locale === "fr";
+  return {
+    billing,
+    addons: rows.map((a) => ({
+      key: a.key,
+      name: isFr ? a.nameFr : a.nameEn,
+      priceMonthly: a.priceMonthly,
+    })),
   };
 }

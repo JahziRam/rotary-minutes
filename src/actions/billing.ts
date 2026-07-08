@@ -15,6 +15,7 @@ import type { AddonKey, PromoDiscountType } from "@/generated/prisma/client";
 
 function revalidateBillingPaths(locale: string) {
   for (const loc of ["fr", "en"]) {
+    revalidatePath(`/${loc}`);
     revalidatePath(`/${loc}/settings/subscription`);
     revalidatePath(`/${loc}/settings`);
     revalidatePath(`/${loc}/admin/subscriptions`);

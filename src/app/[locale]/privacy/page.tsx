@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Shield } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { ManageCookiesButton } from "@/components/analytics/manage-cookies-button";
 
 export default async function PrivacyPage({
   params,
@@ -16,6 +17,7 @@ export default async function PrivacyPage({
     { title: t("sections.controller.title"), body: t("sections.controller.body") },
     { title: t("sections.data.title"), body: t("sections.data.body") },
     { title: t("sections.purpose.title"), body: t("sections.purpose.body") },
+    { title: t("sections.cookies.title"), body: t("sections.cookies.body") },
     { title: t("sections.retention.title"), body: t("sections.retention.body") },
     { title: t("sections.rights.title"), body: t("sections.rights.body") },
     { title: t("sections.security.title"), body: t("sections.security.body") },
@@ -57,13 +59,16 @@ export default async function PrivacyPage({
           </CardContent>
         </Card>
 
-        <p className="text-center text-sm text-gray-400 space-x-4">
+        <p className="text-center text-sm text-gray-400 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
           <Link href={`/${locale}/terms`} className="text-navy hover:underline">
             {locale === "fr" ? "Conditions d'utilisation" : "Terms of use"}
           </Link>
           <Link href={`/${locale}/status`} className="text-navy hover:underline">
             {t("statusLink")}
           </Link>
+          <ManageCookiesButton className="text-navy hover:underline">
+            {t("manageCookies")}
+          </ManageCookiesButton>
         </p>
       </main>
     </div>

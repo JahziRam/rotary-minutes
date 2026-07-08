@@ -8,6 +8,9 @@ import { requireFeature } from "@/lib/require-feature";
 import { BenchmarkPanel } from "@/components/district/benchmark-panel";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { getDistrictBenchmark } from "@/lib/queries/district";
+import { isFeatureEnabled } from "@/lib/feature-gate";
+import { hasRolePermission } from "@/lib/roles";
+import { TreasuryStatisticsPanel } from "@/components/treasury/treasury-statistics-panel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Calendar, TrendingUp } from "lucide-react";
 
@@ -41,6 +44,11 @@ export default async function StatisticsPage({
   }
 
   const { ctx } = gate;
+  const treasuryOn = isFeatureEnabled(ctx.features, "treasuryEnabled", ctx.isSuperAdmin);
+  const canViewTreasury =
+    treasuryOn &&
+    (await hasRolePermission(ctx.role, "treasury.view", ctx.isSuperAdmin));
+
   const [attendance, lowAttendance, benchmark] = await Promise.all([
     getClubAnnualAttendance(ctx.clubId),
     getMembersWithLowAttendance(ctx.clubId),
@@ -127,6 +135,14 @@ export default async function StatisticsPage({
             mandateLabel={benchmark.mandate.label}
             club={benchmark.club}
             districtAverage={benchmark.districtAverage}
+          />
+        )}
+
+        {canViewTreasury && (
+          <TreasuryStatisticsPanel
+            clubId={ctx.clubId}
+            locale={locale}
+            currency={ctx.club.currency}
           />
         )}
 
