@@ -5,13 +5,24 @@ import { generateMinuteHash, getVerifyUrl } from "@/lib/hash";
 import { computeRecordedAttendanceRate } from "@/lib/rotary";
 import { isDataUrl } from "@/lib/image-storage";
 import { resolveClubLogoUrl } from "@/lib/media-url";
+import {
+  buildMinuteAttendanceAnnex,
+  MEMBER_ATTENDANCE_CATEGORIES,
+} from "@/lib/minute-attendance-annex";
 import { renderMinutePdf } from "@/lib/pdf/render";
 import type { MinutePDFData } from "@/lib/pdf/minute-pdf";
+
+export const attendanceWithMemberInclude = {
+  include: {
+    member: { select: { firstName: true, lastName: true } },
+  },
+  orderBy: { category: "asc" as const },
+} as const;
 
 export const minutePdfInclude = {
   club: true,
   agendaItems: { orderBy: { sortOrder: "asc" as const } },
-  meeting: { include: { attendances: true } },
+  meeting: { include: { attendances: attendanceWithMemberInclude } },
 } as const;
 
 type MinuteForPdf = {
@@ -39,7 +50,11 @@ type MinuteForPdf = {
     type: string;
     presidedBy?: string | null;
     secretary?: string | null;
-    attendances: Array<{ category: string }>;
+    attendances: Array<{
+      category: string;
+      guestName?: string | null;
+      member?: { firstName: string; lastName: string } | null;
+    }>;
   };
 };
 
@@ -64,9 +79,12 @@ export async function buildMinutePdfData(
   const { default: QRCode } = await import("qrcode");
   const qrCodeDataUrl = await QRCode.toDataURL(verifyUrl, { width: 200 });
 
-  const present = minute.meeting.attendances.filter((a) => a.category === "PRESENT").length;
-  const total = minute.meeting.attendances.length;
-  const rate = computeRecordedAttendanceRate(minute.meeting.attendances) ?? 0;
+  const memberAttendances = minute.meeting.attendances.filter((a) =>
+    (MEMBER_ATTENDANCE_CATEGORIES as readonly string[]).includes(a.category)
+  );
+  const present = memberAttendances.filter((a) => a.category === "PRESENT").length;
+  const total = memberAttendances.length;
+  const rate = computeRecordedAttendanceRate(memberAttendances) ?? 0;
 
   const logoUrl = minute.club.logoUrl
     ? isDataUrl(minute.club.logoUrl)
@@ -98,6 +116,8 @@ export async function buildMinutePdfData(
     hash,
     qrCodeDataUrl,
     verifyUrl,
+    annex: buildMinuteAttendanceAnnex(minute.meeting.attendances, locale),
+    locale,
   };
 }
 

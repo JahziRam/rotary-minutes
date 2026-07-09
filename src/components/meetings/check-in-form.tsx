@@ -5,13 +5,16 @@ import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { processCheckIn } from "@/actions/check-in";
+import { queueOfflineCheckIn } from "@/components/pwa/offline-checkin-cache";
 
 export function CheckInForm({
   token,
+  meetingId,
   members,
   locale,
 }: {
   token: string;
+  meetingId: string;
   members: Array<{ id: string; firstName: string; lastName: string }>;
   locale: string;
 }) {
@@ -20,19 +23,32 @@ export function CheckInForm({
   const [pending, startTransition] = useTransition();
   const isFr = locale === "fr";
 
-  function checkInMember(memberId: string) {
+  function queueOrCheckIn(data: { memberId?: string; guestName?: string }) {
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      queueOfflineCheckIn({
+        token,
+        meetingId,
+        memberId: data.memberId,
+        guestName: data.guestName,
+        checkedInAt: new Date().toISOString(),
+      });
+      setDone(true);
+      return;
+    }
+
     startTransition(async () => {
-      const r = await processCheckIn(token, { memberId });
+      const r = await processCheckIn(token, data);
       if (r.success) setDone(true);
     });
   }
 
+  function checkInMember(memberId: string) {
+    queueOrCheckIn({ memberId });
+  }
+
   function checkInGuest() {
     if (!guestName.trim()) return;
-    startTransition(async () => {
-      const r = await processCheckIn(token, { guestName });
-      if (r.success) setDone(true);
-    });
+    queueOrCheckIn({ guestName });
   }
 
   if (done) {

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { CompanyLegalFooter } from "@/components/legal/company-legal-footer";
 import { loginUser } from "@/actions/auth";
 
 export default function LoginPage() {
@@ -112,6 +113,7 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+      <CompanyLegalFooter />
     </div>
   );
 }

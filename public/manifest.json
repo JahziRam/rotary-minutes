@@ -1,7 +1,7 @@
 {
   "name": "Rotary Minutes — Gestion de club",
   "short_name": "Rotary Minutes",
-  "description": "Gestion complète de club Rotary : membres, réunions, cotisations, PV authentifiés et communications.",
+  "description": "Gestion complète de club Rotary : membres, réunions, cotisations, PV authentifiés et communications. Produit de Visa Guard USA, LLC.",
   "start_url": "/fr/dashboard",
   "display": "standalone",
   "background_color": "#071a30",

@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
-import { Database, Download, HardDrive } from "lucide-react";
+import { Database, HardDrive, FileJson, FileCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Toast } from "@/components/ui/toast";
 import { createPlatformBackup, downloadPlatformBackup } from "@/actions/backup";
@@ -29,12 +29,13 @@ export function PlatformBackupPanel() {
     });
   }
 
-  function download() {
+  function download(format: "json" | "sql") {
     if (!lastBackupId) return;
     startTransition(async () => {
-      const result = await downloadPlatformBackup(lastBackupId);
+      const result = await downloadPlatformBackup(lastBackupId, format);
       if ("content" in result && result.content) {
-        const blob = new Blob([result.content], { type: "application/json" });
+        const mime = format === "sql" ? "text/plain" : "application/json";
+        const blob = new Blob([result.content], { type: mime });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
@@ -49,7 +50,7 @@ export function PlatformBackupPanel() {
     <div className="mt-6 pt-6 border-t border-gray-200 space-y-3">
       <h3 className="text-sm font-semibold text-gray-800">Sauvegarde plateforme</h3>
       <p className="text-xs text-gray-500">
-        Export JSON des clubs, utilisateurs et configuration SaaS (réservé super admin).
+        Export JSON ou SQL des clubs, utilisateurs et configuration SaaS (réservé super admin).
       </p>
       <div className="flex flex-wrap gap-2">
         <Button size="sm" variant="outline" disabled={pending} onClick={() => runBackup("DATABASE_ONLY")}>
@@ -61,10 +62,16 @@ export function PlatformBackupPanel() {
           Sauvegarde complète
         </Button>
         {lastBackupId && (
-          <Button size="sm" variant="outline" disabled={pending} onClick={download}>
-            <Download className="h-4 w-4 mr-1" />
-            Télécharger
-          </Button>
+          <>
+            <Button size="sm" variant="outline" disabled={pending} onClick={() => download("json")}>
+              <FileJson className="h-4 w-4 mr-1" />
+              Télécharger JSON
+            </Button>
+            <Button size="sm" variant="outline" disabled={pending} onClick={() => download("sql")}>
+              <FileCode className="h-4 w-4 mr-1" />
+              Télécharger SQL
+            </Button>
+          </>
         )}
       </div>
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}

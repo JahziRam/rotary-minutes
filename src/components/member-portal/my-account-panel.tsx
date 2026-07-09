@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
+import Link from "next/link";
 import {
   CreditCard,
   CalendarCheck,
@@ -13,13 +14,22 @@ import {
   Mail,
   Link2,
   User,
+  FileText,
+  Ticket,
+  Target,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Toast } from "@/components/ui/toast";
-import { linkMyMemberAccount } from "@/actions/member-portal";
-import type { DuesStatus, ClubActionStatus, AttendanceCategory } from "@/generated/prisma/client";
+import { checkoutMemberDues, linkMyMemberAccount } from "@/actions/member-portal";
+import type {
+  DuesStatus,
+  ClubActionStatus,
+  AttendanceCategory,
+  EventRegistrationStatus,
+  ClubEventStatus,
+} from "@/generated/prisma/client";
 
 type LinkedData = {
   member: {
@@ -44,6 +54,40 @@ type LinkedData = {
     meeting: { id: string; title: string | null; date: string; type: string };
   }>;
   attendanceStats: { total: number; present: number; rate: number };
+  mandateAttendance: {
+    present: number;
+    total: number;
+    rate: number;
+    goal: number;
+    mandateLabel: string;
+    onTrack: boolean;
+  };
+  finalizedMinutes: Array<{
+    id: string;
+    title: string;
+    meetingDate: string;
+    meetingTitle: string | null;
+    finalizedAt: string | null;
+  }>;
+  eventRegistrations: Array<{
+    id: string;
+    status: EventRegistrationStatus;
+    amount: number | null;
+    createdAt: string;
+    event: {
+      id: string;
+      title: string;
+      startAt: string;
+      location: string | null;
+      status: ClubEventStatus;
+    };
+  }>;
+  duesPayment: {
+    stripeEnabled: boolean;
+    payUrl: string;
+    pendingIds?: string[];
+    paymentInstructions?: string | null;
+  };
   actions: Array<{
     id: string;
     title: string;
@@ -140,7 +184,19 @@ export function MyAccountPanel({
     );
   }
 
-  const { member, duesSummary, attendances, attendanceStats, actions, documents, emailLogs } = data;
+  const {
+    member,
+    duesSummary,
+    attendances,
+    attendanceStats,
+    mandateAttendance,
+    finalizedMinutes,
+    eventRegistrations,
+    duesPayment,
+    actions,
+    documents,
+    emailLogs,
+  } = data;
 
   return (
     <div className="space-y-6">
@@ -182,9 +238,22 @@ export function MyAccountPanel({
               {t("fiscalYear", { year: duesSummary.fiscalYear })}
             </p>
             {duesSummary.pending.length > 0 && (
-              <Badge variant="warning" className="mt-2">
-                {duesSummary.pending.length} {t("pending")}
-              </Badge>
+              <>
+                <Badge variant="warning" className="mt-2">
+                  {duesSummary.pending.length} {t("pending")}
+                </Badge>
+                <p className="text-xs text-gray-500 mt-2">
+                  {duesPayment.stripeEnabled
+                    ? t("duesPayOnline")
+                    : duesPayment.paymentInstructions ?? t("duesPayContact")}
+                </p>
+                <Link
+                  href={duesPayment.payUrl}
+                  className="inline-block text-xs text-navy hover:underline mt-1"
+                >
+                  {t("duesPayLink")}
+                </Link>
+              </>
             )}
           </CardContent>
         </Card>
@@ -192,14 +261,34 @@ export function MyAccountPanel({
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-500 flex items-center gap-2">
-              <CalendarCheck className="h-4 w-4" />
-              {t("attendance")}
+              <Target className="h-4 w-4" />
+              {t("attendanceGoal")}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-navy">{attendanceStats.rate}%</p>
+            <p className="text-2xl font-bold text-navy">{mandateAttendance.rate}%</p>
             <p className="text-xs text-gray-500 mt-1">
-              {attendanceStats.present} / {attendanceStats.total} {t("meetings")}
+              {t("attendanceGoalDetail", {
+                present: mandateAttendance.present,
+                total: mandateAttendance.total,
+                goal: mandateAttendance.goal,
+              })}
+            </p>
+            <div className="mt-2 relative h-2 rounded-full bg-gray-100 overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all ${
+                  mandateAttendance.onTrack ? "bg-green-500" : "bg-amber-500"
+                }`}
+                style={{ width: `${Math.min(100, mandateAttendance.rate)}%` }}
+              />
+              <div
+                className="absolute top-0 bottom-0 w-0.5 bg-navy/40"
+                style={{ left: `${mandateAttendance.goal}%` }}
+                title={`${mandateAttendance.goal}%`}
+              />
+            </div>
+            <p className="text-[10px] text-gray-400 mt-1">
+              {t("mandateLabel", { label: mandateAttendance.mandateLabel })}
             </p>
           </CardContent>
         </Card>
@@ -245,13 +334,32 @@ export function MyAccountPanel({
             ) : (
               <>
                 {duesSummary.pending.map((d) => (
-                  <div key={d.id} className="flex items-center justify-between text-sm">
-                    <span>
+                  <div key={d.id} className="flex items-center justify-between gap-2 text-sm">
+                    <span className="min-w-0">
                       {d.periodLabel ?? t("period")} — {format(new Date(d.dueDate), "PP", { locale: dateLocale })}
                     </span>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0">
                       <span className="font-medium">{Number(d.amount).toFixed(2)} €</span>
                       <Badge variant={DUES_VARIANT[d.status]}>{t(`duesStatus.${d.status}`)}</Badge>
+                      {duesPayment.stripeEnabled && (
+                        <Button
+                          size="sm"
+                          variant="gold"
+                          disabled={pending}
+                          onClick={() =>
+                            startTransition(async () => {
+                              const result = await checkoutMemberDues(d.id, locale);
+                              if ("url" in result && result.url) {
+                                window.location.href = result.url;
+                              } else {
+                                setToast(t("payError"));
+                              }
+                            })
+                          }
+                        >
+                          {t("payNow")}
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -309,6 +417,65 @@ export function MyAccountPanel({
                   </div>
                   <Badge variant={a.category === "PRESENT" ? "success" : "muted"}>
                     {t(`attendanceCategory.${a.category}`)}
+                  </Badge>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              {t("minutesDetail")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {finalizedMinutes.length === 0 ? (
+              <p className="text-sm text-gray-500">{t("noMinutes")}</p>
+            ) : (
+              finalizedMinutes.map((m) => (
+                <div key={m.id} className="flex items-center justify-between text-sm">
+                  <div>
+                    <p className="font-medium">{m.title}</p>
+                    <p className="text-xs text-gray-500">
+                      {format(new Date(m.meetingDate), "PP", { locale: dateLocale })}
+                    </p>
+                  </div>
+                  <Link
+                    href={`/${locale}/minutes/${m.id}`}
+                    className="text-navy text-xs hover:underline shrink-0"
+                  >
+                    {t("viewMinute")}
+                  </Link>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Ticket className="h-5 w-5" />
+              {t("eventsDetail")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {eventRegistrations.length === 0 ? (
+              <p className="text-sm text-gray-500">{t("noEvents")}</p>
+            ) : (
+              eventRegistrations.map((r) => (
+                <div key={r.id} className="flex items-start justify-between gap-2 text-sm">
+                  <div>
+                    <p className="font-medium">{r.event.title}</p>
+                    <p className="text-xs text-gray-500">
+                      {format(new Date(r.event.startAt), "PP", { locale: dateLocale })}
+                    </p>
+                  </div>
+                  <Badge variant={r.status === "CONFIRMED" ? "success" : "warning"}>
+                    {t(`eventStatus.${r.status}`)}
                   </Badge>
                 </div>
               ))

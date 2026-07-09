@@ -9,8 +9,10 @@ import { canViewDistrictMinutes } from "@/lib/district-access";
 import { generateMinuteHash, getVerifyUrl, resolveMinuteVerifyUrl } from "@/lib/hash";
 import { getAppBaseUrl } from "@/lib/app-url";
 import { requirePermission } from "@/lib/require-permission";
-import { sendEmail, minuteFinalizedEmail } from "@/lib/email";
+import { minuteFinalizedEmail } from "@/lib/email";
+import { sendClubEmail } from "@/lib/club-smtp";
 import {
+  attendanceWithMemberInclude,
   buildMinutePdfBuffer,
   minutePdfInclude,
 } from "@/lib/pdf/build-minute-pdf";
@@ -61,7 +63,7 @@ export async function saveMinute(
     where: { id: minuteId },
     include: {
       agendaItems: true,
-      meeting: { include: { attendances: true } },
+      meeting: { include: { attendances: attendanceWithMemberInclude } },
     },
   });
 
@@ -150,7 +152,7 @@ async function doFinalizeMinute(
     include: {
       club: true,
       agendaItems: true,
-      meeting: { include: { attendances: true } },
+      meeting: { include: { attendances: attendanceWithMemberInclude } },
     },
   });
   if (!minute) return { error: "NOT_FOUND" as const };
@@ -204,7 +206,7 @@ async function doFinalizeMinute(
       logoUrl: minute.club.logoUrl ?? undefined,
     });
     const { buffer, filename } = await buildMinutePdfBuffer(minute, locale);
-    await sendEmail({
+    await sendClubEmail(minute.club.id, {
       to: clubEmail,
       subject: mail.subject,
       html: mail.html,
@@ -249,6 +251,15 @@ export async function submitMinuteForReview(minuteId: string, locale: string) {
     return { error: "INVALID_STATUS" };
   }
 
+  const club = await prisma.club.findUnique({
+    where: { id: ctx.clubId },
+    select: { presidentApprovalRequired: true },
+  });
+
+  if (club && !club.presidentApprovalRequired) {
+    return doFinalizeMinute(minuteId, ctx, locale, ctx.userId);
+  }
+
   await prisma.minute.update({
     where: { id: minuteId },
     data: {
@@ -258,6 +269,24 @@ export async function submitMinuteForReview(minuteId: string, locale: string) {
       reviewComment: null,
     },
   });
+
+  const presidents = await prisma.clubMembership.findMany({
+    where: { clubId: ctx.clubId, role: "PRESIDENT", isActive: true },
+    select: { userId: true },
+  });
+  if (presidents.length) {
+    await prisma.notification.createMany({
+      data: presidents.map((p) => ({
+        userId: p.userId,
+        clubId: ctx.clubId,
+        type: "NEW_MINUTE" as const,
+        title: locale === "fr" ? "PV à approuver" : "Minutes awaiting approval",
+        message: minute.title,
+        link: `/${locale}/minutes/${minuteId}`,
+      })),
+      skipDuplicates: true,
+    });
+  }
 
   await prisma.auditLog.create({
     data: {
@@ -322,6 +351,24 @@ export async function rejectMinute(minuteId: string, comment: string, locale: st
       metadata: { comment },
     },
   });
+
+  const secretaries = await prisma.clubMembership.findMany({
+    where: { clubId: ctx.clubId, role: { in: ["SECRETARY", "PROTOCOL"] }, isActive: true },
+    select: { userId: true },
+  });
+  if (secretaries.length) {
+    await prisma.notification.createMany({
+      data: secretaries.map((s) => ({
+        userId: s.userId,
+        clubId: ctx.clubId,
+        type: "SYSTEM" as const,
+        title: locale === "fr" ? "Corrections demandées sur le PV" : "Minutes corrections requested",
+        message: comment || (locale === "fr" ? "Le président a demandé des modifications." : "President requested changes."),
+        link: `/${locale}/minutes/${minuteId}/edit`,
+      })),
+      skipDuplicates: true,
+    });
+  }
 
   revalidateMinutePaths(minuteId, locale);
   return { success: true };
@@ -551,7 +598,7 @@ async function dispatchMinuteEmail(
     locale,
     logoUrl: minute.club.logoUrl ?? undefined,
   });
-  return sendEmail({
+  return sendClubEmail(minute.club.id, {
     to: recipientEmail,
     subject: mail.subject,
     html: mail.html,
@@ -719,7 +766,7 @@ export async function sendMinuteToAllMembers(minuteId: string, locale: string) {
 const minuteDetailInclude = {
   club: true,
   agendaItems: { orderBy: { sortOrder: "asc" as const } },
-  meeting: { include: { attendances: true } },
+  meeting: { include: { attendances: attendanceWithMemberInclude } },
   author: { select: { firstName: true, lastName: true } },
   versions: {
     orderBy: { version: "desc" as const },

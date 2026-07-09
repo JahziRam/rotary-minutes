@@ -4,6 +4,7 @@ import {
   resolveLogoForEmail,
   type EmailLogoResult,
 } from "@/lib/email-logo";
+import { COMPANY_LEGAL, formatCompanyAddress } from "@/lib/company-legal";
 
 export interface BrandedEmailOptions {
   clubName: string;
@@ -75,7 +76,8 @@ export function wrapBrandedEmail(bodyHtml: string, opts: BrandedEmailOptions): s
                 <tr>
                   <td style="border-top:1px solid #e2e8f0;padding-top:20px;font-size:12px;line-height:1.5;color:#94a3b8">
                     <strong style="color:#64748b">${clubName}</strong><br />
-                    Rotary Minutes — Gestion de club
+                    ${escapeHtml(COMPANY_LEGAL.productName)} (${escapeHtml(COMPANY_LEGAL.productAlias)}) — ${escapeHtml(COMPANY_LEGAL.companyName)}<br />
+                    ${escapeHtml(formatCompanyAddress(true))}
                   </td>
                 </tr>
               </table>

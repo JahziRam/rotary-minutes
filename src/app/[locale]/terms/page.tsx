@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Scale } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { CompanyLegalNotice } from "@/components/legal/company-legal-notice";
 
 export default async function TermsPage({
   params,
@@ -13,6 +14,7 @@ export default async function TermsPage({
   const t = await getTranslations("terms");
 
   const sections = [
+    { title: t("sections.publisher.title"), body: t("sections.publisher.body") },
     { title: t("sections.acceptance.title"), body: t("sections.acceptance.body") },
     { title: t("sections.service.title"), body: t("sections.service.body") },
     { title: t("sections.disclaimer.title"), body: t("sections.disclaimer.body") },
@@ -59,14 +61,17 @@ export default async function TermsPage({
           </CardContent>
         </Card>
 
-        <p className="text-center text-sm text-gray-400 space-x-4">
-          <Link href={`/${locale}/privacy`} className="text-navy hover:underline">
-            {t("privacyLink")}
-          </Link>
-          <Link href={`/${locale}/status`} className="text-navy hover:underline">
-            {t("statusLink")}
-          </Link>
-        </p>
+        <div className="text-center space-y-4">
+          <p className="text-sm text-gray-400 space-x-4">
+            <Link href={`/${locale}/privacy`} className="text-navy hover:underline">
+              {t("privacyLink")}
+            </Link>
+            <Link href={`/${locale}/status`} className="text-navy hover:underline">
+              {t("statusLink")}
+            </Link>
+          </p>
+          <CompanyLegalNotice locale={locale} variant="compact" className="text-gray-400" />
+        </div>
       </main>
     </div>
   );

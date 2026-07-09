@@ -19,7 +19,11 @@ export function generateMinuteHash(minute: {
     location?: string | null;
     type: string;
   };
-  attendances: Array<{ category: string; guestName?: string | null }>;
+  attendances: Array<{
+    category: string;
+    guestName?: string | null;
+    member?: { firstName: string; lastName: string } | null;
+  }>;
 }): string {
   const payload = JSON.stringify({
     id: minute.id,
@@ -35,7 +39,8 @@ export function generateMinuteHash(minute: {
     })),
     attendances: minute.attendances.map((a) => ({
       category: a.category,
-      name: a.guestName,
+      name: a.guestName?.trim()
+        || (a.member ? `${a.member.firstName} ${a.member.lastName}`.trim() : null),
     })),
   });
   return generateContentHash(payload);

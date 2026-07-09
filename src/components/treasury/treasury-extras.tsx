@@ -12,6 +12,9 @@ import {
   createBudgetCategory,
   exportTreasuryAccountingCsv,
   exportTreasuryAccountingOfx,
+  exportTreasuryOhada,
+  exportTreasuryQuickBooks,
+  exportTreasurySage,
   toggleBudgetCategory,
 } from "@/actions/treasury";
 import type { BudgetEntryType } from "@/generated/prisma/client";
@@ -92,6 +95,45 @@ export function TreasuryExtras({
             >
               <Download className="h-4 w-4 mr-1" />
               OFX
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={pending}
+              onClick={() =>
+                startTransition(async () => {
+                  const r = await exportTreasurySage(exportOpts);
+                  if ("csv" in r && r.csv) download(r.csv, r.filename!, "text/csv");
+                })
+              }
+            >
+              Sage
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={pending}
+              onClick={() =>
+                startTransition(async () => {
+                  const r = await exportTreasuryQuickBooks(exportOpts);
+                  if ("iif" in r && r.iif) download(r.iif, r.filename!, "text/plain");
+                })
+              }
+            >
+              QuickBooks
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={pending}
+              onClick={() =>
+                startTransition(async () => {
+                  const r = await exportTreasuryOhada(exportOpts);
+                  if ("csv" in r && r.csv) download(r.csv, r.filename!, "text/csv");
+                })
+              }
+            >
+              OHADA
             </Button>
           </div>
         </CardContent>

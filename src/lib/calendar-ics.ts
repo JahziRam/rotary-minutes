@@ -104,3 +104,42 @@ export function icsAttachment(meeting: CalendarMeetingInput) {
   const slug = (meeting.title ?? "reunion").replace(/\s+/g, "-").toLowerCase();
   return { filename: `${slug}.ics`, content };
 }
+
+export function generateClubCalendarIcs(
+  clubName: string,
+  meetings: CalendarMeetingInput[]
+): string {
+  const events = meetings.map((meeting) => {
+    const { start, end } = resolveEventTimes(meeting);
+    const summary = escapeIcs(meeting.title ?? `Réunion ${clubName}`);
+    const location = escapeIcs(meeting.location ?? "");
+    const description = escapeIcs(
+      meeting.description ?? `Réunion Rotary — ${clubName}`
+    );
+    const uid = `${meeting.id}@rotaryminutes.app`;
+    return [
+      "BEGIN:VEVENT",
+      `UID:${uid}`,
+      `DTSTAMP:${formatIcsDate(new Date())}`,
+      `DTSTART:${formatIcsDate(start)}`,
+      `DTEND:${formatIcsDate(end)}`,
+      `SUMMARY:${summary}`,
+      location ? `LOCATION:${location}` : "",
+      `DESCRIPTION:${description}`,
+      "END:VEVENT",
+    ]
+      .filter(Boolean)
+      .join("\r\n");
+  });
+
+  return [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Rotary Minutes//FR",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+    `X-WR-CALNAME:${escapeIcs(clubName)}`,
+    ...events,
+    "END:VCALENDAR",
+  ].join("\r\n");
+}

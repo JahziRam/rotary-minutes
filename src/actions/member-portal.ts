@@ -5,7 +5,35 @@ import { prisma } from "@/lib/prisma";
 import { getClubContext } from "@/lib/club-context";
 import { requireFeature } from "@/lib/require-feature";
 import { currentFiscalYear } from "@/lib/dues";
-import { computeRecordedAttendanceRate } from "@/lib/rotary";
+import { createMemberDuesCheckoutSession } from "@/lib/dues-stripe-checkout";
+import { isClubDuesStripeEnabled } from "@/lib/club-stripe";
+import {
+  ROTARY_ATTENDANCE_GOAL,
+  computeRecordedAttendanceRate,
+  getRotaryMandateYear,
+  calculateAttendanceRate,
+} from "@/lib/rotary";
+
+const MANDATE_PRESENT_CATEGORIES = new Set([
+  "PRESENT",
+  "EXTERNAL_ATTENDANCE",
+  "TRAVELING",
+]);
+
+function computeMandateAttendance(
+  meetings: Array<{ attendances: Array<{ category: string }> }>
+) {
+  let present = 0;
+  let total = 0;
+  for (const meeting of meetings) {
+    const att = meeting.attendances[0];
+    if (!att) continue;
+    total++;
+    if (MANDATE_PRESENT_CATEGORIES.has(att.category)) present++;
+  }
+  const rate = total > 0 ? Math.round(calculateAttendanceRate(present, total).rate) : 0;
+  return { present, total, rate, goal: ROTARY_ATTENDANCE_GOAL };
+}
 
 function revalidateMyAccount() {
   for (const loc of ["fr", "en"]) {
@@ -72,8 +100,10 @@ export async function getMyAccountData() {
   }
 
   const memberEmail = member.email?.toLowerCase();
+  const mandate = getRotaryMandateYear();
 
-  const [documents, emailLogs] = await Promise.all([
+  const [documents, emailLogs, mandateMeetings, finalizedMinutes, eventRegistrations, billing] =
+    await Promise.all([
     prisma.clubDocument.findMany({
       where: {
         clubId: ctx.clubId,
@@ -108,6 +138,50 @@ export async function getMyAccountData() {
           take: 15,
         })
       : Promise.resolve([]),
+    prisma.meeting.findMany({
+      where: {
+        clubId: ctx.clubId,
+        date: { gte: mandate.start, lte: mandate.end },
+      },
+      include: {
+        attendances: {
+          where: { memberId: member.id },
+          select: { category: true },
+        },
+      },
+      orderBy: { date: "asc" },
+    }),
+    prisma.minute.findMany({
+      where: { clubId: ctx.clubId, status: "FINALIZED" },
+      orderBy: { finalizedAt: "desc" },
+      take: 20,
+      select: {
+        id: true,
+        title: true,
+        finalizedAt: true,
+        meeting: { select: { date: true, title: true } },
+      },
+    }),
+    prisma.eventRegistration.findMany({
+      where: { memberId: member.id, event: { clubId: ctx.clubId } },
+      include: {
+        event: {
+          select: {
+            id: true,
+            title: true,
+            startAt: true,
+            location: true,
+            status: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 15,
+    }),
+    prisma.clubDuesPaymentSettings.findUnique({
+      where: { clubId: ctx.clubId },
+      select: { stripeEnabled: true, stripeSecretKey: true, paymentInstructions: true },
+    }),
   ]);
 
   const duesSummary = {
@@ -122,6 +196,9 @@ export async function getMyAccountData() {
 
   const presentCount = member.attendances.filter((a) => a.category === "PRESENT").length;
   const attendanceRate = computeRecordedAttendanceRate(member.attendances);
+  const mandateAttendance = computeMandateAttendance(mandateMeetings);
+  const locale = ctx.club.language === "EN" ? "en" : "fr";
+  const stripeEnabled = await isClubDuesStripeEnabled(ctx.clubId);
 
   return {
     linked: true as const,
@@ -149,6 +226,37 @@ export async function getMyAccountData() {
       total: member.attendances.length,
       present: presentCount,
       rate: attendanceRate ?? 0,
+    },
+    mandateAttendance: {
+      ...mandateAttendance,
+      mandateLabel: mandate.label,
+      onTrack: mandateAttendance.rate >= ROTARY_ATTENDANCE_GOAL,
+    },
+    finalizedMinutes: finalizedMinutes.map((m) => ({
+      id: m.id,
+      title: m.title,
+      meetingDate: m.meeting.date.toISOString(),
+      meetingTitle: m.meeting.title,
+      finalizedAt: m.finalizedAt?.toISOString() ?? null,
+    })),
+    eventRegistrations: eventRegistrations.map((r) => ({
+      id: r.id,
+      status: r.status,
+      amount: r.amount ? Number(r.amount) : null,
+      createdAt: r.createdAt.toISOString(),
+      event: {
+        id: r.event.id,
+        title: r.event.title,
+        startAt: r.event.startAt.toISOString(),
+        location: r.event.location,
+        status: r.event.status,
+      },
+    })),
+    duesPayment: {
+      stripeEnabled,
+      payUrl: `/${locale}/members/dues`,
+      pendingIds: duesSummary.pending.map((d) => d.id),
+      paymentInstructions: billing?.paymentInstructions ?? null,
     },
     actions: member.assignedActions.map((a) => ({
       id: a.id,
@@ -211,4 +319,26 @@ export async function linkMyMemberAccount() {
 
   revalidateMyAccount();
   return { success: true as const, memberId: member.id };
+}
+
+export async function checkoutMemberDues(duesId: string, locale: string) {
+  const gate = await requireMemberPortal();
+  if (gate.error) return { error: gate.error as string };
+  const { ctx } = gate;
+
+  const user = await prisma.user.findUnique({
+    where: { id: ctx.userId },
+    select: { email: true },
+  });
+
+  const result = await createMemberDuesCheckoutSession({
+    duesId,
+    clubId: ctx.clubId,
+    userId: ctx.userId,
+    locale,
+    userEmail: user?.email,
+  });
+
+  if ("error" in result) return { error: result.error };
+  return { url: result.url };
 }

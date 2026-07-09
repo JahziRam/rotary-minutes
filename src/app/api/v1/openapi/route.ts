@@ -1,4 +1,5 @@
 import { apiJson } from "@/lib/api-response";
+import { COMPANY_LEGAL } from "@/lib/company-legal";
 
 const spec = {
   openapi: "3.0.3",
@@ -6,7 +7,11 @@ const spec = {
     title: "Rotary Minutes API",
     version: "1.0.0",
     description:
-      "REST API for High level clubs. Authenticate with Authorization: Bearer rm_live_...",
+      "REST API for Rotary Minutes / Club Minutes. Operated by Visa Guard USA, LLC. Authenticate with Authorization: Bearer rm_live_...",
+    contact: {
+      name: COMPANY_LEGAL.companyName,
+      email: COMPANY_LEGAL.legalEmail,
+    },
   },
   servers: [{ url: "/api/v1" }],
   paths: {

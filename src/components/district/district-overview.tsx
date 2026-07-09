@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { Building2, FileCheck, TrendingUp, Users } from "lucide-react";
+import { Building2, FileCheck, TrendingUp, Users, Download } from "lucide-react";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
@@ -56,16 +56,23 @@ export function DistrictOverview({
         />
       </div>
 
-      {showMinutesLink && (
-        <div className="flex justify-end">
+      <div className="flex flex-wrap justify-end gap-2">
+        <a
+          href={`/api/district/governor-report?district=${encodeURIComponent(district)}`}
+          className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+        >
+          <Download className="h-4 w-4" />
+          {t("downloadReport")}
+        </a>
+        {showMinutesLink && (
           <Link
             href={`/${locale}/district/minutes`}
             className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
           >
             {t("viewMinutes")}
           </Link>
-        </div>
-      )}
+        )}
+      </div>
 
       <Card>
         <CardHeader>

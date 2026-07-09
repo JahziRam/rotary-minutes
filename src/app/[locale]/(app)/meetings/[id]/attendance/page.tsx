@@ -6,7 +6,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { getClubContext } from "@/lib/club-context";
 import { AppShellServer } from "@/components/layout/app-shell-server";
-import { MobileAttendanceSheet } from "@/components/meetings/mobile-attendance-sheet";
+import { UnifiedAttendanceSheet } from "@/components/meetings/unified-attendance-sheet";
 import { AttendanceQrPanel } from "@/components/meetings/attendance-qr-panel";
 import { CalendarExport } from "@/components/meetings/calendar-export";
 
@@ -72,7 +72,7 @@ export default async function MeetingAttendancePage({
             <AttendanceQrPanel meetingId={meeting.id} />
           </div>
         </div>
-        <MobileAttendanceSheet
+        <UnifiedAttendanceSheet
           members={members}
           meetingId={meeting.id}
           initialEntries={initialEntries}

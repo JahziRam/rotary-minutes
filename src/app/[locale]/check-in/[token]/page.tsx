@@ -41,7 +41,12 @@ export default async function CheckInPage({
             {format(data.meeting.date, "EEEE d MMMM yyyy", { locale: dateLocale })}
           </p>
         </div>
-        <CheckInForm token={token} members={data.members} locale={locale} />
+        <CheckInForm
+          token={token}
+          meetingId={data.meeting.id}
+          members={data.members}
+          locale={locale}
+        />
       </div>
     </div>
   );

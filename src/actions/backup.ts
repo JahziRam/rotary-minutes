@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import { requireFeature } from "@/lib/require-feature";
 import { requirePermission } from "@/lib/require-permission";
 import type { BackupScope } from "@/generated/prisma/client";
+import { jsonToSqlDump } from "@/lib/backup-sql";
 
 async function exportClubData(clubId: string, scope: BackupScope) {
   const club = await prisma.club.findUnique({
@@ -62,6 +63,7 @@ export async function createClubBackup(scope: BackupScope) {
   try {
     const payload = await exportClubData(ctx.clubId, scope);
     const json = JSON.stringify(payload, null, 2);
+    const sql = jsonToSqlDump(payload);
     const fileName = `club-backup-${ctx.club.slug}-${scope.toLowerCase()}-${Date.now()}.json`;
 
     await prisma.clubBackup.update({
@@ -69,6 +71,7 @@ export async function createClubBackup(scope: BackupScope) {
       data: {
         status: "COMPLETED",
         payload: json,
+        sqlPayload: sql,
         fileName,
         sizeBytes: Buffer.byteLength(json, "utf8"),
         completedAt: new Date(),
@@ -86,7 +89,10 @@ export async function createClubBackup(scope: BackupScope) {
   }
 }
 
-export async function downloadClubBackup(backupId: string) {
+export async function downloadClubBackup(
+  backupId: string,
+  format: "json" | "sql" = "json"
+) {
   const feature = await requireFeature("clubBackupEnabled");
   if (feature.error) return feature;
   const auth = await requirePermission("treasury.manage");
@@ -98,10 +104,19 @@ export async function downloadClubBackup(backupId: string) {
   });
   if (!backup?.payload) return { error: "NOT_FOUND" as const };
 
+  const content =
+    format === "sql"
+      ? backup.sqlPayload ?? jsonToSqlDump(JSON.parse(backup.payload))
+      : backup.payload;
+
+  const baseName =
+    backup.fileName?.replace(/\.json$/i, "") ?? `backup-${backupId}`;
+
   return {
     success: true as const,
-    fileName: backup.fileName ?? `backup-${backupId}.json`,
-    content: backup.payload,
+    fileName: format === "sql" ? `${baseName}.sql` : (backup.fileName ?? `${baseName}.json`),
+    content,
+    format,
   };
 }
 
@@ -148,6 +163,7 @@ export async function createPlatformBackup(scope: BackupScope, locale: string) {
   try {
     const payload = await exportPlatformData(scope);
     const json = JSON.stringify(payload, null, 2);
+    const sql = jsonToSqlDump(payload);
     const fileName = `platform-backup-${scope.toLowerCase()}-${Date.now()}.json`;
 
     await prisma.platformBackup.update({
@@ -155,6 +171,7 @@ export async function createPlatformBackup(scope: BackupScope, locale: string) {
       data: {
         status: "COMPLETED",
         payload: json,
+        sqlPayload: sql,
         fileName,
         sizeBytes: Buffer.byteLength(json, "utf8"),
         completedAt: new Date(),
@@ -172,7 +189,10 @@ export async function createPlatformBackup(scope: BackupScope, locale: string) {
   }
 }
 
-export async function downloadPlatformBackup(backupId: string) {
+export async function downloadPlatformBackup(
+  backupId: string,
+  format: "json" | "sql" = "json"
+) {
   const session = await auth();
   if (!session?.user?.isSuperAdmin) return { error: "UNAUTHORIZED" as const };
 
@@ -181,9 +201,18 @@ export async function downloadPlatformBackup(backupId: string) {
   });
   if (!backup?.payload) return { error: "NOT_FOUND" as const };
 
+  const content =
+    format === "sql"
+      ? backup.sqlPayload ?? jsonToSqlDump(JSON.parse(backup.payload))
+      : backup.payload;
+
+  const baseName =
+    backup.fileName?.replace(/\.json$/i, "") ?? `platform-${backupId}`;
+
   return {
     success: true as const,
-    fileName: backup.fileName ?? `platform-${backupId}.json`,
-    content: backup.payload,
+    fileName: format === "sql" ? `${baseName}.sql` : (backup.fileName ?? `${baseName}.json`),
+    content,
+    format,
   };
 }

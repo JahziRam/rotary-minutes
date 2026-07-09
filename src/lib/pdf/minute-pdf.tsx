@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Image,
 } from "@react-pdf/renderer";
+import type { MinuteAttendanceAnnex } from "@/lib/minute-attendance-annex";
 
 const styles = StyleSheet.create({
   page: {
@@ -80,6 +81,23 @@ const styles = StyleSheet.create({
   },
   statValue: { fontSize: 14, fontWeight: "bold", color: "#0d2d52" },
   statLabel: { fontSize: 8, color: "#64748b" },
+  annexTitle: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#0d2d52",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  annexSubtitle: {
+    fontSize: 11,
+    fontWeight: "bold",
+    color: "#0d2d52",
+    marginTop: 10,
+    marginBottom: 6,
+  },
+  annexListItem: { fontSize: 9, marginBottom: 2, paddingLeft: 8 },
+  annexCategory: { fontSize: 9, fontWeight: "bold", color: "#475569", marginBottom: 3 },
+  annexEmpty: { fontSize: 9, color: "#94a3b8", fontStyle: "italic" },
 });
 
 export interface MinutePDFData {
@@ -110,9 +128,81 @@ export interface MinutePDFData {
   hash: string;
   qrCodeDataUrl?: string;
   verifyUrl: string;
+  annex?: MinuteAttendanceAnnex;
+  locale?: string;
+}
+
+function AnnexPage({
+  data,
+  labels,
+}: {
+  data: MinutePDFData;
+  labels: { title: string; attendanceList: string; visitorsList: string; none: string };
+}) {
+  const annex = data.annex;
+  if (!annex) return null;
+
+  return (
+    <Page size="A4" style={styles.page}>
+      <Text style={styles.annexTitle}>{labels.title}</Text>
+
+      <Text style={styles.annexSubtitle}>
+        {labels.attendanceList} ({annex.totalMembers})
+      </Text>
+      {annex.memberGroups.length === 0 ? (
+        <Text style={styles.annexEmpty}>{labels.none}</Text>
+      ) : (
+        annex.memberGroups.map((group) => (
+          <View key={group.category} style={{ marginBottom: 8 }}>
+            <Text style={styles.annexCategory}>
+              {group.label} ({group.names.length})
+            </Text>
+            {group.names.map((name, i) => (
+              <Text key={`${group.category}-${i}`} style={styles.annexListItem}>
+                • {name}
+              </Text>
+            ))}
+          </View>
+        ))
+      )}
+
+      <Text style={styles.annexSubtitle}>
+        {labels.visitorsList} ({annex.totalVisitors})
+      </Text>
+      {annex.visitors.length === 0 ? (
+        <Text style={styles.annexEmpty}>{labels.none}</Text>
+      ) : (
+        annex.visitors.map((visitor, i) => (
+          <Text key={`visitor-${i}`} style={styles.annexListItem}>
+            • {visitor.name} — {visitor.label}
+          </Text>
+        ))
+      )}
+
+      <View style={styles.footer} fixed>
+        <View>
+          <Text>Annexe — {data.club.name}</Text>
+          <Text style={styles.hash}>SHA-256: {data.hash.slice(0, 32)}...</Text>
+        </View>
+        <Text
+          render={({ pageNumber, totalPages }) =>
+            `Page ${pageNumber} / ${totalPages}`
+          }
+        />
+      </View>
+    </Page>
+  );
 }
 
 export function MinutePDFDocument({ data }: { data: MinutePDFData }) {
+  const isFr = data.locale !== "en";
+  const annexLabels = {
+    title: isFr ? "Annexe — Présences et visiteurs" : "Annex — Attendance and visitors",
+    attendanceList: isFr ? "Liste de présence" : "Attendance list",
+    visitorsList: isFr ? "Liste des visiteurs" : "Visitors list",
+    none: isFr ? "Aucune entrée" : "No entries",
+  };
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -204,6 +294,7 @@ export function MinutePDFDocument({ data }: { data: MinutePDFData }) {
           />
         </View>
       </Page>
+      {data.annex && <AnnexPage data={data} labels={annexLabels} />}
     </Document>
   );
 }

@@ -8,7 +8,8 @@ import { requireFeature } from "@/lib/require-feature";
 import { requirePermission } from "@/lib/require-permission";
 import { hasRolePermission } from "@/lib/roles";
 import { getAppBaseUrl } from "@/lib/app-url";
-import { sendEmail, isEmailEnabled } from "@/lib/email";
+import { isEmailEnabled } from "@/lib/email";
+import { sendClubEmail } from "@/lib/club-smtp";
 import { prepareBrandedEmail } from "@/lib/email-branding";
 import { logoSrcFromResult, resolveLogoForEmail } from "@/lib/email-logo";
 import { buildClubEmailVars, renderEmailContent } from "@/lib/email-render";
@@ -173,6 +174,92 @@ export async function updateActionStatus(actionId: string, status: ClubActionSta
   return { success: true };
 }
 
+export async function listPendingAgendaActions(minuteId: string) {
+  const auth = await requireActionsView();
+  if ("error" in auth && auth.error) return { error: auth.error as string };
+  const { ctx } = auth;
+
+  const minute = await prisma.minute.findFirst({
+    where: { id: minuteId, clubId: ctx.clubId },
+    include: { agendaItems: { orderBy: { sortOrder: "asc" } } },
+  });
+  if (!minute) return { error: "NOT_FOUND" as const };
+
+  const members = await getActionMembers(ctx.clubId);
+  const pending = minute.agendaItems
+    .filter((item) => item.actions?.trim())
+    .map((item) => {
+      const lines = parseActionLines(item.actions!);
+      const titles = lines.length > 0 ? lines : [item.actions!.trim()];
+      return {
+        agendaItemId: item.id,
+        agendaTitle: item.title,
+        titles,
+        responsible: item.responsible,
+        dueDate: item.dueDate?.toISOString() ?? null,
+        alreadySynced: false as boolean,
+      };
+    });
+
+  for (const p of pending) {
+    const existing = await prisma.clubAction.findFirst({
+      where: { agendaItemId: p.agendaItemId },
+    });
+    p.alreadySynced = !!existing;
+  }
+
+  return { pending, members, canManage: await hasRolePermission(ctx.role, "actions.manage", ctx.isSuperAdmin) };
+}
+
+export async function assignAgendaActions(
+  minuteId: string,
+  assignments: Array<{ agendaItemId: string; responsibleMemberId?: string; title?: string }>
+) {
+  const auth = await requireActionsManage();
+  if (auth.error) return auth;
+  const { ctx } = auth;
+
+  let created = 0;
+  for (const a of assignments) {
+    const item = await prisma.agendaItem.findFirst({
+      where: { id: a.agendaItemId, minuteId, minute: { clubId: ctx.clubId } },
+    });
+    if (!item?.actions?.trim()) continue;
+
+    const existing = await prisma.clubAction.findFirst({ where: { agendaItemId: item.id } });
+    if (existing) {
+      if (a.responsibleMemberId) {
+        await prisma.clubAction.update({
+          where: { id: existing.id },
+          data: { responsibleMemberId: a.responsibleMemberId },
+        });
+      }
+      continue;
+    }
+
+    const title = a.title?.trim() || parseActionLines(item.actions)[0] || item.actions.trim();
+    await prisma.clubAction.create({
+      data: {
+        clubId: ctx.clubId,
+        title,
+        description: item.decisions || item.description || null,
+        responsibleMemberId: a.responsibleMemberId || null,
+        responsibleName: item.responsible || null,
+        dueDate: item.dueDate,
+        minuteId,
+        agendaItemId: item.id,
+        status: "OPEN",
+        priority: "NORMAL",
+        createdById: ctx.userId,
+      },
+    });
+    created++;
+  }
+
+  revalidateActions();
+  return { success: true as const, created };
+}
+
 /** Import actions from finalized minute agenda items. */
 export async function syncFromAgendaItems(minuteId: string, clubId?: string) {
   const minute = await prisma.minute.findFirst({
@@ -300,7 +387,7 @@ export async function sendActionReminder(actionId: string, locale = "fr") {
         clubName: action.club.name,
         logo: emailLogo,
       });
-      const result = await sendEmail({
+      const result = await sendClubEmail(ctx.clubId, {
         to: recipientEmail,
         subject: renderEmailContent(subjectTpl, vars),
         html: branded.html,

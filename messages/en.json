@@ -15,7 +15,7 @@
     "events": "Events",
     "documents": "Documents",
     "treasury": "Treasury",
-    "actions": "Actions",
+    "actions": "Task management",
     "calendar": "Calendar",
     "statistics": "Statistics",
     "district": "District",
@@ -28,7 +28,13 @@
   },
   "notifications": {
     "title": "Notifications & Announcements",
-    "unauthorized": "You must be signed in to view your notifications."
+    "unauthorized": "You must be signed in to view your notifications.",
+    "push": {
+      "title": "Push notifications",
+      "hint": "Get a reminder 1 hour before each meeting and confirm your attendance.",
+      "enable": "Enable",
+      "disable": "Disable"
+    }
   },
   "features": {
     "unavailableTitle": "Feature not available",
@@ -115,7 +121,10 @@
   "dashboard": {
     "welcome": "Welcome",
     "nextMeeting": "Next meeting",
-    "openActions": "Open actions",
+    "openActions": "Open tasks",
+    "openActionsSubtitle": "Task management",
+    "statsSection": "Overview",
+    "activitySection": "Recent activity",
     "recentMinutes": "Recent minutes",
     "attendanceRate": "Attendance rate",
     "scheduledEmails": "Scheduled emails",
@@ -126,7 +135,11 @@
     "meetingsThisMonth": "Meetings this month",
     "pastMeetings": "Past meetings",
     "treasuryBalance": "Treasury balance",
-    "treasuryOverdue": "{count} overdue dues"
+    "treasuryOverdue": "{count} overdue dues",
+    "healthScore": {
+      "title": "Club health score",
+      "allClear": "No issues detected — your club is in great shape."
+    }
   },
   "meetings": {
     "title": "Meetings",
@@ -178,7 +191,8 @@
     "external": "External attendance",
     "rate": "Attendance rate",
     "annualRate": "Annual attendance",
-    "monthlyRate": "Monthly attendance"
+    "monthlyRate": "Monthly attendance",
+    "unifiedNote": "Unified attendance sheet for desktop and mobile."
   },
   "minutes": {
     "title": "Minutes",
@@ -207,7 +221,22 @@
     "autoSave": "Auto-save",
     "offlineDraft": "Offline draft",
     "versionHistory": "Version history",
-    "finalize": "Finalize and authenticate"
+    "finalize": "Finalize and authenticate",
+    "taskAssign": {
+      "title": "Assign agenda actions",
+      "hint": "Select a member to create a task from each agenda action in one click.",
+      "selectMember": "Assign to…",
+      "assigned": "Task assigned",
+      "synced": "Synced"
+    },
+    "autoGenerate": {
+      "button": "Auto-generate from meeting",
+      "success": "Minutes draft generated from meeting data",
+      "error": {
+        "NOT_FOUND": "Minutes not found",
+        "LOCKED": "Minutes are finalized and cannot be edited"
+      }
+    }
   },
   "members": {
     "title": "Members",
@@ -227,7 +256,22 @@
     "photoUrl": "Photo URL",
     "profilePhoto": "Profile photo",
     "profilePhotoHint": "JPEG, PNG or WebP — max 512 KB.",
-    "backToList": "Back to list"
+    "backToList": "Back to list",
+    "import": {
+      "title": "Import members",
+      "hint": "Paste CSV data or upload a file. Download the template for the expected format.",
+      "pastePlaceholder": "firstName,lastName,email,phone,position,registrationNumber,joinedAt",
+      "downloadTemplate": "CSV template",
+      "uploadFile": "Upload CSV",
+      "import": "Import",
+      "success": "{count} member(s) imported",
+      "errors": "error(s)",
+      "error": {
+        "EMPTY_CSV": "Empty CSV",
+        "INVALID_HEADERS": "Invalid headers (firstName, lastName required)",
+        "TOO_LARGE": "File too large (max 5 MB)"
+      }
+    }
   },
   "dues": {
     "title": "Member dues",
@@ -268,6 +312,25 @@
       "autoInvoiceEmail": "Automatically email invoices when created",
       "autoReceiptEmail": "Automatically email receipt when payment is recorded",
       "saved": "Dues settings saved"
+    },
+    "onlinePayment": {
+      "title": "Online payment (club)",
+      "hint": "Dues are collected on the club's own Stripe account. The Rotary Minutes subscription uses platform Stripe, configured by the super admin.",
+      "enableStripe": "Enable Stripe payment for dues",
+      "secretKey": "Club Stripe secret key",
+      "secretKeyPlaceholder": "sk_live_... or sk_test_...",
+      "secretKeyPlaceholderSet": "Leave blank to keep the current key",
+      "webhookSecret": "Club Stripe webhook secret",
+      "webhookSecretPlaceholder": "whsec_...",
+      "webhookSecretPlaceholderSet": "Leave blank to keep the current secret",
+      "webhookUrl": "Webhook URL to configure in Stripe",
+      "webhookHint": "Required event: checkout.session.completed",
+      "instructions": "Payment instructions (when Stripe is off)",
+      "instructionsPlaceholder": "Bank transfer IBAN, check payable to the club, etc.",
+      "instructionsHint": "Shown to members in My account when online payment is not active.",
+      "saved": "Payment settings saved",
+      "keyRequired": "A Stripe secret key is required to enable payment.",
+      "error": "Could not save settings"
     },
     "statuses": {
       "PENDING": "Pending",
@@ -337,6 +400,29 @@
       "TOO_LARGE": "File too large (max 5 MB)",
       "GENERIC": "Import error"
     },
+    "mandate": {
+      "title": "Mandate budget dashboard",
+      "planned": "Planned",
+      "actual": "Actual",
+      "variance": "Variance",
+      "subAccount": "Sub-account",
+      "noSubAccounts": "No sub-accounts configured for this mandate.",
+      "unassigned": "Unassigned entries net: {net}"
+    },
+    "reconciliation": {
+      "title": "Bank reconciliation",
+      "hint": "Import bank statement lines (date, description, amount) then auto-match with treasury entries.",
+      "pastePlaceholder": "date,description,amount,reference",
+      "uploadFile": "Upload CSV",
+      "import": "Import statement",
+      "autoMatch": "Auto-match",
+      "importSuccess": "{count} line(s) imported",
+      "matchSuccess": "{matched} of {total} line(s) matched",
+      "importError": {
+        "EMPTY_FILE": "Empty file",
+        "TOO_LARGE": "File too large (max 5 MB)"
+      }
+    },
     "memberPortal": {
       "title": "Membership dues",
       "viewDues": "Manage dues",
@@ -364,10 +450,20 @@
     "addCategory": "Add",
     "activateCategory": "Active",
     "deactivateCategory": "Inactive",
-    "saved": "Saved"
+    "saved": "Saved",
+    "allSubAccounts": "All sub-accounts",
+    "noSubAccount": "No sub-account",
+    "subAccountsTitle": "Sub-accounts",
+    "subAccountsHint": "Split transactions by account (cash, bank, event fund…).",
+    "subAccountName": "Sub-account name",
+    "subAccountCode": "Code",
+    "addSubAccount": "Add",
+    "subAccountCreated": "Sub-account created",
+    "subAccountDeactivated": "Sub-account deactivated",
+    "noSubAccounts": "No sub-accounts yet"
   },
   "actions": {
-    "title": "Club actions",
+    "title": "Task management",
     "allStatuses": "All statuses",
     "exportCsv": "Export CSV",
     "exported": "Actions exported",
@@ -501,6 +597,27 @@
       "NO_RECIPIENTS": "No recipients selected.",
       "NOT_FOUND": "Item not found.",
       "ALREADY_SENT": "This campaign was already sent."
+    },
+    "smtp": {
+      "title": "SMTP configuration",
+      "description": "Optional — by default all emails are sent via Resend (configured by the super admin).",
+      "resendDefault": "By default, club emails are sent via Resend. Enable custom SMTP only if you want to use your own mail server.",
+      "fallbackNotice": "Your SMTP failed — messages were relayed via Resend. Fix your configuration:",
+      "useCustomSmtp": "Use custom SMTP server",
+      "host": "SMTP host",
+      "port": "Port",
+      "secure": "Secure connection (SSL/TLS)",
+      "user": "Username",
+      "password": "Password",
+      "passwordPlaceholder": "Leave blank to keep current",
+      "fromEmail": "From email",
+      "fromName": "From name",
+      "save": "Save",
+      "test": "Test",
+      "testEmail": "Test email",
+      "saved": "SMTP settings saved",
+      "testSent": "Test email sent",
+      "testFailed": "Test send failed"
     }
   },
   "statistics": {
@@ -539,6 +656,7 @@
     "readOnlyNotice": "Read-only access — finalized minutes only.",
     "unauthorized": "You do not have access to the district dashboard.",
     "governorMode": "District governor view — read-only access to finalized data.",
+    "downloadReport": "Governor report (CSV)",
     "benchmarkTitle": "Club vs district benchmark",
     "benchmarkSubtitle": "Compare your club to the district {district} average — mandate {label}",
     "benchmarkAnonymized": "District averages are anonymized aggregates across all clubs."
@@ -658,7 +776,21 @@
     "meetingDay": "Day",
     "meetingTime": "Time",
     "website": "Website",
-    "saved": "Settings saved"
+    "saved": "Settings saved",
+    "workflow": {
+      "title": "Workflow & integrations",
+      "presidentApprovalRequired": "President approval required before finalizing minutes",
+      "guideEnabled": "Show in-app guide for new users",
+      "whatsappReminderPhone": "WhatsApp reminder phone (E.164)",
+      "publicCalendar": "Public calendar feed",
+      "publicCalendarHint": "Subscribe to club meetings from Google Calendar, Outlook, etc.",
+      "noToken": "No public feed token yet.",
+      "generateToken": "Generate token",
+      "regenerateToken": "Regenerate token",
+      "tokenGenerated": "Public calendar token generated",
+      "tokenRegenerated": "Public calendar token regenerated",
+      "saved": "Workflow settings saved"
+    }
   },
   "subscription": {
     "monthly": "Monthly",
@@ -955,13 +1087,13 @@
   "privacy": {
     "title": "Privacy policy",
     "updated": "Last updated: July 2026",
-    "intro": "Rotary Minutes is committed to protecting your personal data in accordance with the General Data Protection Regulation (GDPR).",
+    "intro": "Visa Guard USA, LLC, operator of Rotary Minutes (also known as Club Minutes), is committed to protecting your personal data in accordance with the General Data Protection Regulation (GDPR).",
     "statusLink": "Service status",
     "manageCookies": "Manage cookies",
     "sections": {
       "controller": {
         "title": "Data controller",
-        "body": "Rotary Minutes SAS\nEmail: privacy@rotaryminutes.app"
+        "body": "Visa Guard USA, LLC\n169 Madison Ave STE 15839\nNew York, NY 10016, US\nEmail: privacy@rotaryminutes.app"
       },
       "data": {
         "title": "Data collected",
@@ -1022,7 +1154,6 @@
     "statusLink": "Service status",
     "cta": "Start free trial",
     "tryDemo": "Try the demo",
-    "pitchLink": "Interactive presentation",
     "trialLine": "14-day free trial · No credit card · Set up in 2 minutes",
     "stats": {
       "time": "5 min",
@@ -1344,7 +1475,51 @@
     "noDocuments": "No documents available",
     "download": "Download",
     "emailsReceived": "Emails received",
-    "noEmails": "No emails logged"
+    "noEmails": "No emails logged",
+    "attendanceGoal": "Attendance goal",
+    "attendanceGoalDetail": "{present}/{total} meetings · {goal}% target",
+    "mandateLabel": "Mandate {label}",
+    "minutesDetail": "Finalized minutes",
+    "noMinutes": "No finalized minutes",
+    "viewMinute": "View",
+    "eventsDetail": "Event registrations",
+    "noEvents": "No registrations",
+    "eventStatus": {
+      "PENDING": "Pending",
+      "CONFIRMED": "Confirmed",
+      "CANCELLED": "Cancelled",
+      "WAITLIST": "Waitlist"
+    },
+    "duesPayOnline": "Pay your dues online via the club's Stripe account.",
+    "payNow": "Pay now",
+    "payError": "Payment unavailable — please contact the treasurer.",
+    "duesPayContact": "Contact the treasurer to settle your pending dues.",
+    "duesPayLink": "View my dues"
+  },
+  "publicMeetings": {
+    "subtitle": "Upcoming public meetings",
+    "empty": "No upcoming meetings",
+    "defaultTitle": "Meeting",
+    "poweredBy": "Powered by Rotary Minutes"
+  },
+  "clubAnnouncements": {
+    "title": "Club announcement",
+    "description": "Send an in-app notification to selected member roles.",
+    "announcementTitle": "Title",
+    "message": "Message",
+    "targetRoles": "Recipients (roles)",
+    "send": "Send announcement",
+    "success": "Announcement sent to {count} member(s)",
+    "error": "Could not send announcement",
+    "roles": {
+      "PRESIDENT": "President",
+      "SECRETARY": "Secretary",
+      "TREASURER": "Treasurer",
+      "ADMIN": "Admin",
+      "MEMBERSHIP_CHAIR": "Membership chair",
+      "READER": "Reader",
+      "PROTOCOL": "Protocol"
+    }
   },
   "attendanceReports": {
     "title": "Attendance reports",
@@ -1553,6 +1728,12 @@
     }
   },
   "legal": {
+    "company": {
+      "publisherTitle": "Service provider",
+      "operatedBy": "{product} (also known as {alias}) is a product and service of {company}.",
+      "operatedByShort": "A product and service of {company}",
+      "copyright": "© {year} {product} · {company}"
+    },
     "disclaimer": {
       "text": "Rotary Minutes is an independent tool. It is not affiliated with, endorsed by, or sponsored by Rotary International.",
       "termsLink": "Terms of use"
@@ -1561,10 +1742,14 @@
   "terms": {
     "title": "Terms of use",
     "updated": "Last updated: July 2026",
-    "intro": "These terms govern access to and use of the Rotary Minutes platform. By creating an account or using the service, you agree to them.",
+    "intro": "These terms govern access to and use of the Rotary Minutes platform (also known as Club Minutes), operated by Visa Guard USA, LLC. By creating an account or using the service, you agree to them.",
     "privacyLink": "Privacy policy",
     "statusLink": "Service status",
     "sections": {
+      "publisher": {
+        "title": "Service provider",
+        "body": "Rotary Minutes (also known as Club Minutes) is a product and service of Visa Guard USA, LLC, with its principal place of business at 169 Madison Ave STE 15839, New York, NY 10016, US."
+      },
       "acceptance": {
         "title": "Acceptance",
         "body": "Using Rotary Minutes means you accept these terms in full. If you do not agree, do not use the service."

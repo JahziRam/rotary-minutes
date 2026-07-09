@@ -6,7 +6,8 @@ import {
   subDays,
 } from "date-fns";
 import { prisma } from "@/lib/prisma";
-import { sendEmail, duesInvoiceEmail } from "@/lib/email";
+import { duesInvoiceEmail } from "@/lib/email";
+import { sendClubEmail } from "@/lib/club-smtp";
 import { buildDuesInvoicePdfBuffer } from "@/lib/pdf/build-dues-pdf";
 import { nextInvoiceNumber } from "@/lib/dues";
 import { getClubFeatures } from "@/lib/features";
@@ -117,7 +118,7 @@ export async function GET(request: Request) {
         logoUrl: dues.club.logoUrl ?? undefined,
       });
 
-      const result = await sendEmail({
+      const result = await sendClubEmail(dues.club.id, {
         to: dues.member.email,
         subject: mail.subject,
         html: mail.html,

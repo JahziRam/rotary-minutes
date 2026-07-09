@@ -17,6 +17,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 import { AddMemberForm } from "@/components/members/add-member-form";
+import { MemberImportPanel } from "@/components/members/member-import-panel";
 import { BirthdayBanner } from "@/components/members/birthday-banner";
 import { MandatesPanel } from "@/components/members/mandates-panel";
 import { OnboardingChecklist } from "@/components/members/onboarding-checklist";
@@ -72,6 +73,7 @@ export default async function MembersPage({
           />
         )}
         <MandatesPanel mandates={mandates} canManage={canManage} />
+        <MemberImportPanel canManage={canManage} />
 
         <div className="flex flex-wrap justify-between items-center gap-3">
           <p className="text-sm text-gray-500">

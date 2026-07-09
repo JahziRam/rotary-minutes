@@ -14,6 +14,7 @@ declare module "next-auth" {
         clubName: string;
         clubSlug: string;
         role: string;
+        customRoleId: string | null;
       }>;
       pendingJoin: {
         clubId: string;
@@ -30,6 +31,7 @@ declare module "next-auth" {
       clubName: string;
       clubSlug: string;
       role: string;
+      customRoleId: string | null;
     }>;
     pendingJoin?: {
       clubId: string;
@@ -48,6 +50,7 @@ declare module "next-auth/jwt" {
       clubName: string;
       clubSlug: string;
       role: string;
+      customRoleId: string | null;
     }>;
     pendingJoin?: {
       clubId: string;

@@ -2,18 +2,7 @@ import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { CLUB_ROLES, type ClubRoleType } from "@/lib/rotary";
 import { PERMISSIONS, type Permission } from "@/lib/permissions";
-
-const ROLE_LABELS: Record<ClubRoleType, { fr: string; en: string; desc: string }> = {
-  PRESIDENT: { fr: "Président", en: "President", desc: "Accès complet au club" },
-  SECRETARY: { fr: "Secrétaire", en: "Secretary", desc: "Gestion des PV et réunions" },
-  PROTOCOL: { fr: "Protocol", en: "Protocol", desc: "Rédaction des PV" },
-  TREASURER: { fr: "Trésorier", en: "Treasurer", desc: "Gestion des cotisations" },
-  FOUNDATION_CHAIR: { fr: "Président Fondation", en: "Foundation Chair", desc: "Consultation" },
-  MEMBERSHIP_CHAIR: { fr: "Président Adhésion", en: "Membership Chair", desc: "Gestion des membres" },
-  PUBLIC_IMAGE_CHAIR: { fr: "Président Image", en: "Public Image Chair", desc: "Emails et communication" },
-  ADMIN: { fr: "Administrateur club", en: "Club Admin", desc: "Administration du club" },
-  READER: { fr: "Lecteur", en: "Reader", desc: "Consultation seule" },
-};
+import { ROLE_LABELS } from "@/lib/role-definitions";
 
 export function getDefaultPermissions(role: ClubRoleType): Permission[] {
   return (Object.keys(PERMISSIONS) as Permission[]).filter((p) =>
@@ -60,12 +49,36 @@ export async function getRolePermission(role: ClubRoleType, permission: Permissi
   return config.permissions.includes(permission);
 }
 
+const getCustomRolesMap = cache(async () => {
+  const roles = await prisma.customRole.findMany();
+  return new Map(
+    roles.map((r) => [
+      r.id,
+      { permissions: r.permissions as string[], isActive: r.isActive },
+    ])
+  );
+});
+
+export async function getCustomRolePermissions(customRoleId: string): Promise<string[] | null> {
+  const map = await getCustomRolesMap();
+  const config = map.get(customRoleId);
+  if (!config || !config.isActive) return null;
+  return config.permissions;
+}
+
 export async function hasRolePermission(
   role: ClubRoleType,
   permission: Permission,
-  isSuperAdmin = false
+  isSuperAdmin = false,
+  customRoleId?: string | null
 ): Promise<boolean> {
   if (isSuperAdmin) return true;
+
+  if (customRoleId) {
+    const customPerms = await getCustomRolePermissions(customRoleId);
+    if (customPerms) return customPerms.includes(permission);
+  }
+
   return getRolePermission(role, permission);
 }
 
@@ -74,4 +87,11 @@ export async function getAllRoleConfigs() {
   return prisma.roleConfig.findMany({ orderBy: { role: "asc" } });
 }
 
-export { ROLE_LABELS };
+export async function getAllCustomRoles() {
+  return prisma.customRole.findMany({
+    orderBy: { key: "asc" },
+    include: { _count: { select: { memberships: true } } },
+  });
+}
+
+export { ROLE_LABELS } from "@/lib/role-definitions";

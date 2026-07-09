@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/require-permission";
 import type { MeetingType } from "@/generated/prisma/client";
 import { getAgendaTemplateForMeeting } from "@/lib/minute-templates";
-import { sendEmail } from "@/lib/email";
+import { sendClubEmail } from "@/lib/club-smtp";
 import { prepareBrandedEmail } from "@/lib/email-branding";
 import { icsAttachment } from "@/lib/ics";
 
@@ -84,7 +84,7 @@ export async function createMeeting(
       logoUrl: ctx.club.logoUrl,
       baseUrl,
     });
-    await sendEmail({
+    await sendClubEmail(ctx.clubId, {
       to: ctx.club.email,
       subject:
         locale === "fr"

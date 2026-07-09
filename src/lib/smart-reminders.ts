@@ -193,7 +193,8 @@ export async function processBirthdayReminders(): Promise<{
     },
   });
 
-  const { sendEmail, isEmailEnabled } = await import("@/lib/email");
+  const { isEmailEnabled } = await import("@/lib/email");
+  const { sendClubEmail } = await import("@/lib/club-smtp");
 
   const emailOn = await isEmailEnabled();
 
@@ -240,7 +241,7 @@ export async function processBirthdayReminders(): Promise<{
     });
 
     if (emailOn && emailAllowed && member.user?.email) {
-      const sent = await sendEmail({
+      const sent = await sendClubEmail(member.clubId, {
         to: member.user.email,
         subject: title,
         html: `<p>${message}</p><p><strong>${member.club.name}</strong></p>`,

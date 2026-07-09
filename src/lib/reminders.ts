@@ -9,7 +9,8 @@ import {
 import { fr, enUS } from "date-fns/locale";
 import { prisma } from "@/lib/prisma";
 import { getAppBaseUrl } from "@/lib/app-url";
-import { sendEmail, isEmailEnabled } from "@/lib/email";
+import { isEmailEnabled } from "@/lib/email";
+import { sendClubEmail } from "@/lib/club-smtp";
 import { prepareBrandedEmail } from "@/lib/email-branding";
 import { logoSrcFromResult, resolveLogoForEmail } from "@/lib/email-logo";
 import { buildClubEmailVars, renderEmailContent } from "@/lib/email-render";
@@ -20,9 +21,14 @@ import {
 
 import type { NotificationType } from "@/generated/prisma/client";
 import { createInAppReminder, shouldDispatchReminder } from "@/lib/smart-reminders";
+import {
+  buildWhatsAppLink,
+  meetingReminderWhatsAppMessage,
+} from "@/lib/whatsapp";
 
 const MEETING_REMINDER_DAYS = [7, 3, 1] as const;
 const PV_REMINDER_DAYS_AGO = [1, 2, 3] as const;
+const PV_48H_EMAIL_DAYS = 2;
 const OFFICER_ROLES = ["ADMIN", "PRESIDENT", "SECRETARY"] as const;
 
 export interface ReminderRunResult {
@@ -136,6 +142,32 @@ export async function processMeetingReminders(): Promise<ReminderRunResult> {
         ? `${meeting.club.name} — ${meetingDateStr}${meeting.location ? ` · ${meeting.location}` : ""}`
         : `${meeting.club.name} — ${meetingDateStr}${meeting.location ? ` · ${meeting.location}` : ""}`;
 
+    if (meeting.club.whatsappReminderPhone) {
+      const checkInUrl = `${baseUrl}/${locale}/check-in`;
+      const waMessage = meetingReminderWhatsAppMessage({
+        clubName: meeting.club.name,
+        meetingTitle: meeting.title ?? (locale === "fr" ? "Réunion" : "Meeting"),
+        dateStr: meetingDateStr,
+        location: meeting.location,
+        checkInUrl,
+        locale,
+      });
+      const waLink = buildWhatsAppLink(meeting.club.whatsappReminderPhone, waMessage);
+      console.info(
+        `[reminders] WhatsApp reminder for meeting ${meeting.id}:`,
+        waLink
+      );
+      await prisma.auditLog.create({
+        data: {
+          clubId: meeting.clubId,
+          action: "MEETING_WHATSAPP_REMINDER",
+          entity: "Meeting",
+          entityId: meeting.id,
+          metadata: { whatsappLink: waLink, daysLeft },
+        },
+      });
+    }
+
     for (const membership of meeting.club.memberships) {
       const result = await notifyUser({
         userId: membership.userId,
@@ -182,7 +214,7 @@ export async function processMeetingReminders(): Promise<ReminderRunResult> {
           logo: emailLogo,
         });
 
-        const sent = await sendEmail({
+        const sent = await sendClubEmail(meeting.club.id, {
           to: membership.user.email,
           subject,
           html: branded.html,
@@ -256,7 +288,7 @@ export async function processPvReminders(): Promise<ReminderRunResult> {
     const secretaries = await prisma.clubMembership.findMany({
       where: {
         clubId: minute.clubId,
-        role: "SECRETARY",
+        role: { in: ["SECRETARY", "PROTOCOL"] },
         isActive: true,
       },
       include: { user: true },
@@ -289,6 +321,24 @@ export async function processPvReminders(): Promise<ReminderRunResult> {
         continue;
       }
       notifications++;
+
+      if (daysAgo === PV_48H_EMAIL_DAYS && membership.user.email && (await isEmailEnabled())) {
+        const { sendClubEmail } = await import("@/lib/club-smtp");
+        const emailTitle =
+          locale === "fr"
+            ? "Rappel : PV non finalisé depuis 48h"
+            : "Reminder: minutes not finalized for 48h";
+        const body =
+          locale === "fr"
+            ? `<p>Le procès-verbal <strong>${minute.title}</strong> (${meetingDateStr}) n'est pas encore finalisé.</p><p><a href="${getAppBaseUrl()}${link}">Ouvrir le PV</a></p>`
+            : `<p>The minutes <strong>${minute.title}</strong> (${meetingDateStr}) are not finalized yet.</p><p><a href="${getAppBaseUrl()}${link}">Open minutes</a></p>`;
+        const sent = await sendClubEmail(minute.clubId, {
+          to: membership.user.email,
+          subject: emailTitle,
+          html: body,
+        });
+        if (sent.ok) emails++;
+      }
     }
   }
 

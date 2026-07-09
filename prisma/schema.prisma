@@ -353,6 +353,8 @@ model User {
   notificationPreferences NotificationPreference[]
   supportTickets   SupportTicket[]
   dataExportRequests DataExportRequest[]
+  pushSubscriptions PushSubscription[]
+  clubAnnouncementsAuthored ClubAnnouncement[]
   deletionRequests   DeletionRequest[]
   consentRecords     ConsentRecord[]
 }
@@ -385,10 +387,17 @@ model Club {
   timezone        String    @default("Europe/Paris")
   language        Language  @default(FR)
   isActive        Boolean   @default(true)
+  presidentApprovalRequired Boolean @default(true)
+  publicCalendarToken       String?  @unique
+  whatsappReminderPhone     String?
+  guideEnabled              Boolean  @default(true)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
   memberships     ClubMembership[]
+  pushSubscriptions PushSubscription[]
+  bankStatementLines BankStatementLine[]
+  clubAnnouncements ClubAnnouncement[]
   members         Member[]
   commissions     Commission[]
   meetings        Meeting[]
@@ -420,6 +429,9 @@ model Club {
   clubBackups     ClubBackup[]
   governanceRecords GovernanceRecord[]
   calendarNotes   ClubCalendarNote[]
+  treasurySubAccounts TreasurySubAccount[]
+  emailSettings   ClubEmailSettings?
+  duesPaymentSettings ClubDuesPaymentSettings?
 }
 
 model ClubMembership {
@@ -427,13 +439,15 @@ model ClubMembership {
   clubId         String
   userId         String
   role           ClubRole                 @default(READER)
+  customRoleId   String?
   approvalStatus MembershipApprovalStatus @default(APPROVED)
   isActive       Boolean                  @default(true)
   joinedAt       DateTime                 @default(now())
   updatedAt      DateTime                 @updatedAt
 
-  club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  club       Club        @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customRole CustomRole? @relation(fields: [customRoleId], references: [id], onDelete: SetNull)
 
   @@unique([clubId, userId])
   @@index([clubId])
@@ -936,6 +950,20 @@ model RoleConfig {
   updatedAt     DateTime @updatedAt
 }
 
+model CustomRole {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  labelFr     String
+  labelEn     String
+  description String?
+  permissions Json
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  memberships ClubMembership[]
+}
+
 model Announcement {
   id              String             @id @default(cuid())
   title           String
@@ -1011,12 +1039,14 @@ model MinuteTemplate {
   name         String
   isSystem     Boolean     @default(true)
   clubId       String?
+  districtId   String?
   sortOrder    Int         @default(0)
   items        Json
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
   @@index([meetingType, locale, clubId])
+  @@index([districtId, meetingType, locale])
 }
 
 // ─── Phase 1: Attendance QR ──────────────────────────────────────────────────
@@ -1271,6 +1301,7 @@ model BudgetEntry {
   id            String           @id @default(cuid())
   clubId        String
   categoryId    String?
+  subAccountId  String?
   type          BudgetEntryType
   amount        Decimal          @db.Decimal(10, 2)
   currency      String           @default("EUR")
@@ -1289,14 +1320,112 @@ model BudgetEntry {
 
   club                  Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
   category              BudgetCategory?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  subAccount            TreasurySubAccount? @relation(fields: [subAccountId], references: [id], onDelete: SetNull)
   event                 ClubEvent?       @relation(fields: [eventId], references: [id], onDelete: SetNull)
   duesPayment           DuesPayment?     @relation(fields: [duesPaymentId], references: [id], onDelete: SetNull)
   action                ClubAction?      @relation(fields: [actionId], references: [id], onDelete: SetNull)
   eventRegistration     EventRegistration? @relation(fields: [eventRegistrationId], references: [id], onDelete: SetNull)
   recordedBy            User?            @relation(fields: [recordedById], references: [id], onDelete: SetNull)
+  bankStatementMatches  BankStatementLine[]
 
   @@index([clubId, date])
   @@index([clubId, type])
+  @@index([clubId, subAccountId])
+}
+
+model TreasurySubAccount {
+  id            String   @id @default(cuid())
+  clubId        String
+  name          String
+  code          String?
+  description   String?  @db.Text
+  budgetPlanned Decimal? @db.Decimal(12, 2)
+  isActive      Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  club    Club          @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  entries BudgetEntry[]
+
+  @@unique([clubId, name])
+  @@index([clubId])
+}
+
+model BankStatementLine {
+  id              String    @id @default(cuid())
+  clubId          String
+  date            DateTime
+  description     String
+  amount          Decimal   @db.Decimal(12, 2)
+  reference       String?
+  matchedEntryId  String?
+  importedAt      DateTime  @default(now())
+
+  club          Club         @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  matchedEntry  BudgetEntry? @relation(fields: [matchedEntryId], references: [id], onDelete: SetNull)
+
+  @@index([clubId, date])
+  @@index([matchedEntryId])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  clubId    String?
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  club Club? @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([clubId])
+}
+
+model ClubAnnouncement {
+  id          String   @id @default(cuid())
+  clubId      String
+  authorId    String
+  title       String
+  message     String   @db.Text
+  targetRoles String[]
+  createdAt   DateTime @default(now())
+
+  club   Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([clubId, createdAt])
+}
+
+model ClubEmailSettings {
+  clubId             String    @id
+  useCustomSmtp      Boolean   @default(false)
+  smtpHost           String?
+  smtpPort           Int?      @default(587)
+  smtpSecure         Boolean   @default(false)
+  smtpUser           String?
+  smtpPassword       String?
+  smtpFrom           String?
+  smtpFromName       String?
+  lastSmtpError      String?
+  lastSmtpFallbackAt DateTime?
+  updatedAt          DateTime  @updatedAt
+
+  club Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
+}
+
+model ClubDuesPaymentSettings {
+  clubId              String   @id
+  stripeEnabled       Boolean  @default(false)
+  stripeSecretKey     String?
+  stripeWebhookSecret String?
+  paymentInstructions String?  @db.Text
+  updatedAt           DateTime @updatedAt
+
+  club Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
 }
 
 model ClubAction {
@@ -1484,6 +1613,7 @@ model ClubBackup {
   status      BackupJobStatus @default(PENDING)
   fileName    String?
   payload     String?         @db.Text
+  sqlPayload  String?         @db.Text
   sizeBytes   Int?
   createdById String?
   createdAt   DateTime        @default(now())
@@ -1501,6 +1631,7 @@ model PlatformBackup {
   status      BackupJobStatus @default(PENDING)
   fileName    String?
   payload     String?         @db.Text
+  sqlPayload  String?         @db.Text
   sizeBytes   Int?
   createdById String?
   createdAt   DateTime        @default(now())

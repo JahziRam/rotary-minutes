@@ -4,6 +4,7 @@ import { Activity, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getSystemStatus } from "@/lib/status-checks";
+import { CompanyLegalNotice } from "@/components/legal/company-legal-notice";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 
@@ -111,6 +112,10 @@ export default async function StatusPage({
               </Card>
             );
           })}
+        </div>
+
+        <div className="pt-4 text-center">
+          <CompanyLegalNotice locale={locale} variant="compact" className="text-gray-400" />
         </div>
       </main>
     </div>

@@ -3,17 +3,24 @@
 import { Fragment, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
-import { Search, Power, Clock, Building2, SlidersHorizontal } from "lucide-react";
+import { Search, Power, Clock, Building2, SlidersHorizontal, Settings2, Plus } from "lucide-react";
 import { ClubFeaturesPanel } from "@/components/admin/club-features-panel";
-import type { ClubFeatureSet } from "@/lib/features";
+import {
+  ClubManagementPanel,
+  type AdminClubManagementData,
+} from "@/components/admin/club-management-panel";
+import type { ClubFeatureSet } from "@/lib/feature-definitions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Toast } from "@/components/ui/toast";
 import {
   toggleClubActive,
   updateClubSubscription,
   extendClubTrial,
 } from "@/actions/admin";
+import { createClubByAdmin } from "@/actions/admin-clubs";
+import type { ClubType } from "@/generated/prisma/client";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -53,7 +60,17 @@ const statusVariant: Record<string, "success" | "warning" | "danger" | "muted"> 
   EXPIRED: "danger",
 };
 
-export function ClubsTable({ clubs }: { clubs: AdminClubRow[] }) {
+export function ClubsTable({
+  clubs,
+  managementByClubId,
+  platformUsers,
+  customRoles,
+}: {
+  clubs: AdminClubRow[];
+  managementByClubId: Record<string, AdminClubManagementData>;
+  platformUsers: Array<{ id: string; email: string; firstName: string; lastName: string }>;
+  customRoles: Array<{ id: string; key: string; labelFr: string; labelEn: string }>;
+}) {
   const locale = useLocale();
   const router = useRouter();
   const dateLocale = locale === "fr" ? fr : enUS;
@@ -61,7 +78,9 @@ export function ClubsTable({ clubs }: { clubs: AdminClubRow[] }) {
   const [filter, setFilter] = useState<"all" | "active" | "inactive" | "trial">("all");
   const [pending, startTransition] = useTransition();
   const [toast, setToast] = useState<string | null>(null);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedFeaturesId, setExpandedFeaturesId] = useState<string | null>(null);
+  const [expandedManageId, setExpandedManageId] = useState<string | null>(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -92,6 +111,69 @@ export function ClubsTable({ clubs }: { clubs: AdminClubRow[] }) {
   return (
     <>
       <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <p className="text-sm text-gray-500">{clubs.length} club{clubs.length > 1 ? "s" : ""}</p>
+          <Button size="sm" variant="gold" onClick={() => setShowCreateForm((v) => !v)}>
+            <Plus className="h-4 w-4" />
+            Nouveau club
+          </Button>
+        </div>
+
+        {showCreateForm && (
+          <form
+            className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 p-4 rounded-xl border border-gray-200 bg-gray-50"
+            action={(fd) => {
+              startTransition(async () => {
+                const result = await createClubByAdmin(
+                  {
+                    name: fd.get("name") as string,
+                    slug: (fd.get("slug") as string) || undefined,
+                    type: fd.get("type") as ClubType,
+                    city: fd.get("city") as string,
+                    country: fd.get("country") as string,
+                    district: (fd.get("district") as string) || undefined,
+                    email: (fd.get("email") as string) || undefined,
+                  },
+                  locale
+                );
+                if (result.success) {
+                  setToast("Club créé");
+                  setShowCreateForm(false);
+                  router.refresh();
+                } else if (result.error === "SLUG_EXISTS") {
+                  setToast("Ce slug existe déjà");
+                }
+              });
+            }}
+          >
+            <Input name="name" label="Nom du club" required />
+            <Input name="slug" label="Slug (optionnel)" placeholder="auto-généré si vide" />
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-gray-700">Type</label>
+              <select
+                name="type"
+                defaultValue="ROTARY"
+                className="flex h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm"
+              >
+                <option value="ROTARY">Rotary</option>
+                <option value="ROTARACT">Rotaract</option>
+              </select>
+            </div>
+            <Input name="city" label="Ville" required />
+            <Input name="country" label="Pays" required />
+            <Input name="district" label="District" />
+            <Input name="email" type="email" label="Email" />
+            <div className="sm:col-span-2 lg:col-span-3 flex gap-2 justify-end">
+              <Button type="button" variant="outline" onClick={() => setShowCreateForm(false)}>
+                Annuler
+              </Button>
+              <Button type="submit" variant="gold" disabled={pending}>
+                Créer le club
+              </Button>
+            </div>
+          </form>
+        )}
+
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -225,9 +307,21 @@ export function ClubsTable({ clubs }: { clubs: AdminClubRow[] }) {
                           variant="outline"
                           size="sm"
                           disabled={pending}
+                          title="Gérer"
+                          onClick={() =>
+                            setExpandedManageId((id) => (id === club.id ? null : club.id))
+                          }
+                        >
+                          <Settings2 className="h-3.5 w-3.5" />
+                          <span className="hidden sm:inline ml-1">Gérer</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={pending}
                           title="Fonctionnalités"
                           onClick={() =>
-                            setExpandedId((id) => (id === club.id ? null : club.id))
+                            setExpandedFeaturesId((id) => (id === club.id ? null : club.id))
                           }
                         >
                           <SlidersHorizontal className="h-3.5 w-3.5" />
@@ -265,10 +359,19 @@ export function ClubsTable({ clubs }: { clubs: AdminClubRow[] }) {
                       </div>
                     </td>
                   </tr>
-                  {expandedId === club.id && (
+                  {(expandedManageId === club.id || expandedFeaturesId === club.id) && (
                     <tr>
                       <td colSpan={4} className="p-0">
-                        <ClubFeaturesPanel clubId={club.id} features={club.features} />
+                        {expandedManageId === club.id && managementByClubId[club.id] && (
+                          <ClubManagementPanel
+                            club={managementByClubId[club.id]}
+                            platformUsers={platformUsers}
+                            customRoles={customRoles}
+                          />
+                        )}
+                        {expandedFeaturesId === club.id && (
+                          <ClubFeaturesPanel clubId={club.id} features={club.features} />
+                        )}
                       </td>
                     </tr>
                   )}
@@ -278,7 +381,7 @@ export function ClubsTable({ clubs }: { clubs: AdminClubRow[] }) {
             </tbody>
           </table>
         </div>
-        <p className="text-xs text-gray-400">{filtered.length} club{filtered.length > 1 ? "s" : ""}</p>
+        <p className="text-xs text-gray-400">{filtered.length} affiché{filtered.length > 1 ? "s" : ""}</p>
       </div>
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
     </>

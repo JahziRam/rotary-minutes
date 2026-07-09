@@ -15,7 +15,7 @@
     "events": "Événements",
     "documents": "Documents",
     "treasury": "Trésorerie",
-    "actions": "Actions",
+    "actions": "Gestion des tâches",
     "calendar": "Calendrier",
     "statistics": "Statistiques",
     "district": "District",
@@ -28,7 +28,13 @@
   },
   "notifications": {
     "title": "Notifications & Annonces",
-    "unauthorized": "Vous devez être connecté pour voir vos notifications."
+    "unauthorized": "Vous devez être connecté pour voir vos notifications.",
+    "push": {
+      "title": "Notifications push",
+      "hint": "Recevez un rappel 1 h avant chaque réunion et confirmez votre présence.",
+      "enable": "Activer",
+      "disable": "Désactiver"
+    }
   },
   "features": {
     "unavailableTitle": "Fonctionnalité non disponible",
@@ -115,7 +121,10 @@
   "dashboard": {
     "welcome": "Bienvenue",
     "nextMeeting": "Prochaine réunion",
-    "openActions": "Actions en attente",
+    "openActions": "Tâches en attente",
+    "openActionsSubtitle": "Gestion des tâches",
+    "statsSection": "Vue d'ensemble",
+    "activitySection": "Activité récente",
     "recentMinutes": "Derniers PV",
     "attendanceRate": "Taux d'assiduité",
     "scheduledEmails": "Emails programmés",
@@ -126,7 +135,11 @@
     "meetingsThisMonth": "Réunions ce mois",
     "pastMeetings": "Réunions passées",
     "treasuryBalance": "Solde trésorerie",
-    "treasuryOverdue": "{count} cotisation(s) en retard"
+    "treasuryOverdue": "{count} cotisation(s) en retard",
+    "healthScore": {
+      "title": "Score de santé du club",
+      "allClear": "Aucun point d'attention — le club est en excellente forme."
+    }
   },
   "meetings": {
     "title": "Réunions",
@@ -178,7 +191,8 @@
     "external": "Assiduité extérieure",
     "rate": "Taux d'assiduité",
     "annualRate": "Assiduité annuelle",
-    "monthlyRate": "Assiduité mensuelle"
+    "monthlyRate": "Assiduité mensuelle",
+    "unifiedNote": "Feuille de présence unifiée pour ordinateur et mobile."
   },
   "minutes": {
     "title": "Procès-verbaux",
@@ -207,7 +221,22 @@
     "autoSave": "Sauvegarde automatique",
     "offlineDraft": "Brouillon hors-ligne",
     "versionHistory": "Historique des versions",
-    "finalize": "Finaliser et authentifier"
+    "finalize": "Finaliser et authentifier",
+    "taskAssign": {
+      "title": "Assigner les actions de l'ordre du jour",
+      "hint": "Sélectionnez un membre pour créer une tâche en un clic.",
+      "selectMember": "Assigner à…",
+      "assigned": "Tâche assignée",
+      "synced": "Synchronisé"
+    },
+    "autoGenerate": {
+      "button": "Générer automatiquement depuis la réunion",
+      "success": "Brouillon PV généré à partir de la réunion",
+      "error": {
+        "NOT_FOUND": "PV introuvable",
+        "LOCKED": "PV finalisé — modification impossible"
+      }
+    }
   },
   "members": {
     "title": "Membres",
@@ -227,7 +256,22 @@
     "photoUrl": "URL photo",
     "profilePhoto": "Photo de profil",
     "profilePhotoHint": "JPEG, PNG ou WebP — max 512 Ko.",
-    "backToList": "Retour à la liste"
+    "backToList": "Retour à la liste",
+    "import": {
+      "title": "Importer des membres",
+      "hint": "Collez des données CSV ou importez un fichier. Téléchargez le modèle pour le format attendu.",
+      "pastePlaceholder": "firstName,lastName,email,phone,position,registrationNumber,joinedAt",
+      "downloadTemplate": "Modèle CSV",
+      "uploadFile": "Importer CSV",
+      "import": "Importer",
+      "success": "{count} membre(s) importé(s)",
+      "errors": "erreur(s)",
+      "error": {
+        "EMPTY_CSV": "CSV vide",
+        "INVALID_HEADERS": "En-têtes invalides (firstName, lastName requis)",
+        "TOO_LARGE": "Fichier trop volumineux (max 5 Mo)"
+      }
+    }
   },
   "dues": {
     "title": "Cotisations",
@@ -268,6 +312,25 @@
       "autoInvoiceEmail": "Envoyer automatiquement les factures par email à la création",
       "autoReceiptEmail": "Envoyer automatiquement le reçu par email au paiement",
       "saved": "Paramètres des cotisations enregistrés"
+    },
+    "onlinePayment": {
+      "title": "Paiement en ligne (club)",
+      "hint": "Les cotisations sont encaissées sur le compte Stripe du club. L'abonnement Rotary Minutes utilise le Stripe de la plateforme, configuré par le super administrateur.",
+      "enableStripe": "Activer le paiement Stripe pour les cotisations",
+      "secretKey": "Clé secrète Stripe du club",
+      "secretKeyPlaceholder": "sk_live_... ou sk_test_...",
+      "secretKeyPlaceholderSet": "Laisser vide pour conserver la clé actuelle",
+      "webhookSecret": "Secret webhook Stripe du club",
+      "webhookSecretPlaceholder": "whsec_...",
+      "webhookSecretPlaceholderSet": "Laisser vide pour conserver le secret actuel",
+      "webhookUrl": "URL webhook à configurer dans Stripe",
+      "webhookHint": "Événement requis : checkout.session.completed",
+      "instructions": "Instructions de paiement (si Stripe désactivé)",
+      "instructionsPlaceholder": "Virement IBAN, chèque à l'ordre du club, etc.",
+      "instructionsHint": "Affiché aux membres dans Mon compte lorsque le paiement en ligne n'est pas actif.",
+      "saved": "Paramètres de paiement enregistrés",
+      "keyRequired": "Une clé secrète Stripe est requise pour activer le paiement.",
+      "error": "Enregistrement impossible"
     },
     "statuses": {
       "PENDING": "En attente",
@@ -337,6 +400,29 @@
       "TOO_LARGE": "Fichier trop volumineux (max 5 Mo)",
       "GENERIC": "Erreur d'import"
     },
+    "mandate": {
+      "title": "Tableau de bord budgétaire du mandat",
+      "planned": "Prévu",
+      "actual": "Réalisé",
+      "variance": "Écart",
+      "subAccount": "Sous-compte",
+      "noSubAccounts": "Aucun sous-compte configuré pour ce mandat.",
+      "unassigned": "Opérations non affectées (net) : {net}"
+    },
+    "reconciliation": {
+      "title": "Rapprochement bancaire",
+      "hint": "Importez les lignes du relevé bancaire (date, libellé, montant) puis rapprochez automatiquement avec la trésorerie.",
+      "pastePlaceholder": "date,description,montant,reference",
+      "uploadFile": "Importer CSV",
+      "import": "Importer le relevé",
+      "autoMatch": "Rapprochement auto",
+      "importSuccess": "{count} ligne(s) importée(s)",
+      "matchSuccess": "{matched} sur {total} ligne(s) rapprochée(s)",
+      "importError": {
+        "EMPTY_FILE": "Fichier vide",
+        "TOO_LARGE": "Fichier trop volumineux (max 5 Mo)"
+      }
+    },
     "memberPortal": {
       "title": "Cotisations",
       "viewDues": "Gérer les cotisations",
@@ -364,10 +450,20 @@
     "addCategory": "Ajouter",
     "activateCategory": "Actif",
     "deactivateCategory": "Inactif",
-    "saved": "Enregistré"
+    "saved": "Enregistré",
+    "allSubAccounts": "Tous les sous-comptes",
+    "noSubAccount": "Sans sous-compte",
+    "subAccountsTitle": "Sous-comptes",
+    "subAccountsHint": "Répartissez les opérations par compte (caisse, banque, fonds événements…).",
+    "subAccountName": "Nom du sous-compte",
+    "subAccountCode": "Code",
+    "addSubAccount": "Ajouter",
+    "subAccountCreated": "Sous-compte créé",
+    "subAccountDeactivated": "Sous-compte désactivé",
+    "noSubAccounts": "Aucun sous-compte"
   },
   "actions": {
-    "title": "Actions du club",
+    "title": "Gestion des tâches",
     "allStatuses": "Tous les statuts",
     "exportCsv": "Exporter CSV",
     "exported": "Actions exportées",
@@ -501,6 +597,27 @@
       "NO_RECIPIENTS": "Aucun destinataire sélectionné.",
       "NOT_FOUND": "Élément introuvable.",
       "ALREADY_SENT": "Cette campagne a déjà été envoyée."
+    },
+    "smtp": {
+      "title": "Configuration SMTP",
+      "description": "Optionnel — par défaut, tous les emails passent par Resend (configuré par le super admin).",
+      "resendDefault": "Par défaut, les emails du club sont envoyés via Resend. Activez le SMTP personnalisé uniquement si vous souhaitez utiliser votre propre serveur.",
+      "fallbackNotice": "Votre SMTP a échoué — les envois ont été relayés via Resend. Corrigez la configuration :",
+      "useCustomSmtp": "Utiliser un serveur SMTP personnalisé",
+      "host": "Serveur SMTP",
+      "port": "Port",
+      "secure": "Connexion sécurisée (SSL/TLS)",
+      "user": "Utilisateur",
+      "password": "Mot de passe",
+      "passwordPlaceholder": "Laisser vide pour conserver l'actuel",
+      "fromEmail": "Email expéditeur",
+      "fromName": "Nom expéditeur",
+      "save": "Enregistrer",
+      "test": "Tester",
+      "testEmail": "Email de test",
+      "saved": "Configuration SMTP enregistrée",
+      "testSent": "Email de test envoyé",
+      "testFailed": "Échec de l'envoi de test"
     }
   },
   "statistics": {
@@ -539,6 +656,7 @@
     "readOnlyNotice": "Accès en lecture seule — PV finalisés uniquement.",
     "unauthorized": "Vous n'avez pas accès au tableau de bord district.",
     "governorMode": "Vue gouverneur de district — accès lecture seule aux données finalisées.",
+    "downloadReport": "Rapport gouverneur (CSV)",
     "benchmarkTitle": "Benchmark club vs district",
     "benchmarkSubtitle": "Comparez votre club à la moyenne du district {district} — mandat {label}",
     "benchmarkAnonymized": "Les moyennes district sont des agrégats anonymisés de tous les clubs."
@@ -658,7 +776,21 @@
     "meetingDay": "Jour",
     "meetingTime": "Heure",
     "website": "Site web",
-    "saved": "Paramètres enregistrés"
+    "saved": "Paramètres enregistrés",
+    "workflow": {
+      "title": "Workflow & intégrations",
+      "presidentApprovalRequired": "Validation du président requise avant finalisation du PV",
+      "guideEnabled": "Afficher le guide intégré pour les nouveaux utilisateurs",
+      "whatsappReminderPhone": "Téléphone WhatsApp pour rappels (E.164)",
+      "publicCalendar": "Flux calendrier public",
+      "publicCalendarHint": "Abonnez-vous aux réunions du club depuis Google Calendar, Outlook, etc.",
+      "noToken": "Aucun jeton de flux public pour l'instant.",
+      "generateToken": "Générer un jeton",
+      "regenerateToken": "Régénérer le jeton",
+      "tokenGenerated": "Jeton calendrier public généré",
+      "tokenRegenerated": "Jeton calendrier public régénéré",
+      "saved": "Paramètres workflow enregistrés"
+    }
   },
   "subscription": {
     "monthly": "Mensuel",
@@ -955,13 +1087,13 @@
   "privacy": {
     "title": "Politique de confidentialité",
     "updated": "Dernière mise à jour : juillet 2026",
-    "intro": "Rotary Minutes s'engage à protéger vos données personnelles conformément au Règlement Général sur la Protection des Données (RGPD).",
+    "intro": "Visa Guard USA, LLC, éditeur de Rotary Minutes (également Club Minutes), s'engage à protéger vos données personnelles conformément au Règlement Général sur la Protection des Données (RGPD).",
     "statusLink": "État des services",
     "manageCookies": "Gérer les cookies",
     "sections": {
       "controller": {
         "title": "Responsable du traitement",
-        "body": "Rotary Minutes SAS\nEmail : privacy@rotaryminutes.app"
+        "body": "Visa Guard USA, LLC\n169 Madison Ave STE 15839\nNew York, NY 10016, États-Unis\nEmail : privacy@rotaryminutes.app"
       },
       "data": {
         "title": "Données collectées",
@@ -1022,7 +1154,6 @@
     "statusLink": "État du service",
     "cta": "Commencer l'essai gratuit",
     "tryDemo": "Essayer la démo",
-    "pitchLink": "Présentation interactive",
     "trialLine": "14 jours gratuits · Sans carte bancaire · Configuration en 2 minutes",
     "stats": {
       "time": "5 min",
@@ -1344,7 +1475,51 @@
     "noDocuments": "Aucun document disponible",
     "download": "Télécharger",
     "emailsReceived": "Emails reçus",
-    "noEmails": "Aucun email enregistré"
+    "noEmails": "Aucun email enregistré",
+    "attendanceGoal": "Objectif assiduité",
+    "attendanceGoalDetail": "{present}/{total} réunions · objectif {goal}%",
+    "mandateLabel": "Mandat {label}",
+    "minutesDetail": "Procès-verbaux finalisés",
+    "noMinutes": "Aucun PV finalisé",
+    "viewMinute": "Consulter",
+    "eventsDetail": "Inscriptions événements",
+    "noEvents": "Aucune inscription",
+    "eventStatus": {
+      "PENDING": "En attente",
+      "CONFIRMED": "Confirmée",
+      "CANCELLED": "Annulée",
+      "WAITLIST": "Liste d'attente"
+    },
+    "duesPayOnline": "Réglez vos cotisations en ligne via le Stripe du club.",
+    "payNow": "Payer",
+    "payError": "Paiement indisponible — contactez le trésorier.",
+    "duesPayContact": "Contactez le trésorier pour régler vos cotisations en attente.",
+    "duesPayLink": "Voir mes cotisations"
+  },
+  "publicMeetings": {
+    "subtitle": "Prochaines réunions publiques",
+    "empty": "Aucune réunion à venir",
+    "defaultTitle": "Réunion",
+    "poweredBy": "Propulsé par Rotary Minutes"
+  },
+  "clubAnnouncements": {
+    "title": "Annonce au club",
+    "description": "Envoyez une notification in-app aux membres sélectionnés.",
+    "announcementTitle": "Titre",
+    "message": "Message",
+    "targetRoles": "Destinataires (rôles)",
+    "send": "Envoyer l'annonce",
+    "success": "Annonce envoyée à {count} membre(s)",
+    "error": "Impossible d'envoyer l'annonce",
+    "roles": {
+      "PRESIDENT": "Président",
+      "SECRETARY": "Secrétaire",
+      "TREASURER": "Trésorier",
+      "ADMIN": "Admin",
+      "MEMBERSHIP_CHAIR": "Responsable adhésions",
+      "READER": "Lecteur",
+      "PROTOCOL": "Protocole"
+    }
   },
   "attendanceReports": {
     "title": "Rapports d'assiduité",
@@ -1553,6 +1728,12 @@
     }
   },
   "legal": {
+    "company": {
+      "publisherTitle": "Éditeur du service",
+      "operatedBy": "{product} (également {alias}) est un produit et service de {company}.",
+      "operatedByShort": "Un produit et service de {company}",
+      "copyright": "© {year} {product} · {company}"
+    },
     "disclaimer": {
       "text": "Rotary Minutes est un outil indépendant. Il n'est ni affilié, ni approuvé, ni sponsorisé par Rotary International.",
       "termsLink": "Conditions d'utilisation"
@@ -1561,10 +1742,14 @@
   "terms": {
     "title": "Conditions générales d'utilisation",
     "updated": "Dernière mise à jour : juillet 2026",
-    "intro": "Les présentes conditions régissent l'accès et l'utilisation de la plateforme Rotary Minutes. En créant un compte ou en utilisant le service, vous les acceptez.",
+    "intro": "Les présentes conditions régissent l'accès et l'utilisation de la plateforme Rotary Minutes (également Club Minutes), éditée par Visa Guard USA, LLC. En créant un compte ou en utilisant le service, vous les acceptez.",
     "privacyLink": "Politique de confidentialité",
     "statusLink": "État des services",
     "sections": {
+      "publisher": {
+        "title": "Éditeur du service",
+        "body": "Rotary Minutes (également Club Minutes) est un produit et service de Visa Guard USA, LLC, société dont le siège est situé au 169 Madison Ave STE 15839, New York, NY 10016, États-Unis."
+      },
       "acceptance": {
         "title": "Acceptation",
         "body": "L'utilisation de Rotary Minutes implique l'acceptation intégrale des présentes conditions. Si vous n'acceptez pas ces termes, n'utilisez pas le service."

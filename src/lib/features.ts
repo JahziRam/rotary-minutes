@@ -5,98 +5,15 @@ import {
   getPlanFeaturePreset,
   mergePlanFeaturesWithAddons,
 } from "@/lib/plan-features";
+import {
+  type ClubFeatureSet,
+  CLUB_FEATURE_KEYS,
+  CLUB_FEATURE_LABELS,
+  DEFAULT_FEATURES,
+} from "@/lib/feature-definitions";
 
-export interface ClubFeatureSet {
-  emailsEnabled: boolean;
-  statisticsEnabled: boolean;
-  districtDashboard: boolean;
-  pdfExport: boolean;
-  offlineMode: boolean;
-  liveMeetings: boolean;
-  emailsMenuVisible: boolean;
-  statisticsMenuVisible: boolean;
-  pdfMenuVisible: boolean;
-  liveMeetingsMenuVisible: boolean;
-  districtMenuVisible: boolean;
-  offlineMenuVisible: boolean;
-  apiAccessEnabled: boolean;
-  duesEnabled: boolean;
-  duesMenuVisible: boolean;
-  treasuryEnabled: boolean;
-  treasuryMenuVisible: boolean;
-  actionsEnabled: boolean;
-  actionsMenuVisible: boolean;
-  calendarEnabled: boolean;
-  calendarMenuVisible: boolean;
-  memberPortalEnabled: boolean;
-  memberPortalMenuVisible: boolean;
-  attendanceReportsEnabled: boolean;
-  attendanceReportsMenuVisible: boolean;
-  eventsEnabled: boolean;
-  eventsMenuVisible: boolean;
-  documentsEnabled: boolean;
-  documentsMenuVisible: boolean;
-  governanceEnabled: boolean;
-  governanceMenuVisible: boolean;
-  smartNotificationsEnabled: boolean;
-  integrationsEnabled: boolean;
-  integrationsMenuVisible: boolean;
-  pwaEnhancedEnabled: boolean;
-  eventsAdvancedEnabled: boolean;
-  eventsAdvancedMenuVisible: boolean;
-  fileManagerEnabled: boolean;
-  fileManagerMenuVisible: boolean;
-  documentSharingEnabled: boolean;
-  treasuryImportEnabled: boolean;
-  clubBackupEnabled: boolean;
-  memberLimit: number | null;
-}
-
-export const DEFAULT_FEATURES: ClubFeatureSet = {
-  emailsEnabled: true,
-  statisticsEnabled: true,
-  districtDashboard: false,
-  pdfExport: true,
-  offlineMode: false,
-  liveMeetings: true,
-  emailsMenuVisible: false,
-  statisticsMenuVisible: false,
-  pdfMenuVisible: false,
-  liveMeetingsMenuVisible: false,
-  districtMenuVisible: false,
-  offlineMenuVisible: false,
-  apiAccessEnabled: false,
-  duesEnabled: true,
-  duesMenuVisible: true,
-  treasuryEnabled: true,
-  treasuryMenuVisible: true,
-  actionsEnabled: true,
-  actionsMenuVisible: true,
-  calendarEnabled: true,
-  calendarMenuVisible: true,
-  memberPortalEnabled: true,
-  memberPortalMenuVisible: true,
-  attendanceReportsEnabled: true,
-  attendanceReportsMenuVisible: false,
-  eventsEnabled: true,
-  eventsMenuVisible: true,
-  documentsEnabled: true,
-  documentsMenuVisible: true,
-  governanceEnabled: true,
-  governanceMenuVisible: false,
-  smartNotificationsEnabled: true,
-  integrationsEnabled: false,
-  integrationsMenuVisible: false,
-  pwaEnhancedEnabled: true,
-  eventsAdvancedEnabled: false,
-  eventsAdvancedMenuVisible: false,
-  fileManagerEnabled: false,
-  fileManagerMenuVisible: false,
-  documentSharingEnabled: false,
-  treasuryImportEnabled: false,
-  clubBackupEnabled: false,
-  memberLimit: null,
-};
+export type { ClubFeatureSet };
+export { CLUB_FEATURE_KEYS, CLUB_FEATURE_LABELS, DEFAULT_FEATURES };
 
 function mapClubFeatures(
   features: NonNullable<Awaited<ReturnType<typeof prisma.clubFeatures.findUnique>>>
@@ -161,12 +78,25 @@ export const getClubFeatures = cache(async (clubId: string): Promise<ClubFeature
   }
 });
 
+export async function getPlatformDefaultClubFeatures(): Promise<ClubFeatureSet> {
+  try {
+    const settings = await prisma.appSettings.findUnique({ where: { id: "global" } });
+    const overrides = (
+      settings?.config as { defaultClubFeatures?: Partial<ClubFeatureSet> } | null
+    )?.defaultClubFeatures;
+    return { ...DEFAULT_FEATURES, ...overrides };
+  } catch {
+    return DEFAULT_FEATURES;
+  }
+}
+
 export async function ensureClubFeatures(clubId: string) {
   try {
+    const defaults = await getPlatformDefaultClubFeatures();
     return await prisma.clubFeatures.upsert({
       where: { clubId },
       update: {},
-      create: { clubId, ...DEFAULT_FEATURES },
+      create: { clubId, ...defaults },
     });
   } catch (e) {
     console.error("[ensureClubFeatures] upsert failed:", e);

@@ -6,7 +6,7 @@ import { useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Toast } from "@/components/ui/toast";
 import { updateClubFeatures } from "@/actions/admin-platform";
-import type { ClubFeatureSet } from "@/lib/features";
+import type { ClubFeatureSet } from "@/lib/feature-definitions";
 
 const FEATURE_MODULES: Array<{
   enabled: keyof ClubFeatureSet;

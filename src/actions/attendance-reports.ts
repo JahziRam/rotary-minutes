@@ -6,7 +6,7 @@ import { requireFeature } from "@/lib/require-feature";
 import { requirePermission } from "@/lib/require-permission";
 import { getAttendanceReportSummary } from "@/lib/queries/attendance-reports";
 import { buildAttendanceReportPdfBuffer } from "@/lib/pdf/build-attendance-report-pdf";
-import { sendEmail } from "@/lib/email";
+import { sendClubEmail } from "@/lib/club-smtp";
 import { prepareBrandedEmail } from "@/lib/email-branding";
 
 function revalidateAttendanceReports() {
@@ -108,7 +108,7 @@ export async function emailReportToDistrict(locale: string) {
     logoUrl: club.logoUrl,
   });
 
-  const result = await sendEmail({
+  const result = await sendClubEmail(ctx.clubId, {
     to: club.email,
     subject,
     html: branded.html,

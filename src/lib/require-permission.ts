@@ -8,7 +8,7 @@ export async function requirePermission(permission: Permission) {
   if (!ctx) return { error: "UNAUTHORIZED" as const };
   if (ctx.isSuperAdmin) return { ctx };
 
-  const allowed = await hasRolePermission(ctx.role, permission, false);
+  const allowed = await hasRolePermission(ctx.role, permission, false, ctx.customRoleId);
   if (!allowed) return { error: "FORBIDDEN" as const };
 
   return { ctx };

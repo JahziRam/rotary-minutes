@@ -141,6 +141,72 @@ const SYSTEM_TEMPLATES: Record<
   },
 };
 
+/** Official Rotary district-style statutory meeting template (homologated). */
+const DISTRICT_STATUTORY: Record<"fr" | "en", TemplateAgendaItem[]> = {
+  fr: [
+    { title: "Ouverture de la séance — hymne et drapeaux", status: "OPEN" },
+    { title: "Mot du Président", status: "OPEN" },
+    { title: "Présentation des visiteurs", status: "OPEN" },
+    { title: "Approbation du PV précédent", status: "OPEN" },
+    { title: "Communications du Secrétaire", status: "OPEN" },
+    { title: "Moment Fondation Rotary", status: "OPEN" },
+    { title: "Conférence / Programme", status: "OPEN" },
+    { title: "Affaires diverses", status: "OPEN" },
+    { title: "Clôture — Serment du Rotarien", status: "OPEN" },
+  ],
+  en: [
+    { title: "Opening — anthem and flags", status: "OPEN" },
+    { title: "President's remarks", status: "OPEN" },
+    { title: "Introduction of visitors", status: "OPEN" },
+    { title: "Approval of previous minutes", status: "OPEN" },
+    { title: "Secretary's communications", status: "OPEN" },
+    { title: "Rotary Foundation moment", status: "OPEN" },
+    { title: "Speaker / Program", status: "OPEN" },
+    { title: "Any other business", status: "OPEN" },
+    { title: "Closing — Rotarian's creed", status: "OPEN" },
+  ],
+};
+
+const DISTRICT_TEMPLATE_TYPES: MeetingType[] = ["STATUTORY", "GENERAL_ASSEMBLY"];
+
+export async function ensureDistrictMinuteTemplates(
+  districtId: string,
+  db: TemplateDb = prisma
+) {
+  if (!districtId.trim()) return;
+
+  for (const meetingType of DISTRICT_TEMPLATE_TYPES) {
+    for (const locale of ["FR", "EN"] as Language[]) {
+      const lang = locale === "FR" ? "fr" : "en";
+      const items =
+        meetingType === "STATUTORY"
+          ? DISTRICT_STATUTORY[lang]
+          : SYSTEM_TEMPLATES[meetingType][lang];
+      const name = `district-official-${districtId}-${meetingType}-${lang}`;
+      const existing = await db.minuteTemplate.findFirst({
+        where: { meetingType, locale, districtId, isSystem: true, name },
+      });
+      if (existing) {
+        await db.minuteTemplate.update({
+          where: { id: existing.id },
+          data: { items: items as object },
+        });
+      } else {
+        await db.minuteTemplate.create({
+          data: {
+            meetingType,
+            locale,
+            name,
+            isSystem: true,
+            districtId,
+            items: items as object,
+          },
+        });
+      }
+    }
+  }
+}
+
 export async function ensureMinuteTemplates(db: TemplateDb = prisma) {
   const types = Object.keys(SYSTEM_TEMPLATES) as MeetingType[];
   for (const meetingType of types) {
@@ -165,11 +231,24 @@ export async function ensureMinuteTemplates(db: TemplateDb = prisma) {
 export async function getAgendaTemplateForMeeting(
   meetingType: MeetingType,
   locale: string,
-  clubId?: string
+  clubId?: string,
+  districtId?: string | null
 ): Promise<TemplateAgendaItem[]> {
   await ensureMinuteTemplates();
   const lang = locale === "en" ? "EN" : "FR";
   const fallbackLang = lang === "FR" ? "EN" : "FR";
+
+  let resolvedDistrict = districtId?.trim() || null;
+  if (!resolvedDistrict && clubId) {
+    const club = await prisma.club.findUnique({
+      where: { id: clubId },
+      select: { district: true },
+    });
+    resolvedDistrict = club?.district?.trim() || null;
+  }
+  if (resolvedDistrict) {
+    await ensureDistrictMinuteTemplates(resolvedDistrict);
+  }
 
   const custom = clubId
     ? await prisma.minuteTemplate.findFirst({
@@ -179,6 +258,20 @@ export async function getAgendaTemplateForMeeting(
     : null;
 
   if (custom) return custom.items as unknown as TemplateAgendaItem[];
+
+  const districtTemplate = resolvedDistrict
+    ? await prisma.minuteTemplate.findFirst({
+        where: {
+          meetingType,
+          locale: lang,
+          districtId: resolvedDistrict,
+          isSystem: true,
+        },
+        orderBy: { sortOrder: "asc" },
+      })
+    : null;
+
+  if (districtTemplate) return districtTemplate.items as unknown as TemplateAgendaItem[];
 
   const system =
     (await prisma.minuteTemplate.findFirst({

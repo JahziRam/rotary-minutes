@@ -3,6 +3,10 @@ import { auth } from "@/lib/auth";
 import { getClubContext } from "@/lib/club-context";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { NotificationsView } from "@/components/notifications/notifications-view";
+import { ClubAnnouncementsPanel } from "@/components/notifications/club-announcements-panel";
+import { WebPushEnable } from "@/components/notifications/web-push-enable";
+import { getVapidPublicKey } from "@/lib/web-push";
+import { hasRolePermission } from "@/lib/roles";
 import {
   getAllUserNotifications,
   getUserAnnouncements,
@@ -34,6 +38,12 @@ export default async function NotificationsPage({
   const ctx = await getClubContext();
   const tab = tabParam === "announcements" ? "announcements" : "notifications";
 
+  const canSendAnnouncements =
+    !!ctx &&
+    (session.user.isSuperAdmin ||
+      (await hasRolePermission(ctx.role, "settings.manage", false)) ||
+      ["PRESIDENT", "SECRETARY", "ADMIN"].includes(ctx.role));
+
   const [notifications, announcements, notifSummary] = await Promise.all([
     getAllUserNotifications(session.user.id, { excludeAnnouncement: true }),
     getUserAnnouncements({
@@ -45,8 +55,17 @@ export default async function NotificationsPage({
     getUserNotifications(session.user.id),
   ]);
 
+  const vapidPublicKey = getVapidPublicKey();
+
   return (
     <AppShellServer title={t("title")}>
+      <WebPushEnable vapidPublicKey={vapidPublicKey} />
+      {canSendAnnouncements && tab === "announcements" && (
+        <div className="mb-6">
+          <ClubAnnouncementsPanel locale={locale} />
+        </div>
+      )}
+
       <NotificationsView
         tab={tab}
         locale={locale}

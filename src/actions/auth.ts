@@ -4,7 +4,8 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { signIn, signOut } from "@/lib/auth";
 import { AuthError } from "next-auth";
-import { sendEmail, welcomeClubEmail } from "@/lib/email";
+import { welcomeClubEmail } from "@/lib/email";
+import { sendClubEmail } from "@/lib/club-smtp";
 import { linkClubReferral } from "@/actions/billing";
 import {
   findDuplicateClub,
@@ -119,7 +120,7 @@ export async function registerClub(data: {
     locale,
     dashboardUrl: `${baseUrl}/${locale}/dashboard`,
   });
-  await sendEmail({
+  await sendClubEmail(createdClubId, {
     to: data.email,
     subject: welcome.subject,
     html: welcome.html,

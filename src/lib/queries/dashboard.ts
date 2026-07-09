@@ -21,10 +21,10 @@ export async function getDashboardStats(clubId: string, userId: string) {
           author: { select: { firstName: true, lastName: true } },
         },
       }),
-      prisma.agendaItem.count({
+      prisma.clubAction.count({
         where: {
+          clubId,
           status: { in: ["OPEN", "IN_PROGRESS"] },
-          minute: { clubId, status: { not: "ARCHIVED" } },
         },
       }),
       prisma.emailCampaign.count({

@@ -7,7 +7,7 @@ import { AppShellServer } from "@/components/layout/app-shell-server";
 import { FeatureUnavailable } from "@/components/layout/feature-unavailable";
 import { requireFeature } from "@/lib/require-feature";
 import { MinuteEditor } from "@/components/minutes/minute-editor";
-import { AttendancePanel } from "@/components/meetings/attendance-panel";
+import { UnifiedAttendanceSheet } from "@/components/meetings/unified-attendance-sheet";
 
 export default async function LiveMeetingPage({
   params,
@@ -43,17 +43,25 @@ export default async function LiveMeetingPage({
     ? await getMinuteById(meeting.minute.id)
     : null;
 
-  const initialSelected = Object.fromEntries(
-    meeting.attendances.map((a) => [a.memberId, a.category])
-  );
+  const members = (ctx.club.members ?? []).map((m) => ({
+    id: m.id,
+    firstName: m.firstName,
+    lastName: m.lastName,
+  }));
+
+  const initialEntries = meeting.attendances.map((a) => ({
+    memberId: a.memberId ?? undefined,
+    guestName: a.guestName ?? undefined,
+    category: a.category,
+  }));
 
   return (
     <AppShellServer title={t("meetings.live")}>
       <div className="grid lg:grid-cols-2 gap-6">
-        <AttendancePanel
-          members={ctx.club.members ?? []}
+        <UnifiedAttendanceSheet
+          members={members}
           meetingId={meeting.id}
-          initialSelected={initialSelected}
+          initialEntries={initialEntries}
         />
         {minute ? (
           <div className="space-y-3">

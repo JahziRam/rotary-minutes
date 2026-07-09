@@ -4,6 +4,11 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireSuperAdmin } from "@/lib/require-permission";
 import { ensureFeatureFlags } from "@/lib/feature-flags";
+import {
+  DEFAULT_FEATURES,
+  getPlatformDefaultClubFeatures,
+  type ClubFeatureSet,
+} from "@/lib/features";
 
 function revalidateAdminPaths(locale: string) {
   for (const loc of ["fr", "en"]) {
@@ -114,6 +119,58 @@ export async function clearClubFeatureFlagOverride(
 
   await prisma.clubFeatureFlagOverride.deleteMany({
     where: { clubId, flagKey },
+  });
+
+  revalidateAdminPaths(locale);
+  return { success: true as const };
+}
+
+export async function getDefaultClubFeatures() {
+  try {
+    const auth = await requireSuperAdmin();
+    if ("error" in auth) return auth;
+
+    const defaults = await getPlatformDefaultClubFeatures();
+    return { success: true as const, defaults };
+  } catch (e) {
+    console.error("[getDefaultClubFeatures]", e);
+    return { error: "LOAD_FAILED" as const };
+  }
+}
+
+export async function updateDefaultClubFeatures(
+  features: Partial<ClubFeatureSet>,
+  locale: string
+) {
+  const auth = await requireSuperAdmin();
+  if ("error" in auth) return auth;
+
+  const existing = await prisma.appSettings.findUnique({ where: { id: "global" } });
+  const config = (existing?.config as Record<string, unknown> | null) ?? {};
+
+  await prisma.appSettings.upsert({
+    where: { id: "global" },
+    update: {
+      config: {
+        ...config,
+        defaultClubFeatures: { ...DEFAULT_FEATURES, ...features },
+      },
+    },
+    create: {
+      id: "global",
+      appName: "Rotary Minutes",
+      config: { defaultClubFeatures: { ...DEFAULT_FEATURES, ...features } },
+    },
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      userId: auth.ctx.userId,
+      action: "DEFAULT_CLUB_FEATURES_UPDATED",
+      entity: "AppSettings",
+      entityId: "global",
+      metadata: features as object,
+    },
   });
 
   revalidateAdminPaths(locale);

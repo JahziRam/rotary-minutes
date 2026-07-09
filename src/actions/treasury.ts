@@ -54,6 +54,7 @@ async function ensureDuesCategory(clubId: string) {
 
 export async function listBudget(filters?: {
   eventId?: string;
+  subAccountId?: string;
   type?: BudgetEntryType;
   from?: string;
   to?: string;
@@ -64,6 +65,7 @@ export async function listBudget(filters?: {
 
   const parsed: TreasuryFilters = {
     eventId: filters?.eventId,
+    subAccountId: filters?.subAccountId,
     type: filters?.type,
     from: filters?.from ? new Date(filters.from) : undefined,
     to: filters?.to ? new Date(filters.to) : undefined,
@@ -95,6 +97,9 @@ export async function listBudget(filters?: {
       description: e.description,
       categoryId: e.categoryId,
       categoryName: e.category?.name ?? null,
+      subAccountId: e.subAccountId,
+      subAccountName: e.subAccount?.name ?? null,
+      subAccountCode: e.subAccount?.code ?? null,
       eventId: e.eventId,
       eventTitle: e.event?.title ?? null,
       duesPaymentId: e.duesPaymentId,
@@ -120,6 +125,7 @@ export async function createEntry(data: {
   date: string;
   description: string;
   categoryId?: string;
+  subAccountId?: string;
   eventId?: string;
   actionId?: string;
   paymentMethod?: PaymentMethod;
@@ -145,6 +151,7 @@ export async function createEntry(data: {
       date: new Date(data.date),
       description: data.description,
       categoryId: data.categoryId || null,
+      subAccountId: data.subAccountId || null,
       eventId: data.eventId || null,
       actionId: data.actionId || null,
       paymentMethod: data.paymentMethod || null,
@@ -185,6 +192,7 @@ export async function updateEntry(
     date?: string;
     description?: string;
     categoryId?: string | null;
+    subAccountId?: string | null;
     eventId?: string | null;
     actionId?: string | null;
     paymentMethod?: PaymentMethod | null;
@@ -209,6 +217,7 @@ export async function updateEntry(
       ...(data.date !== undefined && { date: new Date(data.date) }),
       ...(data.description !== undefined && { description: data.description }),
       ...(data.categoryId !== undefined && { categoryId: data.categoryId }),
+      ...(data.subAccountId !== undefined && { subAccountId: data.subAccountId }),
       ...(data.eventId !== undefined && { eventId: data.eventId }),
       ...(data.actionId !== undefined && { actionId: data.actionId }),
       ...(data.paymentMethod !== undefined && { paymentMethod: data.paymentMethod }),
@@ -466,5 +475,57 @@ export async function exportTreasuryAccountingOfx(opts?: { from?: string; to?: s
       currency: club?.currency ?? "EUR",
     }),
     filename: `treasury-${club?.slug ?? "club"}-${new Date().toISOString().slice(0, 10)}.ofx`,
+  };
+}
+
+async function loadExportRows(
+  clubId: string,
+  opts?: { from?: string; to?: string }
+) {
+  const { loadTreasuryRows } = await import("@/actions/accounting-export");
+  return loadTreasuryRows(
+    clubId,
+    opts?.from ? new Date(opts.from) : undefined,
+    opts?.to ? new Date(opts.to) : undefined
+  );
+}
+
+export async function exportTreasurySage(opts?: { from?: string; to?: string; locale?: string }) {
+  const auth = await requireTreasuryView();
+  if ("error" in auth && auth.error) return { error: auth.error as string };
+  const { ctx } = auth;
+  const { generateSageCsv } = await import("@/lib/accounting-export");
+  const locale = opts?.locale === "en" ? "en" : "fr";
+  const rows = await loadExportRows(ctx.clubId, opts);
+  return {
+    success: true,
+    csv: generateSageCsv(rows, locale),
+    filename: `treasury-sage-${new Date().toISOString().slice(0, 10)}.csv`,
+  };
+}
+
+export async function exportTreasuryQuickBooks(opts?: { from?: string; to?: string }) {
+  const auth = await requireTreasuryView();
+  if ("error" in auth && auth.error) return { error: auth.error as string };
+  const { ctx } = auth;
+  const { generateQuickBooksIif } = await import("@/lib/accounting-export");
+  const rows = await loadExportRows(ctx.clubId, opts);
+  return {
+    success: true,
+    iif: generateQuickBooksIif(rows),
+    filename: `treasury-quickbooks-${new Date().toISOString().slice(0, 10)}.iif`,
+  };
+}
+
+export async function exportTreasuryOhada(opts?: { from?: string; to?: string }) {
+  const auth = await requireTreasuryView();
+  if ("error" in auth && auth.error) return { error: auth.error as string };
+  const { ctx } = auth;
+  const { generateOhadaCsv } = await import("@/lib/accounting-export");
+  const rows = await loadExportRows(ctx.clubId, opts);
+  return {
+    success: true,
+    csv: generateOhadaCsv(rows),
+    filename: `treasury-ohada-${new Date().toISOString().slice(0, 10)}.csv`,
   };
 }

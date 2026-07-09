@@ -126,3 +126,61 @@ export async function getAdminAuditLogs(limit = 25) {
     },
   });
 }
+
+export async function getAdminClubsManagementData() {
+  const [clubs, platformUsers, customRoles] = await Promise.all([
+    prisma.club.findMany({
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        type: true,
+        city: true,
+        country: true,
+        district: true,
+        address: true,
+        email: true,
+        phone: true,
+        website: true,
+        language: true,
+        isActive: true,
+        members: {
+          orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+            position: true,
+            isActive: true,
+          },
+        },
+        memberships: {
+          include: {
+            user: {
+              select: { id: true, email: true, firstName: true, lastName: true },
+            },
+            customRole: {
+              select: { id: true, labelFr: true, labelEn: true },
+            },
+          },
+          orderBy: { joinedAt: "asc" },
+        },
+      },
+    }),
+    prisma.user.findMany({
+      where: { isSuperAdmin: false },
+      select: { id: true, email: true, firstName: true, lastName: true },
+      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+    }),
+    prisma.customRole.findMany({
+      where: { isActive: true },
+      select: { id: true, key: true, labelFr: true, labelEn: true },
+      orderBy: { labelFr: "asc" },
+    }),
+  ]);
+
+  return { clubs, platformUsers, customRoles };
+}

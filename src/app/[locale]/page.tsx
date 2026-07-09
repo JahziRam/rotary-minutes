@@ -19,6 +19,7 @@ import { ClubSolutionSection } from "@/components/marketing/club-solution-sectio
 import { LandingHeader } from "@/components/marketing/landing-header";
 import { ModulesTeaserSection } from "@/components/marketing/modules-teaser-section";
 import { RotaryDisclaimer } from "@/components/marketing/rotary-disclaimer";
+import { CompanyLegalNotice } from "@/components/legal/company-legal-notice";
 import { ManageCookiesButton } from "@/components/analytics/manage-cookies-button";
 
 export const dynamic = "force-dynamic";
@@ -92,7 +93,6 @@ export default async function LandingPage({
         navLinks={[
           { href: `/${locale}#solution`, label: t("landing.solution.nav") },
           { href: `/${locale}#pricing`, label: t("landing.pricing.title") },
-          { href: "/pitch/", label: t("landing.pitchLink") },
         ]}
       />
 
@@ -166,9 +166,7 @@ export default async function LandingPage({
           <Link href={`/${locale}/demo`} className="transition-colors hover:text-white">
             {t("landing.tryDemo")}
           </Link>
-          <Link href="/pitch/" className="transition-colors hover:text-white">
-            {t("landing.pitchLink")}
-          </Link>
+
           <Link href={`/${locale}/login`} className="transition-colors hover:text-white">
             {t("auth.login")}
           </Link>
@@ -185,7 +183,9 @@ export default async function LandingPage({
             {t("cookies.manage")}
           </ManageCookiesButton>
         </div>
-        <p className="mt-3 sm:mt-4">© {new Date().getFullYear()} Rotary Minutes</p>
+        <div className="mt-3 sm:mt-4 px-4">
+          <CompanyLegalNotice locale={locale} variant="footer" />
+        </div>
       </footer>
     </div>
   );

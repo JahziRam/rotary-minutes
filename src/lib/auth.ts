@@ -9,6 +9,7 @@ export type SessionMembership = {
   clubName: string;
   clubSlug: string;
   role: string;
+  customRoleId: string | null;
 };
 
 export type SessionPendingJoin = {
@@ -40,6 +41,7 @@ async function loadUserSessionData(userId: string) {
     clubName: m.club.name,
     clubSlug: m.club.slug,
     role: m.role,
+    customRoleId: m.customRoleId,
   }));
 
   const pendingJoin: SessionPendingJoin | null = pendingMembership

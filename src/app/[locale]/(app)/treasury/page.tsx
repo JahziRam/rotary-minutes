@@ -5,9 +5,16 @@ import { isFeatureEnabled } from "@/lib/feature-gate";
 import { listBudget } from "@/actions/treasury";
 import { mandateRangeForYear } from "@/lib/budget-utils";
 import { currentFiscalYear } from "@/lib/dues";
-import { getTreasuryCategoriesAll, getTreasuryDashboardData } from "@/lib/queries/treasury";
+import {
+  getTreasuryCategoriesAll,
+  getTreasuryDashboardData,
+  getTreasurySubAccounts,
+} from "@/lib/queries/treasury";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { TreasuryPanel } from "@/components/treasury/treasury-panel";
+import { TreasuryMandatePanel } from "@/components/treasury/treasury-mandate-panel";
+import { BankReconciliationPanel } from "@/components/treasury/bank-reconciliation-panel";
+import { hasRolePermission } from "@/lib/roles";
 import type { BudgetEntryType } from "@/generated/prisma/client";
 
 export const dynamic = "force-dynamic";
@@ -33,7 +40,7 @@ export default async function TreasuryPage({
   const fiscalYear = sp.year ? parseInt(sp.year, 10) : currentFiscalYear();
   const range = mandateRangeForYear(fiscalYear);
 
-  const [data, dashboard, allCategories] = await Promise.all([
+  const [data, dashboard, allCategories, subAccounts] = await Promise.all([
     listBudget({
       eventId: sp.eventId,
       type: sp.type as BudgetEntryType | undefined,
@@ -42,11 +49,26 @@ export default async function TreasuryPage({
     }),
     getTreasuryDashboardData(ctx.clubId, locale, fiscalYear),
     getTreasuryCategoriesAll(ctx.clubId),
+    getTreasurySubAccounts(ctx.clubId, true),
   ]);
   if ("error" in data) return null;
 
+  const canManageTreasury = await hasRolePermission(
+    ctx.role,
+    "treasury.manage",
+    ctx.isSuperAdmin
+  );
+
   return (
     <AppShellServer title={t("title")}>
+      <div className="space-y-6 mb-6">
+        <TreasuryMandatePanel
+          clubId={ctx.clubId}
+          currency={ctx.club.currency}
+          locale={locale}
+        />
+        <BankReconciliationPanel canManage={canManageTreasury} />
+      </div>
       <TreasuryPanel
         entries={data.entries}
         categories={data.categories}
@@ -63,6 +85,14 @@ export default async function TreasuryPage({
           name: c.name,
           type: c.type,
           isActive: c.isActive,
+        }))}
+        subAccounts={subAccounts.map((s) => ({
+          id: s.id,
+          name: s.name,
+          code: s.code,
+          description: s.description,
+          isActive: s.isActive,
+          sortOrder: s.sortOrder,
         }))}
         treasuryImportEnabled={isFeatureEnabled(ctx.features, "treasuryImportEnabled", ctx.isSuperAdmin)}
       />

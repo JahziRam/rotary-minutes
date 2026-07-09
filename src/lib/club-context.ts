@@ -14,6 +14,7 @@ export type ClubContext = {
   userId: string;
   isSuperAdmin: boolean;
   role: ClubRoleType;
+  customRoleId: string | null;
   club: ClubContextClub;
   clubId: string;
   clubName: string;
@@ -29,6 +30,7 @@ async function resolveClubContext(includeMembers: boolean): Promise<ClubContext 
 
   let clubId = membership?.clubId;
   let role = (membership?.role ?? "ADMIN") as ClubRoleType;
+  let customRoleId = membership?.customRoleId ?? null;
 
   if (!clubId && session.user.isSuperAdmin) {
     const firstClub = await prisma.club.findFirst({
@@ -60,6 +62,7 @@ async function resolveClubContext(includeMembers: boolean): Promise<ClubContext 
     userId: session.user.id,
     isSuperAdmin: session.user.isSuperAdmin,
     role,
+    customRoleId,
     club,
     clubId: club.id,
     clubName: club.name,

@@ -96,10 +96,72 @@ self.addEventListener("fetch", (event) => {
 self.addEventListener("sync", (event) => {
   if (event.tag === "check-in-sync") {
     event.waitUntil(
-      Promise.resolve().then(() => {
-        // Placeholder: replay queued check-ins from IndexedDB when Background Sync is supported
-        console.info("[PWA] Background sync placeholder: check-in-sync");
+      (async () => {
+        const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+        if (clients.length > 0) {
+          clients.forEach((client) => client.postMessage({ type: "SYNC_OFFLINE_CHECKINS" }));
+          return;
+        }
+        try {
+          const res = await fetch("/api/check-in/sync", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ entries: [] }),
+          });
+          console.info("[PWA] check-in-sync fallback:", res.status);
+        } catch (err) {
+          console.warn("[PWA] check-in-sync failed:", err);
+        }
+      })()
+    );
+  }
+});
+
+self.addEventListener("push", (event) => {
+  let data = { title: "Rotary Minutes", body: "", url: "/" };
+  try {
+    if (event.data) data = { ...data, ...event.data.json() };
+  } catch {
+    if (event.data) data.body = event.data.text();
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: "/icon.svg",
+      badge: "/icon.svg",
+      tag: data.tag,
+      data: { url: data.url },
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || "/";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) {
+        if ("focus" in client) {
+          client.navigate(url);
+          return client.focus();
+        }
+      }
+      return self.clients.openWindow(url);
+    })
+  );
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "FLUSH_OFFLINE_CHECKINS" && event.ports?.[0]) {
+    event.waitUntil(
+      fetch("/api/check-in/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entries: event.data.entries ?? [] }),
       })
+        .then((res) => res.json())
+        .then((data) => event.ports[0].postMessage({ ok: true, data }))
+        .catch((err) => event.ports[0].postMessage({ ok: false, error: String(err) }))
     );
   }
 });

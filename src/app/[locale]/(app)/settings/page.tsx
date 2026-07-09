@@ -15,7 +15,11 @@ import { getPreferences } from "@/actions/notification-preferences";
 import { NotificationPreferencesForm } from "@/components/settings/notification-preferences-form";
 import { getPlanLabel } from "@/lib/feature-gate";
 import { ClubBackupPanel } from "@/components/settings/club-backup-panel";
+import { ClubWorkflowSettings } from "@/components/settings/club-workflow-settings";
 import { listClubBackups } from "@/actions/backup";
+import { ClubAnnouncementsPanel } from "@/components/notifications/club-announcements-panel";
+import { ClubDuesPaymentPanel } from "@/components/settings/club-dues-payment-panel";
+import { getClubDuesPaymentSettings } from "@/actions/club-dues-payment-settings";
 
 export default async function SettingsPage({
   params,
@@ -50,7 +54,8 @@ export default async function SettingsPage({
     club && isFeatureEnabled(ctx!.features, "clubBackupEnabled", ctx!.isSuperAdmin);
   const backupsResult =
     clubBackupEnabled && canManageSettings ? await listClubBackups() : null;
-
+  const duesPaymentSettingsResult =
+    duesEnabled && canManageSettings ? await getClubDuesPaymentSettings() : null;
   return (
     <AppShellServer title={t("settings.title")}>
       <div className="max-w-2xl space-y-6">
@@ -131,6 +136,26 @@ export default async function SettingsPage({
               </Card>
             )}
 
+            {canManageSettings && (
+              <Card>
+                <CardHeader><CardTitle>{t("settings.workflow.title")}</CardTitle></CardHeader>
+                <CardContent>
+                  <ClubWorkflowSettings
+                    settings={{
+                      presidentApprovalRequired: club.presidentApprovalRequired,
+                      whatsappReminderPhone: club.whatsappReminderPhone,
+                      guideEnabled: club.guideEnabled,
+                      publicCalendarToken: club.publicCalendarToken,
+                    }}
+                  />
+                </CardContent>
+              </Card>
+            )}
+
+            {canManageSettings && (
+              <ClubAnnouncementsPanel locale={locale} />
+            )}
+
             {canManageSettings && duesEnabled && (
               <Card>
                 <CardHeader><CardTitle>{t("dues.settings.title")}</CardTitle></CardHeader>
@@ -148,6 +173,21 @@ export default async function SettingsPage({
                 </CardContent>
               </Card>
             )}
+
+            {canManageSettings &&
+              duesEnabled &&
+              duesPaymentSettingsResult &&
+              "settings" in duesPaymentSettingsResult &&
+              duesPaymentSettingsResult.settings && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{t("dues.onlinePayment.title")}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ClubDuesPaymentPanel settings={duesPaymentSettingsResult.settings} />
+                  </CardContent>
+                </Card>
+              )}
 
             {canManageSettings && clubBackupEnabled && backupsResult && "backups" in backupsResult && (
               <ClubBackupPanel

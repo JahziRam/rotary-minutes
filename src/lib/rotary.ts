@@ -66,6 +66,9 @@ export function computeLiveAttendanceRate(
   return Math.round(calculateAttendanceRate(present, memberCount).rate);
 }
 
+/** Rotary International attendance expectation for active members. */
+export const ROTARY_ATTENDANCE_GOAL = 75;
+
 export const MEETING_TYPE_FIELDS: Record<string, string[]> = {
   COMMISSION: ["commissionName"],
   JOINT_MEETING: ["partnerClubs"],

@@ -6,6 +6,8 @@ import { isFeatureEnabled, isFeatureVisibleInUi } from "@/lib/feature-gate";
 import { hasRolePermission } from "@/lib/roles";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { MinuteEditor } from "@/components/minutes/minute-editor";
+import { MinuteTaskAssignPanel } from "@/components/minutes/minute-task-assign-panel";
+import { MinuteAutoGenerateButton } from "@/components/minutes/minute-auto-generate-button";
 
 export default async function MinuteEditPage({
   params,
@@ -33,8 +35,16 @@ export default async function MinuteEditPage({
     ? await hasRolePermission(ctx.role, "minutes.approve", ctx.isSuperAdmin)
     : false;
 
+  const isLocked = ["FINALIZED", "ARCHIVED"].includes(minute.status);
+
   return (
     <AppShellServer title={t("minutes.title")}>
+      <div className="space-y-4 mb-6">
+        <div className="flex flex-wrap items-center gap-2">
+          <MinuteAutoGenerateButton minuteId={minute.id} disabled={isLocked} />
+        </div>
+        <MinuteTaskAssignPanel minuteId={minute.id} />
+      </div>
       <MinuteEditor
         clubId={ctx.clubId}
         pdfEnabled={pdfEnabled}

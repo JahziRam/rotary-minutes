@@ -118,6 +118,73 @@ function escapeXml(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
+/** Sage / Ciel compatible CSV (journal simplifié). */
+export function generateSageCsv(rows: TreasuryExportRow[], locale: "fr" | "en" = "fr"): string {
+  const headers = ["Journal", "Date", "Compte", "Libellé", "Débit", "Crédit", "Référence"];
+  const lines = [headers.join(";")];
+  for (const row of rows) {
+    const debit = row.type === "EXPENSE" ? row.amount.toFixed(2) : "0";
+    const credit = row.type === "INCOME" ? row.amount.toFixed(2) : "0";
+    const account = row.type === "INCOME" ? "706000" : "606000";
+    lines.push(
+      [
+        "OD",
+        row.date.toISOString().slice(0, 10),
+        account,
+        escapeCsv(row.description),
+        debit,
+        credit,
+        escapeCsv(row.reference ?? ""),
+      ].join(";")
+    );
+  }
+  return lines.join("\n");
+}
+
+/** QuickBooks IIF-style tab export. */
+export function generateQuickBooksIif(rows: TreasuryExportRow[]): string {
+  const lines = [
+    "!TRNS\tTRNSTYPE\tDATE\tACCNT\tNAME\tAMOUNT\tMEMO",
+    "!SPL\tSPLID\tTRNSTYPE\tDATE\tACCNT\tNAME\tAMOUNT\tMEMO",
+  ];
+  let splId = 1;
+  for (const row of rows) {
+    const amount = row.type === "INCOME" ? row.amount : -row.amount;
+    const date = row.date.toISOString().slice(0, 10).replace(/-/g, "/");
+    lines.push(
+      `TRNS\t${row.type === "INCOME" ? "DEPOSIT" : "CHECK"}\t${date}\tTreasury\t${row.description.slice(0, 40)}\t${amount.toFixed(2)}\t${row.description}`
+    );
+    lines.push(
+      `SPL\t${splId++}\t${row.type === "INCOME" ? "DEPOSIT" : "CHECK"}\t${date}\t${row.categoryName ?? "General"}\t\t${(-amount).toFixed(2)}\t${row.description}`
+    );
+    lines.push("ENDTRNS");
+  }
+  return lines.join("\n");
+}
+
+/** OHADA / SYSCOHADA journal CSV. */
+export function generateOhadaCsv(rows: TreasuryExportRow[]): string {
+  const headers = ["Date", "N° Pièce", "Compte", "Libellé", "Débit", "Crédit", "Journal"];
+  const lines = [headers.join(";")];
+  for (const row of rows) {
+    const debit = row.type === "EXPENSE" ? row.amount.toFixed(2) : "";
+    const credit = row.type === "INCOME" ? row.amount.toFixed(2) : "";
+    const account = row.type === "INCOME" ? "57" : "65";
+    lines.push(
+      [
+        row.date.toISOString().slice(0, 10),
+        row.id.slice(0, 8),
+        account,
+        escapeCsv(row.description),
+        debit,
+        credit,
+        "CAI",
+      ].join(";")
+    );
+  }
+  return lines.join("\n");
+}
+
 export function generateContactsCsv(
   contacts: Array<{
     email: string;

@@ -13,6 +13,7 @@ export async function syncEventRegistrationTreasury(opts: {
   paymentMethod: PaymentMethod | null;
   collectionStatus: TreasuryCollectionStatus;
   participantLabel: string;
+  subAccountId?: string | null;
 }) {
   const existing = await prisma.budgetEntry.findFirst({
     where: { eventRegistrationId: opts.registrationId },
@@ -28,6 +29,7 @@ export async function syncEventRegistrationTreasury(opts: {
     description,
     eventId: opts.eventId,
     eventRegistrationId: opts.registrationId,
+    subAccountId: opts.subAccountId ?? null,
     paymentMethod: opts.paymentMethod,
     collectionStatus: opts.collectionStatus,
     recordedById: opts.userId,

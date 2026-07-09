@@ -7,7 +7,7 @@ import { ensureRoleConfigs } from "../src/lib/roles";
 import { ensureClubFeatures } from "../src/lib/features";
 import { ensurePlanConfigs } from "../src/lib/plans";
 import { ensureAddonConfigs } from "../src/lib/billing";
-import { ensureMinuteTemplates } from "../src/lib/minute-templates";
+import { ensureDistrictMinuteTemplates, ensureMinuteTemplates } from "../src/lib/minute-templates";
 import { ensureEmailSystemTemplates } from "../src/lib/email-system-templates";
 import { ensureDemoSessionHelper } from "../src/lib/queries/demo";
 import { ensureFeatureFlags } from "../src/lib/feature-flags";
@@ -221,6 +221,9 @@ async function main() {
   });
 
   await ensureMinuteTemplates(prisma);
+  if (club.district) {
+    await ensureDistrictMinuteTemplates(club.district, prisma);
+  }
   await ensureEmailSystemTemplates(prisma);
   await ensureRoleConfigs();
   await ensureClubFeatures(club.id);

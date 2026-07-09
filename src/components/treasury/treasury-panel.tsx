@@ -5,12 +5,13 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
-import { Download, FileText, Plus, Trash2, Link2, Pencil, Search } from "lucide-react";
+import { Download, FileText, Plus, Trash2, Link2, Pencil, Search, FolderPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Toast } from "@/components/ui/toast";
 import { createEntry, deleteEntry, updateEntry } from "@/actions/treasury";
+import { createSubAccount, deleteSubAccount } from "@/actions/treasury-subaccounts";
 import { TreasuryExtras } from "@/components/treasury/treasury-extras";
 import { TreasuryImportPanel } from "@/components/treasury/treasury-import-panel";
 import type { getTreasuryDashboardData } from "@/lib/queries/treasury";
@@ -27,6 +28,9 @@ type EntryRow = {
   description: string;
   categoryId: string | null;
   categoryName: string | null;
+  subAccountId?: string | null;
+  subAccountName?: string | null;
+  subAccountCode?: string | null;
   eventId: string | null;
   eventTitle: string | null;
   duesPaymentId: string | null;
@@ -40,6 +44,14 @@ type EntryRow = {
 
 type Category = { id: string; name: string; type: BudgetEntryType };
 type EventOption = { id: string; title: string };
+type SubAccount = {
+  id: string;
+  name: string;
+  code: string | null;
+  description: string | null;
+  isActive: boolean;
+  sortOrder: number;
+};
 
 export function TreasuryPanel({
   entries,
@@ -53,6 +65,7 @@ export function TreasuryPanel({
   fiscalYear,
   dashboard,
   allCategories = [],
+  subAccounts = [],
   treasuryImportEnabled = false,
 }: {
   entries: EntryRow[];
@@ -71,6 +84,7 @@ export function TreasuryPanel({
     type: BudgetEntryType;
     isActive: boolean;
   }>;
+  subAccounts?: SubAccount[];
   treasuryImportEnabled?: boolean;
 }) {
   const t = useTranslations("treasury");
@@ -78,8 +92,11 @@ export function TreasuryPanel({
   const [pending, startTransition] = useTransition();
   const [toast, setToast] = useState<string | null>(null);
   const [eventFilter, setEventFilter] = useState(initialEventId ?? "");
+  const [subAccountFilter, setSubAccountFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState<"" | BudgetEntryType>("");
   const [search, setSearch] = useState("");
+  const [subAccountName, setSubAccountName] = useState("");
+  const [subAccountCode, setSubAccountCode] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({
@@ -88,6 +105,7 @@ export function TreasuryPanel({
     date: new Date().toISOString().slice(0, 10),
     description: "",
     categoryId: "",
+    subAccountId: "",
     eventId: "",
     collectionStatus: "COLLECTED" as TreasuryCollectionStatus,
   });
@@ -97,6 +115,7 @@ export function TreasuryPanel({
     date: "",
     description: "",
     categoryId: "",
+    subAccountId: "",
     eventId: "",
     collectionStatus: "COLLECTED" as TreasuryCollectionStatus,
   });
@@ -106,6 +125,7 @@ export function TreasuryPanel({
     const q = search.trim().toLowerCase();
     return entries.filter((e) => {
       if (eventFilter && e.eventId !== eventFilter) return false;
+      if (subAccountFilter && e.subAccountId !== subAccountFilter) return false;
       if (typeFilter && e.type !== typeFilter) return false;
       if (!q) return true;
       return (
@@ -114,7 +134,7 @@ export function TreasuryPanel({
         (e.reference ?? "").toLowerCase().includes(q)
       );
     });
-  }, [entries, eventFilter, typeFilter, search]);
+  }, [entries, eventFilter, subAccountFilter, typeFilter, search]);
 
   const maxMonthly = useMemo(
     () =>
@@ -163,10 +183,13 @@ export function TreasuryPanel({
       date: entry.date.slice(0, 10),
       description: entry.description,
       categoryId: entry.categoryId ?? "",
+      subAccountId: entry.subAccountId ?? "",
       eventId: entry.eventId ?? "",
       collectionStatus: entry.collectionStatus ?? "COLLECTED",
     });
   }
+
+  const activeSubAccounts = subAccounts.filter((s) => s.isActive);
 
   const queryParams = new URLSearchParams();
   queryParams.set("from", dashboard.exportFrom);
@@ -288,6 +311,20 @@ export function TreasuryPanel({
                 </option>
               ))}
             </select>
+            {activeSubAccounts.length > 0 && (
+              <select
+                value={subAccountFilter}
+                onChange={(e) => setSubAccountFilter(e.target.value)}
+                className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white"
+              >
+                <option value="">{t("allSubAccounts")}</option>
+                {activeSubAccounts.map((sa) => (
+                  <option key={sa.id} value={sa.id}>
+                    {sa.code ? `${sa.code} — ${sa.name}` : sa.name}
+                  </option>
+                ))}
+              </select>
+            )}
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value as "" | BudgetEntryType)}
@@ -375,18 +412,34 @@ export function TreasuryPanel({
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2"
             />
-            <select
-              value={form.eventId}
-              onChange={(e) => setForm({ ...form, eventId: e.target.value })}
-              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2"
-            >
-              <option value="">{t("noEvent")}</option>
-              {events.map((ev) => (
-                <option key={ev.id} value={ev.id}>
-                  {ev.title}
-                </option>
-              ))}
-            </select>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <select
+                value={form.eventId}
+                onChange={(e) => setForm({ ...form, eventId: e.target.value })}
+                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2"
+              >
+                <option value="">{t("noEvent")}</option>
+                {events.map((ev) => (
+                  <option key={ev.id} value={ev.id}>
+                    {ev.title}
+                  </option>
+                ))}
+              </select>
+              {activeSubAccounts.length > 0 && (
+                <select
+                  value={form.subAccountId}
+                  onChange={(e) => setForm({ ...form, subAccountId: e.target.value })}
+                  className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2"
+                >
+                  <option value="">{t("noSubAccount")}</option>
+                  {activeSubAccounts.map((sa) => (
+                    <option key={sa.id} value={sa.id}>
+                      {sa.code ? `${sa.code} — ${sa.name}` : sa.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
             {form.type === "INCOME" && (
               <label className="flex items-center gap-2 text-sm">
                 <input
@@ -416,6 +469,7 @@ export function TreasuryPanel({
                       date: form.date,
                       description: form.description,
                       categoryId: form.categoryId || undefined,
+                      subAccountId: form.subAccountId || undefined,
                       eventId: form.eventId || undefined,
                       collectionStatus: form.type === "INCOME" ? form.collectionStatus : undefined,
                     }),
@@ -479,18 +533,34 @@ export function TreasuryPanel({
               onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
               className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2"
             />
-            <select
-              value={editForm.eventId}
-              onChange={(e) => setEditForm({ ...editForm, eventId: e.target.value })}
-              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2"
-            >
-              <option value="">{t("noEvent")}</option>
-              {events.map((ev) => (
-                <option key={ev.id} value={ev.id}>
-                  {ev.title}
-                </option>
-              ))}
-            </select>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <select
+                value={editForm.eventId}
+                onChange={(e) => setEditForm({ ...editForm, eventId: e.target.value })}
+                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2"
+              >
+                <option value="">{t("noEvent")}</option>
+                {events.map((ev) => (
+                  <option key={ev.id} value={ev.id}>
+                    {ev.title}
+                  </option>
+                ))}
+              </select>
+              {activeSubAccounts.length > 0 && (
+                <select
+                  value={editForm.subAccountId}
+                  onChange={(e) => setEditForm({ ...editForm, subAccountId: e.target.value })}
+                  className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2"
+                >
+                  <option value="">{t("noSubAccount")}</option>
+                  {activeSubAccounts.map((sa) => (
+                    <option key={sa.id} value={sa.id}>
+                      {sa.code ? `${sa.code} — ${sa.name}` : sa.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
             {editForm.type === "INCOME" && (
               <label className="flex items-center gap-2 text-sm">
                 <input
@@ -521,6 +591,7 @@ export function TreasuryPanel({
                         date: editForm.date,
                         description: editForm.description,
                         categoryId: editForm.categoryId || null,
+                        subAccountId: editForm.subAccountId || null,
                         eventId: editForm.eventId || null,
                         collectionStatus:
                           editForm.type === "INCOME" ? editForm.collectionStatus : undefined,
@@ -575,6 +646,13 @@ export function TreasuryPanel({
                       <p className="font-medium text-gray-900">{entry.description}</p>
                       {entry.categoryName && (
                         <p className="text-xs text-gray-400">{entry.categoryName}</p>
+                      )}
+                      {entry.subAccountName && (
+                        <p className="text-xs text-gray-400">
+                          {entry.subAccountCode
+                            ? `${entry.subAccountCode} — ${entry.subAccountName}`
+                            : entry.subAccountName}
+                        </p>
                       )}
                       {entry.collectionStatus === "RECEIVABLE" && (
                         <Badge variant="warning" className="mt-1">
@@ -643,6 +721,94 @@ export function TreasuryPanel({
             </tbody>
           </table>
         </div>
+
+        {canManage && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <FolderPlus className="h-4 w-4" />
+                {t("subAccountsTitle")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-xs text-gray-500">{t("subAccountsHint")}</p>
+              <div className="flex flex-wrap gap-2">
+                <input
+                  type="text"
+                  value={subAccountName}
+                  onChange={(e) => setSubAccountName(e.target.value)}
+                  placeholder={t("subAccountName")}
+                  className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 flex-1 min-w-[140px]"
+                />
+                <input
+                  type="text"
+                  value={subAccountCode}
+                  onChange={(e) => setSubAccountCode(e.target.value)}
+                  placeholder={t("subAccountCode")}
+                  className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 w-28"
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={pending || !subAccountName.trim()}
+                  onClick={() =>
+                    run(
+                      () =>
+                        createSubAccount({
+                          name: subAccountName.trim(),
+                          code: subAccountCode.trim() || undefined,
+                        }),
+                      t("subAccountCreated"),
+                      () => {
+                        setSubAccountName("");
+                        setSubAccountCode("");
+                      }
+                    )
+                  }
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  {t("addSubAccount")}
+                </Button>
+              </div>
+              {subAccounts.length > 0 ? (
+                <ul className="space-y-1 text-sm">
+                  {subAccounts.map((sa) => (
+                    <li
+                      key={sa.id}
+                      className="flex items-center justify-between gap-2 py-1.5 border-b border-gray-50 last:border-0"
+                    >
+                      <span className={sa.isActive ? "text-gray-800" : "text-gray-400 line-through"}>
+                        {sa.code ? (
+                          <>
+                            <span className="font-mono text-xs text-gray-500 mr-1">{sa.code}</span>
+                            {sa.name}
+                          </>
+                        ) : (
+                          sa.name
+                        )}
+                      </span>
+                      {sa.isActive && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 text-red-500"
+                          disabled={pending}
+                          onClick={() =>
+                            run(() => deleteSubAccount(sa.id), t("subAccountDeactivated"))
+                          }
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-gray-500">{t("noSubAccounts")}</p>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid lg:grid-cols-2 gap-4">
           {treasuryImportEnabled && <TreasuryImportPanel canManage={canManage} />}

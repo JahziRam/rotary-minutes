@@ -548,7 +548,11 @@ export async function cancelRegistration(registrationId: string) {
 
   const reg = await prisma.eventRegistration.findFirst({
     where: { id: registrationId },
-    include: { event: { select: { id: true, clubId: true } } },
+    include: {
+      event: { select: { id: true, clubId: true } },
+      treasuryEntry: { select: { id: true } },
+      ticketSlot: { select: { id: true } },
+    },
   });
   if (!reg || reg.event.clubId !== ctx.clubId) return { error: "NOT_FOUND" as const };
 
@@ -568,8 +572,74 @@ export async function cancelRegistration(registrationId: string) {
     data: { status: "CANCELLED" },
   });
 
+  if (reg.ticketSlot) {
+    await prisma.eventTicketSlot.update({
+      where: { id: reg.ticketSlot.id },
+      data: { isReserved: false, registrationId: null },
+    });
+  }
+
+  if (reg.treasuryEntry) {
+    await prisma.budgetEntry.delete({ where: { id: reg.treasuryEntry.id } });
+    for (const loc of ["fr", "en"]) revalidatePath(`/${loc}/treasury`);
+  }
+
   revalidateEvents(reg.event.id);
   return { success: true as const };
+}
+
+export async function markEventRegistrationPaid(
+  registrationId: string,
+  paymentMethod: PaymentMethod,
+  collectionStatus: TreasuryCollectionStatus
+) {
+  const auth = await requireEventsManage();
+  if ("error" in auth && auth.error) return { error: auth.error as string };
+  const { ctx } = auth;
+
+  const reg = await prisma.eventRegistration.findFirst({
+    where: { id: registrationId },
+    include: {
+      event: { select: { id: true, clubId: true, title: true, currency: true } },
+      member: { select: { firstName: true, lastName: true } },
+    },
+  });
+  if (!reg || reg.event.clubId !== ctx.clubId) return { error: "NOT_FOUND" as const };
+  if (reg.status === "CANCELLED") return { error: "CANCELLED" as const };
+
+  const amount = reg.amount ? Number(reg.amount) : 0;
+  if (amount <= 0) return { error: "NO_AMOUNT" as const };
+
+  const paidAt = new Date();
+  await prisma.eventRegistration.update({
+    where: { id: registrationId },
+    data: {
+      paidAt,
+      paymentMethod,
+      status: "CONFIRMED",
+    },
+  });
+
+  const participantLabel = reg.member
+    ? `${reg.member.firstName} ${reg.member.lastName}`
+    : reg.guestName?.trim() ?? "Invité";
+
+  await syncEventRegistrationTreasury({
+    clubId: ctx.clubId,
+    userId: ctx.userId,
+    eventId: reg.event.id,
+    eventTitle: reg.event.title,
+    registrationId: reg.id,
+    amount,
+    currency: reg.event.currency,
+    paymentMethod,
+    collectionStatus,
+    participantLabel,
+  });
+
+  revalidateEvents(reg.event.id);
+  for (const loc of ["fr", "en"]) revalidatePath(`/${loc}/treasury`);
+  return { success: true as const, paidAt: paidAt.toISOString() };
 }
 
 export async function listRegistrations(eventId: string) {

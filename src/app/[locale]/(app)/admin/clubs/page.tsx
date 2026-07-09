@@ -1,10 +1,11 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { getAdminClubs } from "@/lib/queries/admin";
+import { getAdminClubs, getAdminClubsManagementData } from "@/lib/queries/admin";
 import { adminQuery } from "@/lib/admin-safe";
 import { AdminErrorBanner } from "@/components/admin/admin-error-banner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DEFAULT_FEATURES } from "@/lib/features";
 import { ClubsTable, type AdminClubRow } from "@/components/admin/clubs-table";
+import type { AdminClubManagementData } from "@/components/admin/club-management-panel";
 import { FileText } from "lucide-react";
 
 export default async function AdminClubsPage({
@@ -16,7 +17,52 @@ export default async function AdminClubsPage({
   setRequestLocale(locale);
   const t = await getTranslations("admin");
 
-  const clubs = await adminQuery("clubs", () => getAdminClubs(), []);
+  const [clubs, managementData] = await Promise.all([
+    adminQuery("clubs", () => getAdminClubs(), []),
+    adminQuery(
+      "clubs-management",
+      () => getAdminClubsManagementData(),
+      { clubs: [], platformUsers: [], customRoles: [] }
+    ),
+  ]);
+
+  const managementByClubId = Object.fromEntries(
+    managementData.clubs.map((c) => [
+      c.id,
+      {
+        id: c.id,
+        slug: c.slug,
+        name: c.name,
+        type: c.type,
+        city: c.city,
+        country: c.country,
+        district: c.district,
+        address: c.address,
+        email: c.email,
+        phone: c.phone,
+        website: c.website,
+        language: c.language,
+        isActive: c.isActive,
+        members: c.members,
+        memberships: c.memberships.map((m) => ({
+          id: m.id,
+          userId: m.user.id,
+          email: m.user.email,
+          firstName: m.user.firstName,
+          lastName: m.user.lastName,
+          role: m.role,
+          customRoleId: m.customRoleId,
+          customRoleLabel: m.customRole
+            ? locale === "fr"
+              ? m.customRole.labelFr
+              : m.customRole.labelEn
+            : null,
+          isActive: m.isActive,
+        })),
+      } satisfies AdminClubManagementData,
+    ])
+  );
+
   const clubRows: AdminClubRow[] = clubs.map((c) => ({
     id: c.id,
     name: c.name,
@@ -99,7 +145,12 @@ export default async function AdminClubsPage({
         {clubs.length === 0 ? (
           <AdminErrorBanner message="Aucun club chargé. Vérifiez la connexion à la base de données." />
         ) : null}
-        <ClubsTable clubs={clubRows} />
+        <ClubsTable
+          clubs={clubRows}
+          managementByClubId={managementByClubId}
+          platformUsers={managementData.platformUsers}
+          customRoles={managementData.customRoles}
+        />
       </CardContent>
     </Card>
   );

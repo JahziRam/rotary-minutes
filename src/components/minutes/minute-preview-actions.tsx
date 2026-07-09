@@ -14,9 +14,11 @@ import {
   sendMinuteByEmail,
   sendMinuteToAllMembers,
 } from "@/actions/minutes";
+import { MinuteNewsletterButton } from "./minute-newsletter-button";
 
 export function MinutePreviewActions({
   minuteId,
+  status,
   pdfEnabled = true,
   pdfVisible = true,
   emailsEnabled = true,
@@ -24,6 +26,7 @@ export function MinutePreviewActions({
   memberEmailCount = 0,
 }: {
   minuteId: string;
+  status?: string;
   pdfEnabled?: boolean;
   pdfVisible?: boolean;
   emailsEnabled?: boolean;
@@ -157,6 +160,10 @@ export function MinutePreviewActions({
               </Button>
             </div>
           </div>
+        )}
+
+        {status === "FINALIZED" && emailsEnabled && emailsVisible && (
+          <MinuteNewsletterButton minuteId={minuteId} />
         )}
 
         <button

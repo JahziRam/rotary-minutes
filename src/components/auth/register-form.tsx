@@ -10,6 +10,7 @@ import { registerClub, registerMember } from "@/actions/auth";
 import { listPublicClubs } from "@/actions/registration";
 import { ANALYTICS_EVENTS } from "@/lib/analytics-events";
 import { trackEvent } from "@/lib/analytics";
+import { CompanyLegalFooter } from "@/components/legal/company-legal-footer";
 import { ROTARACT_DISCOUNT_PERCENT } from "@/lib/registration-constants";
 import { Building2, User, Search } from "lucide-react";
 
@@ -336,6 +337,7 @@ export function RegisterForm({ referredByCode }: { referredByCode?: string }) {
           </div>
         </div>
       </div>
+      <CompanyLegalFooter />
     </div>
   );
 }

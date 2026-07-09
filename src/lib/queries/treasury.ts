@@ -10,6 +10,7 @@ import type { BudgetEntryType } from "@/generated/prisma/client";
 
 export type TreasuryFilters = {
   eventId?: string;
+  subAccountId?: string;
   type?: BudgetEntryType;
   from?: Date;
   to?: Date;
@@ -19,11 +20,13 @@ export async function getTreasuryEntries(clubId: string, filters?: TreasuryFilte
   const where: {
     clubId: string;
     eventId?: string;
+    subAccountId?: string;
     type?: BudgetEntryType;
     date?: { gte?: Date; lte?: Date };
   } = { clubId };
 
   if (filters?.eventId) where.eventId = filters.eventId;
+  if (filters?.subAccountId) where.subAccountId = filters.subAccountId;
   if (filters?.type) where.type = filters.type;
   if (filters?.from || filters?.to) {
     where.date = {};
@@ -45,8 +48,19 @@ export async function getTreasuryEntries(clubId: string, filters?: TreasuryFilte
         },
       },
       action: { select: { id: true, title: true } },
+      subAccount: { select: { id: true, name: true, code: true } },
       recordedBy: { select: { firstName: true, lastName: true } },
     },
+  });
+}
+
+export async function getTreasurySubAccounts(clubId: string, includeInactive = false) {
+  return prisma.treasurySubAccount.findMany({
+    where: {
+      clubId,
+      ...(includeInactive ? {} : { isActive: true }),
+    },
+    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
   });
 }
 

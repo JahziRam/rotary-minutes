@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/require-permission";
-import { sendEmail, isEmailEnabled } from "@/lib/email";
+import { isEmailEnabled } from "@/lib/email";
+import { sendClubEmail } from "@/lib/club-smtp";
 import { buildClubEmailVars, renderEmailContent } from "@/lib/email-render";
 import { prepareBrandedEmail } from "@/lib/email-branding";
 import { logoSrcFromResult, resolveLogoForEmail } from "@/lib/email-logo";
@@ -99,7 +100,7 @@ export async function dispatchCampaign(campaignId: string) {
     let error: string | undefined;
 
     if (emailOn) {
-      const result = await sendEmail({
+      const result = await sendClubEmail(campaign.clubId, {
         to: recipient,
         subject,
         html,

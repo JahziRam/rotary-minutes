@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { CompanyLegalFooter } from "@/components/legal/company-legal-footer";
 
 export default function ForgotPasswordPage() {
   const t = useTranslations("auth");
@@ -51,6 +52,7 @@ export default function ForgotPasswordPage() {
           </div>
         </div>
       </div>
+      <CompanyLegalFooter />
     </div>
   );
 }

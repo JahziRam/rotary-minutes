@@ -5,7 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { getClubFeatures } from "@/lib/features";
 import { getOverdueActionsForReminders } from "@/lib/queries/club-actions";
 import { getAppBaseUrl } from "@/lib/app-url";
-import { sendEmail, isEmailEnabled } from "@/lib/email";
+import { isEmailEnabled } from "@/lib/email";
+import { sendClubEmail } from "@/lib/club-smtp";
 import { prepareBrandedEmail } from "@/lib/email-branding";
 import { logoSrcFromResult, resolveLogoForEmail } from "@/lib/email-logo";
 import { buildClubEmailVars, renderEmailContent } from "@/lib/email-render";
@@ -98,7 +99,7 @@ export async function GET(request: Request) {
           clubName: action.club.name,
           logo: emailLogo,
         });
-        const result = await sendEmail({
+        const result = await sendClubEmail(action.club.id, {
           to: action.responsibleMember.email,
           subject: renderEmailContent(subjectTpl, vars),
           html: branded.html,

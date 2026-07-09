@@ -6,7 +6,8 @@ import { getClubContext } from "@/lib/club-context";
 import { requirePermission } from "@/lib/require-permission";
 import { hasRolePermission } from "@/lib/roles";
 import { requireFeature } from "@/lib/require-feature";
-import { sendEmail, duesInvoiceEmail, duesReceiptEmail, duesHistoryEmail } from "@/lib/email";
+import { duesInvoiceEmail, duesReceiptEmail, duesHistoryEmail } from "@/lib/email";
+import { sendClubEmail } from "@/lib/club-smtp";
 import {
   buildDuesHistoryPdfBuffer,
   buildDuesInvoicePdfBuffer,
@@ -489,7 +490,7 @@ export async function sendDuesInvoiceEmail(
     logoUrl: dues.club.logoUrl ?? undefined,
   });
 
-  const result = await sendEmail({
+  const result = await sendClubEmail(ctx.clubId, {
     to: recipientEmail,
     subject: mail.subject,
     html: mail.html,
@@ -539,7 +540,7 @@ export async function sendDuesReceiptEmail(
     logoUrl: dues.club.logoUrl ?? undefined,
   });
 
-  const result = await sendEmail({
+  const result = await sendClubEmail(clubCtx.clubId, {
     to: recipientEmail,
     subject: mail.subject,
     html: mail.html,
@@ -590,7 +591,7 @@ export async function sendMemberDuesHistoryEmail(
     logoUrl: club.logoUrl ?? undefined,
   });
 
-  const result = await sendEmail({
+  const result = await sendClubEmail(ctx.clubId, {
     to: recipientEmail,
     subject: mail.subject,
     html: mail.html,

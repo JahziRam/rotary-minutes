@@ -5,6 +5,10 @@ import { ClubLogo } from "@/components/ui/club-logo";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 import { calculateAttendanceRate } from "@/lib/rotary";
+import {
+  buildMinuteAttendanceAnnex,
+  MEMBER_ATTENDANCE_CATEGORIES,
+} from "@/lib/minute-attendance-annex";
 export interface MinutePreviewData {
   id: string;
   title: string;
@@ -27,7 +31,11 @@ export interface MinutePreviewData {
     type: string;
     presidedBy?: string | null;
     secretary?: string | null;
-    attendances: Array<{ category: string }>;
+    attendances: Array<{
+      category: string;
+      guestName?: string | null;
+      member?: { firstName: string; lastName: string } | null;
+    }>;
   };
   agendaItems: Array<{
     id: string;
@@ -102,12 +110,20 @@ export function MinutePreview({
   const typeLabel = MEETING_TYPE_LABELS[data.meeting.type] ?? data.meeting.type;
   const statusInfo = STATUS_LABELS[data.status] ?? STATUS_LABELS.DRAFT;
 
-  const present = countByCategory(data.meeting.attendances, "PRESENT");
-  const excused = countByCategory(data.meeting.attendances, "EXCUSED_ABSENT");
-  const unexcused = countByCategory(data.meeting.attendances, "UNEXCUSED_ABSENT");
-  const traveling = countByCategory(data.meeting.attendances, "TRAVELING");
-  const total = data.meeting.attendances.length || present + excused + unexcused + traveling;
+  const memberAttendances = data.meeting.attendances.filter((a) =>
+    (MEMBER_ATTENDANCE_CATEGORIES as readonly string[]).includes(a.category)
+  );
+  const present = countByCategory(memberAttendances, "PRESENT");
+  const excused = countByCategory(memberAttendances, "EXCUSED_ABSENT");
+  const unexcused = countByCategory(memberAttendances, "UNEXCUSED_ABSENT");
+  const traveling = countByCategory(memberAttendances, "TRAVELING");
+  const total = memberAttendances.length || present + excused + unexcused + traveling;
   const rate = total > 0 ? Math.round(calculateAttendanceRate(present, total).rate) : 0;
+  const annex = buildMinuteAttendanceAnnex(data.meeting.attendances, locale);
+  const annexTitle = locale === "fr" ? "Annexe — Présences et visiteurs" : "Annex — Attendance and visitors";
+  const attendanceListLabel = locale === "fr" ? "Liste de présence" : "Attendance list";
+  const visitorsListLabel = locale === "fr" ? "Liste des visiteurs" : "Visitors list";
+  const noneLabel = locale === "fr" ? "Aucune entrée" : "No entries";
 
   const timeRange = [data.meeting.startTime, data.meeting.endTime]
     .filter(Boolean)
@@ -228,6 +244,60 @@ export function MinutePreview({
             </div>
           </div>
 
+          {/* Annex — attendance & visitors */}
+          <div className="px-6 py-5 border-b border-gray-100 bg-[#faf9f7]">
+            <h4 className="font-semibold text-gray-900 mb-1">{annexTitle}</h4>
+            <p className="text-xs text-gray-500 mb-4">
+              {locale === "fr"
+                ? "Listes enregistrées depuis la feuille de présence de la réunion."
+                : "Lists recorded from the meeting attendance sheet."}
+            </p>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <h5 className="text-sm font-semibold text-navy mb-2">
+                  {attendanceListLabel} ({annex.totalMembers})
+                </h5>
+                {annex.memberGroups.length === 0 ? (
+                  <p className="text-sm text-gray-400 italic">{noneLabel}</p>
+                ) : (
+                  <div className="space-y-3">
+                    {annex.memberGroups.map((group) => (
+                      <div key={group.category}>
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                          {group.label} ({group.names.length})
+                        </p>
+                        <ul className="text-sm text-gray-800 space-y-0.5">
+                          {group.names.map((name) => (
+                            <li key={`${group.category}-${name}`}>• {name}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h5 className="text-sm font-semibold text-navy mb-2">
+                  {visitorsListLabel} ({annex.totalVisitors})
+                </h5>
+                {annex.visitors.length === 0 ? (
+                  <p className="text-sm text-gray-400 italic">{noneLabel}</p>
+                ) : (
+                  <ul className="text-sm text-gray-800 space-y-1">
+                    {annex.visitors.map((visitor) => (
+                      <li key={`${visitor.category}-${visitor.name}`}>
+                        • {visitor.name}
+                        <span className="text-gray-500"> — {visitor.label}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Agenda */}
           <div className="px-6 py-5 border-b border-gray-100">
             <h4 className="font-semibold text-gray-900 mb-4">Ordre du jour</h4>
@@ -312,6 +382,7 @@ export function MinutePreview({
             </span>
             <MinutePreviewActions
               minuteId={data.id}
+              status={data.status}
               pdfEnabled={pdfEnabled}
               pdfVisible={pdfVisible}
               emailsEnabled={emailsEnabled}

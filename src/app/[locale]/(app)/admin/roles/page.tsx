@@ -1,5 +1,5 @@
 import { setRequestLocale } from "next-intl/server";
-import { getAllRoleConfigs } from "@/lib/roles";
+import { getAllRoleConfigs, getAllCustomRoles } from "@/lib/roles";
 import { adminQuery } from "@/lib/admin-safe";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdminErrorBanner } from "@/components/admin/admin-error-banner";
@@ -14,7 +14,10 @@ export default async function AdminRolesPage({
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const roles = await adminQuery("roleConfigs", () => getAllRoleConfigs(), []);
+  const [roles, customRoles] = await Promise.all([
+    adminQuery("roleConfigs", () => getAllRoleConfigs(), []),
+    adminQuery("customRoles", () => getAllCustomRoles(), []),
+  ]);
 
   return (
     <Card>
@@ -32,13 +35,23 @@ export default async function AdminRolesPage({
           <AdminErrorBanner message="Aucun rôle chargé. Vérifiez que la base est à jour (prisma db push)." />
         ) : null}
         <RolesEditor
-          roles={roles.map((r) => ({
+          builtinRoles={roles.map((r) => ({
             role: r.role,
             labelFr: r.labelFr,
             labelEn: r.labelEn,
             description: r.description,
             permissions: r.permissions as string[],
             isActive: r.isActive,
+          }))}
+          customRoles={customRoles.map((r) => ({
+            id: r.id,
+            key: r.key,
+            labelFr: r.labelFr,
+            labelEn: r.labelEn,
+            description: r.description,
+            permissions: r.permissions as string[],
+            isActive: r.isActive,
+            membershipCount: r._count.memberships,
           }))}
         />
       </CardContent>
