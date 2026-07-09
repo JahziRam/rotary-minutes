@@ -7,6 +7,7 @@ import { isEmailEnabled } from "@/lib/email";
 import { sendClubEmail } from "@/lib/club-smtp";
 import { buildClubEmailVars, renderEmailContent } from "@/lib/email-render";
 import { prepareBrandedEmail } from "@/lib/email-branding";
+import { appendEmailOpenPixel } from "@/lib/email-tracking";
 import { logoSrcFromResult, resolveLogoForEmail } from "@/lib/email-logo";
 
 function revalidateEmails() {
@@ -95,10 +96,20 @@ export async function dispatchCampaign(campaignId: string) {
       clubName: campaign.club.name,
       logo: emailLogo,
     });
-    const html = branded.html;
+
+    const log = await prisma.emailLog.create({
+      data: {
+        campaignId,
+        recipient,
+        status: "pending",
+      },
+    });
 
     let status = "skipped";
     let error: string | undefined;
+    const html = emailOn
+      ? appendEmailOpenPixel(branded.html, log.id, baseUrl)
+      : branded.html;
 
     if (emailOn) {
       const result = await sendClubEmail(campaign.clubId, {
@@ -123,13 +134,9 @@ export async function dispatchCampaign(campaignId: string) {
       sent++;
     }
 
-    await prisma.emailLog.create({
-      data: {
-        campaignId,
-        recipient,
-        status,
-        error,
-      },
+    await prisma.emailLog.update({
+      where: { id: log.id },
+      data: { status, error },
     });
   }
 

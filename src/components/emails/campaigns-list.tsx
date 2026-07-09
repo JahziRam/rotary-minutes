@@ -70,12 +70,20 @@ export function CampaignsList({
                   {c.group && <span>{c.group.name}</span>}
                   {c.template && <span>{c.template.name}</span>}
                   <span>{c._count.logs} {t("recipients").toLowerCase()}</span>
-                  {c.status === "SENT" && (
-                    <>
-                      <span>{t("stats.opens")}: {c.openCount}</span>
-                      <span>{t("stats.errors")}: {c.errorCount}</span>
-                    </>
-                  )}
+                  {c.status === "SENT" && (() => {
+                    const delivered = Math.max(c._count.logs - c.errorCount, 0);
+                    const openRate =
+                      delivered > 0 ? Math.round((c.openCount / delivered) * 100) : 0;
+                    return (
+                      <>
+                        <span>
+                          {t("stats.opens")}: {c.openCount}
+                          {delivered > 0 && <> ({openRate}%)</>}
+                        </span>
+                        <span>{t("stats.errors")}: {c.errorCount}</span>
+                      </>
+                    );
+                  })()}
                   {c.scheduledAt && <span>{t("schedule")}: {fmt(c.scheduledAt)}</span>}
                   {c.sentAt && <span>{t("sentAt")}: {fmt(c.sentAt)}</span>}
                 </div>

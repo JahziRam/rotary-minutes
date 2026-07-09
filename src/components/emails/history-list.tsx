@@ -2,12 +2,14 @@
 
 import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
+import { Eye, EyeOff, Clock } from "lucide-react";
 
 type Log = {
   id: string;
   recipient: string;
   status: string;
   error: string | null;
+  openedAt: Date | null;
   createdAt: Date;
   campaign: {
     name: string;
@@ -22,7 +24,16 @@ const STATUS_VARIANT: Record<string, "success" | "danger" | "warning" | "muted">
   failed: "danger",
   simulated: "warning",
   skipped: "muted",
+  pending: "muted",
 };
+
+function readBadgeVariant(
+  status: string,
+  openedAt: Date | null
+): "success" | "warning" | "muted" {
+  if (status !== "sent") return "muted";
+  return openedAt ? "success" : "warning";
+}
 
 export function HistoryList({ logs, locale }: { logs: Log[]; locale: string }) {
   const t = useTranslations("emails");
@@ -37,23 +48,47 @@ export function HistoryList({ logs, locale }: { logs: Log[]; locale: string }) {
 
   return (
     <div className="border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-100">
-      {logs.map((log) => (
-        <div key={log.id} className="p-4 bg-white hover:bg-gray-50">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-gray-900">{log.recipient}</p>
-              <p className="text-xs text-gray-500 truncate">{log.campaign.name} — {log.campaign.subject}</p>
-              {log.error && <p className="text-xs text-red-600 mt-1">{log.error}</p>}
-            </div>
-            <div className="text-right shrink-0">
-              <Badge variant={STATUS_VARIANT[log.status] ?? "muted"}>
-                {t(`logStatus.${log.status}`)}
-              </Badge>
-              <p className="text-xs text-gray-400 mt-1">{fmt(log.createdAt)}</p>
+      {logs.map((log) => {
+        const readKey =
+          log.status !== "sent"
+            ? "notApplicable"
+            : log.openedAt
+              ? "read"
+              : "unread";
+
+        return (
+          <div key={log.id} className="p-4 bg-white hover:bg-gray-50">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-gray-900">{log.recipient}</p>
+                <p className="text-xs text-gray-500 truncate">
+                  {log.campaign.name} — {log.campaign.subject}
+                </p>
+                {log.error && <p className="text-xs text-red-600 mt-1">{log.error}</p>}
+              </div>
+              <div className="text-right shrink-0 space-y-1">
+                <Badge variant={STATUS_VARIANT[log.status] ?? "muted"}>
+                  {t(`logStatus.${log.status}` as "sent")}
+                </Badge>
+                <div className="flex items-center justify-end gap-1">
+                  {readKey === "read" && <Eye className="h-3 w-3 text-emerald-600" />}
+                  {readKey === "unread" && <EyeOff className="h-3 w-3 text-amber-500" />}
+                  {readKey === "notApplicable" && <Clock className="h-3 w-3 text-gray-300" />}
+                  <Badge variant={readBadgeVariant(log.status, log.openedAt)} className="text-[10px]">
+                    {t(`readStatus.${readKey}`)}
+                  </Badge>
+                </div>
+                <p className="text-xs text-gray-400">{fmt(log.createdAt)}</p>
+                {log.openedAt && (
+                  <p className="text-xs text-emerald-600">
+                    {t("openedAt")} {fmt(log.openedAt)}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

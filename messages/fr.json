@@ -587,8 +587,15 @@
       "sent": "Envoyé",
       "failed": "Échec",
       "simulated": "Simulé",
-      "skipped": "Ignoré"
+      "skipped": "Ignoré",
+      "pending": "En cours"
     },
+    "readStatus": {
+      "read": "Lu",
+      "unread": "Non lu",
+      "notApplicable": "—"
+    },
+    "openedAt": "Ouvert le",
     "stats": {
       "opens": "Ouvertures",
       "errors": "Erreurs"
