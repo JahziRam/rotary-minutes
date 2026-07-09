@@ -613,11 +613,17 @@
       "fromEmail": "Email expéditeur",
       "fromName": "Nom expéditeur",
       "save": "Enregistrer",
+      "saving": "Enregistrement…",
       "test": "Tester",
+      "testing": "Test en cours…",
       "testEmail": "Email de test",
       "saved": "Configuration SMTP enregistrée",
       "testSent": "Email de test envoyé",
-      "testFailed": "Échec de l'envoi de test"
+      "testFailed": "Échec de l'envoi de test",
+      "testFailedDetail": "Échec du test : {error}",
+      "testIncomplete": "Renseignez serveur, utilisateur et mot de passe SMTP",
+      "testInvalidEmail": "Adresse email de test invalide",
+      "testTimeout": "Délai dépassé — vérifiez l'hôte, le port et le pare-feu"
     }
   },
   "statistics": {

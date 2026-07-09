@@ -613,11 +613,17 @@
       "fromEmail": "From email",
       "fromName": "From name",
       "save": "Save",
+      "saving": "Saving…",
       "test": "Test",
+      "testing": "Testing…",
       "testEmail": "Test email",
       "saved": "SMTP settings saved",
       "testSent": "Test email sent",
-      "testFailed": "Test send failed"
+      "testFailed": "Test send failed",
+      "testFailedDetail": "Test failed: {error}",
+      "testIncomplete": "Enter SMTP host, username and password",
+      "testInvalidEmail": "Invalid test email address",
+      "testTimeout": "Timed out — check host, port and firewall"
     }
   },
   "statistics": {

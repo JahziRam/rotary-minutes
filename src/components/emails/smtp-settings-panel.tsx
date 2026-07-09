@@ -33,8 +33,10 @@ export function SmtpSettingsPanel({
 }) {
   const t = useTranslations("emails.smtp");
   const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const [savePending, startSave] = useTransition();
+  const [testPending, startTest] = useTransition();
   const [toast, setToast] = useState<string | null>(null);
+  const pending = savePending || testPending;
   const [form, setForm] = useState({
     ...initialSettings,
     smtpPassword: "",
@@ -42,7 +44,7 @@ export function SmtpSettingsPanel({
   const [testEmail, setTestEmail] = useState(userEmail ?? "");
 
   function save() {
-    startTransition(async () => {
+    startSave(async () => {
       const result = await updateClubEmailSettings({
         useCustomSmtp: form.useCustomSmtp,
         smtpHost: form.smtpHost,
@@ -62,12 +64,31 @@ export function SmtpSettingsPanel({
   }
 
   function sendTest() {
-    startTransition(async () => {
-      const result = await testClubSmtp(testEmail);
-      if ("success" in result && result.success) {
-        setToast(t("testSent"));
-      } else if ("error" in result) {
-        setToast(t("testFailed"));
+    startTest(async () => {
+      try {
+        const result = await testClubSmtp(testEmail, {
+          smtpHost: form.smtpHost,
+          smtpPort: form.smtpPort,
+          smtpSecure: form.smtpSecure,
+          smtpUser: form.smtpUser,
+          smtpPassword: form.smtpPassword || undefined,
+          smtpFrom: form.smtpFrom,
+          smtpFromName: form.smtpFromName,
+        });
+        if ("success" in result && result.success) {
+          setToast(t("testSent"));
+        } else if ("error" in result) {
+          const code = result.error;
+          if (code === "SMTP_INCOMPLETE") {
+            setToast(t("testIncomplete"));
+          } else if (code === "INVALID_EMAIL") {
+            setToast(t("testInvalidEmail"));
+          } else {
+            setToast(t("testFailedDetail", { error: String(code) }));
+          }
+        }
+      } catch {
+        setToast(t("testTimeout"));
       }
     });
   }
@@ -192,22 +213,27 @@ export function SmtpSettingsPanel({
 
           {canManage && (
             <div className="flex flex-wrap gap-2 pt-2">
-              <Button size="sm" variant="gold" disabled={pending} onClick={save}>
-                {t("save")}
+              <Button size="sm" variant="gold" disabled={savePending || testPending} onClick={save}>
+                {savePending ? t("saving") : t("save")}
               </Button>
               {form.useCustomSmtp && (
                 <div className="flex flex-wrap items-center gap-2">
                   <input
                     type="email"
                     value={testEmail}
-                    disabled={pending}
+                    disabled={testPending}
                     onChange={(e) => setTestEmail(e.target.value)}
                     placeholder={t("testEmail")}
                     className="text-sm border border-gray-200 rounded-lg px-3 py-1.5"
                   />
-                  <Button size="sm" variant="outline" disabled={pending || !testEmail} onClick={sendTest}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={testPending || !testEmail}
+                    onClick={sendTest}
+                  >
                     <Send className="h-4 w-4 mr-1" />
-                    {t("test")}
+                    {testPending ? t("testing") : t("test")}
                   </Button>
                 </div>
               )}

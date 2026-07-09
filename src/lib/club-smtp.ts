@@ -141,6 +141,9 @@ async function sendViaClubSmtp(
       user: settings.smtpUser!,
       pass: settings.smtpPassword!,
     },
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 15_000,
   });
 
   try {
@@ -218,18 +221,44 @@ export async function sendClubEmail(
   return fallbackToResend(clubId, options, smtpResult.error ?? "SMTP send failed");
 }
 
+type SmtpTestOverride = Partial<{
+  smtpHost: string;
+  smtpPort: number;
+  smtpSecure: boolean;
+  smtpUser: string;
+  smtpPassword: string;
+  smtpFrom: string;
+  smtpFromName: string;
+}>;
+
 /** Test SMTP only — no Resend fallback (for the settings panel). */
 export async function testClubSmtpDirect(
   clubId: string,
-  options: SendEmailOptions
+  options: SendEmailOptions,
+  override?: SmtpTestOverride
 ): Promise<{ ok: boolean; id?: string; error?: string }> {
-  const settings = await loadClubSmtpSettings(clubId);
-  if (!settings?.useCustomSmtp) {
+  const stored = await loadClubSmtpSettings(clubId);
+  const password =
+    override?.smtpPassword?.trim() || stored?.smtpPassword || null;
+
+  const settings: ClubSmtpSettings = {
+    useCustomSmtp: true,
+    smtpHost: override?.smtpHost?.trim() || stored?.smtpHost || null,
+    smtpPort: override?.smtpPort ?? stored?.smtpPort ?? 587,
+    smtpSecure: override?.smtpSecure ?? stored?.smtpSecure ?? false,
+    smtpUser: override?.smtpUser?.trim() || stored?.smtpUser || null,
+    smtpPassword: password,
+    smtpFrom: override?.smtpFrom?.trim() || stored?.smtpFrom || null,
+    smtpFromName: override?.smtpFromName?.trim() || stored?.smtpFromName || null,
+  };
+
+  if (!stored?.useCustomSmtp && !override) {
     return { ok: false, error: "CUSTOM_SMTP_DISABLED" };
   }
   if (!isSmtpFullyConfigured(settings)) {
     return { ok: false, error: "SMTP_INCOMPLETE" };
   }
+
   const result = await sendViaClubSmtp(settings, options);
   if (result.ok) await clearSmtpFailure(clubId);
   return result;

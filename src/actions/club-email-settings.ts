@@ -99,7 +99,18 @@ export async function updateClubEmailSettings(data: {
   return { success: true };
 }
 
-export async function testClubSmtp(recipientEmail: string) {
+export async function testClubSmtp(
+  recipientEmail: string,
+  smtp?: {
+    smtpHost?: string;
+    smtpPort?: number;
+    smtpSecure?: boolean;
+    smtpUser?: string;
+    smtpPassword?: string;
+    smtpFrom?: string;
+    smtpFromName?: string;
+  }
+) {
   const auth = await requireEmailsSend();
   if (auth.error) return auth;
   const { ctx } = auth;
@@ -114,15 +125,19 @@ export async function testClubSmtp(recipientEmail: string) {
   if (!club) return { error: "NOT_FOUND" as const };
 
   const isFr = club.language !== "EN";
-  const result = await testClubSmtpDirect(ctx.clubId, {
-    to: email,
-    subject: isFr
-      ? `Test SMTP — ${club.name}`
-      : `SMTP test — ${club.name}`,
-    html: isFr
-      ? `<p>Ceci est un email de test envoyé depuis la configuration SMTP de <strong>${club.name}</strong>.</p>`
-      : `<p>This is a test email sent from <strong>${club.name}</strong> SMTP settings.</p>`,
-  });
+  const result = await testClubSmtpDirect(
+    ctx.clubId,
+    {
+      to: email,
+      subject: isFr
+        ? `Test SMTP — ${club.name}`
+        : `SMTP test — ${club.name}`,
+      html: isFr
+        ? `<p>Ceci est un email de test envoyé depuis la configuration SMTP de <strong>${club.name}</strong>.</p>`
+        : `<p>This is a test email sent from <strong>${club.name}</strong> SMTP settings.</p>`,
+    },
+    smtp
+  );
 
   if (!result.ok) return { error: result.error ?? "SEND_FAILED" };
   return { success: true };
