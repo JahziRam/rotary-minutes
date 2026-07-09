@@ -5,10 +5,10 @@ import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
 import {
   assertContactRateLimit,
-  CONTACT_INBOX,
   validateContactForm,
   type ContactFormPayload,
 } from "@/lib/contact-form-guard";
+import { getContactInboxConfig } from "@/lib/contact-inbox";
 import { COMPANY_LEGAL } from "@/lib/company-legal";
 
 const TOPIC_LABELS: Record<string, { fr: string; en: string }> = {
@@ -82,11 +82,12 @@ export async function submitContactForm(payload: ContactFormPayload) {
   const rate = await assertContactRateLimit(validated.data.email, ip);
   if (!rate.ok) return { error: rate.error };
 
+  const inbox = await getContactInboxConfig();
+  if (!inbox) return { error: "NOT_CONFIGURED" };
+
   const isFr = validated.data.locale === "fr";
   const topicLabel = TOPIC_LABELS[validated.data.topic]?.[isFr ? "fr" : "en"] ?? validated.data.topic;
-  const subject = isFr
-    ? `[${COMPANY_LEGAL.productName}] Contact — ${topicLabel}`
-    : `[${COMPANY_LEGAL.productName}] Contact — ${topicLabel}`;
+  const subject = `[${COMPANY_LEGAL.productName}] Contact — ${topicLabel}`;
 
   const html = buildContactEmailHtml(validated.data);
   const text = [
@@ -100,9 +101,9 @@ export async function submitContactForm(payload: ContactFormPayload) {
     .join("\n");
 
   const result = await sendEmail({
-    to: CONTACT_INBOX,
+    to: inbox.to,
     cc: validated.data.email,
-    bcc: CONTACT_INBOX,
+    bcc: inbox.bcc,
     replyTo: validated.data.email,
     subject,
     html,

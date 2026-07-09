@@ -330,11 +330,23 @@ export async function updatePlanConfig(
   return { success: true, stripePriceWarning };
 }
 
+function normalizeOptionalEmail(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed || undefined;
+}
+
+function validateOptionalEmail(value: string | undefined): boolean {
+  if (!value?.trim()) return true;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(value.trim());
+}
+
 export async function updateAppSettings(
   data: {
     appName: string;
     tagline?: string;
     supportEmail?: string;
+    contactToEmail?: string;
+    contactBccEmail?: string;
     trialDays: number;
     maintenanceMode: boolean;
     gaMeasurementId?: string;
@@ -344,7 +356,21 @@ export async function updateAppSettings(
   const user = await admin();
   if (!user) return { error: "UNAUTHORIZED" };
 
-  const { gaMeasurementId, ...appData } = data;
+  if (
+    !validateOptionalEmail(data.supportEmail) ||
+    !validateOptionalEmail(data.contactToEmail) ||
+    !validateOptionalEmail(data.contactBccEmail)
+  ) {
+    return { error: "INVALID_EMAIL" as const };
+  }
+
+  const { gaMeasurementId, ...rest } = data;
+  const appData = {
+    ...rest,
+    supportEmail: normalizeOptionalEmail(rest.supportEmail),
+    contactToEmail: normalizeOptionalEmail(rest.contactToEmail),
+    contactBccEmail: normalizeOptionalEmail(rest.contactBccEmail),
+  };
 
   await prisma.appSettings.upsert({
     where: { id: "global" },

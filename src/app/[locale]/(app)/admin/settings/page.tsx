@@ -57,6 +57,8 @@ export default async function AdminSettingsPage({
             appName: settings?.appName ?? "Rotary Minutes",
             tagline: settings?.tagline ?? "",
             supportEmail: settings?.supportEmail ?? "",
+            contactToEmail: settings?.contactToEmail ?? "",
+            contactBccEmail: settings?.contactBccEmail ?? "",
             trialDays: settings?.trialDays ?? 14,
             maintenanceMode: settings?.maintenanceMode ?? false,
             gaMeasurementId: analytics.gaMeasurementId,

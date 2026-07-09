@@ -13,8 +13,6 @@ const DISPOSABLE_DOMAINS = new Set([
   "getnada.com",
 ]);
 
-export const CONTACT_INBOX = "jahaziela@ramanitra.mg";
-
 export type ContactFormPayload = {
   name: string;
   email: string;

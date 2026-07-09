@@ -748,6 +748,12 @@
       "appName": "Application name",
       "tagline": "Tagline",
       "supportEmail": "Support email",
+      "contactTitle": "Contact form",
+      "contactHint": "Addresses used by the contact form on the landing page. If the recipient is empty, the support email is used. If BCC is empty, a copy is sent to the same recipient.",
+      "contactToEmail": "Recipient (To)",
+      "contactBccEmail": "Blind copy (BCC)",
+      "contactBccPlaceholder": "Same as recipient if empty",
+      "invalidEmail": "Invalid email address",
       "trialDays": "Free trial days",
       "maintenanceMode": "Maintenance mode",
       "gaTitle": "Google Analytics 4",
@@ -1337,7 +1343,8 @@
         "TOPIC_INVALID": "Please select a subject.",
         "MESSAGE_INVALID": "Message must be between 20 and 4000 characters.",
         "RATE_LIMIT": "Too many messages sent. Try again in one hour.",
-        "EMAIL_DISABLED": "Email sending is temporarily unavailable. Write to jahaziela@ramanitra.mg.",
+        "EMAIL_DISABLED": "Email sending is temporarily unavailable. Please try again later.",
+        "NOT_CONFIGURED": "The contact form is not configured yet. Please try again later.",
         "SEND_FAILED": "Sending failed. Try again or email us directly."
       }
     },

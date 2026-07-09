@@ -190,6 +190,8 @@ async function main() {
     });
   }
 
+  const CONTACT_INBOX_EMAIL = "jahaziela@ramanitra.mg";
+
   await prisma.appSettings.upsert({
     where: { id: "global" },
     update: { annualDiscountPercent: 20, currency: "EUR" },
@@ -198,6 +200,8 @@ async function main() {
       appName: "Rotary Minutes",
       tagline: "Procès-verbaux modernes pour clubs Rotary",
       supportEmail: SUPER_ADMIN_EMAIL,
+      contactToEmail: CONTACT_INBOX_EMAIL,
+      contactBccEmail: CONTACT_INBOX_EMAIL,
       trialDays: 14,
       annualDiscountPercent: 20,
       currency: "EUR",

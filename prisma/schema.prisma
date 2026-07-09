@@ -862,6 +862,8 @@ model AppSettings {
   appName               String   @default("Rotary Minutes")
   tagline               String?
   supportEmail          String?
+  contactToEmail        String?
+  contactBccEmail       String?
   stripeEnabled         Boolean  @default(false)
   resendEnabled         Boolean  @default(false)
   trialDays             Int      @default(14)

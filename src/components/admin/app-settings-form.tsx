@@ -12,6 +12,8 @@ interface SettingsData {
   appName: string;
   tagline: string;
   supportEmail: string;
+  contactToEmail: string;
+  contactBccEmail: string;
   trialDays: number;
   maintenanceMode: boolean;
   gaMeasurementId: string;
@@ -35,12 +37,18 @@ export function AppSettingsForm({ settings }: { settings: SettingsData }) {
                 appName: fd.get("appName") as string,
                 tagline: (fd.get("tagline") as string) || undefined,
                 supportEmail: (fd.get("supportEmail") as string) || undefined,
+                contactToEmail: (fd.get("contactToEmail") as string) || undefined,
+                contactBccEmail: (fd.get("contactBccEmail") as string) || undefined,
                 trialDays: parseInt(fd.get("trialDays") as string, 10) || 14,
                 maintenanceMode: fd.get("maintenanceMode") === "on",
                 gaMeasurementId: (fd.get("gaMeasurementId") as string) || "",
               },
               locale
             );
+            if (result.error === "INVALID_EMAIL") {
+              setToast(t("invalidEmail"));
+              return;
+            }
             if (result.error === "INVALID_GA_ID") {
               setToast(t("invalidGaId"));
               return;
@@ -59,6 +67,30 @@ export function AppSettingsForm({ settings }: { settings: SettingsData }) {
             label={t("supportEmail")}
             defaultValue={settings.supportEmail}
           />
+        </div>
+
+        <div className="rounded-xl border border-amber-200/80 bg-amber-50/50 p-4 space-y-3">
+          <div>
+            <h3 className="font-semibold text-gray-900">{t("contactTitle")}</h3>
+            <p className="text-sm text-gray-500 mt-1">{t("contactHint")}</p>
+          </div>
+          <Input
+            name="contactToEmail"
+            type="email"
+            label={t("contactToEmail")}
+            defaultValue={settings.contactToEmail}
+            placeholder="contact@exemple.com"
+          />
+          <Input
+            name="contactBccEmail"
+            type="email"
+            label={t("contactBccEmail")}
+            defaultValue={settings.contactBccEmail}
+            placeholder={t("contactBccPlaceholder")}
+          />
+        </div>
+
+        <div className="space-y-4">
           <Input
             name="trialDays"
             type="number"

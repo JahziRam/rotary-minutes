@@ -748,6 +748,12 @@
       "appName": "Nom de l'application",
       "tagline": "Slogan",
       "supportEmail": "Email support",
+      "contactTitle": "Formulaire de contact",
+      "contactHint": "Adresses utilisées par le formulaire de contact sur la page d'accueil. Si le destinataire est vide, l'email support est utilisé. Si le BCC est vide, une copie est envoyée au même destinataire.",
+      "contactToEmail": "Destinataire (To)",
+      "contactBccEmail": "Copie cachée (BCC)",
+      "contactBccPlaceholder": "Identique au destinataire si vide",
+      "invalidEmail": "Adresse email invalide",
       "trialDays": "Jours d'essai gratuit",
       "maintenanceMode": "Mode maintenance",
       "gaTitle": "Google Analytics 4",
@@ -1337,7 +1343,8 @@
         "TOPIC_INVALID": "Veuillez choisir un objet.",
         "MESSAGE_INVALID": "Le message doit contenir entre 20 et 4000 caractères.",
         "RATE_LIMIT": "Trop de messages envoyés. Réessayez dans une heure.",
-        "EMAIL_DISABLED": "L'envoi d'email est temporairement indisponible. Écrivez-nous à jahaziela@ramanitra.mg.",
+        "EMAIL_DISABLED": "L'envoi d'email est temporairement indisponible. Réessayez plus tard.",
+        "NOT_CONFIGURED": "Le formulaire de contact n'est pas encore configuré. Réessayez plus tard.",
         "SEND_FAILED": "L'envoi a échoué. Réessayez ou contactez-nous par email."
       }
     },
