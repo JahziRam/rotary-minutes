@@ -47,7 +47,8 @@ export async function sendEmail(options: SendEmailOptions): Promise<{ ok: boolea
       attachments: options.attachments?.map((a) => ({
         filename: a.filename,
         content: typeof a.content === "string" ? Buffer.from(a.content) : a.content,
-        ...(a.cid ? { content_id: a.cid } : {}),
+        // Resend SDK maps contentId → content_id for inline cid: references
+        ...(a.cid ? { contentId: a.cid } : {}),
       })),
     });
     if (error) return { ok: false, error: error.message };

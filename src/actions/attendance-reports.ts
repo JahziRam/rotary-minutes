@@ -112,7 +112,10 @@ export async function emailReportToDistrict(locale: string) {
     to: club.email,
     subject,
     html: branded.html,
-    attachments: [{ filename, content: buffer }],
+    attachments: [
+      ...(branded.attachments ?? []),
+      { filename, content: buffer },
+    ],
   });
 
   if (!result.ok) return { error: result.error ?? "EMAIL_FAILED" as const };

@@ -173,17 +173,42 @@ export async function prepareBrandedEmail(
     logo?: EmailLogoResult;
   }
 ): Promise<BrandedEmailPackage> {
+  let logoUrl = opts.logoUrl;
+  let clubAddressLine = opts.clubAddressLine?.trim() ?? null;
+
+  const needsClubLookup =
+    !!opts.clubId &&
+    !opts.logo &&
+    (!logoUrl || (!clubAddressLine && !opts.club));
+
+  if (needsClubLookup) {
+    const club = await prisma.club.findUnique({
+      where: { id: opts.clubId },
+      select: {
+        logoUrl: true,
+        address: true,
+        city: true,
+        country: true,
+        meetingLocation: true,
+      },
+    });
+    if (!logoUrl) logoUrl = club?.logoUrl;
+    if (!clubAddressLine && !opts.club) {
+      clubAddressLine = formatClubAddressForEmail(club);
+    }
+  } else if (!clubAddressLine) {
+    clubAddressLine = await resolveClubAddressLine(opts);
+  }
+
   const logo =
     opts.logo ??
-    (opts.clubId && opts.logoUrl
-      ? resolveLogoForEmail(opts.clubId, opts.logoUrl, opts.baseUrl)
+    (opts.clubId && logoUrl
+      ? resolveLogoForEmail(opts.clubId, logoUrl, opts.baseUrl)
       : {});
 
   const wrappedBody = bodyHtml.includes('class="email-body"')
     ? bodyHtml
     : `<div class="email-body">${bodyHtml}</div>`;
-
-  const clubAddressLine = await resolveClubAddressLine(opts);
 
   const html = wrapBrandedEmail(wrappedBody, {
     clubName: opts.clubName,

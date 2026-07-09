@@ -8,6 +8,8 @@ export interface EmailLogoResult {
   cid?: string;
   /** Raw attachment content (Buffer) */
   content?: Buffer;
+  /** MIME type when content is embedded inline */
+  mime?: string;
 }
 
 const LOGO_CID = "club-logo";
@@ -31,6 +33,7 @@ export function resolveLogoForEmail(
       url: logoUrl,
       cid: LOGO_CID,
       content: parsed.buffer,
+      mime: parsed.mime,
     };
   }
 
@@ -43,12 +46,25 @@ export function logoSrcFromResult(logo: EmailLogoResult): string | undefined {
   return logo.url;
 }
 
+function mimeToExtension(mime?: string): string {
+  switch (mime) {
+    case "image/jpeg":
+      return "jpg";
+    case "image/webp":
+      return "webp";
+    case "image/gif":
+      return "gif";
+    default:
+      return "png";
+  }
+}
+
 export function logoAttachmentFromResult(
   logo: EmailLogoResult
 ): { filename: string; content: Buffer; cid: string } | undefined {
   if (!logo.cid || !logo.content) return undefined;
   return {
-    filename: "club-logo.png",
+    filename: `club-logo.${mimeToExtension(logo.mime)}`,
     content: logo.content,
     cid: logo.cid,
   };
