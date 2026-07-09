@@ -26,6 +26,15 @@ const publicPaths = [
 
 export default function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Static pitch deck in /public/pitch — bypass auth and i18n locale redirects
+  if (pathname === "/pitch") {
+    return NextResponse.redirect(new URL("/pitch/", request.url));
+  }
+  if (pathname.startsWith("/pitch/")) {
+    return NextResponse.next();
+  }
+
   const pathnameWithoutLocale = pathname.replace(/^\/(fr|en)/, "") || "/";
 
   const isPublic = publicPaths.some(
