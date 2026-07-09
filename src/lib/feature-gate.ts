@@ -20,6 +20,11 @@ export type GatedFeature = keyof Pick<
   | "smartNotificationsEnabled"
   | "integrationsEnabled"
   | "pwaEnhancedEnabled"
+  | "eventsAdvancedEnabled"
+  | "fileManagerEnabled"
+  | "documentSharingEnabled"
+  | "treasuryImportEnabled"
+  | "clubBackupEnabled"
 >;
 
 export const GATED_FEATURE_KEYS: GatedFeature[] = [
@@ -41,6 +46,11 @@ export const GATED_FEATURE_KEYS: GatedFeature[] = [
   "smartNotificationsEnabled",
   "integrationsEnabled",
   "pwaEnhancedEnabled",
+  "eventsAdvancedEnabled",
+  "fileManagerEnabled",
+  "documentSharingEnabled",
+  "treasuryImportEnabled",
+  "clubBackupEnabled",
 ];
 
 export function isFeatureEnabled(
@@ -69,6 +79,8 @@ const FEATURE_MENU_VISIBLE: Partial<Record<GatedFeature, keyof ClubFeatureSet>> 
   documentsEnabled: "documentsMenuVisible",
   governanceEnabled: "governanceMenuVisible",
   integrationsEnabled: "integrationsMenuVisible",
+  eventsAdvancedEnabled: "eventsAdvancedMenuVisible",
+  fileManagerEnabled: "fileManagerMenuVisible",
 };
 
 export function isFeatureVisibleInUi(
@@ -82,13 +94,15 @@ export function isFeatureVisibleInUi(
   return menuKey ? !!features[menuKey] : false;
 }
 
+/** Libellés publics des offres (clés enum inchangées en base : STARTER, PROFESSIONAL, ENTERPRISE). */
+export const PLAN_DISPLAY_LABELS: Record<string, { fr: string; en: string }> = {
+  TRIAL: { fr: "Essai gratuit", en: "Free trial" },
+  STARTER: { fr: "Starter", en: "Starter" },
+  PROFESSIONAL: { fr: "Active", en: "Active" },
+  ENTERPRISE: { fr: "High level", en: "High level" },
+};
+
 export function getPlanLabel(plan: string | undefined, locale: string): string {
-  const labels: Record<string, { fr: string; en: string }> = {
-    TRIAL: { fr: "Essai gratuit", en: "Free trial" },
-    STARTER: { fr: "Starter", en: "Starter" },
-    PROFESSIONAL: { fr: "Professional", en: "Professional" },
-    ENTERPRISE: { fr: "Enterprise", en: "Enterprise" },
-  };
   const key = plan ?? "TRIAL";
-  return labels[key]?.[locale === "fr" ? "fr" : "en"] ?? key;
+  return PLAN_DISPLAY_LABELS[key]?.[locale === "fr" ? "fr" : "en"] ?? key;
 }

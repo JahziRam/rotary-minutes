@@ -19,6 +19,22 @@ export default async function AppLayout({
     redirect(`/${locale}/login`);
   }
 
+  if (
+    !session.user.isSuperAdmin &&
+    session.user.memberships.length === 0 &&
+    session.user.pendingJoin
+  ) {
+    redirect(`/${locale}/pending-approval`);
+  }
+
+  if (
+    !session.user.isSuperAdmin &&
+    session.user.memberships.length === 0 &&
+    !session.user.pendingJoin
+  ) {
+    redirect(`/${locale}/register`);
+  }
+
   if (!session.user.isSuperAdmin && session.user.memberships.length > 0) {
     const ctx = await getClubContext();
     const club = ctx?.club;

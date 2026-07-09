@@ -75,6 +75,13 @@ export default async function AdminClubsPage({
           integrationsEnabled: c.features.integrationsEnabled ?? DEFAULT_FEATURES.integrationsEnabled,
           integrationsMenuVisible: c.features.integrationsMenuVisible ?? DEFAULT_FEATURES.integrationsMenuVisible,
           pwaEnhancedEnabled: c.features.pwaEnhancedEnabled ?? DEFAULT_FEATURES.pwaEnhancedEnabled,
+          eventsAdvancedEnabled: c.features.eventsAdvancedEnabled ?? DEFAULT_FEATURES.eventsAdvancedEnabled,
+          eventsAdvancedMenuVisible: c.features.eventsAdvancedMenuVisible ?? DEFAULT_FEATURES.eventsAdvancedMenuVisible,
+          fileManagerEnabled: c.features.fileManagerEnabled ?? DEFAULT_FEATURES.fileManagerEnabled,
+          fileManagerMenuVisible: c.features.fileManagerMenuVisible ?? DEFAULT_FEATURES.fileManagerMenuVisible,
+          documentSharingEnabled: c.features.documentSharingEnabled ?? DEFAULT_FEATURES.documentSharingEnabled,
+          treasuryImportEnabled: c.features.treasuryImportEnabled ?? DEFAULT_FEATURES.treasuryImportEnabled,
+          clubBackupEnabled: c.features.clubBackupEnabled ?? DEFAULT_FEATURES.clubBackupEnabled,
           memberLimit: c.features.memberLimit,
         }
       : DEFAULT_FEATURES,

@@ -1,0 +1,1 @@
+export const ROTARACT_DISCOUNT_PERCENT = 15;

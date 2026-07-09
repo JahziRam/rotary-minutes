@@ -1,4 +1,6 @@
-export const MAX_DOCUMENT_BYTES = 5 * 1024 * 1024;
+import { MAX_UPLOAD_FILE_BYTES } from "@/lib/upload-limits";
+
+export const MAX_DOCUMENT_BYTES = MAX_UPLOAD_FILE_BYTES;
 
 export const ALLOWED_DOCUMENT_TYPES = new Set([
   "application/pdf",

@@ -17,6 +17,7 @@ import {
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { getPlanLabel } from "@/lib/feature-gate";
 
 export interface AdminClubRow {
   id: string;
@@ -177,7 +178,7 @@ export function ClubsTable({ clubs }: { clubs: AdminClubRow[] }) {
                         <div className="space-y-1.5">
                           <div className="flex gap-1 flex-wrap">
                             <Badge variant={planVariant[club.subscription.plan] ?? "default"}>
-                              {club.subscription.plan}
+                              {getPlanLabel(club.subscription.plan, locale)}
                             </Badge>
                             <Badge variant={statusVariant[club.subscription.status] ?? "muted"}>
                               {club.subscription.status}
@@ -208,7 +209,9 @@ export function ClubsTable({ clubs }: { clubs: AdminClubRow[] }) {
                             className="h-7 w-full max-w-[140px] rounded border border-gray-200 text-xs px-1.5"
                           >
                             {PLANS.map((p) => (
-                              <option key={p} value={p}>{p}</option>
+                              <option key={p} value={p}>
+                                {getPlanLabel(p, locale)}
+                              </option>
                             ))}
                           </select>
                         </div>

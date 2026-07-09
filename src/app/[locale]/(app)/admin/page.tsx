@@ -134,7 +134,7 @@ export default async function SuperAdminPage({
 
         <div className="grid lg:grid-cols-2 gap-6">
           <TrialAlerts trials={expiringTrials} locale={locale} />
-          <SubscriptionBreakdown data={subscriptionBreakdown} />
+          <SubscriptionBreakdown data={subscriptionBreakdown} locale={locale} />
         </div>
 
         <div className="flex flex-wrap gap-3">

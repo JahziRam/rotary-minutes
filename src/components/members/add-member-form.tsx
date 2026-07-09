@@ -36,6 +36,7 @@ export function AddMemberForm() {
               lastName: formData.get("lastName") as string,
               email: (formData.get("email") as string) || undefined,
               phone: (formData.get("phone") as string) || undefined,
+              registrationNumber: (formData.get("registrationNumber") as string) || undefined,
               position: (formData.get("position") as string) || undefined,
               birthday: (formData.get("birthday") as string) || undefined,
               joinDate: (formData.get("joinDate") as string) || undefined,
@@ -57,6 +58,7 @@ export function AddMemberForm() {
         </div>
         <Input name="email" type="email" label="Email" />
         <Input name="phone" label={t("phone")} />
+        <Input name="registrationNumber" label={t("registrationNumber")} />
         <Input name="position" label={t("position")} />
         <Input name="birthday" type="date" label={t("birthday")} />
         <Input name="joinDate" type="date" label={t("joinDate")} />

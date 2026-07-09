@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/require-permission";
 import { fileToDataUrl, validateImageDataUrl } from "@/lib/image-storage";
+import { validateUploadFileSize } from "@/lib/upload-limits";
 
 export async function uploadClubLogo(formData: FormData) {
   const auth = await requirePermission("settings.manage");
@@ -14,6 +15,8 @@ export async function uploadClubLogo(formData: FormData) {
   if (!(file instanceof File) || file.size === 0) {
     return { error: "NO_FILE" as const };
   }
+  const sizeError = validateUploadFileSize(file.size);
+  if (sizeError) return { error: sizeError };
 
   try {
     const dataUrl = await fileToDataUrl(file);
@@ -63,6 +66,8 @@ export async function uploadMemberPhoto(memberId: string, formData: FormData) {
   if (!(file instanceof File) || file.size === 0) {
     return { error: "NO_FILE" as const };
   }
+  const sizeError = validateUploadFileSize(file.size);
+  if (sizeError) return { error: sizeError };
 
   try {
     const dataUrl = await fileToDataUrl(file);

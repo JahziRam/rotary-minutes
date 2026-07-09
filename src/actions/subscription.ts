@@ -11,6 +11,10 @@ import {
   validatePromoCode,
   computeDiscountedPrice,
 } from "@/lib/billing";
+import {
+  applyPercentDiscount,
+  resolveCheckoutDiscountPercent,
+} from "@/lib/registration";
 import { processReferralReward } from "@/actions/billing";
 import {
   createBillingPortalSession,
@@ -47,6 +51,11 @@ export async function choosePlan(
 
   let promoCodeId: string | undefined;
   let discountLabel: string | undefined;
+  let promoPercent: number | undefined;
+
+  const basePrice =
+    billingInterval === "ANNUAL" ? plan.priceAnnual : plan.priceMonthly;
+  let priceAfterDiscount = basePrice;
 
   if (promoCode?.trim()) {
     const promoResult = await validatePromoCode(promoCode);
@@ -54,16 +63,27 @@ export async function choosePlan(
       return { error: promoResult.error };
     }
 
-    const basePrice =
-      billingInterval === "ANNUAL" ? plan.priceAnnual : plan.priceMonthly;
-    const discounted = computeDiscountedPrice(
+    priceAfterDiscount = computeDiscountedPrice(
       basePrice,
       promoResult.promo.discountType,
       promoResult.promo.discountValue
     );
 
     promoCodeId = promoResult.promo.id;
-    discountLabel = formatPrice(discounted, billing.currency, locale);
+    if (promoResult.promo.discountType === "PERCENT") {
+      promoPercent = promoResult.promo.discountValue;
+    }
+  }
+
+  const effectivePercent = resolveCheckoutDiscountPercent(
+    ctx.club.type,
+    promoPercent
+  );
+  if (effectivePercent != null) {
+    priceAfterDiscount = applyPercentDiscount(basePrice, effectivePercent);
+    discountLabel = formatPrice(priceAfterDiscount, billing.currency, locale);
+  } else if (promoCodeId) {
+    discountLabel = formatPrice(priceAfterDiscount, billing.currency, locale);
   }
 
   const stripePriceId = getStripePriceId(plan, billingInterval);

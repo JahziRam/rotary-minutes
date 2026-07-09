@@ -29,6 +29,7 @@ export default async function EventDetailPage({
         event={data.event}
         registrations={data.registrations}
         canManage={data.canManage}
+        eventsAdvanced={data.eventsAdvanced}
         myMemberId={data.myMemberId}
         myRegistration={data.myRegistration}
         locale={locale}

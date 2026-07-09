@@ -39,8 +39,11 @@ export default async function DocumentsPage({
     <AppShellServer title={t("title")}>
       <DocumentsLibrary
         documents={data.documents}
+        folders={"folders" in data ? data.folders : []}
         canManage={data.canManage}
         locale={locale}
+        fileManagerEnabled={"fileManagerEnabled" in data ? data.fileManagerEnabled : false}
+        documentSharingEnabled={"documentSharingEnabled" in data ? data.documentSharingEnabled : false}
       />
     </AppShellServer>
   );

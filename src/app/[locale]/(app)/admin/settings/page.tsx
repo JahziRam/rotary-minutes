@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AppSettingsForm } from "@/components/admin/app-settings-form";
 import { IntegrationsConfigPanel } from "@/components/admin/integrations-config-panel";
 import { Settings } from "lucide-react";
+import { PlatformBackupPanel } from "@/components/admin/platform-backup-panel";
 
 export default async function AdminSettingsPage({
   params,
@@ -64,6 +65,7 @@ export default async function AdminSettingsPage({
           }}
         />
         <IntegrationsConfigPanel integration={integration} />
+        <PlatformBackupPanel />
       </CardContent>
     </Card>
   );

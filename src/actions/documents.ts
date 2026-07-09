@@ -5,7 +5,10 @@ import { prisma } from "@/lib/prisma";
 import { requireFeature } from "@/lib/require-feature";
 import { requirePermission } from "@/lib/require-permission";
 import { hasRolePermission } from "@/lib/roles";
+import { randomBytes } from "node:crypto";
 import { fileToDocumentDataUrl, validateDocumentDataUrl } from "@/lib/document-storage";
+import { validateUploadFileSize, validateUploadFiles } from "@/lib/upload-limits";
+import { getClubFeatures } from "@/lib/features";
 import type { DocumentCategory } from "@/generated/prisma/client";
 
 function revalidateDocuments() {
@@ -42,26 +45,184 @@ const documentSelect = {
   fileName: true,
   mimeType: true,
   minuteId: true,
+  folderId: true,
   isArchived: true,
+  isShareEnabled: true,
+  shareToken: true,
+  shareExpiresAt: true,
   tags: true,
   createdAt: true,
   updatedAt: true,
   uploadedBy: { select: { firstName: true, lastName: true } },
 } as const;
 
+function mapDocumentRow(d: {
+  id: string;
+  title: string;
+  category: DocumentCategory;
+  description: string | null;
+  fileUrl: string | null;
+  fileName: string | null;
+  mimeType: string | null;
+  minuteId: string | null;
+  folderId: string | null;
+  isArchived: boolean;
+  isShareEnabled: boolean;
+  shareToken: string | null;
+  shareExpiresAt: Date | null;
+  tags: string[];
+  createdAt: Date;
+  updatedAt: Date;
+  uploadedBy: { firstName: string; lastName: string } | null;
+}) {
+  return {
+    ...d,
+    createdAt: d.createdAt.toISOString(),
+    updatedAt: d.updatedAt.toISOString(),
+    shareExpiresAt: d.shareExpiresAt?.toISOString() ?? null,
+    uploadedByName: d.uploadedBy
+      ? `${d.uploadedBy.firstName} ${d.uploadedBy.lastName}`
+      : null,
+  };
+}
+
+export async function listDocumentFolders() {
+  const auth = await requireDocumentsView();
+  if ("error" in auth && auth.error) return { error: auth.error as string };
+  const { ctx } = auth;
+
+  const features = await getClubFeatures(ctx.clubId);
+  if (!features.fileManagerEnabled) return { folders: [] };
+
+  const folders = await prisma.documentFolder.findMany({
+    where: { clubId: ctx.clubId },
+    orderBy: [{ parentId: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
+    select: {
+      id: true,
+      name: true,
+      parentId: true,
+      sortOrder: true,
+      _count: { select: { documents: true, children: true } },
+    },
+  });
+
+  return {
+    folders: folders.map((f) => ({
+      id: f.id,
+      name: f.name,
+      parentId: f.parentId,
+      sortOrder: f.sortOrder,
+      documentCount: f._count.documents,
+      childCount: f._count.children,
+    })),
+  };
+}
+
+export async function createDocumentFolder(data: { name: string; parentId?: string }) {
+  const auth = await requireDocumentsManage();
+  if ("error" in auth && auth.error) return { error: auth.error as string };
+  const { ctx } = auth;
+
+  const features = await getClubFeatures(ctx.clubId);
+  if (!features.fileManagerEnabled) return { error: "FEATURE_DISABLED" as const };
+
+  const name = data.name.trim();
+  if (!name) return { error: "INVALID_NAME" as const };
+
+  const folder = await prisma.documentFolder.create({
+    data: {
+      clubId: ctx.clubId,
+      name,
+      parentId: data.parentId || null,
+    },
+  });
+
+  revalidateDocuments();
+  return { success: true as const, folderId: folder.id };
+}
+
+export async function renameDocumentFolder(folderId: string, name: string) {
+  const auth = await requireDocumentsManage();
+  if ("error" in auth && auth.error) return { error: auth.error as string };
+  const { ctx } = auth;
+
+  const existing = await prisma.documentFolder.findFirst({
+    where: { id: folderId, clubId: ctx.clubId },
+  });
+  if (!existing) return { error: "NOT_FOUND" as const };
+
+  await prisma.documentFolder.update({
+    where: { id: folderId },
+    data: { name: name.trim() },
+  });
+
+  revalidateDocuments();
+  return { success: true as const };
+}
+
+export async function deleteDocumentFolder(folderId: string) {
+  const auth = await requireDocumentsManage();
+  if ("error" in auth && auth.error) return { error: auth.error as string };
+  const { ctx } = auth;
+
+  const existing = await prisma.documentFolder.findFirst({
+    where: { id: folderId, clubId: ctx.clubId },
+  });
+  if (!existing) return { error: "NOT_FOUND" as const };
+
+  await prisma.clubDocument.updateMany({
+    where: { folderId },
+    data: { folderId: null },
+  });
+  await prisma.documentFolder.delete({ where: { id: folderId } });
+
+  revalidateDocuments();
+  return { success: true as const };
+}
+
+export async function moveDocumentToFolder(documentId: string, folderId: string | null) {
+  const auth = await requireDocumentsManage();
+  if ("error" in auth && auth.error) return { error: auth.error as string };
+  const { ctx } = auth;
+
+  const doc = await prisma.clubDocument.findFirst({
+    where: { id: documentId, clubId: ctx.clubId },
+  });
+  if (!doc) return { error: "NOT_FOUND" as const };
+
+  if (folderId) {
+    const folder = await prisma.documentFolder.findFirst({
+      where: { id: folderId, clubId: ctx.clubId },
+    });
+    if (!folder) return { error: "NOT_FOUND" as const };
+  }
+
+  await prisma.clubDocument.update({
+    where: { id: documentId },
+    data: { folderId },
+  });
+
+  revalidateDocuments();
+  return { success: true as const };
+}
+
 export async function listDocuments(filters?: {
   category?: DocumentCategory;
   includeArchived?: boolean;
+  folderId?: string | null;
 }) {
   const auth = await requireDocumentsView();
   if ("error" in auth && auth.error) return { error: auth.error as string };
   const { ctx } = auth;
+
+  const features = await getClubFeatures(ctx.clubId);
 
   const documents = await prisma.clubDocument.findMany({
     where: {
       clubId: ctx.clubId,
       ...(filters?.category ? { category: filters.category } : {}),
       ...(filters?.includeArchived ? {} : { isArchived: false }),
+      ...(filters?.folderId !== undefined ? { folderId: filters.folderId } : {}),
     },
     select: documentSelect,
     orderBy: [{ category: "asc" }, { createdAt: "desc" }],
@@ -69,15 +230,14 @@ export async function listDocuments(filters?: {
 
   const canManage = await hasRolePermission(ctx.role, "documents.manage", ctx.isSuperAdmin);
 
+  const foldersResult =
+    features.fileManagerEnabled ? await listDocumentFolders() : { folders: [] };
+
   return {
-    documents: documents.map((d) => ({
-      ...d,
-      createdAt: d.createdAt.toISOString(),
-      updatedAt: d.updatedAt.toISOString(),
-      uploadedByName: d.uploadedBy
-        ? `${d.uploadedBy.firstName} ${d.uploadedBy.lastName}`
-        : null,
-    })),
+    documents: documents.map(mapDocumentRow),
+    folders: "folders" in foldersResult ? foldersResult.folders : [],
+    fileManagerEnabled: features.fileManagerEnabled,
+    documentSharingEnabled: features.documentSharingEnabled,
     canManage,
   };
 }
@@ -112,15 +272,88 @@ export async function searchDocuments(query: string, category?: DocumentCategory
   const canManage = await hasRolePermission(ctx.role, "documents.manage", ctx.isSuperAdmin);
 
   return {
-    documents: documents.map((d) => ({
-      ...d,
-      createdAt: d.createdAt.toISOString(),
-      updatedAt: d.updatedAt.toISOString(),
-      uploadedByName: d.uploadedBy
-        ? `${d.uploadedBy.firstName} ${d.uploadedBy.lastName}`
-        : null,
-    })),
+    documents: documents.map(mapDocumentRow),
     canManage,
+  };
+}
+
+export async function enableDocumentShare(documentId: string, expiresInDays?: number) {
+  const auth = await requireDocumentsManage();
+  if ("error" in auth && auth.error) return { error: auth.error as string };
+  const { ctx } = auth;
+
+  const features = await getClubFeatures(ctx.clubId);
+  if (!features.documentSharingEnabled) return { error: "FEATURE_DISABLED" as const };
+
+  const doc = await prisma.clubDocument.findFirst({
+    where: { id: documentId, clubId: ctx.clubId, isArchived: false },
+  });
+  if (!doc) return { error: "NOT_FOUND" as const };
+
+  const shareToken = randomBytes(24).toString("hex");
+  const shareExpiresAt = expiresInDays
+    ? new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000)
+    : null;
+
+  await prisma.clubDocument.update({
+    where: { id: documentId },
+    data: { isShareEnabled: true, shareToken, shareExpiresAt },
+  });
+
+  revalidateDocuments();
+  return { success: true as const, shareToken };
+}
+
+export async function disableDocumentShare(documentId: string) {
+  const auth = await requireDocumentsManage();
+  if ("error" in auth && auth.error) return { error: auth.error as string };
+  const { ctx } = auth;
+
+  const doc = await prisma.clubDocument.findFirst({
+    where: { id: documentId, clubId: ctx.clubId },
+  });
+  if (!doc) return { error: "NOT_FOUND" as const };
+
+  await prisma.clubDocument.update({
+    where: { id: documentId },
+    data: { isShareEnabled: false, shareToken: null, shareExpiresAt: null },
+  });
+
+  revalidateDocuments();
+  return { success: true as const };
+}
+
+export async function getSharedDocument(shareToken: string) {
+  const doc = await prisma.clubDocument.findFirst({
+    where: {
+      shareToken,
+      isShareEnabled: true,
+      isArchived: false,
+    },
+    select: {
+      id: true,
+      title: true,
+      fileUrl: true,
+      fileName: true,
+      mimeType: true,
+      shareExpiresAt: true,
+      club: { select: { name: true } },
+    },
+  });
+  if (!doc) return { error: "NOT_FOUND" as const };
+  if (doc.shareExpiresAt && doc.shareExpiresAt < new Date()) {
+    return { error: "EXPIRED" as const };
+  }
+
+  return {
+    success: true as const,
+    document: {
+      title: doc.title,
+      fileUrl: doc.fileUrl,
+      fileName: doc.fileName,
+      mimeType: doc.mimeType,
+      clubName: doc.club.name,
+    },
   };
 }
 
@@ -182,6 +415,9 @@ export async function uploadDocumentFile(formData: FormData) {
   if (!title || !category) return { error: "MISSING_FIELDS" as const };
   if (!(file instanceof File) || file.size === 0) return { error: "NO_FILE" as const };
 
+  const sizeError = validateUploadFileSize(file.size);
+  if (sizeError) return { error: sizeError };
+
   try {
     const fileDataUrl = await fileToDocumentDataUrl(file);
     return uploadDocument({
@@ -197,6 +433,78 @@ export async function uploadDocumentFile(formData: FormData) {
     const msg = e instanceof Error ? e.message : "UPLOAD_FAILED";
     return { error: msg };
   }
+}
+
+function titleFromFileName(fileName: string): string {
+  const base = fileName.replace(/\.[^.]+$/, "");
+  return base || fileName;
+}
+
+export async function uploadDocumentFiles(formData: FormData) {
+  const auth = await requireDocumentsManage();
+  if ("error" in auth && auth.error) return { error: auth.error as string };
+
+  const category = formData.get("category") as DocumentCategory;
+  const description = (formData.get("description") as string)?.trim();
+  const tagsRaw = (formData.get("tags") as string)?.trim();
+  const titleSingle = (formData.get("title") as string)?.trim();
+  const files = formData
+    .getAll("files")
+    .filter((f): f is File => f instanceof File && f.size > 0);
+
+  if (!category) return { error: "MISSING_FIELDS" as const };
+
+  const batchError = validateUploadFiles(files);
+  if (batchError) return { error: batchError };
+
+  if (files.length === 1 && !titleSingle) {
+    return { error: "MISSING_FIELDS" as const };
+  }
+
+  const tags = tagsRaw
+    ? tagsRaw.split(",").map((t) => t.trim()).filter(Boolean)
+    : [];
+
+  const documentIds: string[] = [];
+  const failed: string[] = [];
+
+  for (const file of files) {
+    const title =
+      files.length === 1 && titleSingle
+        ? titleSingle
+        : titleFromFileName(file.name);
+
+    try {
+      const fileDataUrl = await fileToDocumentDataUrl(file);
+      const result = await uploadDocument({
+        title,
+        category,
+        description,
+        tags,
+        fileDataUrl,
+        fileName: file.name,
+        mimeType: file.type,
+      });
+      if ("success" in result && result.success) {
+        documentIds.push(result.documentId);
+      } else {
+        failed.push(file.name);
+      }
+    } catch {
+      failed.push(file.name);
+    }
+  }
+
+  if (documentIds.length === 0) {
+    return { error: "UPLOAD_FAILED" as const };
+  }
+
+  return {
+    success: true as const,
+    uploaded: documentIds.length,
+    documentIds,
+    failed,
+  };
 }
 
 export async function archiveDocument(documentId: string) {

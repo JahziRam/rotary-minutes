@@ -18,6 +18,7 @@ export async function createMember(data: {
   lastName: string;
   email?: string;
   phone?: string;
+  registrationNumber?: string;
   position?: string;
   birthday?: string;
   joinDate?: string;
@@ -37,6 +38,7 @@ export async function createMember(data: {
       lastName: data.lastName,
       email: data.email || null,
       phone: data.phone || null,
+      registrationNumber: data.registrationNumber?.trim() || null,
       position: data.position || null,
       sponsorName: data.sponsorName || null,
       commissionId: data.commissionId || null,
@@ -81,6 +83,7 @@ export async function updateMember(
     lastName?: string;
     email?: string;
     phone?: string;
+    registrationNumber?: string;
     position?: string;
     birthday?: string;
     joinDate?: string;
@@ -107,6 +110,9 @@ export async function updateMember(
       ...(data.lastName && { lastName: data.lastName }),
       ...(data.email !== undefined && { email: data.email || null }),
       ...(data.phone !== undefined && { phone: data.phone || null }),
+      ...(data.registrationNumber !== undefined && {
+        registrationNumber: data.registrationNumber?.trim() || null,
+      }),
       ...(data.position !== undefined && { position: data.position || null }),
       ...(data.sponsorName !== undefined && { sponsorName: data.sponsorName || null }),
       ...(data.commissionId !== undefined && { commissionId: data.commissionId }),

@@ -1,18 +1,12 @@
 import { CreditCard } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { getPlanLabel } from "@/lib/feature-gate";
 
 interface Breakdown {
   byPlan: Array<{ plan: string; _count: { plan: number } }>;
   byStatus: Array<{ status: string; _count: { status: number } }>;
 }
-
-const planLabels: Record<string, string> = {
-  TRIAL: "Essai",
-  STARTER: "Starter",
-  PROFESSIONAL: "Pro",
-  ENTERPRISE: "Enterprise",
-};
 
 const statusLabels: Record<string, string> = {
   TRIALING: "En essai",
@@ -22,7 +16,13 @@ const statusLabels: Record<string, string> = {
   EXPIRED: "Expiré",
 };
 
-export function SubscriptionBreakdown({ data }: { data: Breakdown }) {
+export function SubscriptionBreakdown({
+  data,
+  locale = "fr",
+}: {
+  data: Breakdown;
+  locale?: string;
+}) {
   const total = data.byStatus.reduce((s, r) => s + r._count.status, 0);
 
   return (
@@ -39,7 +39,7 @@ export function SubscriptionBreakdown({ data }: { data: Breakdown }) {
           <div className="flex flex-wrap gap-2">
             {data.byPlan.map((r) => (
               <Badge key={r.plan} variant="default">
-                {planLabels[r.plan] ?? r.plan}: {r._count.plan}
+                {getPlanLabel(r.plan, locale)}: {r._count.plan}
               </Badge>
             ))}
           </div>

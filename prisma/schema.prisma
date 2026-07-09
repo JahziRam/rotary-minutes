@@ -150,6 +150,22 @@ enum EventRegistrationStatus {
   WAITLIST
 }
 
+enum TreasuryCollectionStatus {
+  COLLECTED
+  RECEIVABLE
+}
+
+enum BackupScope {
+  FULL
+  DATABASE_ONLY
+}
+
+enum BackupJobStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
 enum DocumentCategory {
   STATUTES
   BUDGET
@@ -257,6 +273,12 @@ enum OnboardingStepKey {
   COMPLETE
 }
 
+enum MembershipApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 // ─── Auth (NextAuth) ─────────────────────────────────────────────────────────
 
 model Account {
@@ -325,6 +347,8 @@ model User {
   budgetEntriesRecorded BudgetEntry[]
   clubActionsCreated ClubAction[] @relation("ActionCreator")
   clubDocumentsUploaded ClubDocument[]
+  clubBackupsCreated ClubBackup[] @relation("ClubBackupCreator")
+  platformBackupsCreated PlatformBackup[] @relation("PlatformBackupCreator")
   governanceRecordsCreated GovernanceRecord[]
   notificationPreferences NotificationPreference[]
   supportTickets   SupportTicket[]
@@ -392,18 +416,21 @@ model Club {
   clubActions     ClubAction[]
   clubEvents      ClubEvent[]
   clubDocuments   ClubDocument[]
+  documentFolders DocumentFolder[]
+  clubBackups     ClubBackup[]
   governanceRecords GovernanceRecord[]
   calendarNotes   ClubCalendarNote[]
 }
 
 model ClubMembership {
-  id        String   @id @default(cuid())
-  clubId    String
-  userId    String
-  role      ClubRole @default(READER)
-  isActive  Boolean  @default(true)
-  joinedAt  DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String                   @id @default(cuid())
+  clubId         String
+  userId         String
+  role           ClubRole                 @default(READER)
+  approvalStatus MembershipApprovalStatus @default(APPROVED)
+  isActive       Boolean                  @default(true)
+  joinedAt       DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
 
   club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -411,6 +438,7 @@ model ClubMembership {
   @@unique([clubId, userId])
   @@index([clubId])
   @@index([userId])
+  @@index([clubId, approvalStatus])
 }
 
 model Member {
@@ -428,6 +456,7 @@ model Member {
   bio          String?   @db.Text
   commissionId String?
   sponsorName  String?
+  registrationNumber String?
   userId           String?          @unique
   duesPaymentPlan  DuesPaymentPlan  @default(ANNUAL)
   createdAt        DateTime         @default(now())
@@ -884,6 +913,13 @@ model ClubFeatures {
   integrationsEnabled     Boolean  @default(false)
   integrationsMenuVisible Boolean  @default(false)
   pwaEnhancedEnabled      Boolean  @default(true)
+  eventsAdvancedEnabled   Boolean  @default(false)
+  eventsAdvancedMenuVisible Boolean @default(false)
+  fileManagerEnabled      Boolean  @default(false)
+  fileManagerMenuVisible  Boolean  @default(false)
+  documentSharingEnabled  Boolean  @default(false)
+  treasuryImportEnabled   Boolean  @default(false)
+  clubBackupEnabled       Boolean  @default(false)
   memberLimit             Int?
   updatedAt               DateTime @updatedAt
 
@@ -1244,17 +1280,20 @@ model BudgetEntry {
   duesPaymentId String?
   actionId      String?
   paymentMethod PaymentMethod?
-  reference     String?
-  recordedById  String?
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
+  reference             String?
+  collectionStatus      TreasuryCollectionStatus @default(COLLECTED)
+  eventRegistrationId   String?                  @unique
+  recordedById          String?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
 
-  club          Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  category      BudgetCategory?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  event         ClubEvent?       @relation(fields: [eventId], references: [id], onDelete: SetNull)
-  duesPayment   DuesPayment?     @relation(fields: [duesPaymentId], references: [id], onDelete: SetNull)
-  action        ClubAction?      @relation(fields: [actionId], references: [id], onDelete: SetNull)
-  recordedBy    User?            @relation(fields: [recordedById], references: [id], onDelete: SetNull)
+  club                  Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  category              BudgetCategory?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  event                 ClubEvent?       @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  duesPayment           DuesPayment?     @relation(fields: [duesPaymentId], references: [id], onDelete: SetNull)
+  action                ClubAction?      @relation(fields: [actionId], references: [id], onDelete: SetNull)
+  eventRegistration     EventRegistration? @relation(fields: [eventRegistrationId], references: [id], onDelete: SetNull)
+  recordedBy            User?            @relation(fields: [recordedById], references: [id], onDelete: SetNull)
 
   @@index([clubId, date])
   @@index([clubId, type])
@@ -1325,9 +1364,42 @@ model ClubEvent {
   club            Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
   registrations   EventRegistration[]
   budgetEntries   BudgetEntry[]
+  priceTiers      EventPriceTier[]
+  ticketSlots     EventTicketSlot[]
 
   @@index([clubId, startAt])
   @@index([clubId, status])
+}
+
+model EventPriceTier {
+  id        String   @id @default(cuid())
+  eventId   String
+  label     String
+  price     Decimal  @db.Decimal(10, 2)
+  sortOrder Int      @default(0)
+  maxQty    Int?
+  createdAt DateTime @default(now())
+
+  event           ClubEvent           @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  registrations   EventRegistration[]
+
+  @@index([eventId])
+}
+
+model EventTicketSlot {
+  id             String   @id @default(cuid())
+  eventId        String
+  ticketNumber   String
+  label          String?
+  isReserved     Boolean  @default(false)
+  registrationId String?  @unique
+  createdAt      DateTime @default(now())
+
+  event          ClubEvent            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  registration   EventRegistration?   @relation(fields: [registrationId], references: [id], onDelete: SetNull)
+
+  @@unique([eventId, ticketNumber])
+  @@index([eventId])
 }
 
 model EventRegistration {
@@ -1336,6 +1408,10 @@ model EventRegistration {
   memberId      String?
   guestName     String?
   email         String?
+  phone         String?
+  orderGroupId  String?
+  quantity      Int                     @default(1)
+  priceTierId   String?
   status        EventRegistrationStatus @default(PENDING)
   paidAt        DateTime?
   paymentMethod PaymentMethod?
@@ -1345,33 +1421,94 @@ model EventRegistration {
 
   event         ClubEvent               @relation(fields: [eventId], references: [id], onDelete: Cascade)
   member        Member?                 @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  priceTier     EventPriceTier?         @relation(fields: [priceTierId], references: [id], onDelete: SetNull)
+  ticketSlot    EventTicketSlot?
+  treasuryEntry BudgetEntry?
 
   @@index([eventId])
   @@index([memberId])
+  @@index([orderGroupId])
+}
+
+model DocumentFolder {
+  id        String   @id @default(cuid())
+  clubId    String
+  parentId  String?
+  name      String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  club      Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  parent    DocumentFolder?  @relation("FolderTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children  DocumentFolder[] @relation("FolderTree")
+  documents ClubDocument[]
+
+  @@index([clubId, parentId])
 }
 
 model ClubDocument {
-  id           String           @id @default(cuid())
-  clubId       String
-  title        String
-  category     DocumentCategory @default(OTHER)
-  description  String?
-  fileUrl      String?
-  fileName     String?
-  mimeType     String?
-  minuteId     String?
-  isArchived   Boolean          @default(false)
-  tags         String[]
-  uploadedById String?
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
+  id              String           @id @default(cuid())
+  clubId          String
+  folderId        String?
+  title           String
+  category        DocumentCategory @default(OTHER)
+  description     String?
+  fileUrl         String?
+  fileName        String?
+  mimeType        String?
+  minuteId        String?
+  isArchived      Boolean          @default(false)
+  isShareEnabled  Boolean          @default(false)
+  shareToken      String?          @unique
+  shareExpiresAt  DateTime?
+  tags            String[]
+  uploadedById    String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 
-  club         Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  minute       Minute?          @relation(fields: [minuteId], references: [id], onDelete: SetNull)
-  uploadedBy   User?            @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+  club            Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  folder          DocumentFolder?  @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  minute          Minute?          @relation(fields: [minuteId], references: [id], onDelete: SetNull)
+  uploadedBy      User?            @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
 
   @@index([clubId, category])
+  @@index([clubId, folderId])
   @@index([clubId, createdAt])
+}
+
+model ClubBackup {
+  id          String          @id @default(cuid())
+  clubId      String
+  scope       BackupScope
+  status      BackupJobStatus @default(PENDING)
+  fileName    String?
+  payload     String?         @db.Text
+  sizeBytes   Int?
+  createdById String?
+  createdAt   DateTime        @default(now())
+  completedAt DateTime?
+
+  club        Club            @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  createdBy   User?           @relation("ClubBackupCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([clubId, createdAt])
+}
+
+model PlatformBackup {
+  id          String          @id @default(cuid())
+  scope       BackupScope
+  status      BackupJobStatus @default(PENDING)
+  fileName    String?
+  payload     String?         @db.Text
+  sizeBytes   Int?
+  createdById String?
+  createdAt   DateTime        @default(now())
+  completedAt DateTime?
+
+  createdBy   User?           @relation("PlatformBackupCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
 }
 
 model GovernanceRecord {

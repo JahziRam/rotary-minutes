@@ -2,6 +2,7 @@ import { addMonths, addYears } from "date-fns";
 import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
 import { processReferralReward } from "@/actions/billing";
+import { resolveCheckoutDiscountPercent } from "@/lib/registration";
 import type {
   BillingInterval,
   PromoCode,
@@ -46,6 +47,21 @@ export async function getOrCreateStripeCustomer(
   return customer.id;
 }
 
+async function createStripePercentCoupon(
+  percent: number,
+  name: string
+): Promise<string | undefined> {
+  const stripe = await getStripe();
+  if (!stripe) return undefined;
+
+  const coupon = await stripe.coupons.create({
+    percent_off: percent,
+    duration: "once",
+    name,
+  });
+  return coupon.id;
+}
+
 async function createStripeCouponForPromo(promo: PromoCode): Promise<string | undefined> {
   const stripe = await getStripe();
   if (!stripe) return undefined;
@@ -82,8 +98,33 @@ export async function createCheckoutSession(params: {
 
   const customerId = await getOrCreateStripeCustomer(params.clubId, params.userEmail);
 
-  let discounts: { coupon: string }[] | undefined;
+  const club = await prisma.club.findUnique({
+    where: { id: params.clubId },
+    select: { type: true },
+  });
+
+  let promoPercent: number | undefined;
   if (params.promoCodeId) {
+    const promo = await prisma.promoCode.findUnique({
+      where: { id: params.promoCodeId },
+    });
+    if (promo?.discountType === "PERCENT") {
+      promoPercent = promo.discountValue;
+    }
+  }
+
+  const effectivePercent = club
+    ? resolveCheckoutDiscountPercent(club.type, promoPercent)
+    : promoPercent;
+
+  let discounts: { coupon: string }[] | undefined;
+  if (effectivePercent != null && effectivePercent > 0) {
+    const couponId = await createStripePercentCoupon(
+      effectivePercent,
+      club?.type === "ROTARACT" ? "Rotaract -15%" : "Promo"
+    );
+    if (couponId) discounts = [{ coupon: couponId }];
+  } else if (params.promoCodeId) {
     const promo = await prisma.promoCode.findUnique({
       where: { id: params.promoCodeId },
     });

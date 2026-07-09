@@ -34,6 +34,16 @@ import {
   FolderOpen,
   TrendingUp,
   TrendingDown,
+  UserPlus,
+  Check,
+  X,
+  Building2,
+  User,
+  Search,
+  Clock,
+  Percent,
+  Share2,
+  Upload,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -52,11 +62,15 @@ import {
   DEMO_CALENDAR_EVENTS,
   DEMO_CLUB_EVENTS,
   DEMO_DOCUMENTS,
+  DEMO_DOCUMENT_FOLDERS,
   DEMO_PORTAL,
   DEMO_ACTIONS,
+  DEMO_PUBLIC_CLUBS,
+  DEMO_SUBSCRIPTION,
   getDemoData,
   getDemoDues,
 } from "@/lib/demo-data";
+import { MAX_UPLOAD_FILES_PER_BATCH } from "@/lib/upload-limits";
 import { DemoLockedButton, DemoFeaturePill } from "./demo-ui";
 
 export type DemoPanelProps = {
@@ -64,9 +78,51 @@ export type DemoPanelProps = {
   onPreviewMinute: () => void;
   onLiveMeeting: () => void;
   onMinuteEditor: () => void;
+  onRegistration?: () => void;
 };
 
-export function DemoDashboardPanel({ locale, onPreviewMinute, onLiveMeeting }: DemoPanelProps) {
+function DemoPendingJoinRequestsCard({ locale }: { locale: string }) {
+  const t = useTranslations("demo");
+  const data = getDemoData(locale);
+  const requests = data.pendingJoinRequests;
+
+  return (
+    <Card className="border-amber-200 bg-amber-50/40">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <UserPlus className="h-5 w-5 text-amber-700" />
+          {t("pendingJoinTitle", { count: requests.length })}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {requests.map((req) => (
+          <div
+            key={req.id}
+            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-lg bg-white border border-amber-100"
+          >
+            <div className="min-w-0">
+              <p className="font-medium text-gray-900">
+                {req.firstName} {req.lastName}
+              </p>
+              <p className="text-sm text-gray-500 truncate">{req.email}</p>
+            </div>
+            <div className="flex gap-2 shrink-0">
+              <DemoLockedButton label={t("rejectJoin")} icon={X} />
+              <DemoLockedButton label={t("approveJoin")} icon={Check} variant="gold" />
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+export function DemoDashboardPanel({
+  locale,
+  onPreviewMinute,
+  onLiveMeeting,
+  onRegistration,
+}: DemoPanelProps) {
   const t = useTranslations("demo");
   const dateLocale = locale === "fr" ? fr : enUS;
   const data = getDemoData(locale);
@@ -78,10 +134,25 @@ export function DemoDashboardPanel({ locale, onPreviewMinute, onLiveMeeting }: D
       <div className="flex flex-wrap gap-2">
         <DemoFeaturePill label="PDF + QR" />
         <DemoFeaturePill label={isFr ? "Réunion live" : "Live meeting"} />
+        <DemoFeaturePill label={isFr ? "Inscription membre/club" : "Member/club signup"} />
+        <DemoFeaturePill label={isFr ? "Rotaract −15 %" : "Rotaract −15%"} />
         <DemoFeaturePill label={isFr ? "Trésorerie" : "Treasury"} />
-        <DemoFeaturePill label={isFr ? "Calendrier unifié" : "Unified calendar"} />
+        <DemoFeaturePill label={isFr ? "Upload 5 Mo" : "5 MB uploads"} />
         <DemoFeaturePill label="FR / EN" />
       </div>
+
+      {onRegistration && (
+        <button
+          type="button"
+          onClick={onRegistration}
+          className="w-full text-left rounded-xl border border-navy/15 bg-gradient-to-r from-navy/5 to-gold/10 p-4 hover:border-navy/25 transition-colors"
+        >
+          <p className="font-semibold text-navy text-sm">{t("registrationTeaserTitle")}</p>
+          <p className="text-xs text-gray-600 mt-1">{t("registrationTeaserHint")}</p>
+        </button>
+      )}
+
+      <DemoPendingJoinRequestsCard locale={locale} />
 
       <div className="flex flex-wrap gap-2">
         <DemoLockedButton label={t("newMeeting")} icon={Plus} variant="gold" />
@@ -427,6 +498,8 @@ export function DemoMembersPanel({ locale }: { locale: string }) {
 
   return (
     <div className="space-y-4">
+      <DemoPendingJoinRequestsCard locale={locale} />
+
       <div className="flex flex-wrap gap-2">
         <DemoLockedButton label={t("addMember")} icon={Plus} variant="gold" />
         <DemoLockedButton label={t("importMembers")} />
@@ -582,6 +655,7 @@ export function DemoSettingsPanel({ locale }: { locale: string }) {
           </div>
           {[
             { label: isFr ? "Nom du club" : "Club name", value: DEMO_CLUB.name },
+            { label: isFr ? "Type de club" : "Club type", value: isFr ? "Club Rotary" : "Rotary club" },
             { label: "District", value: DEMO_CLUB.district },
             { label: isFr ? "Ville" : "City", value: DEMO_CLUB.city },
             { label: isFr ? "Lieu de réunion" : "Meeting location", value: DEMO_CLUB.meetingLocation },
@@ -622,6 +696,19 @@ export function DemoSettingsPanel({ locale }: { locale: string }) {
         <CardContent className="py-4 flex items-center gap-3 text-sm text-gray-600">
           <FileSpreadsheet className="h-5 w-5 text-navy" />
           {isFr ? "Intégrations : export comptable CSV/OFX, webhooks" : "Integrations: CSV/OFX accounting export, webhooks"}
+        </CardContent>
+      </Card>
+
+      <Card className="border-emerald-200 bg-emerald-50/40">
+        <CardContent className="py-4 space-y-2">
+          <p className="text-sm font-medium text-emerald-900 flex items-center gap-2">
+            <Percent className="h-4 w-4" />
+            {t("rotaractDiscountTitle")}
+          </p>
+          <p className="text-xs text-emerald-800">{t("rotaractDiscountHint", { percent: DEMO_SUBSCRIPTION.rotaractDiscountPercent })}</p>
+          <p className="text-xs text-gray-600">
+            {isFr ? "Essai en cours" : "Trial in progress"} — {DEMO_SUBSCRIPTION.trialDaysLeft} {isFr ? "jours restants" : "days left"}
+          </p>
         </CardContent>
       </Card>
     </div>
@@ -784,10 +871,22 @@ export function DemoDuesPanel({ locale }: { locale: string }) {
 }
 
 export function DemoTreasuryPanel({ locale }: { locale: string }) {
+  const tDemo = useTranslations("demo");
   const isFr = locale === "fr";
   const t = DEMO_TREASURY;
   return (
     <div className="space-y-4">
+      <Card className="border-dashed border-gray-200">
+        <CardContent className="py-4 space-y-2">
+          <p className="text-sm font-medium text-gray-800">{tDemo("treasuryImportTitle")}</p>
+          <p className="text-xs text-gray-500">{tDemo("uploadLimitsHint")}</p>
+          <div className="flex flex-wrap gap-2 pt-1">
+            <DemoLockedButton label={tDemo("downloadImportTemplate")} icon={Download} />
+            <DemoLockedButton label={tDemo("importTreasuryFile")} icon={FileSpreadsheet} variant="gold" />
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="flex flex-wrap gap-2">
         <DemoLockedButton label={isFr ? "Ajouter une écriture" : "Add entry"} icon={Plus} variant="gold" />
         <DemoLockedButton label={isFr ? "Rapport PDF trésorier" : "Treasurer PDF report"} icon={Download} />
@@ -931,21 +1030,157 @@ export function DemoPortalPanel({ locale }: { locale: string }) {
 }
 
 export function DemoDocumentsPanel({ locale }: { locale: string }) {
+  const t = useTranslations("demo");
   const isFr = locale === "fr";
   return (
     <div className="space-y-4">
-      <DemoLockedButton label={isFr ? "Ajouter un document" : "Add document"} icon={Plus} variant="gold" />
+      <Card>
+        <CardContent className="p-4 space-y-3">
+          <p className="text-sm font-medium text-gray-800">{t("documentUploadTitle")}</p>
+          <p className="text-xs text-gray-500">{t("uploadLimitsHint")}</p>
+          <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 px-4 py-6 text-center text-sm text-gray-500">
+            {t("documentDropzone")}
+            <p className="text-xs mt-2 text-gray-400">
+              {t("documentMultiHint", { max: MAX_UPLOAD_FILES_PER_BATCH })}
+            </p>
+          </div>
+          <DemoLockedButton label={t("documentUploadCta")} icon={Upload} variant="gold" />
+        </CardContent>
+      </Card>
+
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+        {DEMO_DOCUMENT_FOLDERS.filter((f) => !f.parentId).map((folder) => (
+          <div
+            key={folder.id}
+            className="flex items-center gap-2 p-3 rounded-lg border border-gray-200 bg-white text-sm"
+          >
+            <FolderOpen className="h-4 w-4 text-gold shrink-0" />
+            <div>
+              <p className="font-medium">{folder.name}</p>
+              <p className="text-xs text-gray-400">{folder.documentCount} {isFr ? "fichiers" : "files"}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
       <Card>
         <CardContent className="divide-y divide-gray-50">
           {DEMO_DOCUMENTS.map((d) => (
-            <div key={d.id} className="py-3 flex justify-between text-sm">
-              <div className="flex items-center gap-2">
-                <FolderOpen className="h-4 w-4 text-navy/50" />
-                <span className="font-medium">{d.title}</span>
+            <div key={d.id} className="py-3 flex flex-wrap justify-between gap-2 text-sm">
+              <div className="flex items-center gap-2 min-w-0">
+                <FileText className="h-4 w-4 text-navy/50 shrink-0" />
+                <div className="min-w-0">
+                  <span className="font-medium block truncate">{d.title}</span>
+                  <span className="text-xs text-gray-400">{d.fileSizeKb} Ko</span>
+                </div>
               </div>
-              <Badge variant="muted">{d.category}</Badge>
+              <div className="flex items-center gap-2 shrink-0">
+                {d.shared && (
+                  <Badge variant="gold" className="gap-1 text-[10px]">
+                    <Share2 className="h-3 w-3" />
+                    {isFr ? "Partagé" : "Shared"}
+                  </Badge>
+                )}
+                <Badge variant="muted">{d.category}</Badge>
+              </div>
             </div>
           ))}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+export function DemoRegistrationPanel({ locale }: { locale: string }) {
+  const t = useTranslations("demo");
+  const isFr = locale === "fr";
+
+  return (
+    <div className="space-y-4 max-w-2xl mx-auto">
+      <Card className="border-navy/10">
+        <CardHeader>
+          <CardTitle className="text-base">{t("registrationPanelTitle")}</CardTitle>
+          <p className="text-sm text-gray-500">{t("registrationPanelHint")}</p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-600 flex items-center justify-center gap-2">
+              <Building2 className="h-4 w-4" />
+              {t("registrationModeClub")}
+            </div>
+            <div className="rounded-lg border border-navy bg-navy/5 px-3 py-2.5 text-sm font-medium text-navy flex items-center justify-center gap-2">
+              <User className="h-4 w-4" />
+              {t("registrationModeMember")}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-xs font-medium text-gray-500 mb-2">{t("registrationSelectClub")}</p>
+            <div className="relative mb-2">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <div className="h-10 rounded-lg border border-gray-200 bg-gray-50 pl-9 flex items-center text-sm text-gray-500">
+                {isFr ? "Paris" : "Paris"}
+              </div>
+            </div>
+            <div className="rounded-lg border border-gray-200 divide-y divide-gray-100">
+              {DEMO_PUBLIC_CLUBS.map((club, i) => (
+                <div
+                  key={club.id}
+                  className={`px-3 py-2.5 text-sm ${i === 0 ? "bg-navy/5 font-medium text-navy" : "text-gray-700"}`}
+                >
+                  {club.label}
+                  {club.type === "ROTARACT" && (
+                    <span className="ml-2 text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+                      −{DEMO_SUBSCRIPTION.rotaractDiscountPercent}%
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-gray-500 mt-2">{t("registrationApprovalHint")}</p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div className="h-10 rounded-lg border border-gray-200 bg-gray-50 px-3 flex items-center text-sm text-gray-400">
+              {isFr ? "Prénom" : "First name"}
+            </div>
+            <div className="h-10 rounded-lg border border-gray-200 bg-gray-50 px-3 flex items-center text-sm text-gray-400">
+              {isFr ? "Nom" : "Last name"}
+            </div>
+          </div>
+          <div className="h-10 rounded-lg border border-gray-200 bg-gray-50 px-3 flex items-center text-sm text-gray-400">
+            email@exemple.fr
+          </div>
+
+          <DemoLockedButton label={t("registrationSubmit")} variant="gold" className="w-full" />
+        </CardContent>
+      </Card>
+
+      <Card className="border-amber-200 bg-amber-50/40">
+        <CardContent className="py-5 text-center space-y-2">
+          <Clock className="h-8 w-8 text-amber-600 mx-auto" />
+          <p className="font-semibold text-gray-900">{t("pendingApprovalTitle")}</p>
+          <p className="text-sm text-gray-600">{t("pendingApprovalHint", { clubName: DEMO_CLUB.name })}</p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">{t("registrationClubFlowTitle")}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-lg border border-navy bg-navy/5 px-3 py-2 text-sm font-medium text-navy text-center">
+              Rotary
+            </div>
+            <div className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600 text-center">
+              Rotaract
+            </div>
+          </div>
+          <p className="text-xs text-emerald-700 bg-emerald-50 rounded-lg p-2">
+            {t("rotaractDiscountHint", { percent: DEMO_SUBSCRIPTION.rotaractDiscountPercent })}
+          </p>
+          <p className="text-xs text-gray-500">{t("registrationClubDuplicateHint")}</p>
         </CardContent>
       </Card>
     </div>

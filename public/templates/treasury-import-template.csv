@@ -1,0 +1,4 @@
+date,type,amount,description,category,payment_method,reference,collection_status
+2026-01-15,INCOME,150.00,Cotisation événement gala,Événements,BANK_TRANSFER,REF-001,COLLECTED
+2026-01-20,EXPENSE,45.50,Fournitures réunion,Administratif,CASH,,COLLECTED
+2026-02-01,INCOME,200.00,Don anonyme,Donations,CHECK,CHQ-42,RECEIVABLE

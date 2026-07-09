@@ -52,6 +52,7 @@ import {
   DemoEventsPanel,
   DemoPortalPanel,
   DemoDocumentsPanel,
+  DemoRegistrationPanel,
 } from "./demo-panels";
 
 export type DemoTab =
@@ -73,7 +74,7 @@ export type DemoTab =
   | "settings"
   | "support";
 
-type DemoView = DemoTab | "minutePreview" | "liveMeeting" | "minuteEditor";
+type DemoView = DemoTab | "minutePreview" | "liveMeeting" | "minuteEditor" | "registration";
 
 const NAV: { id: DemoTab; icon: typeof Home; labelKey: string }[] = [
   { id: "dashboard", icon: Home, labelKey: "dashboard" },
@@ -110,6 +111,7 @@ export function DemoApp({ locale }: { locale: string }) {
     onPreviewMinute: () => setView("minutePreview"),
     onLiveMeeting: () => setView("liveMeeting"),
     onMinuteEditor: () => setView("minuteEditor"),
+    onRegistration: () => setView("registration"),
   };
 
   const goToTab = (id: DemoTab) => {
@@ -145,6 +147,9 @@ export function DemoApp({ locale }: { locale: string }) {
           onPreviewMinute={() => setView("minutePreview")}
         />
       );
+    }
+    if (view === "registration") {
+      return <DemoRegistrationPanel locale={locale} />;
     }
 
     switch (view) {
@@ -187,7 +192,11 @@ export function DemoApp({ locale }: { locale: string }) {
     }
   };
 
-  const isSubView = view === "minutePreview" || view === "liveMeeting" || view === "minuteEditor";
+  const isSubView =
+    view === "minutePreview" ||
+    view === "liveMeeting" ||
+    view === "minuteEditor" ||
+    view === "registration";
 
   return (
     <div className="min-h-screen bg-gray-50">

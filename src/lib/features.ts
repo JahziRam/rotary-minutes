@@ -42,6 +42,13 @@ export interface ClubFeatureSet {
   integrationsEnabled: boolean;
   integrationsMenuVisible: boolean;
   pwaEnhancedEnabled: boolean;
+  eventsAdvancedEnabled: boolean;
+  eventsAdvancedMenuVisible: boolean;
+  fileManagerEnabled: boolean;
+  fileManagerMenuVisible: boolean;
+  documentSharingEnabled: boolean;
+  treasuryImportEnabled: boolean;
+  clubBackupEnabled: boolean;
   memberLimit: number | null;
 }
 
@@ -81,6 +88,13 @@ export const DEFAULT_FEATURES: ClubFeatureSet = {
   integrationsEnabled: false,
   integrationsMenuVisible: false,
   pwaEnhancedEnabled: true,
+  eventsAdvancedEnabled: false,
+  eventsAdvancedMenuVisible: false,
+  fileManagerEnabled: false,
+  fileManagerMenuVisible: false,
+  documentSharingEnabled: false,
+  treasuryImportEnabled: false,
+  clubBackupEnabled: false,
   memberLimit: null,
 };
 
@@ -124,6 +138,13 @@ function mapClubFeatures(
     integrationsEnabled: features.integrationsEnabled ?? d.integrationsEnabled,
     integrationsMenuVisible: features.integrationsMenuVisible ?? d.integrationsMenuVisible,
     pwaEnhancedEnabled: features.pwaEnhancedEnabled ?? d.pwaEnhancedEnabled,
+    eventsAdvancedEnabled: features.eventsAdvancedEnabled ?? d.eventsAdvancedEnabled,
+    eventsAdvancedMenuVisible: features.eventsAdvancedMenuVisible ?? d.eventsAdvancedMenuVisible,
+    fileManagerEnabled: features.fileManagerEnabled ?? d.fileManagerEnabled,
+    fileManagerMenuVisible: features.fileManagerMenuVisible ?? d.fileManagerMenuVisible,
+    documentSharingEnabled: features.documentSharingEnabled ?? d.documentSharingEnabled,
+    treasuryImportEnabled: features.treasuryImportEnabled ?? d.treasuryImportEnabled,
+    clubBackupEnabled: features.clubBackupEnabled ?? d.clubBackupEnabled,
     memberLimit: features.memberLimit,
   };
 }

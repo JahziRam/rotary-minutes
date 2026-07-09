@@ -6,6 +6,7 @@ export const DEMO_CLUB = {
   id: "demo-club",
   name: "Rotary Club de Paris",
   slug: DEMO_CLUB_SLUG,
+  type: "ROTARY" as const,
   meetingLocation: "Hôtel Lutetia, 45 Bd Raspail",
   meetingDay: "Mardi",
   meetingTime: "12:30",
@@ -94,15 +95,49 @@ export const DEMO_STATS = {
   annualAttendance: 82,
   openActions: 5,
   scheduledEmails: 2,
-  notificationCount: 3,
+  notificationCount: 4,
+  pendingJoinCount: 2,
   mandateLabel: "2025-2026",
 };
 
 export const DEMO_NOTIFICATIONS = [
+  { id: "n0", title: "Demande d'adhésion", message: "Thomas Girard souhaite rejoindre le club", time: "Il y a 45 min", type: "join" },
   { id: "n1", title: "PV en attente de validation", message: "PV Commission International — 24 juin 2026", time: "Il y a 2 h", type: "review" },
   { id: "n2", title: "Réunion demain", message: "Réunion statutaire — Hôtel Lutetia, 12h30", time: "Il y a 1 j", type: "meeting" },
   { id: "n3", title: "Action assignée", message: "Publier le calendrier des événements — Sophie Leroy", time: "Il y a 3 j", type: "action" },
 ];
+
+export const DEMO_PENDING_JOIN_REQUESTS = [
+  {
+    id: "jr1",
+    firstName: "Thomas",
+    lastName: "Girard",
+    email: "t.girard@email.fr",
+    requestedAt: "2026-07-09T10:15:00",
+  },
+  {
+    id: "jr2",
+    firstName: "Émilie",
+    lastName: "Rousseau",
+    email: "e.rousseau@email.fr",
+    requestedAt: "2026-07-08T16:40:00",
+  },
+];
+
+export const DEMO_PUBLIC_CLUBS = [
+  { id: "c1", label: "Rotary Club de Paris — Paris, France", type: "ROTARY" as const },
+  { id: "c2", label: "Rotary Club de Lyon — Lyon, France", type: "ROTARY" as const },
+  { id: "c3", label: "Rotaract Paris Opéra — Paris, France", type: "ROTARACT" as const },
+  { id: "c4", label: "Rotary Club de Marseille — Marseille, France", type: "ROTARY" as const },
+];
+
+export const DEMO_SUBSCRIPTION = {
+  plan: "TRIAL",
+  planLabelFr: "Essai gratuit",
+  planLabelEn: "Free trial",
+  trialDaysLeft: 11,
+  rotaractDiscountPercent: 15,
+};
 
 export const DEMO_DUES = [
   { id: "d1", member: "Jean Dupont", amount: 250, currency: "EUR", fiscalYear: "2025-2026", dueDate: "2026-03-31", status: "PAID", paidAt: "2026-01-15", plan: "ANNUAL" as const, invoiceNumber: "INV-2025-0001", receiptNumber: "REC-2025-0001" },
@@ -146,10 +181,11 @@ export const DEMO_ATTENDANCE_MONTHS = [
 ];
 
 export const DEMO_DISTRICT_CLUBS = [
-  { name: "Rotary Club de Paris", members: 42, attendance: 82, minutes: 11 },
-  { name: "Rotary Club de Lyon", members: 38, attendance: 79, minutes: 9 },
-  { name: "Rotary Club de Marseille", members: 35, attendance: 76, minutes: 8 },
-  { name: "Moyenne district", members: 38, attendance: 79, minutes: 9, isAvg: true },
+  { name: "Rotary Club de Paris", members: 42, attendance: 82, minutes: 11, type: "ROTARY" as const },
+  { name: "Rotary Club de Lyon", members: 38, attendance: 79, minutes: 9, type: "ROTARY" as const },
+  { name: "Rotaract Paris Opéra", members: 28, attendance: 88, minutes: 7, type: "ROTARACT" as const },
+  { name: "Rotary Club de Marseille", members: 35, attendance: 76, minutes: 8, type: "ROTARY" as const },
+  { name: "Moyenne district", members: 36, attendance: 81, minutes: 9, isAvg: true },
 ];
 
 export const DEMO_LIVE_AGENDA = [
@@ -192,11 +228,18 @@ export const DEMO_CLUB_EVENTS = [
   { id: "ev2", title: "Conférence Paix & éducation", date: "2026-09-12", location: "Maison de l'UNESCO", registrations: 12, capacity: 40, fee: 0, status: "OPEN" },
 ];
 
+export const DEMO_DOCUMENT_FOLDERS = [
+  { id: "f1", name: "Gouvernance", documentCount: 2, parentId: null as string | null },
+  { id: "f2", name: "PV archivés", documentCount: 3, parentId: null as string | null },
+  { id: "f3", name: "Budget 2025-2026", documentCount: 1, parentId: "f1" },
+];
+
 export const DEMO_DOCUMENTS = [
-  { id: "doc1", title: "Statuts du club", category: "STATUTES", updatedAt: "2024-09-01" },
-  { id: "doc2", title: "Budget 2025-2026", category: "BUDGET", updatedAt: "2025-07-15" },
-  { id: "doc3", title: "PV Réunion statutaire — 1er juillet 2026", category: "MINUTES", updatedAt: "2026-07-02" },
-  { id: "doc4", title: "Mandat président 2025-2026", category: "MANDATE", updatedAt: "2025-07-01" },
+  { id: "doc1", title: "Statuts du club", category: "STATUTES", updatedAt: "2024-09-01", fileSizeKb: 420, folderId: "f1", shared: false },
+  { id: "doc2", title: "Budget 2025-2026", category: "BUDGET", updatedAt: "2025-07-15", fileSizeKb: 890, folderId: "f3", shared: false },
+  { id: "doc3", title: "PV Réunion statutaire — 1er juillet 2026", category: "MINUTES", updatedAt: "2026-07-02", fileSizeKb: 310, folderId: "f2", shared: true },
+  { id: "doc4", title: "Mandat président 2025-2026", category: "MANDATE", updatedAt: "2025-07-01", fileSizeKb: 156, folderId: "f1", shared: false },
+  { id: "doc5", title: "Rapport trésorerie Q2", category: "TREASURY", updatedAt: "2026-07-05", fileSizeKb: 245, folderId: null, shared: false },
 ];
 
 export const DEMO_PORTAL = {
@@ -238,21 +281,31 @@ export function getDemoDues(locale: string) {
   }));
 }
 
+export function getDemoPendingJoinRequests(locale: string) {
+  const isFr = locale === "fr";
+  return DEMO_PENDING_JOIN_REQUESTS.map((r) => ({
+    ...r,
+    requestedLabel: isFr ? "Demandé récemment" : "Requested recently",
+  }));
+}
+
 export function getDemoData(locale: string) {
   const isFr = locale === "fr";
+  const notificationEn: Record<string, { title: string; message: string; time: string }> = {
+    n0: { title: "Join request", message: "Thomas Girard wants to join the club", time: "45 min ago" },
+    n1: { title: "Minutes pending review", message: "International Commission minutes — Jun 24, 2026", time: "2 h ago" },
+    n2: { title: "Meeting tomorrow", message: "Statutory meeting — Hôtel Lutetia, 12:30 PM", time: "1 d ago" },
+    n3: { title: "Action assigned", message: "Publish event calendar — Sophie Leroy", time: "3 d ago" },
+  };
   return {
+    pendingJoinRequests: getDemoPendingJoinRequests(locale),
     notifications: isFr
       ? DEMO_NOTIFICATIONS
       : DEMO_NOTIFICATIONS.map((n) => ({
           ...n,
-          title: n.id === "n1" ? "Minutes pending review" : n.id === "n2" ? "Meeting tomorrow" : "Action assigned",
-          message:
-            n.id === "n1"
-              ? "International Commission minutes — Jun 24, 2026"
-              : n.id === "n2"
-                ? "Statutory meeting — Hôtel Lutetia, 12:30 PM"
-                : "Publish event calendar — Sophie Leroy",
-          time: n.id === "n1" ? "2 h ago" : n.id === "n2" ? "1 d ago" : "3 d ago",
+          title: notificationEn[n.id]?.title ?? n.title,
+          message: notificationEn[n.id]?.message ?? n.message,
+          time: notificationEn[n.id]?.time ?? n.time,
         })),
     openActions: isFr
       ? DEMO_OPEN_ACTIONS

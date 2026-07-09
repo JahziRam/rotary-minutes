@@ -14,6 +14,11 @@ import { hasRolePermission } from "@/lib/roles";
 import { getMinuteStatusLabel, getMinuteStatusVariant } from "@/lib/minute-status";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { StatCard } from "@/components/dashboard/stat-card";
+import {
+  PendingJoinRequests,
+  type PendingJoinRequest,
+} from "@/components/dashboard/pending-join-requests";
+import { getPendingJoinRequests } from "@/actions/registration";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -72,9 +77,24 @@ export default async function DashboardPage({
     ? isFeatureVisibleInUi(ctx.features, "liveMeetings", ctx.isSuperAdmin)
     : true;
 
+  const canManageMembers =
+    ctx && !ctx.isSuperAdmin
+      ? await hasRolePermission(ctx.role, "members.manage", false)
+      : ctx?.isSuperAdmin ?? false;
+  let pendingRequests: PendingJoinRequest[] = [];
+  if (ctx && canManageMembers) {
+    const pendingJoinResult = await getPendingJoinRequests();
+    if (pendingJoinResult && "requests" in pendingJoinResult) {
+      pendingRequests = pendingJoinResult.requests ?? [];
+    }
+  }
+
   return (
     <AppShellServer title={t("nav.dashboard")}>
       <div className="space-y-6">
+        {pendingRequests.length > 0 && (
+          <PendingJoinRequests requests={pendingRequests} />
+        )}
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
             {t("dashboard.welcome")}{userName ? `, ${userName}` : ""}

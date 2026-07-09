@@ -12,8 +12,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Toast } from "@/components/ui/toast";
 import { createEntry, deleteEntry, updateEntry } from "@/actions/treasury";
 import { TreasuryExtras } from "@/components/treasury/treasury-extras";
+import { TreasuryImportPanel } from "@/components/treasury/treasury-import-panel";
 import type { getTreasuryDashboardData } from "@/lib/queries/treasury";
-import type { BudgetEntryType } from "@/generated/prisma/client";
+import type { BudgetEntryType, TreasuryCollectionStatus } from "@/generated/prisma/client";
 
 type DashboardData = Awaited<ReturnType<typeof getTreasuryDashboardData>>;
 
@@ -33,6 +34,8 @@ type EntryRow = {
   actionId: string | null;
   actionTitle: string | null;
   reference: string | null;
+  collectionStatus?: TreasuryCollectionStatus;
+  eventRegistrationId?: string | null;
 };
 
 type Category = { id: string; name: string; type: BudgetEntryType };
@@ -50,6 +53,7 @@ export function TreasuryPanel({
   fiscalYear,
   dashboard,
   allCategories = [],
+  treasuryImportEnabled = false,
 }: {
   entries: EntryRow[];
   categories: Category[];
@@ -67,6 +71,7 @@ export function TreasuryPanel({
     type: BudgetEntryType;
     isActive: boolean;
   }>;
+  treasuryImportEnabled?: boolean;
 }) {
   const t = useTranslations("treasury");
   const router = useRouter();
@@ -84,6 +89,7 @@ export function TreasuryPanel({
     description: "",
     categoryId: "",
     eventId: "",
+    collectionStatus: "COLLECTED" as TreasuryCollectionStatus,
   });
   const [editForm, setEditForm] = useState({
     type: "EXPENSE" as BudgetEntryType,
@@ -92,6 +98,7 @@ export function TreasuryPanel({
     description: "",
     categoryId: "",
     eventId: "",
+    collectionStatus: "COLLECTED" as TreasuryCollectionStatus,
   });
   const dateLocale = locale === "fr" ? fr : enUS;
 
@@ -157,6 +164,7 @@ export function TreasuryPanel({
       description: entry.description,
       categoryId: entry.categoryId ?? "",
       eventId: entry.eventId ?? "",
+      collectionStatus: entry.collectionStatus ?? "COLLECTED",
     });
   }
 
@@ -379,6 +387,22 @@ export function TreasuryPanel({
                 </option>
               ))}
             </select>
+            {form.type === "INCOME" && (
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={form.collectionStatus === "RECEIVABLE"}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      collectionStatus: e.target.checked ? "RECEIVABLE" : "COLLECTED",
+                    })
+                  }
+                  className="rounded"
+                />
+                {t("receivable")}
+              </label>
+            )}
             <Button
               size="sm"
               variant="gold"
@@ -393,6 +417,7 @@ export function TreasuryPanel({
                       description: form.description,
                       categoryId: form.categoryId || undefined,
                       eventId: form.eventId || undefined,
+                      collectionStatus: form.type === "INCOME" ? form.collectionStatus : undefined,
                     }),
                   t("entryCreated"),
                   () => setShowForm(false)
@@ -466,6 +491,22 @@ export function TreasuryPanel({
                 </option>
               ))}
             </select>
+            {editForm.type === "INCOME" && (
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={editForm.collectionStatus === "RECEIVABLE"}
+                  onChange={(e) =>
+                    setEditForm({
+                      ...editForm,
+                      collectionStatus: e.target.checked ? "RECEIVABLE" : "COLLECTED",
+                    })
+                  }
+                  className="rounded"
+                />
+                {t("receivable")}
+              </label>
+            )}
             <div className="flex gap-2">
               <Button
                 size="sm"
@@ -481,6 +522,8 @@ export function TreasuryPanel({
                         description: editForm.description,
                         categoryId: editForm.categoryId || null,
                         eventId: editForm.eventId || null,
+                        collectionStatus:
+                          editForm.type === "INCOME" ? editForm.collectionStatus : undefined,
                       }),
                     t("entryUpdated"),
                     () => setEditingId(null)
@@ -532,6 +575,11 @@ export function TreasuryPanel({
                       <p className="font-medium text-gray-900">{entry.description}</p>
                       {entry.categoryName && (
                         <p className="text-xs text-gray-400">{entry.categoryName}</p>
+                      )}
+                      {entry.collectionStatus === "RECEIVABLE" && (
+                        <Badge variant="warning" className="mt-1">
+                          {t("receivableBadge")}
+                        </Badge>
                       )}
                     </td>
                     <td className="px-4 py-3 font-medium">
@@ -596,13 +644,16 @@ export function TreasuryPanel({
           </table>
         </div>
 
-        <TreasuryExtras
-          allCategories={allCategories}
-          canManage={canManage}
-          locale={locale}
-          exportFrom={dashboard.exportFrom}
-          exportTo={dashboard.exportTo}
-        />
+        <div className="grid lg:grid-cols-2 gap-4">
+          {treasuryImportEnabled && <TreasuryImportPanel canManage={canManage} />}
+          <TreasuryExtras
+            allCategories={allCategories}
+            canManage={canManage}
+            locale={locale}
+            exportFrom={dashboard.exportFrom}
+            exportTo={dashboard.exportTo}
+          />
+        </div>
       </div>
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
     </>

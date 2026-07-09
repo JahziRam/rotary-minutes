@@ -36,9 +36,12 @@ export default function LoginPage() {
         return;
       }
 
-      const dest = result.isSuperAdmin
-        ? `/${locale}/admin`
-        : `/${locale}/dashboard`;
+      let dest = `/${locale}/dashboard`;
+      if (result.isSuperAdmin) {
+        dest = `/${locale}/admin`;
+      } else if (result.hasPending && !result.hasApproved) {
+        dest = `/${locale}/pending-approval`;
+      }
       router.push(dest);
       router.refresh();
     } catch {

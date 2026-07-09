@@ -10,8 +10,8 @@ import {
 
 const basePlan: PlanConfigData = {
   plan: "PROFESSIONAL",
-  nameFr: "Professionnel",
-  nameEn: "Professional",
+  nameFr: "Active",
+  nameEn: "Active",
   descriptionFr: "Desc FR",
   descriptionEn: "Desc EN",
   priceMonthly: 39,
@@ -41,7 +41,7 @@ describe("computeAnnualPerMonth", () => {
 describe("toPublicPlan", () => {
   it("localizes fields for French", () => {
     const plan = toPublicPlan(basePlan, "fr", 20);
-    expect(plan.name).toBe("Professionnel");
+    expect(plan.name).toBe("Active");
     expect(plan.features).toEqual(["PV", "Trésorerie"]);
     expect(plan.priceAnnual).toBe(374);
     expect(plan.annualSavings).toBe(94);
@@ -49,7 +49,7 @@ describe("toPublicPlan", () => {
 
   it("localizes fields for English", () => {
     const plan = toPublicPlan(basePlan, "en", 20);
-    expect(plan.name).toBe("Professional");
+    expect(plan.name).toBe("Active");
     expect(plan.features).toEqual(["Minutes", "Treasury"]);
   });
 });

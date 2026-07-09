@@ -13,6 +13,9 @@ import { getGdprRequests } from "@/actions/gdpr";
 import { clubHasApiAccess } from "@/lib/api-auth";
 import { getPreferences } from "@/actions/notification-preferences";
 import { NotificationPreferencesForm } from "@/components/settings/notification-preferences-form";
+import { getPlanLabel } from "@/lib/feature-gate";
+import { ClubBackupPanel } from "@/components/settings/club-backup-panel";
+import { listClubBackups } from "@/actions/backup";
 
 export default async function SettingsPage({
   params,
@@ -43,6 +46,10 @@ export default async function SettingsPage({
     club &&
     isFeatureEnabled(ctx!.features, "smartNotificationsEnabled", ctx!.isSuperAdmin);
   const prefsResult = smartNotificationsEnabled ? await getPreferences() : null;
+  const clubBackupEnabled =
+    club && isFeatureEnabled(ctx!.features, "clubBackupEnabled", ctx!.isSuperAdmin);
+  const backupsResult =
+    clubBackupEnabled && canManageSettings ? await listClubBackups() : null;
 
   return (
     <AppShellServer title={t("settings.title")}>
@@ -81,7 +88,7 @@ export default async function SettingsPage({
                 <div className="flex items-center justify-between p-4 rounded-lg bg-gold/10 border border-gold/20">
                   <div>
                     <p className="font-semibold text-gray-900">
-                      {club.subscription?.plan ?? "TRIAL"}
+                      {getPlanLabel(club.subscription?.plan, locale)}
                     </p>
                     <p className="text-sm text-gray-500">
                       Statut : {club.subscription?.status ?? "TRIALING"}
@@ -140,6 +147,13 @@ export default async function SettingsPage({
                   />
                 </CardContent>
               </Card>
+            )}
+
+            {canManageSettings && clubBackupEnabled && backupsResult && "backups" in backupsResult && (
+              <ClubBackupPanel
+                backups={backupsResult.backups}
+                canManage={canManageSettings}
+              />
             )}
 
             {canManageSettings && (

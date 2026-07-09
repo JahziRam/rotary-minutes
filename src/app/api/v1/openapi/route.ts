@@ -6,7 +6,7 @@ const spec = {
     title: "Rotary Minutes API",
     version: "1.0.0",
     description:
-      "REST API for Enterprise clubs. Authenticate with Authorization: Bearer rm_live_...",
+      "REST API for High level clubs. Authenticate with Authorization: Bearer rm_live_...",
   },
   servers: [{ url: "/api/v1" }],
   paths: {

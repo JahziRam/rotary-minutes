@@ -4,6 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import { Camera, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MAX_IMAGE_BYTES } from "@/lib/image-storage";
+import { validateUploadFileSize } from "@/lib/upload-limits";
 
 type UploadResult = { success?: true; error?: string };
 
@@ -36,6 +37,10 @@ export function ImageUpload({
 
   const handleFile = (file: File) => {
     setError(null);
+    if (validateUploadFileSize(file.size) === "TOO_LARGE") {
+      setError("Fichier trop volumineux (max 5 Mo)");
+      return;
+    }
     if (file.size > MAX_IMAGE_BYTES) {
       setError("Image trop volumineuse (max 512 Ko)");
       return;

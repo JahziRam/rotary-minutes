@@ -64,6 +64,7 @@ export default async function TreasuryPage({
           type: c.type,
           isActive: c.isActive,
         }))}
+        treasuryImportEnabled={isFeatureEnabled(ctx.features, "treasuryImportEnabled", ctx.isSuperAdmin)}
       />
     </AppShellServer>
   );

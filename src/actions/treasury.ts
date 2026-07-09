@@ -14,7 +14,7 @@ import {
   type TreasuryFilters,
 } from "@/lib/queries/treasury";
 import { buildTreasuryReportPdfBuffer } from "@/lib/pdf/build-treasury-pdf";
-import type { BudgetEntryType, PaymentMethod } from "@/generated/prisma/client";
+import type { BudgetEntryType, PaymentMethod, TreasuryCollectionStatus } from "@/generated/prisma/client";
 
 function revalidateTreasury() {
   for (const loc of ["fr", "en"]) {
@@ -105,6 +105,8 @@ export async function listBudget(filters?: {
       actionTitle: e.action?.title ?? null,
       paymentMethod: e.paymentMethod,
       reference: e.reference,
+      collectionStatus: e.collectionStatus,
+      eventRegistrationId: e.eventRegistrationId,
       recordedBy: e.recordedBy
         ? `${e.recordedBy.firstName} ${e.recordedBy.lastName}`
         : null,
@@ -123,6 +125,7 @@ export async function createEntry(data: {
   paymentMethod?: PaymentMethod;
   reference?: string;
   currency?: string;
+  collectionStatus?: TreasuryCollectionStatus;
 }) {
   const auth = await requireTreasuryManage();
   if (auth.error) return auth;
@@ -146,6 +149,7 @@ export async function createEntry(data: {
       actionId: data.actionId || null,
       paymentMethod: data.paymentMethod || null,
       reference: data.reference || null,
+      collectionStatus: data.collectionStatus ?? "COLLECTED",
       recordedById: ctx.userId,
     },
   });
@@ -185,6 +189,7 @@ export async function updateEntry(
     actionId?: string | null;
     paymentMethod?: PaymentMethod | null;
     reference?: string | null;
+    collectionStatus?: TreasuryCollectionStatus;
   }
 ) {
   const auth = await requireTreasuryManage();
@@ -208,6 +213,7 @@ export async function updateEntry(
       ...(data.actionId !== undefined && { actionId: data.actionId }),
       ...(data.paymentMethod !== undefined && { paymentMethod: data.paymentMethod }),
       ...(data.reference !== undefined && { reference: data.reference }),
+      ...(data.collectionStatus !== undefined && { collectionStatus: data.collectionStatus }),
     },
   });
 

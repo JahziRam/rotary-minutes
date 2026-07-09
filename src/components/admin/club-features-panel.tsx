@@ -32,6 +32,11 @@ const FEATURE_MODULES: Array<{
   { enabled: "smartNotificationsEnabled", menuVisible: "smartNotificationsEnabled", label: "Notifications intelligentes", inNav: false },
   { enabled: "integrationsEnabled", menuVisible: "integrationsMenuVisible", label: "Intégrations", inNav: true },
   { enabled: "pwaEnhancedEnabled", menuVisible: "pwaEnhancedEnabled", label: "PWA avancée", inNav: false },
+  { enabled: "eventsAdvancedEnabled", menuVisible: "eventsAdvancedMenuVisible", label: "Événements avancés (multi-billets, tarifs)", inNav: false },
+  { enabled: "fileManagerEnabled", menuVisible: "fileManagerMenuVisible", label: "Gestionnaire de fichiers", inNav: true },
+  { enabled: "documentSharingEnabled", menuVisible: "documentSharingEnabled", label: "Partage documents en ligne", inNav: false },
+  { enabled: "treasuryImportEnabled", menuVisible: "treasuryImportEnabled", label: "Import trésorerie CSV", inNav: false },
+  { enabled: "clubBackupEnabled", menuVisible: "clubBackupEnabled", label: "Sauvegarde club", inNav: false },
 ];
 
 const API_ACCESS_KEY = "apiAccessEnabled" as const;

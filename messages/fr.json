@@ -70,7 +70,47 @@
     "trialInfo": "Essai gratuit de 14 jours, sans carte bancaire",
     "invalidCredentials": "Email ou mot de passe incorrect",
     "loginError": "Erreur de connexion. Réessayez ou contactez le support.",
-    "loggingIn": "Connexion en cours…"
+    "loggingIn": "Connexion en cours…",
+    "registration": {
+      "modeClub": "Inscrire un club",
+      "modeMember": "Rejoindre en tant que membre",
+      "clubTypeLabel": "Type de club",
+      "rotary": "Club Rotary",
+      "rotaract": "Club Rotaract",
+      "rotaractDiscount": "Réduction de {percent} % sur l'abonnement pour les clubs Rotaract",
+      "city": "Ville",
+      "country": "Pays",
+      "selectClubLabel": "Choisir votre club",
+      "searchClub": "Rechercher un club…",
+      "noClubsFound": "Aucun club trouvé",
+      "memberApprovalHint": "Un administrateur du club devra valider votre inscription.",
+      "memberTrialHint": "Rejoignez un club déjà enregistré sur la plateforme",
+      "referral": "Parrainage : {code}",
+      "errors": {
+        "emailExists": "Cet email est déjà utilisé",
+        "clubExists": "Un club avec ce nom existe déjà dans cette ville",
+        "clubNotFound": "Club introuvable",
+        "membershipPending": "Votre demande est déjà en attente de validation",
+        "membershipRejected": "Votre demande a été refusée. Contactez l'administrateur du club.",
+        "alreadyMember": "Vous êtes déjà membre de ce club",
+        "memberExistsInClub": "Un membre avec cet email existe déjà dans ce club",
+        "selectClub": "Veuillez sélectionner un club",
+        "passwordMismatch": "Les mots de passe ne correspondent pas",
+        "generic": "Erreur lors de l'inscription"
+      }
+    },
+    "pendingApproval": {
+      "title": "Inscription en attente",
+      "description": "Votre demande pour rejoindre {clubName} a été envoyée. Un administrateur du club doit l'approuver avant que vous puissiez accéder au tableau de bord.",
+      "hint": "Vous recevrez une notification dès que votre inscription sera validée.",
+      "logout": "Se déconnecter"
+    },
+    "pendingRequests": {
+      "title": "{count, plural, one {# demande d'adhésion} other {# demandes d'adhésion}}",
+      "approve": "Approuver",
+      "reject": "Refuser",
+      "error": "Impossible de traiter la demande"
+    }
   },
   "dashboard": {
     "welcome": "Bienvenue",
@@ -179,6 +219,7 @@
     "firstName": "Prénom",
     "lastName": "Nom",
     "phone": "Téléphone",
+    "registrationNumber": "N° d'immatriculation",
     "joinDate": "Date d'entrée",
     "sponsor": "Parrain Rotary",
     "commission": "Commission",
@@ -282,6 +323,20 @@
     "cancelEdit": "Annuler",
     "entryUpdated": "Opération mise à jour",
     "entryCount": "{count} opération(s)",
+    "receivable": "À recouvrer",
+    "receivableBadge": "À recouvrer",
+    "importTitle": "Import trésorerie",
+    "importHint": "Importez des opérations depuis un fichier CSV ou Excel (.xlsx), max 5 Mo. Téléchargez le modèle pour respecter le format attendu.",
+    "downloadTemplate": "Modèle CSV",
+    "importFile": "Importer un fichier",
+    "importSuccess": "{count} opération(s) importée(s)",
+    "importErrors": "erreur(s)",
+    "importError": {
+      "EMPTY_FILE": "Fichier vide",
+      "INVALID_HEADER": "En-têtes invalides",
+      "TOO_LARGE": "Fichier trop volumineux (max 5 Mo)",
+      "GENERIC": "Erreur d'import"
+    },
     "memberPortal": {
       "title": "Cotisations",
       "viewDues": "Gérer les cotisations",
@@ -749,7 +804,7 @@
     "title": "Intégrations",
     "cardDescription": "Clés API REST et webhooks sortants pour connecter vos outils.",
     "manage": "Gérer les intégrations",
-    "upgradeRequired": "L'accès API est réservé au plan Enterprise ou activé par le Super Admin.",
+    "upgradeRequired": "L'accès API est réservé au plan High level ou activé par le Super Admin.",
     "upgradeCta": "Voir les offres",
     "docsIntro": "Documentation OpenAPI :",
     "apiKey": {
@@ -1098,7 +1153,7 @@
       "badge": "Modules inclus selon l'offre",
       "title": "Bien plus que des procès-verbaux",
       "subtitle": "Des briques modulaires activées avec votre abonnement — sans complexifier le quotidien du secrétariat.",
-      "note": "Chaque formule inclut un socle essentiel. Les modules avancés s'ajoutent avec Professional et Enterprise.",
+      "note": "Chaque formule inclut un socle essentiel. Les modules avancés s'ajoutent avec Active et High level.",
       "finance": {
         "title": "Finances club",
         "desc": "Cotisations, trésorerie et rapports trésorier PDF."
@@ -1117,7 +1172,7 @@
       },
       "advanced": {
         "title": "Gouvernance & district",
-        "desc": "Archives, mandats, intégrations et vue district (Enterprise)."
+        "desc": "Archives, mandats, intégrations et vue district (High level)."
       }
     }
   },
@@ -1141,7 +1196,7 @@
     "meetingDay": "Réunion",
     "location": "Lieu",
     "interactiveNotice": "Explorez l'interface réelle : tableau de bord, membres, PV et emails. Cliquez sur un PV pour voir l'aperçu complet.",
-    "fullDemoNotice": "Démo complète en lecture seule — explorez toutes les fonctionnalités. Les données ne peuvent pas être modifiées. Inscrivez-vous pour utiliser votre propre club.",
+    "fullDemoNotice": "Démo complète en lecture seule — inscription membre/club, validation des adhésions, documents multi-fichiers (max 10 × 5 Mo), réduction Rotaract. Inscrivez-vous pour utiliser votre propre club.",
     "backToDemo": "Retour à la démo",
     "minutesList": "Liste des procès-verbaux",
     "previewMinute": "Voir l'aperçu du PV",
@@ -1193,7 +1248,33 @@
     "duesOverdue": "En retard",
     "recordPayment": "Enregistrer un paiement",
     "sendDuesReminder": "Rappel cotisation",
-    "exportDues": "Exporter les cotisations"
+    "exportDues": "Exporter les cotisations",
+    "pendingJoinTitle": "{count, plural, one {# demande d'adhésion} other {# demandes d'adhésion}}",
+    "approveJoin": "Approuver",
+    "rejectJoin": "Refuser",
+    "registrationTeaserTitle": "Voir le parcours d'inscription membre / club",
+    "registrationTeaserHint": "Choix Rotary ou Rotaract, recherche de club, validation par l'administrateur.",
+    "registrationPanelTitle": "Parcours d'inscription",
+    "registrationPanelHint": "Les nouveaux utilisateurs choisissent de rejoindre un club existant ou d'en créer un.",
+    "registrationModeClub": "Inscrire un club",
+    "registrationModeMember": "Rejoindre en tant que membre",
+    "registrationSelectClub": "Choisir un club enregistré",
+    "registrationApprovalHint": "Un administrateur du club valide la demande depuis le tableau de bord.",
+    "registrationSubmit": "Créer mon compte",
+    "pendingApprovalTitle": "Inscription en attente",
+    "pendingApprovalHint": "Après inscription, l'utilisateur attend l'approbation de {clubName} avant d'accéder au tableau de bord.",
+    "registrationClubFlowTitle": "Inscription d'un nouveau club",
+    "registrationClubDuplicateHint": "Les doublons de club (même nom, ville et pays) sont automatiquement bloqués.",
+    "rotaractDiscountTitle": "Avantage clubs Rotaract",
+    "rotaractDiscountHint": "Réduction automatique de {percent} % sur l'abonnement pour tous les clubs Rotaract.",
+    "uploadLimitsHint": "Maximum 10 fichiers par envoi, 5 Mo par fichier.",
+    "documentUploadTitle": "Téléverser des documents",
+    "documentDropzone": "Glissez-déposez ou sélectionnez vos fichiers",
+    "documentMultiHint": "Jusqu'à {max} fichiers à la fois",
+    "documentUploadCta": "Téléverser",
+    "treasuryImportTitle": "Import trésorerie CSV / Excel",
+    "downloadImportTemplate": "Modèle CSV",
+    "importTreasuryFile": "Importer un fichier"
   },
   "caseStudies": {
     "title": "Témoignages clients",
@@ -1212,6 +1293,7 @@
     "linkAccount": "Lier mon compte",
     "linkSuccess": "Compte lié avec succès",
     "linkError": "Impossible de lier le compte",
+    "registrationNumber": "N° d'immatriculation",
     "contactSecretary": "Contactez le secrétaire du club pour associer votre compte à votre fiche membre.",
     "dues": "Cotisations",
     "attendance": "Présences",
@@ -1335,12 +1417,6 @@
     "paymentMethod": "Mode de paiement",
     "selectPayment": "Choisir…",
     "notes": "Notes",
-    "paymentMethods": {
-      "CASH": "Espèces",
-      "CHECK": "Chèque",
-      "STRIPE": "Stripe",
-      "MOBILE_MONEY": "Mobile money"
-    },
     "statuses": {
       "DRAFT": "Brouillon",
       "PUBLISHED": "Publié",
@@ -1352,6 +1428,50 @@
       "CONFIRMED": "Confirmé",
       "CANCELLED": "Annulé",
       "WAITLIST": "Liste d'attente"
+    },
+    "phone": "Téléphone",
+    "ticket": "Billet",
+    "reactivate": "Réactiver",
+    "reactivated": "Événement réactivé",
+    "edit": "Modifier",
+    "updated": "Événement mis à jour",
+    "advancedSettings": "Paramètres avancés",
+    "ticketQuantity": "Nombre de billets",
+    "priceTier": "Tarif",
+    "selectTickets": "Choisir les numéros de billet",
+    "markReceivable": "Marquer comme à recouvrer",
+    "registerMultiple": "Acheter {count} billets",
+    "ticketUnavailable": "Billet non disponible",
+    "priceTiersTitle": "Tarifs multiples",
+    "tierLabel": "Libellé du tarif",
+    "tierMaxQty": "Qté max.",
+    "addTier": "Ajouter un tarif",
+    "saveTiers": "Enregistrer les tarifs",
+    "tiersSaved": "Tarifs enregistrés",
+    "ticketNumbersTitle": "Numéros de billet",
+    "ticketNumbersInput": "Numéros (séparés par virgule ou ligne)",
+    "ticketLabelOptional": "Libellé commun (optionnel)",
+    "saveTickets": "Ajouter les billets",
+    "ticketsSaved": "Billets enregistrés",
+    "reserved": "réservé",
+    "paymentMethods": {
+      "CASH": "Espèces",
+      "CHECK": "Chèque",
+      "STRIPE": "Stripe",
+      "MOBILE_MONEY": "Mobile money",
+      "BANK_TRANSFER": "Virement"
+    }
+  },
+  "backup": {
+    "clubTitle": "Sauvegarde du club",
+    "clubDescription": "Exportez les données de votre club en JSON. Choisissez une sauvegarde complète (avec documents) ou base de données uniquement.",
+    "databaseOnly": "Base de données",
+    "fullBackup": "Sauvegarde complète",
+    "created": "Sauvegarde créée",
+    "failed": "Échec de la sauvegarde",
+    "scope": {
+      "FULL": "Complet",
+      "DATABASE_ONLY": "BDD"
     }
   },
   "documents": {
@@ -1367,15 +1487,29 @@
     "tags": "Tags",
     "tagsPlaceholder": "tag1, tag2",
     "file": "Fichier",
+    "uploadFiles": "Fichiers",
+    "uploadLimitsHint": "Maximum 10 fichiers par envoi, 5 Mo par fichier.",
     "save": "Enregistrer",
     "cancel": "Annuler",
     "uploaded": "Document téléversé",
+    "uploadedMultiple": "{count} documents téléversés",
+    "uploadedPartial": "{count} document(s) téléversé(s), {failed} en échec",
     "uploadError": "Erreur de téléversement",
     "fileTooLarge": "Fichier trop volumineux (max 5 Mo)",
+    "tooManyFiles": "Trop de fichiers (maximum {max} par envoi)",
     "invalidType": "Type de fichier non autorisé",
     "archived": "Document archivé",
     "noDocuments": "Aucun document",
     "download": "Télécharger",
+    "rootFolder": "Racine",
+    "newFolder": "Nouveau dossier",
+    "folderCreated": "Dossier créé",
+    "files": "fichiers",
+    "shared": "Partagé",
+    "shareEnabled": "Lien de partage copié",
+    "shareLinkCopied": "Lien copié dans le presse-papiers",
+    "shareDisabled": "Partage désactivé",
+    "stopShare": "Arrêter",
     "categories": {
       "STATUTES": "Statuts",
       "BUDGET": "Budget",

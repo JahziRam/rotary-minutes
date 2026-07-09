@@ -10,6 +10,7 @@ import { PlansEditor } from "@/components/admin/plans-editor";
 import { PromoCodesEditor } from "@/components/admin/promo-codes-editor";
 import { AddonsEditor } from "@/components/admin/addons-editor";
 import { CreditCard, Tag, Puzzle } from "lucide-react";
+import { getPlanLabel } from "@/lib/feature-gate";
 
 export default async function AdminSubscriptionsPage({
   params,
@@ -65,7 +66,7 @@ export default async function AdminSubscriptionsPage({
 
   return (
     <div className="space-y-6">
-      <SubscriptionBreakdown data={breakdown} />
+      <SubscriptionBreakdown data={breakdown} locale={locale} />
 
       <Card>
         <CardHeader>
@@ -132,7 +133,7 @@ export default async function AdminSubscriptionsPage({
                   subscriptions.map((s) => (
                     <tr key={s.id}>
                       <td className="px-4 py-2">{s.club?.name ?? "—"} · {s.club?.city ?? ""}</td>
-                      <td className="px-4 py-2">{s.plan}</td>
+                      <td className="px-4 py-2">{getPlanLabel(s.plan, locale)}</td>
                       <td className="px-4 py-2">
                         {s.billingInterval === "ANNUAL" ? "Annuel" : "Mensuel"}
                       </td>

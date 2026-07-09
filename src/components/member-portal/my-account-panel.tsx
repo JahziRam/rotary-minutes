@@ -29,6 +29,7 @@ type LinkedData = {
     email: string | null;
     position: string | null;
     photoUrl: string | null;
+    registrationNumber: string | null;
   };
   duesSummary: {
     fiscalYear: number;
@@ -156,6 +157,11 @@ export function MyAccountPanel({
           )}
           {member.email && (
             <p className="text-sm text-gray-500">{member.email}</p>
+          )}
+          {member.registrationNumber && (
+            <p className="text-sm text-gray-500">
+              {t("registrationNumber")}: {member.registrationNumber}
+            </p>
           )}
         </div>
       </div>

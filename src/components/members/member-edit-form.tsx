@@ -21,6 +21,7 @@ export function MemberEditForm({
     lastName: string;
     email: string | null;
     phone: string | null;
+    registrationNumber: string | null;
     position: string | null;
     birthday: Date | null;
     joinDate: Date | null;
@@ -63,6 +64,7 @@ export function MemberEditForm({
             lastName: fd.get("lastName") as string,
             email: (fd.get("email") as string) || undefined,
             phone: (fd.get("phone") as string) || undefined,
+            registrationNumber: (fd.get("registrationNumber") as string) || undefined,
             position: (fd.get("position") as string) || undefined,
             sponsorName: (fd.get("sponsorName") as string) || undefined,
             commissionId: (fd.get("commissionId") as string) || null,
@@ -89,6 +91,11 @@ export function MemberEditForm({
         <Input name="lastName" label={t("lastName")} defaultValue={member.lastName} required />
         <Input name="email" type="email" label="Email" defaultValue={member.email ?? ""} />
         <Input name="phone" label={t("phone")} defaultValue={member.phone ?? ""} />
+        <Input
+          name="registrationNumber"
+          label={t("registrationNumber")}
+          defaultValue={member.registrationNumber ?? ""}
+        />
         <Input name="position" label={t("position")} defaultValue={member.position ?? ""} />
         <Input name="sponsorName" label={t("sponsor")} defaultValue={member.sponsorName ?? ""} />
         <Input

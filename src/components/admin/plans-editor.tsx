@@ -138,7 +138,10 @@ export function PlansEditor({
           action={(fd) => savePlan(plan.plan, fd)}
         >
           <div className="flex items-center justify-between gap-2">
-            <h3 className="font-semibold text-gray-900">{plan.plan}</h3>
+            <h3 className="font-semibold text-gray-900">
+              {locale === "fr" ? plan.nameFr : plan.nameEn}
+              <span className="ml-2 text-xs font-normal text-gray-400">({plan.plan})</span>
+            </h3>
             <div className="flex gap-3 text-sm">
               <label className="flex items-center gap-1.5">
                 <input type="checkbox" name="isActive" defaultChecked={plan.isActive} />

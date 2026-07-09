@@ -70,7 +70,47 @@
     "trialInfo": "14-day free trial, no credit card required",
     "invalidCredentials": "Incorrect email or password",
     "loginError": "Sign-in failed. Please try again or contact support.",
-    "loggingIn": "Signing in…"
+    "loggingIn": "Signing in…",
+    "registration": {
+      "modeClub": "Register a club",
+      "modeMember": "Join as a member",
+      "clubTypeLabel": "Club type",
+      "rotary": "Rotary club",
+      "rotaract": "Rotaract club",
+      "rotaractDiscount": "{percent}% subscription discount for Rotaract clubs",
+      "city": "City",
+      "country": "Country",
+      "selectClubLabel": "Choose your club",
+      "searchClub": "Search for a club…",
+      "noClubsFound": "No clubs found",
+      "memberApprovalHint": "A club administrator must approve your registration.",
+      "memberTrialHint": "Join a club already registered on the platform",
+      "referral": "Referral: {code}",
+      "errors": {
+        "emailExists": "This email is already in use",
+        "clubExists": "A club with this name already exists in this city",
+        "clubNotFound": "Club not found",
+        "membershipPending": "Your request is already pending approval",
+        "membershipRejected": "Your request was rejected. Contact the club administrator.",
+        "alreadyMember": "You are already a member of this club",
+        "memberExistsInClub": "A member with this email already exists in this club",
+        "selectClub": "Please select a club",
+        "passwordMismatch": "Passwords do not match",
+        "generic": "Registration failed"
+      }
+    },
+    "pendingApproval": {
+      "title": "Registration pending",
+      "description": "Your request to join {clubName} has been submitted. A club administrator must approve it before you can access the dashboard.",
+      "hint": "You will receive a notification once your registration is approved.",
+      "logout": "Sign out"
+    },
+    "pendingRequests": {
+      "title": "{count, plural, one {# join request} other {# join requests}}",
+      "approve": "Approve",
+      "reject": "Reject",
+      "error": "Could not process the request"
+    }
   },
   "dashboard": {
     "welcome": "Welcome",
@@ -179,6 +219,7 @@
     "firstName": "First name",
     "lastName": "Last name",
     "phone": "Phone",
+    "registrationNumber": "Registration number",
     "joinDate": "Join date",
     "sponsor": "Rotary sponsor",
     "commission": "Commission",
@@ -282,6 +323,20 @@
     "cancelEdit": "Cancel",
     "entryUpdated": "Entry updated",
     "entryCount": "{count} entries",
+    "receivable": "Receivable",
+    "receivableBadge": "Receivable",
+    "importTitle": "Treasury import",
+    "importHint": "Import entries from CSV or Excel (.xlsx), max 5 MB. Download the template to match the expected format.",
+    "downloadTemplate": "CSV template",
+    "importFile": "Import file",
+    "importSuccess": "{count} entry(ies) imported",
+    "importErrors": "error(s)",
+    "importError": {
+      "EMPTY_FILE": "Empty file",
+      "INVALID_HEADER": "Invalid headers",
+      "TOO_LARGE": "File too large (max 5 MB)",
+      "GENERIC": "Import error"
+    },
     "memberPortal": {
       "title": "Membership dues",
       "viewDues": "Manage dues",
@@ -749,7 +804,7 @@
     "title": "Integrations",
     "cardDescription": "REST API keys and outbound webhooks to connect your tools.",
     "manage": "Manage integrations",
-    "upgradeRequired": "API access requires the Enterprise plan or Super Admin activation.",
+    "upgradeRequired": "API access requires the High level plan or Super Admin activation.",
     "upgradeCta": "View plans",
     "docsIntro": "OpenAPI documentation:",
     "apiKey": {
@@ -1098,7 +1153,7 @@
       "badge": "Modules included per plan",
       "title": "Much more than meeting minutes",
       "subtitle": "Modular building blocks activated with your subscription — without cluttering the secretary's daily workflow.",
-      "note": "Every plan includes a solid core. Advanced modules unlock with Professional and Enterprise.",
+      "note": "Every plan includes a solid core. Advanced modules unlock with Active and High level.",
       "finance": {
         "title": "Club finances",
         "desc": "Dues, treasury and treasurer PDF reports."
@@ -1117,7 +1172,7 @@
       },
       "advanced": {
         "title": "Governance & district",
-        "desc": "Archives, mandates, integrations and district view (Enterprise)."
+        "desc": "Archives, mandates, integrations and district view (High level)."
       }
     }
   },
@@ -1141,7 +1196,7 @@
     "meetingDay": "Meeting schedule",
     "location": "Location",
     "interactiveNotice": "Explore the real interface: dashboard, members, minutes and emails. Click a minute to see the full preview.",
-    "fullDemoNotice": "Full read-only demo — explore every feature. Data cannot be changed. Sign up to use your own club.",
+    "fullDemoNotice": "Full read-only demo — member/club signup, join approvals, multi-file uploads (max 10 × 5 MB), Rotaract discount. Sign up to use your own club.",
     "backToDemo": "Back to demo",
     "minutesList": "Minutes list",
     "previewMinute": "View minute preview",
@@ -1193,7 +1248,33 @@
     "duesOverdue": "Overdue",
     "recordPayment": "Record payment",
     "sendDuesReminder": "Dues reminder",
-    "exportDues": "Export dues"
+    "exportDues": "Export dues",
+    "pendingJoinTitle": "{count, plural, one {# join request} other {# join requests}}",
+    "approveJoin": "Approve",
+    "rejectJoin": "Reject",
+    "registrationTeaserTitle": "View member / club signup flow",
+    "registrationTeaserHint": "Choose Rotary or Rotaract, search for a club, admin approval required.",
+    "registrationPanelTitle": "Signup journey",
+    "registrationPanelHint": "New users either join an existing club or register a new one.",
+    "registrationModeClub": "Register a club",
+    "registrationModeMember": "Join as a member",
+    "registrationSelectClub": "Choose a registered club",
+    "registrationApprovalHint": "A club administrator approves the request from the dashboard.",
+    "registrationSubmit": "Create my account",
+    "pendingApprovalTitle": "Registration pending",
+    "pendingApprovalHint": "After signup, the user waits for {clubName} approval before accessing the dashboard.",
+    "registrationClubFlowTitle": "Register a new club",
+    "registrationClubDuplicateHint": "Duplicate clubs (same name, city and country) are automatically blocked.",
+    "rotaractDiscountTitle": "Rotaract club benefit",
+    "rotaractDiscountHint": "Automatic {percent}% subscription discount for all Rotaract clubs.",
+    "uploadLimitsHint": "Up to 10 files per upload, 5 MB per file.",
+    "documentUploadTitle": "Upload documents",
+    "documentDropzone": "Drag and drop or select your files",
+    "documentMultiHint": "Up to {max} files at once",
+    "documentUploadCta": "Upload",
+    "treasuryImportTitle": "Treasury CSV / Excel import",
+    "downloadImportTemplate": "CSV template",
+    "importTreasuryFile": "Import file"
   },
   "caseStudies": {
     "title": "Customer stories",
@@ -1212,6 +1293,7 @@
     "linkAccount": "Link my account",
     "linkSuccess": "Account linked successfully",
     "linkError": "Unable to link account",
+    "registrationNumber": "Registration number",
     "contactSecretary": "Contact your club secretary to link your account to your member profile.",
     "dues": "Dues",
     "attendance": "Attendance",
@@ -1335,12 +1417,6 @@
     "paymentMethod": "Payment method",
     "selectPayment": "Select…",
     "notes": "Notes",
-    "paymentMethods": {
-      "CASH": "Cash",
-      "CHECK": "Check",
-      "STRIPE": "Stripe",
-      "MOBILE_MONEY": "Mobile money"
-    },
     "statuses": {
       "DRAFT": "Draft",
       "PUBLISHED": "Published",
@@ -1352,6 +1428,50 @@
       "CONFIRMED": "Confirmed",
       "CANCELLED": "Cancelled",
       "WAITLIST": "Waitlist"
+    },
+    "phone": "Phone",
+    "ticket": "Ticket",
+    "reactivate": "Reactivate",
+    "reactivated": "Event reactivated",
+    "edit": "Edit",
+    "updated": "Event updated",
+    "advancedSettings": "Advanced settings",
+    "ticketQuantity": "Number of tickets",
+    "priceTier": "Price tier",
+    "selectTickets": "Select ticket numbers",
+    "markReceivable": "Mark as receivable",
+    "registerMultiple": "Buy {count} tickets",
+    "ticketUnavailable": "Ticket unavailable",
+    "priceTiersTitle": "Multiple price tiers",
+    "tierLabel": "Tier label",
+    "tierMaxQty": "Max qty",
+    "addTier": "Add tier",
+    "saveTiers": "Save tiers",
+    "tiersSaved": "Tiers saved",
+    "ticketNumbersTitle": "Ticket numbers",
+    "ticketNumbersInput": "Numbers (comma or line separated)",
+    "ticketLabelOptional": "Common label (optional)",
+    "saveTickets": "Add tickets",
+    "ticketsSaved": "Tickets saved",
+    "reserved": "reserved",
+    "paymentMethods": {
+      "CASH": "Cash",
+      "CHECK": "Check",
+      "STRIPE": "Stripe",
+      "MOBILE_MONEY": "Mobile money",
+      "BANK_TRANSFER": "Bank transfer"
+    }
+  },
+  "backup": {
+    "clubTitle": "Club backup",
+    "clubDescription": "Export your club data as JSON. Choose full backup (with documents) or database only.",
+    "databaseOnly": "Database only",
+    "fullBackup": "Full backup",
+    "created": "Backup created",
+    "failed": "Backup failed",
+    "scope": {
+      "FULL": "Full",
+      "DATABASE_ONLY": "DB"
     }
   },
   "documents": {
@@ -1367,15 +1487,29 @@
     "tags": "Tags",
     "tagsPlaceholder": "tag1, tag2",
     "file": "File",
+    "uploadFiles": "Files",
+    "uploadLimitsHint": "Up to 10 files per upload, 5 MB per file.",
     "save": "Save",
     "cancel": "Cancel",
     "uploaded": "Document uploaded",
+    "uploadedMultiple": "{count} documents uploaded",
+    "uploadedPartial": "{count} document(s) uploaded, {failed} failed",
     "uploadError": "Upload error",
     "fileTooLarge": "File too large (max 5 MB)",
+    "tooManyFiles": "Too many files (maximum {max} per upload)",
     "invalidType": "File type not allowed",
     "archived": "Document archived",
     "noDocuments": "No documents",
     "download": "Download",
+    "rootFolder": "Root",
+    "newFolder": "New folder",
+    "folderCreated": "Folder created",
+    "files": "files",
+    "shared": "Shared",
+    "shareEnabled": "Share link copied",
+    "shareLinkCopied": "Link copied to clipboard",
+    "shareDisabled": "Sharing disabled",
+    "stopShare": "Stop",
     "categories": {
       "STATUTES": "Statutes",
       "BUDGET": "Budget",

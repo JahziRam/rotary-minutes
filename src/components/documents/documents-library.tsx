@@ -1,17 +1,40 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
-import { Search, Upload, Archive, FileText, FolderOpen } from "lucide-react";
+import {
+  Search,
+  Upload,
+  Archive,
+  FileText,
+  FolderOpen,
+  FolderPlus,
+  Eye,
+  Share2,
+  Link2,
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Toast } from "@/components/ui/toast";
-import { searchDocuments, uploadDocumentFile, archiveDocument } from "@/actions/documents";
+import { DocumentViewerModal } from "@/components/documents/document-viewer-modal";
+import {
+  MAX_UPLOAD_FILES_PER_BATCH,
+  validateUploadFiles,
+} from "@/lib/upload-limits";
+import {
+  searchDocuments,
+  uploadDocumentFiles,
+  archiveDocument,
+  createDocumentFolder,
+  enableDocumentShare,
+  disableDocumentShare,
+  moveDocumentToFolder,
+} from "@/actions/documents";
 import type { DocumentCategory } from "@/generated/prisma/client";
 
 type DocumentRow = {
@@ -23,10 +46,20 @@ type DocumentRow = {
   fileName: string | null;
   mimeType: string | null;
   minuteId: string | null;
+  folderId: string | null;
   isArchived: boolean;
+  isShareEnabled: boolean;
+  shareToken: string | null;
   tags: string[];
   createdAt: string;
   uploadedByName: string | null;
+};
+
+type FolderRow = {
+  id: string;
+  name: string;
+  parentId: string | null;
+  documentCount: number;
 };
 
 const CATEGORIES: DocumentCategory[] = [
@@ -41,22 +74,37 @@ const CATEGORIES: DocumentCategory[] = [
 
 export function DocumentsLibrary({
   documents: initialDocs,
+  folders: initialFolders = [],
   canManage,
   locale,
+  fileManagerEnabled = false,
+  documentSharingEnabled = false,
 }: {
   documents: DocumentRow[];
+  folders?: FolderRow[];
   canManage: boolean;
   locale: string;
+  fileManagerEnabled?: boolean;
+  documentSharingEnabled?: boolean;
 }) {
   const t = useTranslations("documents");
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [toast, setToast] = useState<string | null>(null);
   const [documents, setDocuments] = useState(initialDocs);
+  const [folders] = useState(initialFolders);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<DocumentCategory | "">("");
+  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
   const [showUpload, setShowUpload] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [viewer, setViewer] = useState<DocumentRow | null>(null);
   const dateLocale = locale === "fr" ? fr : enUS;
+
+  const childFolders = useMemo(
+    () => folders.filter((f) => f.parentId === currentFolderId),
+    [folders, currentFolderId]
+  );
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -70,15 +118,53 @@ export function DocumentsLibrary({
 
   function handleUpload(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const fd = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const fileInput = form.elements.namedItem("files") as HTMLInputElement | null;
+    const selected = Array.from(fileInput?.files ?? []);
+
+    const validationError = validateUploadFiles(selected);
+    if (validationError === "TOO_LARGE") {
+      setToast(t("fileTooLarge"));
+      return;
+    }
+    if (validationError === "TOO_MANY_FILES") {
+      setToast(t("tooManyFiles", { max: MAX_UPLOAD_FILES_PER_BATCH }));
+      return;
+    }
+    if (validationError === "NO_FILE") {
+      setToast(t("uploadError"));
+      return;
+    }
+
+    const fd = new FormData(form);
     startTransition(async () => {
-      const result = await uploadDocumentFile(fd);
+      const result = await uploadDocumentFiles(fd);
       if ("success" in result && result.success) {
-        setToast(t("uploaded"));
+        if (currentFolderId) {
+          for (const documentId of result.documentIds) {
+            await moveDocumentToFolder(documentId, currentFolderId);
+          }
+        }
+        if (result.failed.length > 0) {
+          setToast(
+            t("uploadedPartial", {
+              count: result.uploaded,
+              failed: result.failed.length,
+            })
+          );
+        } else {
+          setToast(
+            result.uploaded > 1
+              ? t("uploadedMultiple", { count: result.uploaded })
+              : t("uploaded")
+          );
+        }
         setShowUpload(false);
         router.refresh();
       } else if ("error" in result && result.error === "TOO_LARGE") {
         setToast(t("fileTooLarge"));
+      } else if ("error" in result && result.error === "TOO_MANY_FILES") {
+        setToast(t("tooManyFiles", { max: MAX_UPLOAD_FILES_PER_BATCH }));
       } else if ("error" in result && result.error === "INVALID_TYPE") {
         setToast(t("invalidType"));
       } else {
@@ -97,9 +183,56 @@ export function DocumentsLibrary({
     });
   }
 
-  const filtered = category
-    ? documents.filter((d) => d.category === category)
-    : documents;
+  function handleCreateFolder() {
+    if (!newFolderName.trim()) return;
+    startTransition(async () => {
+      const result = await createDocumentFolder({
+        name: newFolderName,
+        parentId: currentFolderId ?? undefined,
+      });
+      if ("success" in result && result.success) {
+        setToast(t("folderCreated"));
+        setNewFolderName("");
+        router.refresh();
+      }
+    });
+  }
+
+  function handleShare(doc: DocumentRow) {
+    startTransition(async () => {
+      if (doc.isShareEnabled && doc.shareToken) {
+        const url = `${window.location.origin}/api/share/document/${doc.shareToken}`;
+        await navigator.clipboard.writeText(url);
+        setToast(t("shareLinkCopied"));
+        return;
+      }
+      const result = await enableDocumentShare(doc.id, 30);
+      if ("shareToken" in result && result.shareToken) {
+        const url = `${window.location.origin}/api/share/document/${result.shareToken}`;
+        await navigator.clipboard.writeText(url);
+        setToast(t("shareEnabled"));
+        router.refresh();
+      }
+    });
+  }
+
+  function handleDisableShare(documentId: string) {
+    startTransition(async () => {
+      await disableDocumentShare(documentId);
+      setToast(t("shareDisabled"));
+      router.refresh();
+    });
+  }
+
+  const filtered = documents.filter((d) => {
+    if (category && d.category !== category) return false;
+    if (fileManagerEnabled && d.folderId !== currentFolderId) return false;
+    return true;
+  });
+
+  const currentFolder = currentFolderId
+    ? folders.find((f) => f.id === currentFolderId)
+    : null;
 
   return (
     <div className="space-y-6">
@@ -138,11 +271,58 @@ export function DocumentsLibrary({
         )}
       </div>
 
+      {fileManagerEnabled && (
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <button
+            type="button"
+            onClick={() => setCurrentFolderId(null)}
+            className={`px-2 py-1 rounded ${!currentFolderId ? "bg-navy text-white" : "text-navy hover:underline"}`}
+          >
+            {t("rootFolder")}
+          </button>
+          {currentFolder && (
+            <span className="text-gray-500">/ {currentFolder.name}</span>
+          )}
+          {canManage && (
+            <div className="flex items-center gap-2 ml-auto">
+              <input
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                placeholder={t("newFolder")}
+                className="text-sm border border-gray-200 rounded-lg px-2 py-1"
+              />
+              <Button size="sm" variant="outline" disabled={pending} onClick={handleCreateFolder}>
+                <FolderPlus className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {fileManagerEnabled && childFolders.length > 0 && (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
+          {childFolders.map((folder) => (
+            <button
+              key={folder.id}
+              type="button"
+              onClick={() => setCurrentFolderId(folder.id)}
+              className="flex items-center gap-2 p-3 rounded-lg border border-gray-200 bg-white hover:border-navy/30 text-left"
+            >
+              <FolderOpen className="h-5 w-5 text-gold shrink-0" />
+              <div>
+                <p className="font-medium text-sm">{folder.name}</p>
+                <p className="text-xs text-gray-400">{folder.documentCount} {t("files")}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+
       {showUpload && canManage && (
         <Card>
           <CardContent className="p-6">
             <form onSubmit={handleUpload} className="grid sm:grid-cols-2 gap-4">
-              <Input name="title" label={t("docTitle")} required />
+              <Input name="title" label={t("docTitle")} />
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-gray-700">{t("category")}</label>
                 <select
@@ -160,14 +340,16 @@ export function DocumentsLibrary({
               <Input name="description" label={t("description")} />
               <Input name="tags" label={t("tags")} placeholder={t("tagsPlaceholder")} />
               <div className="sm:col-span-2 space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">{t("file")}</label>
+                <label className="text-sm font-medium text-gray-700">{t("uploadFiles")}</label>
                 <input
                   type="file"
-                  name="file"
+                  name="files"
                   required
+                  multiple
                   accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.webp,.txt"
                   className="flex w-full text-sm"
                 />
+                <p className="text-xs text-gray-500">{t("uploadLimitsHint")}</p>
               </div>
               <div className="sm:col-span-2 flex gap-2">
                 <Button type="submit" disabled={pending}>{t("save")}</Button>
@@ -196,6 +378,12 @@ export function DocumentsLibrary({
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-medium text-gray-900 truncate">{doc.title}</h3>
                       <Badge variant="default">{t(`categories.${doc.category}`)}</Badge>
+                      {doc.isShareEnabled && (
+                        <Badge variant="success">
+                          <Link2 className="h-3 w-3 mr-0.5" />
+                          {t("shared")}
+                        </Badge>
+                      )}
                     </div>
                     {doc.description && (
                       <p className="text-sm text-gray-500 truncate">{doc.description}</p>
@@ -208,15 +396,47 @@ export function DocumentsLibrary({
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {doc.fileUrl && (
-                    <a
-                      href={doc.fileUrl.startsWith("data:") ? doc.fileUrl : doc.fileUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      download={doc.fileName ?? undefined}
-                      className="text-sm text-navy hover:underline"
-                    >
-                      {t("download")}
-                    </a>
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setViewer(doc)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <a
+                        href={doc.fileUrl.startsWith("data:") ? doc.fileUrl : doc.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        download={doc.fileName ?? undefined}
+                        className="text-sm text-navy hover:underline"
+                      >
+                        {t("download")}
+                      </a>
+                    </>
+                  )}
+                  {documentSharingEnabled && canManage && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={pending}
+                        onClick={() => handleShare(doc)}
+                      >
+                        <Share2 className="h-4 w-4" />
+                      </Button>
+                      {doc.isShareEnabled && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs"
+                          disabled={pending}
+                          onClick={() => handleDisableShare(doc.id)}
+                        >
+                          {t("stopShare")}
+                        </Button>
+                      )}
+                    </>
                   )}
                   {canManage && (
                     <Button
@@ -233,6 +453,20 @@ export function DocumentsLibrary({
             </Card>
           ))}
         </div>
+      )}
+
+      {viewer?.fileUrl && (
+        <DocumentViewerModal
+          title={viewer.title}
+          fileUrl={viewer.fileUrl}
+          mimeType={viewer.mimeType}
+          shareUrl={
+            viewer.shareToken
+              ? `/api/share/document/${viewer.shareToken}`
+              : undefined
+          }
+          onClose={() => setViewer(null)}
+        />
       )}
 
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}

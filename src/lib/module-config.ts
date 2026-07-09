@@ -7,6 +7,7 @@ export const CLUB_MODULES = [
   { key: "attendanceReports", enabled: "attendanceReportsEnabled", menuVisible: "attendanceReportsMenuVisible", href: "/attendance-reports", navKey: "attendanceReports", labelFr: "Assiduité", labelEn: "Attendance" },
   { key: "events", enabled: "eventsEnabled", menuVisible: "eventsMenuVisible", href: "/events", navKey: "events", labelFr: "Événements", labelEn: "Events" },
   { key: "documents", enabled: "documentsEnabled", menuVisible: "documentsMenuVisible", href: "/documents", navKey: "documents", labelFr: "Documents", labelEn: "Documents" },
+  { key: "fileManager", enabled: "fileManagerEnabled", menuVisible: "fileManagerMenuVisible", href: "/documents", navKey: "documents", labelFr: "Fichiers", labelEn: "Files" },
   { key: "governance", enabled: "governanceEnabled", menuVisible: "governanceMenuVisible", href: "/governance", navKey: "governance", labelFr: "Gouvernance", labelEn: "Governance" },
   { key: "integrations", enabled: "integrationsEnabled", menuVisible: "integrationsMenuVisible", href: "/settings/integrations", navKey: "integrations", labelFr: "Intégrations", labelEn: "Integrations" },
 ] as const;

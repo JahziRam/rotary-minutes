@@ -132,6 +132,7 @@ export async function getMyAccountData() {
       email: member.email,
       position: member.position,
       photoUrl: member.photoUrl,
+      registrationNumber: member.registrationNumber,
     },
     duesSummary,
     attendances: member.attendances.map((a) => ({

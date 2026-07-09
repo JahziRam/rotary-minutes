@@ -43,8 +43,8 @@ const DEFAULT_PLANS: Omit<PlanConfigData, "plan">[] = [
     sortOrder: 1,
   },
   {
-    nameFr: "Professional",
-    nameEn: "Professional",
+    nameFr: "Active",
+    nameEn: "Active",
     descriptionFr: "Pour les clubs actifs",
     descriptionEn: "For active clubs",
     priceMonthly: 39,
@@ -66,10 +66,10 @@ const DEFAULT_PLANS: Omit<PlanConfigData, "plan">[] = [
     sortOrder: 2,
   },
   {
-    nameFr: "Enterprise",
-    nameEn: "Enterprise",
-    descriptionFr: "Multi-clubs et support prioritaire",
-    descriptionEn: "Multi-club and priority support",
+    nameFr: "High level",
+    nameEn: "High level",
+    descriptionFr: "Fonctionnalités avancées, district et support prioritaire",
+    descriptionEn: "Advanced features, district view and priority support",
     priceMonthly: 79,
     featuresFr: [
       "Gouvernance & archives complètes",
@@ -98,7 +98,12 @@ export async function ensurePlanConfigs(db: Pick<PrismaClient, "planConfig"> = p
     const defaults = DEFAULT_PLANS[i];
     await db.planConfig.upsert({
       where: { plan },
-      update: {},
+      update: {
+        nameFr: defaults.nameFr,
+        nameEn: defaults.nameEn,
+        descriptionFr: defaults.descriptionFr,
+        descriptionEn: defaults.descriptionEn,
+      },
       create: { plan, ...defaults },
     });
   }

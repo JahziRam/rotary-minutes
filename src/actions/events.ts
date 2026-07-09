@@ -5,7 +5,15 @@ import { prisma } from "@/lib/prisma";
 import { requireFeature } from "@/lib/require-feature";
 import { requirePermission } from "@/lib/require-permission";
 import { hasRolePermission } from "@/lib/roles";
-import type { ClubEventStatus, EventRegistrationStatus, PaymentMethod } from "@/generated/prisma/client";
+import { randomUUID } from "node:crypto";
+import { getClubFeatures } from "@/lib/features";
+import { syncEventRegistrationTreasury } from "@/lib/event-treasury";
+import type {
+  ClubEventStatus,
+  EventRegistrationStatus,
+  PaymentMethod,
+  TreasuryCollectionStatus,
+} from "@/generated/prisma/client";
 
 function revalidateEvents(eventId?: string) {
   for (const loc of ["fr", "en"]) {
@@ -83,11 +91,18 @@ export async function getEventDetail(eventId: string) {
   if ("error" in auth && auth.error) return { error: auth.error as string };
   const { ctx } = auth;
 
+  const features = await getClubFeatures(ctx.clubId);
   const event = await prisma.clubEvent.findFirst({
     where: { id: eventId, clubId: ctx.clubId },
     include: {
+      priceTiers: { orderBy: { sortOrder: "asc" } },
+      ticketSlots: { orderBy: { ticketNumber: "asc" } },
       registrations: {
-        include: { member: { select: { id: true, firstName: true, lastName: true, email: true } } },
+        include: {
+          member: { select: { id: true, firstName: true, lastName: true, email: true, phone: true } },
+          priceTier: true,
+          ticketSlot: true,
+        },
         orderBy: { createdAt: "asc" },
       },
       _count: { select: { registrations: true } },
@@ -118,12 +133,30 @@ export async function getEventDetail(eventId: string) {
       currency: event.currency,
       requiresPayment: event.requiresPayment,
       registrationCount: event._count.registrations,
+      priceTiers: event.priceTiers.map((t) => ({
+        id: t.id,
+        label: t.label,
+        price: Number(t.price),
+        sortOrder: t.sortOrder,
+        maxQty: t.maxQty,
+      })),
+      ticketSlots: event.ticketSlots.map((s) => ({
+        id: s.id,
+        ticketNumber: s.ticketNumber,
+        label: s.label,
+        isReserved: s.isReserved,
+        registrationId: s.registrationId,
+      })),
     },
     registrations: event.registrations.map((r) => ({
       id: r.id,
       memberId: r.memberId,
       guestName: r.guestName,
       email: r.email,
+      phone: r.phone,
+      quantity: r.quantity,
+      priceTierId: r.priceTierId,
+      orderGroupId: r.orderGroupId,
       status: r.status,
       paidAt: r.paidAt?.toISOString() ?? null,
       paymentMethod: r.paymentMethod,
@@ -131,8 +164,11 @@ export async function getEventDetail(eventId: string) {
       notes: r.notes,
       createdAt: r.createdAt.toISOString(),
       member: r.member,
+      priceTierLabel: r.priceTier?.label ?? null,
+      ticketNumber: r.ticketSlot?.ticketNumber ?? null,
     })),
     canManage,
+    eventsAdvanced: features.eventsAdvancedEnabled,
     myMemberId: myMember?.id ?? null,
     myRegistration: myRegistration
       ? {
@@ -209,6 +245,10 @@ export async function updateEvent(
   });
   if (!existing) return { error: "NOT_FOUND" as const };
 
+  if (existing.status === "CANCELLED" && data.status !== "CANCELLED") {
+    return { error: "EVENT_CANCELLED" as const };
+  }
+
   await prisma.clubEvent.update({
     where: { id: eventId },
     data: {
@@ -233,24 +273,131 @@ export async function publishEvent(eventId: string) {
   return updateEvent(eventId, { status: "PUBLISHED" });
 }
 
+export async function reactivateEvent(eventId: string) {
+  const auth = await requireEventsManage();
+  if ("error" in auth && auth.error) return { error: auth.error as string };
+  const { ctx } = auth;
+
+  const existing = await prisma.clubEvent.findFirst({
+    where: { id: eventId, clubId: ctx.clubId },
+  });
+  if (!existing) return { error: "NOT_FOUND" as const };
+  if (existing.status !== "COMPLETED") return { error: "NOT_COMPLETED" as const };
+
+  await prisma.clubEvent.update({
+    where: { id: eventId },
+    data: { status: "PUBLISHED" },
+  });
+  revalidateEvents(eventId);
+  return { success: true as const };
+}
+
+export async function saveEventPriceTiers(
+  eventId: string,
+  tiers: Array<{ id?: string; label: string; price: number; sortOrder?: number; maxQty?: number | null }>
+) {
+  const auth = await requireEventsManage();
+  if ("error" in auth && auth.error) return { error: auth.error as string };
+  const { ctx } = auth;
+
+  const features = await getClubFeatures(ctx.clubId);
+  if (!features.eventsAdvancedEnabled) return { error: "FEATURE_DISABLED" as const };
+
+  const event = await prisma.clubEvent.findFirst({
+    where: { id: eventId, clubId: ctx.clubId },
+  });
+  if (!event) return { error: "NOT_FOUND" as const };
+
+  await prisma.eventPriceTier.deleteMany({ where: { eventId } });
+  if (tiers.length > 0) {
+    await prisma.eventPriceTier.createMany({
+      data: tiers.map((t, i) => ({
+        eventId,
+        label: t.label.trim(),
+        price: t.price,
+        sortOrder: t.sortOrder ?? i,
+        maxQty: t.maxQty ?? null,
+      })),
+    });
+  }
+
+  revalidateEvents(eventId);
+  return { success: true as const };
+}
+
+export async function saveEventTicketSlots(
+  eventId: string,
+  slots: Array<{ ticketNumber: string; label?: string }>
+) {
+  const auth = await requireEventsManage();
+  if ("error" in auth && auth.error) return { error: auth.error as string };
+  const { ctx } = auth;
+
+  const features = await getClubFeatures(ctx.clubId);
+  if (!features.eventsAdvancedEnabled) return { error: "FEATURE_DISABLED" as const };
+
+  const event = await prisma.clubEvent.findFirst({
+    where: { id: eventId, clubId: ctx.clubId },
+  });
+  if (!event) return { error: "NOT_FOUND" as const };
+
+  const reserved = await prisma.eventTicketSlot.findMany({
+    where: { eventId, isReserved: true },
+    select: { ticketNumber: true },
+  });
+  const reservedNums = new Set(reserved.map((r) => r.ticketNumber));
+
+  await prisma.eventTicketSlot.deleteMany({
+    where: { eventId, isReserved: false },
+  });
+
+  const toCreate = slots
+    .map((s) => ({
+      ticketNumber: s.ticketNumber.trim(),
+      label: s.label?.trim() || null,
+    }))
+    .filter((s) => s.ticketNumber && !reservedNums.has(s.ticketNumber));
+
+  if (toCreate.length > 0) {
+    await prisma.eventTicketSlot.createMany({
+      data: toCreate.map((s) => ({ eventId, ...s })),
+      skipDuplicates: true,
+    });
+  }
+
+  revalidateEvents(eventId);
+  return { success: true as const };
+}
+
 export async function registerForEvent(
   eventId: string,
   data: {
     memberId?: string;
     guestName?: string;
     email?: string;
+    phone?: string;
+    quantity?: number;
+    priceTierId?: string;
+    ticketSlotIds?: string[];
     paymentMethod?: PaymentMethod;
     amount?: number;
     notes?: string;
+    collectionStatus?: TreasuryCollectionStatus;
   }
 ) {
   const auth = await requireEventsView();
   if ("error" in auth && auth.error) return { error: auth.error as string };
   const { ctx } = auth;
 
+  const features = await getClubFeatures(ctx.clubId);
+  const quantity = Math.max(1, Math.min(features.eventsAdvancedEnabled ? data.quantity ?? 1 : 1, 20));
+
   const event = await prisma.clubEvent.findFirst({
     where: { id: eventId, clubId: ctx.clubId, status: "PUBLISHED" },
-    include: { _count: { select: { registrations: { where: { status: { in: ["PENDING", "CONFIRMED"] } } } } } },
+    include: {
+      priceTiers: true,
+      _count: { select: { registrations: { where: { status: { in: ["PENDING", "CONFIRMED"] } } } } },
+    },
   });
   if (!event) return { error: "NOT_FOUND" as const };
 
@@ -258,7 +405,7 @@ export async function registerForEvent(
   if (!memberId) {
     const myMember = await prisma.member.findFirst({
       where: { clubId: ctx.clubId, userId: ctx.userId },
-      select: { id: true },
+      select: { id: true, firstName: true, lastName: true },
     });
     memberId = myMember?.id ?? null;
   }
@@ -267,46 +414,131 @@ export async function registerForEvent(
     return { error: "NO_PARTICIPANT" as const };
   }
 
-  if (memberId) {
+  if (memberId && quantity === 1) {
     const existing = await prisma.eventRegistration.findFirst({
       where: { eventId, memberId, status: { not: "CANCELLED" } },
     });
     if (existing) return { error: "ALREADY_REGISTERED" as const };
   }
 
-  if (event.maxAttendees && event._count.registrations >= event.maxAttendees) {
-    const status: EventRegistrationStatus = "WAITLIST";
+  let unitPrice = event.price ? Number(event.price) : 0;
+  if (data.priceTierId) {
+    const tier = event.priceTiers.find((t) => t.id === data.priceTierId);
+    if (!tier) return { error: "INVALID_TIER" as const };
+    unitPrice = Number(tier.price);
+  }
+
+  const ticketSlotIds = features.eventsAdvancedEnabled ? data.ticketSlotIds ?? [] : [];
+  if (ticketSlotIds.length > 0 && ticketSlotIds.length !== quantity) {
+    return { error: "TICKET_COUNT_MISMATCH" as const };
+  }
+
+  const activeCount = event._count.registrations;
+  if (event.maxAttendees && activeCount + quantity > event.maxAttendees) {
+    if (activeCount >= event.maxAttendees) {
+      const reg = await prisma.eventRegistration.create({
+        data: {
+          eventId,
+          memberId,
+          guestName: data.guestName?.trim() || null,
+          email: data.email?.trim() || null,
+          phone: data.phone?.trim() || null,
+          quantity,
+          priceTierId: data.priceTierId ?? null,
+          status: "WAITLIST",
+          notes: data.notes?.trim() || null,
+        },
+      });
+      revalidateEvents(eventId);
+      return { success: true as const, registrationId: reg.id, waitlisted: true as const };
+    }
+    return { error: "CAPACITY_EXCEEDED" as const };
+  }
+
+  const requiresPayment = event.requiresPayment && (unitPrice > 0 || event.price);
+  const orderGroupId = quantity > 1 ? randomUUID() : null;
+  const registrationIds: string[] = [];
+  const member = memberId
+    ? await prisma.member.findUnique({
+        where: { id: memberId },
+        select: { firstName: true, lastName: true },
+      })
+    : null;
+  const participantLabel = member
+    ? `${member.firstName} ${member.lastName}`
+    : data.guestName?.trim() ?? "Invité";
+
+  for (let i = 0; i < quantity; i++) {
+    const ticketSlotId = ticketSlotIds[i];
+    if (ticketSlotId) {
+      const slot = await prisma.eventTicketSlot.findFirst({
+        where: { id: ticketSlotId, eventId, isReserved: false },
+      });
+      if (!slot) return { error: "TICKET_UNAVAILABLE" as const };
+    }
+
+    const paid = Boolean(data.paymentMethod);
+    const status: EventRegistrationStatus =
+      requiresPayment && !paid ? "PENDING" : "CONFIRMED";
+    const lineAmount = data.amount ?? unitPrice;
+
     const reg = await prisma.eventRegistration.create({
       data: {
         eventId,
-        memberId,
-        guestName: data.guestName?.trim() || null,
+        memberId: i === 0 ? memberId : null,
+        guestName: i === 0 ? data.guestName?.trim() || null : null,
         email: data.email?.trim() || null,
+        phone: data.phone?.trim() || null,
+        quantity: 1,
+        orderGroupId,
+        priceTierId: data.priceTierId ?? null,
         status,
+        paymentMethod: data.paymentMethod ?? null,
+        amount: lineAmount > 0 ? lineAmount : null,
+        paidAt: paid ? new Date() : null,
         notes: data.notes?.trim() || null,
       },
     });
-    revalidateEvents(eventId);
-    return { success: true as const, registrationId: reg.id, waitlisted: true as const };
+
+    if (ticketSlotId) {
+      await prisma.eventTicketSlot.update({
+        where: { id: ticketSlotId },
+        data: { isReserved: true, registrationId: reg.id },
+      });
+    }
+
+    if (paid && lineAmount > 0) {
+      const collectionStatus: TreasuryCollectionStatus =
+        data.collectionStatus ??
+        (data.paymentMethod === "CHECK" || data.paymentMethod === "CASH"
+          ? "COLLECTED"
+          : "COLLECTED");
+      await syncEventRegistrationTreasury({
+        clubId: ctx.clubId,
+        userId: ctx.userId,
+        eventId,
+        eventTitle: event.title,
+        registrationId: reg.id,
+        amount: lineAmount,
+        currency: event.currency,
+        paymentMethod: data.paymentMethod ?? null,
+        collectionStatus,
+        participantLabel:
+          quantity > 1 ? `${participantLabel} (bil. ${i + 1}/${quantity})` : participantLabel,
+      });
+    }
+
+    registrationIds.push(reg.id);
   }
 
-  const requiresPayment = event.requiresPayment && event.price;
-  const reg = await prisma.eventRegistration.create({
-    data: {
-      eventId,
-      memberId,
-      guestName: data.guestName?.trim() || null,
-      email: data.email?.trim() || null,
-      status: requiresPayment && !data.paymentMethod ? "PENDING" : "CONFIRMED",
-      paymentMethod: data.paymentMethod ?? null,
-      amount: data.amount ?? (event.price ? Number(event.price) : null),
-      paidAt: data.paymentMethod ? new Date() : null,
-      notes: data.notes?.trim() || null,
-    },
-  });
-
   revalidateEvents(eventId);
-  return { success: true as const, registrationId: reg.id };
+  for (const loc of ["fr", "en"]) revalidatePath(`/${loc}/treasury`);
+  return {
+    success: true as const,
+    registrationId: registrationIds[0],
+    registrationIds,
+    orderGroupId,
+  };
 }
 
 export async function cancelRegistration(registrationId: string) {
@@ -359,22 +591,25 @@ export async function exportParticipants(eventId: string) {
     include: {
       registrations: {
         where: { status: { not: "CANCELLED" } },
-        include: { member: true },
+        include: { member: true, ticketSlot: true },
         orderBy: { createdAt: "asc" },
       },
     },
   });
   if (!event) return { error: "NOT_FOUND" as const };
 
-  const header = "Name,Email,Status,Payment,PaidAt,Amount,Notes\n";
+  const header = "Name,Email,Phone,Ticket,Status,Payment,PaidAt,Amount,Notes\n";
   const rows = event.registrations.map((r) => {
     const name = r.member
       ? `${r.member.firstName} ${r.member.lastName}`
       : r.guestName ?? "";
     const email = r.email ?? r.member?.email ?? "";
+    const phone = r.phone ?? r.member?.phone ?? "";
     return [
       `"${name.replace(/"/g, '""')}"`,
       `"${email.replace(/"/g, '""')}"`,
+      `"${phone.replace(/"/g, '""')}"`,
+      r.ticketSlot?.ticketNumber ?? "",
       r.status,
       r.paymentMethod ?? "",
       r.paidAt?.toISOString() ?? "",
