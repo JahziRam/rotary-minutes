@@ -78,7 +78,7 @@ export async function createMeeting(
       locale === "fr"
         ? `<p>Réunion planifiée le ${new Date(data.date).toLocaleDateString("fr-FR")}.</p>`
         : `<p>Meeting scheduled on ${new Date(data.date).toLocaleDateString("en-GB")}.</p>`;
-    const branded = prepareBrandedEmail(body, {
+    const branded = await prepareBrandedEmail(body, {
       clubName: ctx.club.name,
       clubId: ctx.club.id,
       logoUrl: ctx.club.logoUrl,

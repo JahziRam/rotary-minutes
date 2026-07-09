@@ -209,7 +209,8 @@ export async function processMeetingReminders(): Promise<ReminderRunResult> {
         });
         const subject = renderEmailContent(tpl.subject, vars);
         const bodyHtml = renderEmailContent(tpl.body, vars);
-        const branded = prepareBrandedEmail(bodyHtml, {
+        const branded = await prepareBrandedEmail(bodyHtml, {
+          clubId: meeting.club.id,
           clubName: meeting.club.name,
           logo: emailLogo,
         });

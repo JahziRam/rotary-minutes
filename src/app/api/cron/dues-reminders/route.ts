@@ -107,7 +107,7 @@ export async function GET(request: Request) {
         clubFull &&
         (await buildDuesInvoicePdfBuffer(clubFull, dues.member, duesWithInvoice, locale));
 
-      const mail = duesInvoiceEmail({
+      const mail = await duesInvoiceEmail({
         clubName: dues.club.name,
         clubId: dues.club.id,
         memberName: `${dues.member.firstName} ${dues.member.lastName}`,

@@ -90,7 +90,8 @@ export async function dispatchCampaign(campaignId: string) {
     });
     const subject = renderEmailContent(campaign.subject, vars);
     const bodyHtml = renderEmailContent(campaign.body, vars);
-    const branded = prepareBrandedEmail(bodyHtml, {
+    const branded = await prepareBrandedEmail(bodyHtml, {
+      clubId: campaign.club.id,
       clubName: campaign.club.name,
       logo: emailLogo,
     });

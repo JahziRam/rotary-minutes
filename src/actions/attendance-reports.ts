@@ -102,7 +102,7 @@ export async function emailReportToDistrict(locale: string) {
     ? `<p>Veuillez trouver ci-joint le rapport d'assiduité du club <strong>${club.name}</strong>.</p>`
     : `<p>Please find attached the attendance report for <strong>${club.name}</strong>.</p>`;
 
-  const branded = prepareBrandedEmail(body, {
+  const branded = await prepareBrandedEmail(body, {
     clubId: ctx.clubId,
     clubName: club.name,
     logoUrl: club.logoUrl,

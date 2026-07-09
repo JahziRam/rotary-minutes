@@ -197,7 +197,7 @@ async function doFinalizeMinute(
 
   const clubEmail = minute.club.email;
   if (clubEmail) {
-    const mail = minuteFinalizedEmail({
+    const mail = await minuteFinalizedEmail({
       clubName: minute.club.name,
       clubId: minute.club.id,
       minuteTitle: minute.title,
@@ -590,7 +590,7 @@ async function dispatchMinuteEmail(
   pdf: { buffer: Buffer; filename: string },
   verifyUrl: string
 ) {
-  const mail = minuteFinalizedEmail({
+  const mail = await minuteFinalizedEmail({
     clubName: minute.club.name,
     clubId: minute.club.id,
     minuteTitle: minute.title,

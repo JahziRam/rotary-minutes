@@ -479,7 +479,7 @@ export async function sendDuesInvoiceEmail(
   }
 
   const pdf = await buildDuesInvoicePdfBuffer(dues.club, dues.member, dues, locale);
-  const mail = duesInvoiceEmail({
+  const mail = await duesInvoiceEmail({
     clubName: dues.club.name,
     clubId: dues.club.id,
     memberName: `${dues.member.firstName} ${dues.member.lastName}`,
@@ -529,7 +529,7 @@ export async function sendDuesReceiptEmail(
   if (!recipientEmail) return { error: "NO_EMAIL" as const };
 
   const pdf = await buildDuesReceiptPdfBuffer(dues.club, dues.member, dues, locale);
-  const mail = duesReceiptEmail({
+  const mail = await duesReceiptEmail({
     clubName: dues.club.name,
     clubId: dues.club.id,
     memberName: `${dues.member.firstName} ${dues.member.lastName}`,
@@ -582,7 +582,7 @@ export async function sendMemberDuesHistoryEmail(
   if (!club) return { error: "NOT_FOUND" as const };
 
   const pdf = await buildDuesHistoryPdfBuffer(club, member, periods, locale);
-  const mail = duesHistoryEmail({
+  const mail = await duesHistoryEmail({
     clubName: club.name,
     clubId: club.id,
     memberName: `${member.firstName} ${member.lastName}`,

@@ -58,7 +58,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<{ ok: boolea
   }
 }
 
-export function trialReminderEmail(opts: {
+export async function trialReminderEmail(opts: {
   clubName: string;
   clubId?: string;
   daysLeft: number;
@@ -73,7 +73,7 @@ export function trialReminderEmail(opts: {
   const body = isFr
     ? `<p>Bonjour,</p><p>L'essai gratuit de <strong>${opts.clubName}</strong> sur Rotary Minutes expire dans <strong>${opts.daysLeft} jour(s)</strong>.</p><p><a class="cta-button" href="${opts.upgradeUrl}">Choisir une offre</a></p><p style="font-size:14px;color:#64748b">Continuez à rédiger vos procès-verbaux sans interruption.</p>`
     : `<p>Hello,</p><p>The free trial for <strong>${opts.clubName}</strong> on Rotary Minutes expires in <strong>${opts.daysLeft} day(s)</strong>.</p><p><a class="cta-button" href="${opts.upgradeUrl}">Choose a plan</a></p><p style="font-size:14px;color:#64748b">Keep writing your minutes without interruption.</p>`;
-  const branded = prepareBrandedEmail(body, {
+  const branded = await prepareBrandedEmail(body, {
     clubName: opts.clubName,
     clubId: opts.clubId,
     logoUrl: opts.logoUrl,
@@ -85,7 +85,7 @@ export function trialReminderEmail(opts: {
   };
 }
 
-export function welcomeClubEmail(opts: {
+export async function welcomeClubEmail(opts: {
   clubName: string;
   clubId?: string;
   locale: string;
@@ -96,7 +96,7 @@ export function welcomeClubEmail(opts: {
   const body = isFr
     ? `<p>Félicitations ! <strong>${opts.clubName}</strong> est prêt sur Rotary Minutes.</p><p><a class="cta-button" href="${opts.dashboardUrl}">Accéder au tableau de bord</a></p>`
     : `<p>Congratulations! <strong>${opts.clubName}</strong> is ready on Rotary Minutes.</p><p><a class="cta-button" href="${opts.dashboardUrl}">Go to dashboard</a></p>`;
-  const branded = prepareBrandedEmail(body, {
+  const branded = await prepareBrandedEmail(body, {
     clubName: opts.clubName,
     clubId: opts.clubId,
     logoUrl: opts.logoUrl,
@@ -108,7 +108,7 @@ export function welcomeClubEmail(opts: {
   };
 }
 
-export function duesInvoiceEmail(opts: {
+export async function duesInvoiceEmail(opts: {
   clubName: string;
   clubId?: string;
   memberName: string;
@@ -122,7 +122,7 @@ export function duesInvoiceEmail(opts: {
   const body = isFr
     ? `<p>Bonjour <strong>${opts.memberName}</strong>,</p><p>Veuillez trouver ci-joint votre facture de cotisation pour la période <strong>${opts.periodLabel}</strong> au <strong>${opts.clubName}</strong>.</p><p>Montant : <strong>${opts.amount}</strong><br/>Échéance : <strong>${opts.dueDate}</strong></p>`
     : `<p>Hello <strong>${opts.memberName}</strong>,</p><p>Please find attached your dues invoice for <strong>${opts.periodLabel}</strong> at <strong>${opts.clubName}</strong>.</p><p>Amount: <strong>${opts.amount}</strong><br/>Due date: <strong>${opts.dueDate}</strong></p>`;
-  const branded = prepareBrandedEmail(body, {
+  const branded = await prepareBrandedEmail(body, {
     clubName: opts.clubName,
     clubId: opts.clubId,
     logoUrl: opts.logoUrl,
@@ -136,7 +136,7 @@ export function duesInvoiceEmail(opts: {
   };
 }
 
-export function duesReceiptEmail(opts: {
+export async function duesReceiptEmail(opts: {
   clubName: string;
   clubId?: string;
   memberName: string;
@@ -150,7 +150,7 @@ export function duesReceiptEmail(opts: {
   const body = isFr
     ? `<p>Bonjour <strong>${opts.memberName}</strong>,</p><p>Nous confirmons la réception de votre paiement de cotisation pour <strong>${opts.periodLabel}</strong>.</p><p>Montant : <strong>${opts.amount}</strong><br/>Référence : <strong>${opts.receiptNumber}</strong></p><p>Le reçu officiel est joint à cet email.</p>`
     : `<p>Hello <strong>${opts.memberName}</strong>,</p><p>We confirm receipt of your dues payment for <strong>${opts.periodLabel}</strong>.</p><p>Amount: <strong>${opts.amount}</strong><br/>Reference: <strong>${opts.receiptNumber}</strong></p><p>The official receipt is attached to this email.</p>`;
-  const branded = prepareBrandedEmail(body, {
+  const branded = await prepareBrandedEmail(body, {
     clubName: opts.clubName,
     clubId: opts.clubId,
     logoUrl: opts.logoUrl,
@@ -164,7 +164,7 @@ export function duesReceiptEmail(opts: {
   };
 }
 
-export function duesHistoryEmail(opts: {
+export async function duesHistoryEmail(opts: {
   clubName: string;
   clubId?: string;
   memberName: string;
@@ -176,7 +176,7 @@ export function duesHistoryEmail(opts: {
   const body = isFr
     ? `<p>Bonjour <strong>${opts.memberName}</strong>,</p><p>Veuillez trouver ci-joint l'historique de vos cotisations pour l'exercice <strong>${opts.fiscalYear}</strong> au <strong>${opts.clubName}</strong>.</p>`
     : `<p>Hello <strong>${opts.memberName}</strong>,</p><p>Please find attached your dues payment history for fiscal year <strong>${opts.fiscalYear}</strong> at <strong>${opts.clubName}</strong>.</p>`;
-  const branded = prepareBrandedEmail(body, {
+  const branded = await prepareBrandedEmail(body, {
     clubName: opts.clubName,
     clubId: opts.clubId,
     logoUrl: opts.logoUrl,
@@ -190,7 +190,7 @@ export function duesHistoryEmail(opts: {
   };
 }
 
-export function minuteFinalizedEmail(opts: {
+export async function minuteFinalizedEmail(opts: {
   clubName: string;
   clubId?: string;
   minuteTitle: string;
@@ -202,7 +202,7 @@ export function minuteFinalizedEmail(opts: {
   const body = isFr
     ? `<p>Le procès-verbal <strong>${opts.minuteTitle}</strong> de ${opts.clubName} est disponible.</p><p>Le PDF officiel est joint à cet email.</p><p><a class="cta-button" href="${opts.verifyUrl}">Vérifier l'authenticité en ligne</a></p>`
     : `<p>The minutes <strong>${opts.minuteTitle}</strong> for ${opts.clubName} are available.</p><p>The official PDF is attached to this email.</p><p><a class="cta-button" href="${opts.verifyUrl}">Verify authenticity online</a></p>`;
-  const branded = prepareBrandedEmail(body, {
+  const branded = await prepareBrandedEmail(body, {
     clubName: opts.clubName,
     clubId: opts.clubId,
     logoUrl: opts.logoUrl,

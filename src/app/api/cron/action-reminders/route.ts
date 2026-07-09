@@ -95,7 +95,8 @@ export async function GET(request: Request) {
           actionResponsible: responsible,
           dashboardUrl: `${baseUrl}/${locale}/actions`,
         });
-        const branded = prepareBrandedEmail(renderEmailContent(bodyTpl, vars), {
+        const branded = await prepareBrandedEmail(renderEmailContent(bodyTpl, vars), {
+          clubId: action.club.id,
           clubName: action.club.name,
           logo: emailLogo,
         });

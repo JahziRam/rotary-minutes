@@ -383,7 +383,8 @@ export async function sendActionReminder(actionId: string, locale = "fr") {
         actionResponsible: responsible,
         dashboardUrl: `${baseUrl}/${loc}/actions`,
       });
-      const branded = prepareBrandedEmail(renderEmailContent(bodyTpl, vars), {
+      const branded = await prepareBrandedEmail(renderEmailContent(bodyTpl, vars), {
+        clubId: ctx.clubId,
         clubName: action.club.name,
         logo: emailLogo,
       });

@@ -1,13 +1,14 @@
+import { prisma } from "@/lib/prisma";
 import {
   logoAttachmentFromResult,
   logoSrcFromResult,
   resolveLogoForEmail,
   type EmailLogoResult,
 } from "@/lib/email-logo";
-import { COMPANY_LEGAL, formatCompanyAddress } from "@/lib/company-legal";
 
 export interface BrandedEmailOptions {
   clubName: string;
+  clubAddressLine?: string | null;
   logoSrc?: string;
   logoAlt?: string;
 }
@@ -17,6 +18,13 @@ export interface BrandedEmailPackage {
   attachments?: Array<{ filename: string; content: Buffer; cid: string }>;
 }
 
+export type ClubAddressFields = {
+  address?: string | null;
+  city?: string | null;
+  country?: string | null;
+  meetingLocation?: string | null;
+};
+
 function escapeHtml(text: string): string {
   return text
     .replace(/&/g, "&amp;")
@@ -25,12 +33,27 @@ function escapeHtml(text: string): string {
     .replace(/"/g, "&quot;");
 }
 
+export function formatClubAddressForEmail(club: ClubAddressFields | null | undefined): string | null {
+  if (!club) return null;
+  const parts: string[] = [];
+  if (club.address?.trim()) parts.push(club.address.trim());
+  const cityCountry = [club.city?.trim(), club.country?.trim()].filter(Boolean).join(", ");
+  if (cityCountry) parts.push(cityCountry);
+  if (!parts.length && club.meetingLocation?.trim()) {
+    parts.push(club.meetingLocation.trim());
+  }
+  return parts.length ? parts.join(" — ") : null;
+}
+
 /**
  * Wraps email body HTML in a table-based, client-safe branded layout.
  */
 export function wrapBrandedEmail(bodyHtml: string, opts: BrandedEmailOptions): string {
   const logoAlt = escapeHtml(opts.logoAlt ?? opts.clubName);
   const clubName = escapeHtml(opts.clubName);
+  const addressLine = opts.clubAddressLine?.trim()
+    ? escapeHtml(opts.clubAddressLine.trim())
+    : null;
 
   const logoBlock = opts.logoSrc
     ? `<tr>
@@ -39,6 +62,8 @@ export function wrapBrandedEmail(bodyHtml: string, opts: BrandedEmailOptions): s
         </td>
       </tr>`
     : "";
+
+  const footerExtra = addressLine ? `<br />${addressLine}` : "";
 
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -75,9 +100,7 @@ export function wrapBrandedEmail(bodyHtml: string, opts: BrandedEmailOptions): s
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
                   <td style="border-top:1px solid #e2e8f0;padding-top:20px;font-size:12px;line-height:1.5;color:#94a3b8">
-                    <strong style="color:#64748b">${clubName}</strong><br />
-                    ${escapeHtml(COMPANY_LEGAL.productName)} (${escapeHtml(COMPANY_LEGAL.productAlias)}) — ${escapeHtml(COMPANY_LEGAL.companyName)}<br />
-                    ${escapeHtml(formatCompanyAddress(true))}
+                    <strong style="color:#64748b">${clubName}</strong>${footerExtra}
                   </td>
                 </tr>
               </table>
@@ -109,13 +132,47 @@ export function wrapBrandedEmail(bodyHtml: string, opts: BrandedEmailOptions): s
 </html>`;
 }
 
+async function resolveClubAddressLine(
+  opts: {
+    clubId?: string;
+    clubAddressLine?: string | null;
+    club?: ClubAddressFields | null;
+  }
+): Promise<string | null> {
+  if (opts.clubAddressLine?.trim()) return opts.clubAddressLine.trim();
+  if (opts.club) return formatClubAddressForEmail(opts.club);
+
+  if (opts.clubId) {
+    const club = await prisma.club.findUnique({
+      where: { id: opts.clubId },
+      select: {
+        address: true,
+        city: true,
+        country: true,
+        meetingLocation: true,
+      },
+    });
+    return formatClubAddressForEmail(club);
+  }
+
+  return null;
+}
+
 /**
  * Builds branded HTML and optional logo attachment from raw club logo URL.
  */
-export function prepareBrandedEmail(
+export async function prepareBrandedEmail(
   bodyHtml: string,
-  opts: { clubName: string; clubId?: string; logoUrl?: string | null; baseUrl?: string; logo?: EmailLogoResult }
-): BrandedEmailPackage {
+  opts: {
+    clubName: string;
+    clubId?: string;
+    club?: ClubAddressFields | null;
+    clubAddressLine?: string | null;
+    logoUrl?: string | null;
+    baseUrl?: string;
+    logo?: EmailLogoResult;
+  }
+): Promise<BrandedEmailPackage> {
   const logo =
     opts.logo ??
     (opts.clubId && opts.logoUrl
@@ -126,8 +183,11 @@ export function prepareBrandedEmail(
     ? bodyHtml
     : `<div class="email-body">${bodyHtml}</div>`;
 
+  const clubAddressLine = await resolveClubAddressLine(opts);
+
   const html = wrapBrandedEmail(wrappedBody, {
     clubName: opts.clubName,
+    clubAddressLine,
     logoSrc: logoSrcFromResult(logo),
     logoAlt: opts.clubName,
   });
