@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { submitContactForm } from "@/actions/contact";
 import { cn } from "@/lib/utils";
+import { trackContactFormSubmit } from "@/lib/landing-analytics";
 
 type Topic = "demo" | "pricing" | "support" | "partnership" | "other";
 
@@ -114,11 +115,13 @@ export function ContactModal({
     setPending(false);
 
     if ("success" in result && result.success) {
+      trackContactFormSubmit("success");
       setSuccess(true);
       return;
     }
 
-    const code = "error" in result ? result.error : "SEND_FAILED";
+    const code = ("error" in result && result.error) ? result.error : "SEND_FAILED";
+    trackContactFormSubmit(code);
     setError(t(`errors.${code}` as "errors.SEND_FAILED"));
     if (code === "CAPTCHA_INVALID") {
       setCaptcha(randomCaptcha());

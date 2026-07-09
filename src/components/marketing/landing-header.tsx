@@ -2,30 +2,44 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { ContactModal } from "@/components/marketing/contact-modal";
+import { locales, localeLabels, type Locale } from "@/i18n/config";
+import { trackLandingCta, trackContactFormOpen } from "@/lib/landing-analytics";
 
 export function LandingHeader({
   locale,
-  otherLocale,
   loginLabel,
   ctaLabel,
   pricingLabel,
   demoLabel,
   contactLabel,
+  helpLabel,
   navLinks,
 }: {
   locale: string;
-  otherLocale: string;
   loginLabel: string;
   ctaLabel: string;
   pricingLabel: string;
   demoLabel: string;
   contactLabel: string;
+  helpLabel: string;
   navLinks: { href: string; label: string }[];
 }) {
   const [open, setOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
+  const pathname = usePathname();
+
+  function localeHref(target: Locale) {
+    const suffix = pathname.replace(new RegExp(`^/${locale}`), "") || "";
+    return `/${target}${suffix}`;
+  }
+
+  function openContact() {
+    trackContactFormOpen();
+    setContactOpen(true);
+  }
 
   return (
     <>
@@ -46,24 +60,45 @@ export function LandingHeader({
                 {l.label}
               </Link>
             ))}
+            <Link
+              href={`/${locale}/help`}
+              className="text-sm text-white/70 transition-colors hover:text-white"
+            >
+              {helpLabel}
+            </Link>
             <button
               type="button"
-              onClick={() => setContactOpen(true)}
+              onClick={openContact}
               className="text-sm text-white/70 transition-colors hover:text-white"
             >
               {contactLabel}
             </button>
+            <div className="flex items-center gap-1 rounded-lg border border-white/15 p-0.5">
+              {locales.map((loc) => (
+                <Link
+                  key={loc}
+                  href={localeHref(loc)}
+                  className={
+                    loc === locale
+                      ? "rounded-md bg-white/15 px-2 py-1 text-xs font-semibold uppercase text-white"
+                      : "rounded-md px-2 py-1 text-xs uppercase text-white/60 hover:text-white"
+                  }
+                  title={localeLabels[loc]}
+                >
+                  {loc}
+                </Link>
+              ))}
+            </div>
             <Link
-              href={`/${otherLocale}`}
-              className="rounded-lg border border-white/15 px-2.5 py-1 text-xs font-medium uppercase tracking-wide text-white/70 hover:border-white/30 hover:text-white"
+              href={`/${locale}/login`}
+              onClick={() => trackLandingCta("header", "login")}
+              className="text-sm text-white/80 hover:text-white"
             >
-              {otherLocale}
-            </Link>
-            <Link href={`/${locale}/login`} className="text-sm text-white/80 hover:text-white">
               {loginLabel}
             </Link>
             <Link
               href={`/${locale}/register`}
+              onClick={() => trackLandingCta("header", "register")}
               className="inline-flex h-10 items-center rounded-lg bg-gold px-5 text-sm font-semibold text-navy-dark hover:bg-gold-light"
             >
               {ctaLabel}
@@ -93,11 +128,18 @@ export function LandingHeader({
                   {l.label}
                 </Link>
               ))}
+              <Link
+                href={`/${locale}/help`}
+                onClick={() => setOpen(false)}
+                className="rounded-xl px-4 py-3 text-sm font-medium text-white/85 hover:bg-white/10"
+              >
+                {helpLabel}
+              </Link>
               <button
                 type="button"
                 onClick={() => {
                   setOpen(false);
-                  setContactOpen(true);
+                  openContact();
                 }}
                 className="rounded-xl px-4 py-3 text-left text-sm font-medium text-white/85 hover:bg-white/10"
               >
@@ -105,7 +147,10 @@ export function LandingHeader({
               </button>
               <Link
                 href={`/${locale}/demo`}
-                onClick={() => setOpen(false)}
+                onClick={() => {
+                  trackLandingCta("mobile_nav", "demo");
+                  setOpen(false);
+                }}
                 className="rounded-xl px-4 py-3 text-sm font-medium text-white/85 hover:bg-white/10"
               >
                 {demoLabel}
@@ -119,18 +164,30 @@ export function LandingHeader({
               </Link>
               <Link
                 href={`/${locale}/register`}
-                onClick={() => setOpen(false)}
+                onClick={() => {
+                  trackLandingCta("mobile_nav", "register");
+                  setOpen(false);
+                }}
                 className="mt-2 inline-flex h-12 items-center justify-center rounded-xl bg-gold text-sm font-semibold text-navy-dark"
               >
                 {ctaLabel}
               </Link>
-              <Link
-                href={`/${otherLocale}`}
-                onClick={() => setOpen(false)}
-                className="mt-2 text-center text-xs text-white/50 uppercase"
-              >
-                {otherLocale}
-              </Link>
+              <div className="mt-3 flex justify-center gap-2">
+                {locales.map((loc) => (
+                  <Link
+                    key={loc}
+                    href={localeHref(loc)}
+                    onClick={() => setOpen(false)}
+                    className={
+                      loc === locale
+                        ? "text-xs font-semibold uppercase text-gold"
+                        : "text-xs uppercase text-white/50"
+                    }
+                  >
+                    {localeLabels[loc]}
+                  </Link>
+                ))}
+              </div>
             </nav>
           </div>
         )}

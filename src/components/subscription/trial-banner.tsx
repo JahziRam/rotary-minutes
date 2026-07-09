@@ -3,8 +3,8 @@
 import { useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { differenceInCalendarDays, format } from "date-fns";
-import { fr, enUS } from "date-fns/locale";
-import { Clock } from "lucide-react";
+import { fr, enUS, es } from "date-fns/locale";
+import { Clock, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 export function TrialBanner({
@@ -15,7 +15,7 @@ export function TrialBanner({
   locale: string;
 }) {
   const t = useTranslations("subscription");
-  const dateLocale = locale === "fr" ? fr : enUS;
+  const dateLocale = locale === "fr" ? fr : locale === "es" ? es : enUS;
 
   const { daysLeft, endLabel, urgent } = useMemo(() => {
     const end = new Date(trialEndsAt);
@@ -35,20 +35,23 @@ export function TrialBanner({
           : "bg-navy/5 border-b border-navy/10 text-navy"
       }
     >
-      <div className="max-w-7xl mx-auto px-4 lg:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2 text-sm">
+      <div className="max-w-7xl mx-auto px-4 lg:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 text-sm">
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4 shrink-0" />
           <span>
             {daysLeft === 0
               ? t("trialBanner.lastDay", { date: endLabel })
-              : t("trialBanner.daysLeft", { count: daysLeft, date: endLabel })}
+              : daysLeft <= 3
+                ? t("trialBanner.urgent", { count: daysLeft, date: endLabel })
+                : t("trialBanner.daysLeft", { count: daysLeft, date: endLabel })}
           </span>
         </div>
         <Link
           href={`/${locale}/settings/subscription`}
-          className="font-semibold underline underline-offset-2 hover:no-underline"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-gold px-3 py-1.5 text-xs font-semibold text-navy-dark hover:bg-gold-light transition-colors"
         >
           {t("trialBanner.upgrade")}
+          <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       </div>
     </div>

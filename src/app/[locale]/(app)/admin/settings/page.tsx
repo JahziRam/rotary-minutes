@@ -59,6 +59,7 @@ export default async function AdminSettingsPage({
             supportEmail: settings?.supportEmail ?? "",
             contactToEmail: settings?.contactToEmail ?? "",
             contactBccEmail: settings?.contactBccEmail ?? "",
+            signupNotifyEmail: settings?.signupNotifyEmail ?? "",
             trialDays: settings?.trialDays ?? 14,
             maintenanceMode: settings?.maintenanceMode ?? false,
             gaMeasurementId: analytics.gaMeasurementId,

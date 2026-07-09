@@ -753,6 +753,8 @@
       "contactToEmail": "Destinataire (To)",
       "contactBccEmail": "Copie cachée (BCC)",
       "contactBccPlaceholder": "Identique au destinataire si vide",
+      "signupNotifyEmail": "Email notification nouvelle inscription",
+      "signupNotifyPlaceholder": "Alerte à chaque inscription club (défaut : email support)",
       "invalidEmail": "Adresse email invalide",
       "trialDays": "Jours d'essai gratuit",
       "maintenanceMode": "Mode maintenance",
@@ -828,6 +830,7 @@
     "stripeNote": "Intégration Stripe — configuration des clés API requise pour le paiement.",
     "trialBanner": {
       "daysLeft": "Essai gratuit : {count, plural, one {# jour restant} other {# jours restants}} (expire le {date})",
+      "urgent": "Fin d'essai proche : {count, plural, one {# jour restant} other {# jours restants}} — expire le {date}",
       "lastDay": "Dernier jour d'essai gratuit (expire le {date})",
       "upgrade": "Choisir un abonnement"
     },
@@ -900,13 +903,25 @@
       "CLUB_PROFILE": "Profil du club",
       "MEMBERS": "Membres",
       "FIRST_MEETING": "Première réunion",
-      "INVITE_USERS": "Inviter des utilisateurs"
+      "INVITE_USERS": "Inviter des utilisateurs",
+      "FIRST_MINUTE": "Premier PV"
     },
     "descriptions": {
       "CLUB_PROFILE": "Complétez les informations de base de votre club.",
       "MEMBERS": "Ajoutez au moins un membre du club.",
       "FIRST_MEETING": "Planifiez votre première réunion statutaire.",
-      "INVITE_USERS": "Invitez un secrétaire ou un autre officier."
+      "INVITE_USERS": "Invitez un secrétaire ou un autre officier.",
+      "FIRST_MINUTE": "Ouvrez le brouillon de PV créé avec votre réunion, complétez-le et préparez votre premier procès-verbal officiel."
+    },
+    "openMinutes": "Ouvrir les PV",
+    "checklistTitle": "Premiers pas",
+    "markDone": "Fait",
+    "checklist": {
+      "CLUB_PROFILE": "Compléter le profil du club",
+      "MEMBERS": "Ajouter les membres",
+      "FIRST_MEETING": "Créer la première réunion",
+      "INVITE_USERS": "Inviter les utilisateurs",
+      "FIRST_MINUTE": "Rédiger le premier PV"
     },
     "fields": {
       "clubName": "Nom du club",
@@ -1179,8 +1194,8 @@
       "timeLabel": "pour rédiger un PV complet",
       "trial": "14 jours",
       "trialLabel": "d'essai gratuit inclus",
-      "lang": "FR / EN",
-      "langLabel": "interface bilingue native"
+      "lang": "FR / EN / ES",
+      "langLabel": "interface multilingue"
     },
     "caseStudiesLink": "Témoignages clients",
     "caseStudies": {
@@ -1237,6 +1252,8 @@
       "title": "Prêt à simplifier la vie de votre club ?",
       "subtitle": "Essai gratuit 14 jours — membres, réunions et PV dans un seul outil. Votre prochain PV peut partir ce soir.",
       "cta": "Démarrer l'essai gratuit",
+      "demo": "Essayer la démo",
+      "contact": "Nous contacter",
       "note": "Sans engagement · Annulation à tout moment"
     },
     "features": {
@@ -1290,7 +1307,28 @@
       "title": "Tarifs simples et transparents",
       "subtitle": "Choisissez l'offre adaptée à votre club. Les modules s'activent automatiquement selon votre formule.",
       "trialNote": "Essai gratuit 14 jours · Sans carte bancaire",
-      "cta": "Commencer l'essai gratuit"
+      "cta": "Commencer l'essai gratuit",
+      "loadError": "Les tarifs sont temporairement indisponibles. Actualisez la page.",
+      "compare": {
+        "feature": "Fonctionnalité",
+        "unlimited": "Illimité",
+        "rows": {
+          "members": "Membres",
+          "minutesPdf": "PV & PDF authentifié",
+          "liveMeetings": "Mode réunion live",
+          "dues": "Suivi des cotisations",
+          "treasury": "Module trésorerie",
+          "emails": "Campagnes email club",
+          "statistics": "Statistiques & rapports",
+          "events": "Gestion des événements",
+          "attendance": "Rapports d'assiduité",
+          "district": "Tableau de bord district",
+          "api": "Accès API",
+          "offline": "Mode hors ligne PWA",
+          "governance": "Gouvernance & archives",
+          "integrations": "Intégrations"
+        }
+      }
     },
     "addons": {
       "title": "Modules optionnels",
@@ -1474,6 +1512,54 @@
     "treasuryImportTitle": "Import trésorerie CSV / Excel",
     "downloadImportTemplate": "Modèle CSV",
     "importTreasuryFile": "Importer un fichier"
+  },
+  "seo": {
+    "landing": {
+      "title": "Rotary Minutes — Procès-verbaux modernes pour clubs Rotary",
+      "description": "Plateforme SaaS collaborative pour rédiger, archiver et authentifier les PV Rotary et Rotaract. Réunions live, PDF QR, cotisations et trésorerie."
+    },
+    "help": {
+      "title": "Centre d'aide — Rotary Minutes",
+      "description": "Guides PV, réunions, cotisations, emails et abonnement sur Rotary Minutes."
+    }
+  },
+  "help": {
+    "nav": "Aide",
+    "title": "Centre d'aide",
+    "subtitle": "Réponses rapides pour secrétaires, trésoriers et dirigeants de club.",
+    "backHome": "Retour à l'accueil",
+    "contactHint": "Vous ne trouvez pas votre réponse ? Utilisez le formulaire de contact sur la page d'accueil.",
+    "contactCta": "Contacter le support",
+    "articles": {
+      "getting-started": {
+        "title": "Premiers pas",
+        "body": "Après l'inscription, suivez la checklist : profil club, membres, première réunion, invitations, puis votre premier brouillon de PV.\n\nLe tableau de bord affiche les étapes restantes jusqu'à la fin de la configuration."
+      },
+      "minutes": {
+        "title": "Rédiger et publier les PV",
+        "body": "Créez une réunion, ouvrez le PV associé, complétez les points à l'ordre du jour, puis finalisez pour générer le PDF authentifié avec vérification QR.\n\nDiffusez le PDF par email ou téléchargez-le depuis la bibliothèque."
+      },
+      "meetings": {
+        "title": "Réunions & présences",
+        "body": "Planifiez les réunions statutaires ou de bureau, utilisez le mode live pour la prise de notes en direct et enregistrez les présences depuis la fiche réunion."
+      },
+      "dues": {
+        "title": "Cotisations & trésorerie",
+        "body": "Suivez les cotisations par exercice, enregistrez les paiements et exportez les rapports trésorier si le module est activé sur votre offre."
+      },
+      "emails": {
+        "title": "Emails club",
+        "body": "Envoyez des campagnes aux membres ou groupes, utilisez les modèles système pour les rappels et suivez les ouvertures si activé."
+      },
+      "district": {
+        "title": "Vue district",
+        "body": "L'offre Enterprise inclut un tableau de bord district en lecture seule pour les gouverneurs."
+      },
+      "subscription": {
+        "title": "Essai & abonnement",
+        "body": "Votre club démarre en essai gratuit. Avant la fin, choisissez une offre dans Paramètres → Abonnement. Des emails de rappel sont envoyés à J-7, J-3 et J-1."
+      }
+    }
   },
   "caseStudies": {
     "title": "Témoignages clients",

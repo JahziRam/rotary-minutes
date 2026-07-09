@@ -68,12 +68,17 @@ export async function trialReminderEmail(opts: {
   logoUrl?: string;
 }) {
   const isFr = opts.locale === "fr";
+  const isEs = opts.locale === "es";
   const subject = isFr
     ? `Votre essai Rotary Minutes expire dans ${opts.daysLeft} jour${opts.daysLeft > 1 ? "s" : ""}`
-    : `Your Rotary Minutes trial expires in ${opts.daysLeft} day${opts.daysLeft > 1 ? "s" : ""}`;
+    : isEs
+      ? `Su prueba de Rotary Minutes expira en ${opts.daysLeft} día${opts.daysLeft > 1 ? "s" : ""}`
+      : `Your Rotary Minutes trial expires in ${opts.daysLeft} day${opts.daysLeft > 1 ? "s" : ""}`;
   const body = isFr
     ? `<p>Bonjour,</p><p>L'essai gratuit de <strong>${opts.clubName}</strong> sur Rotary Minutes expire dans <strong>${opts.daysLeft} jour(s)</strong>.</p><p><a class="cta-button" href="${opts.upgradeUrl}">Choisir une offre</a></p><p style="font-size:14px;color:#64748b">Continuez à rédiger vos procès-verbaux sans interruption.</p>`
-    : `<p>Hello,</p><p>The free trial for <strong>${opts.clubName}</strong> on Rotary Minutes expires in <strong>${opts.daysLeft} day(s)</strong>.</p><p><a class="cta-button" href="${opts.upgradeUrl}">Choose a plan</a></p><p style="font-size:14px;color:#64748b">Keep writing your minutes without interruption.</p>`;
+    : isEs
+      ? `<p>Hola,</p><p>La prueba gratuita de <strong>${opts.clubName}</strong> en Rotary Minutes expira en <strong>${opts.daysLeft} día(s)</strong>.</p><p><a class="cta-button" href="${opts.upgradeUrl}">Elegir un plan</a></p><p style="font-size:14px;color:#64748b">Siga redactando sus actas sin interrupción.</p>`
+      : `<p>Hello,</p><p>The free trial for <strong>${opts.clubName}</strong> on Rotary Minutes expires in <strong>${opts.daysLeft} day(s)</strong>.</p><p><a class="cta-button" href="${opts.upgradeUrl}">Choose a plan</a></p><p style="font-size:14px;color:#64748b">Keep writing your minutes without interruption.</p>`;
   const branded = await prepareBrandedEmail(body, {
     clubName: opts.clubName,
     clubId: opts.clubId,

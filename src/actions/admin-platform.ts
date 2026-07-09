@@ -347,6 +347,7 @@ export async function updateAppSettings(
     supportEmail?: string;
     contactToEmail?: string;
     contactBccEmail?: string;
+    signupNotifyEmail?: string;
     trialDays: number;
     maintenanceMode: boolean;
     gaMeasurementId?: string;
@@ -359,7 +360,8 @@ export async function updateAppSettings(
   if (
     !validateOptionalEmail(data.supportEmail) ||
     !validateOptionalEmail(data.contactToEmail) ||
-    !validateOptionalEmail(data.contactBccEmail)
+    !validateOptionalEmail(data.contactBccEmail) ||
+    !validateOptionalEmail(data.signupNotifyEmail)
   ) {
     return { error: "INVALID_EMAIL" as const };
   }
@@ -370,6 +372,7 @@ export async function updateAppSettings(
     supportEmail: normalizeOptionalEmail(rest.supportEmail),
     contactToEmail: normalizeOptionalEmail(rest.contactToEmail),
     contactBccEmail: normalizeOptionalEmail(rest.contactBccEmail),
+    signupNotifyEmail: normalizeOptionalEmail(rest.signupNotifyEmail),
   };
 
   await prisma.appSettings.upsert({

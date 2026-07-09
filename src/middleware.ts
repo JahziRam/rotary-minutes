@@ -9,6 +9,8 @@ const intlMiddleware = createMiddleware({
   localePrefix: "always",
 });
 
+const LOCALE_PATTERN = new RegExp(`^/(${locales.join("|")})`);
+
 const publicPaths = [
   "/",
   "/login",
@@ -23,11 +25,12 @@ const publicPaths = [
   "/case-studies",
   "/clubs",
   "/check-in",
+  "/help",
 ];
 
 export default function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const pathnameWithoutLocale = pathname.replace(/^\/(fr|en)/, "") || "/";
+  const pathnameWithoutLocale = pathname.replace(LOCALE_PATTERN, "") || "/";
 
   const isPublic = publicPaths.some(
     (p) =>
@@ -42,7 +45,7 @@ export default function middleware(request: NextRequest) {
       request.cookies.get("__Secure-authjs.session-token")?.value;
 
     if (!token) {
-      const locale = pathname.match(/^\/(fr|en)/)?.[1] || defaultLocale;
+      const locale = pathname.match(LOCALE_PATTERN)?.[1] || defaultLocale;
       return NextResponse.redirect(
         new URL(`/${locale}/login`, request.url)
       );

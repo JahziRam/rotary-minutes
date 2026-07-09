@@ -3,16 +3,17 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { CheckCircle, Circle } from "lucide-react";
 import { completeOnboardingStep } from "@/actions/onboarding";
 import type { OnboardingStepKey } from "@/generated/prisma/client";
 
-const STEPS: { key: OnboardingStepKey; href: string; fr: string; en: string }[] = [
-  { key: "CLUB_PROFILE", href: "/settings", fr: "Compléter le profil du club", en: "Complete club profile" },
-  { key: "MEMBERS", href: "/members", fr: "Ajouter les membres", en: "Add members" },
-  { key: "FIRST_MEETING", href: "/meetings/new", fr: "Créer la première réunion", en: "Create first meeting" },
-  { key: "INVITE_USERS", href: "/settings/users", fr: "Inviter les utilisateurs", en: "Invite users" },
+const STEPS: { key: OnboardingStepKey; href: string }[] = [
+  { key: "CLUB_PROFILE", href: "/settings" },
+  { key: "MEMBERS", href: "/members" },
+  { key: "FIRST_MEETING", href: "/meetings/new" },
+  { key: "INVITE_USERS", href: "/settings/users" },
+  { key: "FIRST_MINUTE", href: "/minutes" },
 ];
 
 export function OnboardingChecklist({
@@ -23,17 +24,15 @@ export function OnboardingChecklist({
   currentStep: OnboardingStepKey;
 }) {
   const locale = useLocale();
+  const t = useTranslations("onboarding");
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const isFr = locale === "fr";
 
   if (currentStep === "COMPLETE") return null;
 
   return (
     <div className="rounded-xl border border-gold/30 bg-gold/5 p-4 space-y-3">
-      <h3 className="font-semibold text-navy">
-        {isFr ? "Premiers pas" : "Getting started"}
-      </h3>
+      <h3 className="font-semibold text-navy">{t("checklistTitle")}</h3>
       <ul className="space-y-2">
         {STEPS.map((step) => {
           const done = completedSteps.includes(step.key);
@@ -48,7 +47,7 @@ export function OnboardingChecklist({
                 href={`/${locale}${step.href}`}
                 className={done ? "text-gray-500 line-through" : "text-navy hover:underline"}
               >
-                {isFr ? step.fr : step.en}
+                {t(`checklist.${step.key}`)}
               </Link>
               {!done && (
                 <button
@@ -62,7 +61,7 @@ export function OnboardingChecklist({
                     })
                   }
                 >
-                  {isFr ? "Fait" : "Done"}
+                  {t("markDone")}
                 </button>
               )}
             </li>

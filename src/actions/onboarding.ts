@@ -11,6 +11,7 @@ const STEPS: OnboardingStepKey[] = [
   "MEMBERS",
   "FIRST_MEETING",
   "INVITE_USERS",
+  "FIRST_MINUTE",
   "COMPLETE",
 ];
 
@@ -50,10 +51,11 @@ export async function completeOnboardingStep(step: OnboardingStepKey) {
     },
   });
 
-  for (const loc of ["fr", "en"]) {
+  for (const loc of ["fr", "en", "es"]) {
     revalidatePath(`/${loc}/dashboard`);
     revalidatePath(`/${loc}/members`);
     revalidatePath(`/${loc}/onboarding`);
+    revalidatePath(`/${loc}/minutes`);
   }
   return { success: true };
 }
@@ -107,9 +109,10 @@ export async function createOnboardingMeeting(
     },
   });
 
-  for (const loc of ["fr", "en"]) {
+  for (const loc of ["fr", "en", "es"]) {
     revalidatePath(`/${loc}/meetings`);
     revalidatePath(`/${loc}/dashboard`);
+    revalidatePath(`/${loc}/minutes`);
   }
 
   return { success: true, meetingId: meeting.id };

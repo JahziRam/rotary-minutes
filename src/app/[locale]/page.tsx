@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import {
@@ -13,16 +14,33 @@ import { LandingHero } from "@/components/marketing/landing-hero";
 import { HowItWorks } from "@/components/marketing/how-it-works";
 import { LandingCta } from "@/components/marketing/landing-cta";
 import { PersonasSection } from "@/components/marketing/personas-section";
-import { PricingSection } from "@/components/marketing/pricing-section";
-import { AddonsSection } from "@/components/marketing/addons-section";
+import { LandingPricingBlock } from "@/components/marketing/landing-pricing-block";
 import { ClubSolutionSection } from "@/components/marketing/club-solution-section";
 import { LandingHeader } from "@/components/marketing/landing-header";
 import { ModulesTeaserSection } from "@/components/marketing/modules-teaser-section";
 import { RotaryDisclaimer } from "@/components/marketing/rotary-disclaimer";
 import { CompanyLegalNotice } from "@/components/legal/company-legal-notice";
 import { ManageCookiesButton } from "@/components/analytics/manage-cookies-button";
+import { buildPageMetadata } from "@/lib/seo";
+import { locales } from "@/i18n/config";
 
-export const dynamic = "force-dynamic";
+export function generateStaticParams() {
+  return locales.map((locale) => ({ locale }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "seo.landing" });
+  return buildPageMetadata({
+    locale,
+    title: t("title"),
+    description: t("description"),
+  });
+}
 
 export default async function LandingPage({
   params,
@@ -32,7 +50,6 @@ export default async function LandingPage({
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations();
-  const otherLocale = locale === "fr" ? "en" : "fr";
 
   const features = [
     {
@@ -85,12 +102,12 @@ export default async function LandingPage({
     <div className="flex min-h-screen flex-col">
       <LandingHeader
         locale={locale}
-        otherLocale={otherLocale}
         loginLabel={t("auth.login")}
         ctaLabel={t("landing.cta")}
         pricingLabel={t("landing.pricing.title")}
         demoLabel={t("landing.tryDemo")}
         contactLabel={t("landing.contact.nav")}
+        helpLabel={t("help.nav")}
         navLinks={[
           { href: `/${locale}#solution`, label: t("landing.solution.nav") },
           { href: `/${locale}#pricing`, label: t("landing.pricing.title") },
@@ -154,9 +171,7 @@ export default async function LandingPage({
 
       <PersonasSection />
 
-      <PricingSection locale={locale} />
-
-      <AddonsSection locale={locale} />
+      <LandingPricingBlock locale={locale} />
 
       <LandingCta locale={locale} />
 
@@ -167,7 +182,9 @@ export default async function LandingPage({
           <Link href={`/${locale}/demo`} className="transition-colors hover:text-white">
             {t("landing.tryDemo")}
           </Link>
-
+          <Link href={`/${locale}/help`} className="transition-colors hover:text-white">
+            {t("help.nav")}
+          </Link>
           <Link href={`/${locale}/login`} className="transition-colors hover:text-white">
             {t("auth.login")}
           </Link>

@@ -753,6 +753,8 @@
       "contactToEmail": "Recipient (To)",
       "contactBccEmail": "Blind copy (BCC)",
       "contactBccPlaceholder": "Same as recipient if empty",
+      "signupNotifyEmail": "New signup notification email",
+      "signupNotifyPlaceholder": "Alert when a club registers (defaults to support email)",
       "invalidEmail": "Invalid email address",
       "trialDays": "Free trial days",
       "maintenanceMode": "Maintenance mode",
@@ -828,6 +830,7 @@
     "stripeNote": "Stripe integration — API keys required for payment.",
     "trialBanner": {
       "daysLeft": "Free trial: {count, plural, one {# day left} other {# days left}} (expires {date})",
+      "urgent": "Trial ending soon: {count, plural, one {# day left} other {# days left}} — expires {date}",
       "lastDay": "Last day of free trial (expires {date})",
       "upgrade": "Choose a plan"
     },
@@ -900,13 +903,25 @@
       "CLUB_PROFILE": "Club profile",
       "MEMBERS": "Members",
       "FIRST_MEETING": "First meeting",
-      "INVITE_USERS": "Invite users"
+      "INVITE_USERS": "Invite users",
+      "FIRST_MINUTE": "First minutes"
     },
     "descriptions": {
       "CLUB_PROFILE": "Complete your club's basic information.",
       "MEMBERS": "Add at least one club member.",
       "FIRST_MEETING": "Schedule your first statutory meeting.",
-      "INVITE_USERS": "Invite a secretary or another officer."
+      "INVITE_USERS": "Invite a secretary or another officer.",
+      "FIRST_MINUTE": "Open your draft minutes, add content and get ready to finalize your first official record."
+    },
+    "openMinutes": "Open minutes",
+    "checklistTitle": "Getting started",
+    "markDone": "Done",
+    "checklist": {
+      "CLUB_PROFILE": "Complete club profile",
+      "MEMBERS": "Add members",
+      "FIRST_MEETING": "Create first meeting",
+      "INVITE_USERS": "Invite users",
+      "FIRST_MINUTE": "Draft your first minutes"
     },
     "fields": {
       "clubName": "Club name",
@@ -1179,8 +1194,8 @@
       "timeLabel": "to draft complete minutes",
       "trial": "14 days",
       "trialLabel": "free trial included",
-      "lang": "FR / EN",
-      "langLabel": "native bilingual interface"
+      "lang": "FR / EN / ES",
+      "langLabel": "multilingual interface"
     },
     "caseStudiesLink": "Customer stories",
     "caseStudies": {
@@ -1237,6 +1252,8 @@
       "title": "Ready to simplify club life?",
       "subtitle": "14-day free trial — members, meetings and minutes in one tool. Your next minutes can go out tonight.",
       "cta": "Start your free trial",
+      "demo": "Try the demo",
+      "contact": "Contact us",
       "note": "No commitment · Cancel anytime"
     },
     "features": {
@@ -1290,7 +1307,28 @@
       "title": "Simple, transparent pricing",
       "subtitle": "Choose the plan that fits your club. Modules activate automatically with your subscription.",
       "trialNote": "14-day free trial · No credit card required",
-      "cta": "Start your free trial"
+      "cta": "Start your free trial",
+      "loadError": "Pricing is temporarily unavailable. Please refresh the page.",
+      "compare": {
+        "feature": "Feature",
+        "unlimited": "Unlimited",
+        "rows": {
+          "members": "Members",
+          "minutesPdf": "Minutes & authenticated PDF",
+          "liveMeetings": "Live meeting mode",
+          "dues": "Dues tracking",
+          "treasury": "Treasury module",
+          "emails": "Club email campaigns",
+          "statistics": "Statistics & reports",
+          "events": "Events management",
+          "attendance": "Attendance reports",
+          "district": "District dashboard",
+          "api": "API access",
+          "offline": "Offline PWA mode",
+          "governance": "Governance & archives",
+          "integrations": "Integrations"
+        }
+      }
     },
     "addons": {
       "title": "Optional modules",
@@ -1474,6 +1512,54 @@
     "treasuryImportTitle": "Treasury CSV / Excel import",
     "downloadImportTemplate": "CSV template",
     "importTreasuryFile": "Import file"
+  },
+  "seo": {
+    "landing": {
+      "title": "Rotary Minutes — Modern meeting minutes for Rotary clubs",
+      "description": "Collaborative SaaS for writing, archiving and authenticating Rotary and Rotaract meeting minutes. Live meetings, QR PDFs, dues and treasury."
+    },
+    "help": {
+      "title": "Help center — Rotary Minutes",
+      "description": "Guides for minutes, meetings, dues, emails and subscriptions on Rotary Minutes."
+    }
+  },
+  "help": {
+    "nav": "Help",
+    "title": "Help center",
+    "subtitle": "Quick answers for secretaries, treasurers and club officers.",
+    "backHome": "Back to home",
+    "contactHint": "Can't find what you need? Use the contact form on the home page.",
+    "contactCta": "Contact support",
+    "articles": {
+      "getting-started": {
+        "title": "Getting started",
+        "body": "After registration, complete the onboarding checklist: club profile, members, first meeting, invitations, then your first minutes draft.\n\nThe dashboard shows your next steps until setup is complete."
+      },
+      "minutes": {
+        "title": "Writing and publishing minutes",
+        "body": "Create a meeting, open the linked minutes draft, fill agenda items during or after the session, then finalize to generate the authenticated PDF with QR verification.\n\nShare the PDF by email or download it from the minutes library."
+      },
+      "meetings": {
+        "title": "Meetings & attendance",
+        "body": "Schedule statutory or board meetings, use live mode for real-time note-taking, and record attendance from the meeting screen or member check-in."
+      },
+      "dues": {
+        "title": "Dues & treasury",
+        "body": "Track member dues by fiscal year, record payments, and export treasurer reports when the treasury module is enabled on your plan."
+      },
+      "emails": {
+        "title": "Club emails",
+        "body": "Send campaigns to members or groups, use system templates for reminders, and track opens when enabled by your administrator."
+      },
+      "district": {
+        "title": "District view",
+        "body": "Enterprise plans include a read-only district dashboard for governors to monitor club activity and access finalized minutes."
+      },
+      "subscription": {
+        "title": "Trial & subscription",
+        "body": "Your club starts with a free trial. Before it ends, choose a plan under Settings → Subscription. You'll receive reminder emails 7, 3 and 1 days before expiry."
+      }
+    }
   },
   "caseStudies": {
     "title": "Customer stories",

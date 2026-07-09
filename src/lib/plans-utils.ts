@@ -72,7 +72,9 @@ export function toPublicPlan(
 }
 
 export function formatPrice(amount: number, currency: string, locale: string): string {
-  return new Intl.NumberFormat(locale === "fr" ? "fr-FR" : "en-US", {
+  const numberLocale =
+    locale === "fr" ? "fr-FR" : locale === "es" ? "es-ES" : "en-US";
+  return new Intl.NumberFormat(numberLocale, {
     style: "currency",
     currency,
     maximumFractionDigits: amount % 1 === 0 ? 0 : 2,

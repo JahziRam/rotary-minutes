@@ -3,7 +3,8 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
-import { Building2, Users, Calendar, UserPlus, CheckCircle2 } from "lucide-react";
+import { Building2, Users, Calendar, UserPlus, CheckCircle2, FileText } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,6 +20,7 @@ const STEPS: OnboardingStepKey[] = [
   "MEMBERS",
   "FIRST_MEETING",
   "INVITE_USERS",
+  "FIRST_MINUTE",
 ];
 
 const STEP_ICONS = {
@@ -26,6 +28,7 @@ const STEP_ICONS = {
   MEMBERS: Users,
   FIRST_MEETING: Calendar,
   INVITE_USERS: UserPlus,
+  FIRST_MINUTE: FileText,
 };
 
 interface ClubData {
@@ -72,7 +75,7 @@ export function OnboardingWizard({
         return;
       }
       then?.();
-      if (key === "INVITE_USERS") {
+      if (key === "FIRST_MINUTE") {
         router.push(`/${locale}/dashboard`);
         router.refresh();
       } else {
@@ -270,6 +273,31 @@ export function OnboardingWizard({
             </form>
           )}
 
+          {step === "FIRST_MINUTE" && (
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600">{t("descriptions.FIRST_MINUTE")}</p>
+              <Link
+                href={`/${locale}/minutes`}
+                className="inline-flex h-10 items-center rounded-lg bg-navy px-4 text-sm font-medium text-white hover:bg-navy-dark"
+              >
+                {t("openMinutes")}
+              </Link>
+              <div className="flex gap-3 pt-2">
+                <Button
+                  type="button"
+                  variant="gold"
+                  disabled={pending}
+                  onClick={() => finishStep("FIRST_MINUTE")}
+                >
+                  {pending ? "..." : t("finish")}
+                </Button>
+                <Button type="button" variant="outline" disabled={pending} onClick={skipStep}>
+                  {t("skip")}
+                </Button>
+              </div>
+            </div>
+          )}
+
           {step === "INVITE_USERS" && (
             <form action={handleInvite} className="space-y-4">
               <div className="grid sm:grid-cols-2 gap-4">
@@ -293,7 +321,7 @@ export function OnboardingWizard({
               </div>
               <div className="flex gap-3 pt-2">
                 <Button type="submit" variant="gold" disabled={pending}>
-                  {pending ? "..." : isLast ? t("finish") : t("continue")}
+                  {pending ? "..." : t("continue")}
                 </Button>
                 <Button type="button" variant="outline" disabled={pending} onClick={skipStep}>
                   {t("skip")}

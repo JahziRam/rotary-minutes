@@ -14,6 +14,7 @@ interface SettingsData {
   supportEmail: string;
   contactToEmail: string;
   contactBccEmail: string;
+  signupNotifyEmail: string;
   trialDays: number;
   maintenanceMode: boolean;
   gaMeasurementId: string;
@@ -39,6 +40,7 @@ export function AppSettingsForm({ settings }: { settings: SettingsData }) {
                 supportEmail: (fd.get("supportEmail") as string) || undefined,
                 contactToEmail: (fd.get("contactToEmail") as string) || undefined,
                 contactBccEmail: (fd.get("contactBccEmail") as string) || undefined,
+                signupNotifyEmail: (fd.get("signupNotifyEmail") as string) || undefined,
                 trialDays: parseInt(fd.get("trialDays") as string, 10) || 14,
                 maintenanceMode: fd.get("maintenanceMode") === "on",
                 gaMeasurementId: (fd.get("gaMeasurementId") as string) || "",
@@ -87,6 +89,13 @@ export function AppSettingsForm({ settings }: { settings: SettingsData }) {
             label={t("contactBccEmail")}
             defaultValue={settings.contactBccEmail}
             placeholder={t("contactBccPlaceholder")}
+          />
+          <Input
+            name="signupNotifyEmail"
+            type="email"
+            label={t("signupNotifyEmail")}
+            defaultValue={settings.signupNotifyEmail}
+            placeholder={t("signupNotifyPlaceholder")}
           />
         </div>
 

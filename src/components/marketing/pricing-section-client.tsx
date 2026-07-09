@@ -6,6 +6,8 @@ import { Check } from "lucide-react";
 import { formatPrice, type BillingSettings, type PublicPlan } from "@/lib/plans-utils";
 import type { BillingInterval } from "@/generated/prisma/client";
 import { cn } from "@/lib/utils";
+import { PricingComparisonTable } from "./pricing-comparison-table";
+import { trackPricingInterval } from "@/lib/landing-analytics";
 
 export function PricingSectionClient({
   plans,
@@ -27,7 +29,10 @@ export function PricingSectionClient({
         <div className="inline-flex rounded-xl border border-gray-200 bg-white p-1">
           <button
             type="button"
-            onClick={() => setInterval("MONTHLY")}
+            onClick={() => {
+              setInterval("MONTHLY");
+              trackPricingInterval("monthly");
+            }}
             className={cn(
               "rounded-lg px-4 py-2 text-sm font-medium transition-colors",
               !isAnnual
@@ -39,7 +44,10 @@ export function PricingSectionClient({
           </button>
           <button
             type="button"
-            onClick={() => setInterval("ANNUAL")}
+            onClick={() => {
+              setInterval("ANNUAL");
+              trackPricingInterval("annual");
+            }}
             className={cn(
               "rounded-lg px-4 py-2 text-sm font-medium transition-colors",
               isAnnual
@@ -104,6 +112,8 @@ export function PricingSectionClient({
           );
         })}
       </div>
+
+      <PricingComparisonTable plans={plans} />
     </div>
   );
 }

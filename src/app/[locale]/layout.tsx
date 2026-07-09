@@ -13,14 +13,21 @@ import { AnalyticsConfigHydrator } from "@/components/analytics/analytics-config
 import { getEnvAnalyticsConfig } from "@/lib/analytics-env";
 import "../globals.css";
 
-export const metadata: Metadata = {
-  manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    title: "Rotary Minutes",
-    statusBarStyle: "default",
-  },
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    manifest: `/${locale}/manifest.webmanifest`,
+    appleWebApp: {
+      capable: true,
+      title: "Rotary Minutes",
+      statusBarStyle: "default",
+    },
+  };
+}
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));

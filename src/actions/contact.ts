@@ -11,13 +11,21 @@ import {
 import { getContactInboxConfig } from "@/lib/contact-inbox";
 import { COMPANY_LEGAL } from "@/lib/company-legal";
 
-const TOPIC_LABELS: Record<string, { fr: string; en: string }> = {
-  demo: { fr: "Démonstration", en: "Demo request" },
-  pricing: { fr: "Tarifs & abonnement", en: "Pricing & subscription" },
-  support: { fr: "Support technique", en: "Technical support" },
-  partnership: { fr: "Partenariat", en: "Partnership" },
-  other: { fr: "Autre demande", en: "Other inquiry" },
+const TOPIC_LABELS: Record<string, { fr: string; en: string; es: string }> = {
+  demo: { fr: "Démonstration", en: "Demo request", es: "Solicitud de demo" },
+  pricing: { fr: "Tarifs & abonnement", en: "Pricing & subscription", es: "Tarifas y suscripción" },
+  support: { fr: "Support technique", en: "Technical support", es: "Soporte técnico" },
+  partnership: { fr: "Partenariat", en: "Partnership", es: "Colaboración" },
+  other: { fr: "Autre demande", en: "Other inquiry", es: "Otra consulta" },
 };
+
+function topicLabel(topic: string, locale: string): string {
+  const labels = TOPIC_LABELS[topic];
+  if (!labels) return topic;
+  if (locale === "fr") return labels.fr;
+  if (locale === "es") return labels.es;
+  return labels.en;
+}
 
 function escapeHtml(text: string): string {
   return text
@@ -36,7 +44,7 @@ function buildContactEmailHtml(data: {
   locale: string;
 }) {
   const isFr = data.locale === "fr";
-  const topicLabel = TOPIC_LABELS[data.topic]?.[isFr ? "fr" : "en"] ?? data.topic;
+  const topicText = topicLabel(data.topic, data.locale);
   const clubLine = data.clubName
     ? `<tr><td style="padding:8px 0;color:#64748b;font-size:13px;width:120px;vertical-align:top">${isFr ? "Club" : "Club"}</td><td style="padding:8px 0;font-size:14px;color:#0f172a">${escapeHtml(data.clubName)}</td></tr>`
     : "";
@@ -54,7 +62,7 @@ function buildContactEmailHtml(data: {
           <tr><td style="padding:8px 0;color:#64748b;font-size:13px;width:120px;vertical-align:top">${isFr ? "Nom" : "Name"}</td><td style="padding:8px 0;font-size:14px;color:#0f172a;font-weight:600">${escapeHtml(data.name)}</td></tr>
           <tr><td style="padding:8px 0;color:#64748b;font-size:13px;vertical-align:top">Email</td><td style="padding:8px 0;font-size:14px;color:#0f172a"><a href="mailto:${escapeHtml(data.email)}">${escapeHtml(data.email)}</a></td></tr>
           ${clubLine}
-          <tr><td style="padding:8px 0;color:#64748b;font-size:13px;vertical-align:top">${isFr ? "Sujet" : "Topic"}</td><td style="padding:8px 0;font-size:14px;color:#0f172a">${escapeHtml(topicLabel)}</td></tr>
+          <tr><td style="padding:8px 0;color:#64748b;font-size:13px;vertical-align:top">${isFr ? "Sujet" : "Topic"}</td><td style="padding:8px 0;font-size:14px;color:#0f172a">${escapeHtml(topicText)}</td></tr>
         </table>
         <div style="margin-top:20px;padding:16px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0">
           <p style="margin:0 0 8px;font-size:12px;color:#64748b;font-weight:600">${isFr ? "Message" : "Message"}</p>
@@ -85,15 +93,28 @@ export async function submitContactForm(payload: ContactFormPayload) {
   const inbox = await getContactInboxConfig();
   if (!inbox) return { error: "NOT_CONFIGURED" };
 
-  const isFr = validated.data.locale === "fr";
-  const topicLabel = TOPIC_LABELS[validated.data.topic]?.[isFr ? "fr" : "en"] ?? validated.data.topic;
-  const subject = `[${COMPANY_LEGAL.productName}] Contact — ${topicLabel}`;
+  const submission = await prisma.contactSubmission.create({
+    data: {
+      name: validated.data.name,
+      email: validated.data.email,
+      clubName: validated.data.clubName || null,
+      topic: validated.data.topic,
+      message: validated.data.message,
+      locale: validated.data.locale,
+      ipAddress: ip,
+      status: "NEW",
+      emailSent: false,
+    },
+  });
+
+  const topicLabelText = topicLabel(validated.data.topic, validated.data.locale);
+  const subject = `[${COMPANY_LEGAL.productName}] Contact — ${topicLabelText}`;
 
   const html = buildContactEmailHtml(validated.data);
   const text = [
     `${validated.data.name} <${validated.data.email}>`,
     validated.data.clubName ? `Club: ${validated.data.clubName}` : null,
-    `Topic: ${topicLabel}`,
+    `Topic: ${topicLabelText}`,
     "",
     validated.data.message,
   ]
@@ -130,6 +151,11 @@ export async function submitContactForm(payload: ContactFormPayload) {
     }
     return { error: "SEND_FAILED" };
   }
+
+  await prisma.contactSubmission.update({
+    where: { id: submission.id },
+    data: { emailSent: true },
+  });
 
   return { success: true };
 }

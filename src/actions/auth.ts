@@ -137,6 +137,16 @@ export async function registerClub(data: {
       update: {},
       create: { clubId: createdClubId, currentStep: "CLUB_PROFILE", completedSteps: [] },
     });
+
+    const { notifySuperAdminNewClubSignup } = await import("@/lib/admin-notify");
+    await notifySuperAdminNewClubSignup({
+      clubName: data.clubName,
+      clubSlug: finalSlug,
+      adminEmail: data.email,
+      clubType: data.clubType,
+      country: data.country,
+      locale,
+    });
   }
 
   try {

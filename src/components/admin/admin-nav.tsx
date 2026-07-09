@@ -14,6 +14,7 @@ import {
   CreditCard,
   LifeBuoy,
   Flag,
+  Mail,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +26,7 @@ const items = [
   { href: "/admin/roles", icon: Shield, label: "Rôles" },
   { href: "/admin/announcements", icon: Megaphone, label: "Annonces" },
   { href: "/admin/support", icon: LifeBuoy, label: "Support" },
+  { href: "/admin/contacts", icon: Mail, label: "Contacts" },
   { href: "/admin/feature-flags", icon: Flag, label: "Feature flags" },
   { href: "/admin/settings", icon: Settings, label: "Paramètres SaaS" },
   { href: "/admin/export", icon: Download, label: "Export" },

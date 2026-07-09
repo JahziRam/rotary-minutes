@@ -270,7 +270,14 @@ enum OnboardingStepKey {
   MEMBERS
   FIRST_MEETING
   INVITE_USERS
+  FIRST_MINUTE
   COMPLETE
+}
+
+enum ContactSubmissionStatus {
+  NEW
+  READ
+  ARCHIVED
 }
 
 enum MembershipApprovalStatus {
@@ -864,6 +871,7 @@ model AppSettings {
   supportEmail          String?
   contactToEmail        String?
   contactBccEmail       String?
+  signupNotifyEmail     String?
   stripeEnabled         Boolean  @default(false)
   resendEnabled         Boolean  @default(false)
   trialDays             Int      @default(14)
@@ -1158,6 +1166,24 @@ model SupportMessage {
   createdAt  DateTime @default(now())
 
   ticket     SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+}
+
+model ContactSubmission {
+  id        String                  @id @default(cuid())
+  name      String
+  email     String
+  clubName  String?
+  topic     String
+  message   String                  @db.Text
+  locale    String                  @default("fr")
+  status    ContactSubmissionStatus @default(NEW)
+  ipAddress String?
+  emailSent Boolean                 @default(false)
+  createdAt DateTime                @default(now())
+  readAt    DateTime?
+
+  @@index([status, createdAt])
+  @@index([email])
 }
 
 model CaseStudy {

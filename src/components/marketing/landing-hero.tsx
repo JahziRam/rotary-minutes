@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { ArrowRight, Play, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { ProductPreview } from "./product-preview";
+import { LandingHeroActions } from "./landing-hero-actions";
 
 export async function LandingHero({ locale }: { locale: string }) {
   const t = await getTranslations("landing");
@@ -35,22 +35,7 @@ export async function LandingHero({ locale }: { locale: string }) {
           <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-white/75 sm:mt-5 sm:text-lg lg:mx-0">
             {t("subtitle")}
           </p>
-          <div className="mt-6 flex flex-col gap-2.5 sm:mt-8 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-3 lg:justify-start">
-            <Link
-              href={`/${locale}/register`}
-              className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gold px-6 text-base font-semibold text-navy-dark shadow-lg shadow-gold/25 transition-all hover:bg-gold-light sm:w-auto"
-            >
-              {t("cta")}
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </Link>
-            <Link
-              href={`/${locale}/demo`}
-              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-white/25 bg-white/5 px-6 text-base font-medium text-white backdrop-blur-sm transition-all hover:bg-white/10 sm:w-auto"
-            >
-              <Play className="h-4 w-4" />
-              {t("tryDemo")}
-            </Link>
-          </div>
+          <LandingHeroActions locale={locale} ctaLabel={t("cta")} demoLabel={t("tryDemo")} />
           <p className="mt-3 text-xs text-white/45 sm:mt-4 sm:text-sm">{t("trialLine")}</p>
           <dl className="mt-6 grid grid-cols-3 gap-2 border-t border-white/10 pt-6 sm:mt-10 sm:gap-4 sm:pt-8">
             {stats.map(({ value, label }) => (
