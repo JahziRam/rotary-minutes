@@ -34,8 +34,8 @@ export async function GET(request: Request) {
     const daysLeft = differenceInCalendarDays(sub.trialEndsAt, now);
     if (!REMINDER_DAYS.includes(daysLeft as (typeof REMINDER_DAYS)[number])) continue;
 
-    const locale = sub.club.language === "EN" ? "en" : "fr";
-    // UI locale es is not stored on club yet; FR clubs use fr reminders
+    const locale =
+      sub.club.language === "EN" ? "en" : sub.club.language === "ES" ? "es" : "fr";
     const mail = await trialReminderEmail({
       clubName: sub.club.name,
       clubId: sub.club.id,

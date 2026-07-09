@@ -1,7 +1,8 @@
 "use client";
 
 import { format } from "date-fns";
-import { fr, enUS } from "date-fns/locale";
+import { fr, enUS, es } from "date-fns/locale";
+import { pickDemoLocale } from "@/lib/demo-i18n";
 import { useTranslations } from "next-intl";
 import {
   Calendar,
@@ -49,26 +50,27 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   DEMO_CLUB,
-  DEMO_MEMBERS,
-  DEMO_MEETINGS,
-  DEMO_MINUTES,
-  DEMO_STATS,
-  DEMO_EMAIL_TEMPLATES,
-  DEMO_EMAIL_CAMPAIGNS,
   DEMO_EMAIL_CONTACTS,
-  DEMO_DISTRICT_CLUBS,
-  DEMO_MANDATES,
-  DEMO_TREASURY,
-  DEMO_CALENDAR_EVENTS,
-  DEMO_CLUB_EVENTS,
-  DEMO_DOCUMENTS,
-  DEMO_DOCUMENT_FOLDERS,
   DEMO_PORTAL,
-  DEMO_ACTIONS,
   DEMO_PUBLIC_CLUBS,
+  DEMO_STATS,
   DEMO_SUBSCRIPTION,
+  DEMO_TREASURY,
+  getDemoActions,
+  getDemoCalendarEvents,
+  getDemoClubEvents,
   getDemoData,
+  getDemoDistrictClubs,
+  getDemoDocuments,
+  getDemoDocumentFolders,
   getDemoDues,
+  getDemoEmailCampaigns,
+  getDemoEmailTemplates,
+  getDemoMandates,
+  getDemoMeetings,
+  getDemoMembers,
+  getDemoMinutes,
+  getDemoTreasuryEntries,
 } from "@/lib/demo-data";
 import { MAX_UPLOAD_FILES_PER_BATCH } from "@/lib/upload-limits";
 import { DemoLockedButton, DemoFeaturePill } from "./demo-ui";
@@ -124,21 +126,26 @@ export function DemoDashboardPanel({
   onRegistration,
 }: DemoPanelProps) {
   const t = useTranslations("demo");
-  const dateLocale = locale === "fr" ? fr : enUS;
+  const L = (frText: string, enText: string, esText: string) =>
+    pickDemoLocale(locale, { fr: frText, en: enText, es: esText });
+  const dateLocale = locale === "fr" ? fr : locale === "es" ? es : enUS;
   const data = getDemoData(locale);
-  const isFr = locale === "fr";
-  const nextMeeting = DEMO_MEETINGS[2];
+  const meetings = getDemoMeetings(locale);
+  const minutes = getDemoMinutes(locale);
+  const calendarEvents = getDemoCalendarEvents(locale);
+  const clubEvents = getDemoClubEvents(locale);
+  const nextMeeting = meetings[2];
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
         <DemoFeaturePill label="PDF + QR" />
-        <DemoFeaturePill label={isFr ? "Réunion live" : "Live meeting"} />
-        <DemoFeaturePill label={isFr ? "Inscription membre/club" : "Member/club signup"} />
-        <DemoFeaturePill label={isFr ? "Rotaract −15 %" : "Rotaract −15%"} />
-        <DemoFeaturePill label={isFr ? "Trésorerie" : "Treasury"} />
-        <DemoFeaturePill label={isFr ? "Upload 5 Mo" : "5 MB uploads"} />
-        <DemoFeaturePill label="FR / EN" />
+        <DemoFeaturePill label={L("Réunion live", "Live meeting", "Reunión en vivo")} />
+        <DemoFeaturePill label={L("Inscription membre/club", "Member/club signup", "Registro miembro/club")} />
+        <DemoFeaturePill label={L("Rotaract −15 %", "Rotaract −15%", "Rotaract −15 %")} />
+        <DemoFeaturePill label={L("Trésorerie", "Treasury", "Tesorería")} />
+        <DemoFeaturePill label={L("Upload 5 Mo", "5 MB uploads", "Subida 5 MB")} />
+        <DemoFeaturePill label={L("FR / EN", "FR / EN", "ES / EN / FR")} />
       </div>
 
       {onRegistration && (
@@ -206,7 +213,7 @@ export function DemoDashboardPanel({
         <Card>
           <CardHeader><CardTitle className="text-base">{t("recentMinutes")}</CardTitle></CardHeader>
           <CardContent className="space-y-2">
-            {DEMO_MINUTES.slice(0, 3).map((pv) => (
+            {minutes.slice(0, 3).map((pv) => (
               <button
                 key={pv.id}
                 type="button"
@@ -261,23 +268,23 @@ export function DemoDashboardPanel({
 
       <div className="grid lg:grid-cols-3 gap-4">
         <Card>
-          <CardHeader className="py-3"><CardTitle className="text-sm">{isFr ? "Trésorerie" : "Treasury"}</CardTitle></CardHeader>
+          <CardHeader className="py-3"><CardTitle className="text-sm">{L("Trésorerie", "Treasury", "Tesorería")}</CardTitle></CardHeader>
           <CardContent className="text-sm space-y-1">
             <p className="font-bold text-navy">{DEMO_TREASURY.balance.toLocaleString()} {DEMO_TREASURY.currency}</p>
-            <p className="text-gray-500">{isFr ? "Solde club" : "Club balance"}</p>
+            <p className="text-gray-500">{L("Solde club", "Club balance", "Saldo del club")}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="py-3"><CardTitle className="text-sm">{isFr ? "Prochain événement" : "Next event"}</CardTitle></CardHeader>
+          <CardHeader className="py-3"><CardTitle className="text-sm">{L("Prochain événement", "Next event", "Próximo evento")}</CardTitle></CardHeader>
           <CardContent className="text-sm">
-            <p className="font-medium">{DEMO_CLUB_EVENTS[0].title}</p>
-            <p className="text-gray-500">{DEMO_CLUB_EVENTS[0].registrations}/{DEMO_CLUB_EVENTS[0].capacity} {isFr ? "inscrits" : "registered"}</p>
+            <p className="font-medium">{clubEvents[0].title}</p>
+            <p className="text-gray-500">{clubEvents[0].registrations}/{clubEvents[0].capacity} {L("inscrits", "registered", "inscritos")}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="py-3"><CardTitle className="text-sm">{isFr ? "Calendrier" : "Calendar"}</CardTitle></CardHeader>
+          <CardHeader className="py-3"><CardTitle className="text-sm">{L("Calendrier", "Calendar", "Calendario")}</CardTitle></CardHeader>
           <CardContent className="text-sm text-gray-600">
-            {DEMO_CALENDAR_EVENTS.slice(0, 2).map((e) => (
+            {calendarEvents.slice(0, 2).map((e) => (
               <p key={e.id} className="truncate">{e.date} — {e.title}</p>
             ))}
           </CardContent>
@@ -310,7 +317,9 @@ export function DemoNotificationsPanel({ locale }: { locale: string }) {
 
 export function DemoMeetingsPanel({ locale, onLiveMeeting }: DemoPanelProps) {
   const t = useTranslations("demo");
-  const dateLocale = locale === "fr" ? fr : enUS;
+  const L = (frText: string, enText: string, esText: string) =>
+    pickDemoLocale(locale, { fr: frText, en: enText, es: esText });
+  const dateLocale = locale === "fr" ? fr : locale === "es" ? es : enUS;
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
@@ -319,7 +328,7 @@ export function DemoMeetingsPanel({ locale, onLiveMeeting }: DemoPanelProps) {
         <DemoLockedButton label={t("exportIcs")} icon={CalendarPlus} />
         <DemoLockedButton label={t("googleCalendar")} icon={Calendar} />
       </div>
-      {DEMO_MEETINGS.map((m) => (
+      {getDemoMeetings(locale).map((m) => (
         <Card key={m.id}>
           <CardContent className="pt-4 space-y-3">
             <div className="flex flex-wrap items-start justify-between gap-3">
@@ -342,7 +351,7 @@ export function DemoMeetingsPanel({ locale, onLiveMeeting }: DemoPanelProps) {
                   {t("viewLiveMode")}
                 </button>
               ) : (
-                <Badge variant="success">{locale === "fr" ? "Terminée" : "Completed"}</Badge>
+                <Badge variant="success">{L("Terminée", "Completed", "Finalizada")}</Badge>
               )}
             </div>
             <div className="flex flex-wrap gap-2 pt-1 border-t border-gray-50">
@@ -358,8 +367,9 @@ export function DemoMeetingsPanel({ locale, onLiveMeeting }: DemoPanelProps) {
 
 export function DemoMinutesPanel({ locale, onPreviewMinute, onMinuteEditor }: DemoPanelProps) {
   const t = useTranslations("demo");
-  const dateLocale = locale === "fr" ? fr : enUS;
-  const isFr = locale === "fr";
+  const L = (frText: string, enText: string, esText: string) =>
+    pickDemoLocale(locale, { fr: frText, en: enText, es: esText });
+  const dateLocale = locale === "fr" ? fr : locale === "es" ? es : enUS;
 
   return (
     <div className="space-y-4">
@@ -383,7 +393,7 @@ export function DemoMinutesPanel({ locale, onPreviewMinute, onMinuteEditor }: De
         </button>
       </div>
 
-      {DEMO_MINUTES.map((pv) => (
+      {getDemoMinutes(locale).map((pv) => (
         <Card key={pv.id}>
           <CardContent className="pt-4 space-y-3">
             <div className="flex flex-wrap justify-between gap-2">
@@ -405,7 +415,7 @@ export function DemoMinutesPanel({ locale, onPreviewMinute, onMinuteEditor }: De
                 </button>
               )}
               {pv.status === "REVIEW" && (
-                <DemoLockedButton label={isFr ? "Valider" : "Approve"} />
+                <DemoLockedButton label={L("Valider", "Approve", "Aprobar")} />
               )}
             </div>
           </CardContent>
@@ -417,7 +427,8 @@ export function DemoMinutesPanel({ locale, onPreviewMinute, onMinuteEditor }: De
 
 export function DemoEmailsPanel({ locale }: { locale: string }) {
   const t = useTranslations("demo");
-  const isFr = locale === "fr";
+  const L = (frText: string, enText: string, esText: string) =>
+    pickDemoLocale(locale, { fr: frText, en: enText, es: esText });
 
   return (
     <div className="space-y-4">
@@ -442,13 +453,13 @@ export function DemoEmailsPanel({ locale }: { locale: string }) {
       <Card>
         <CardHeader><CardTitle className="text-base">{t("emailTemplates")}</CardTitle></CardHeader>
         <CardContent className="space-y-2">
-          {DEMO_EMAIL_TEMPLATES.map((tpl) => (
+          {getDemoEmailTemplates(locale).map((tpl) => (
             <div key={tpl.id} className="flex justify-between items-center py-2 border-b border-gray-50 last:border-0">
               <div>
                 <p className="font-medium text-sm">{tpl.name}</p>
                 <p className="text-xs text-gray-500">{tpl.subject}</p>
               </div>
-              <span className="text-xs text-gray-400">{tpl.uses} {isFr ? "envois" : "sends"}</span>
+              <span className="text-xs text-gray-400">{tpl.uses} {L("envois", "sends", "envíos")}</span>
             </div>
           ))}
         </CardContent>
@@ -457,11 +468,11 @@ export function DemoEmailsPanel({ locale }: { locale: string }) {
       <Card>
         <CardHeader><CardTitle className="text-base">{t("emailCampaigns")}</CardTitle></CardHeader>
         <CardContent className="space-y-2">
-          {DEMO_EMAIL_CAMPAIGNS.map((c) => (
+          {getDemoEmailCampaigns(locale).map((c) => (
             <div key={c.id} className="flex justify-between items-center py-2">
               <div>
                 <p className="font-medium text-sm">{c.name}</p>
-                <p className="text-xs text-gray-500">{c.recipients} {isFr ? "destinataires" : "recipients"}</p>
+                <p className="text-xs text-gray-500">{c.recipients} {L("destinataires", "recipients", "destinatarios")}</p>
               </div>
               <Badge variant={c.status === "SENT" ? "success" : "warning"}>{c.status}</Badge>
             </div>
@@ -473,16 +484,18 @@ export function DemoEmailsPanel({ locale }: { locale: string }) {
         <CardHeader><CardTitle className="text-base">{t("emailPreview")}</CardTitle></CardHeader>
         <CardContent>
           <div className="rounded-xl border overflow-hidden text-sm">
-            <div className="bg-navy/5 px-4 py-2 border-b font-medium">{isFr ? "Convocation réunion" : "Meeting invitation"}</div>
+            <div className="bg-navy/5 px-4 py-2 border-b font-medium">{L("Convocation réunion", "Meeting invitation", "Convocatoria de reunión")}</div>
             <div className="p-4 space-y-2">
               <div className="flex items-center gap-2 pb-2 border-b">
                 <div className="h-8 w-8 rounded-full bg-navy text-gold text-[10px] font-bold flex items-center justify-center">RC</div>
                 <span className="font-semibold">{DEMO_CLUB.name}</span>
               </div>
               <p className="text-gray-700">
-                {isFr
-                  ? "Bonjour {{memberName}}, vous êtes convié(e) à la réunion du {{meetingDate}}."
-                  : "Hello {{memberName}}, you are invited to the meeting on {{meetingDate}}."}
+                {L(
+                  "Bonjour {{memberName}}, vous êtes convié(e) à la réunion du {{meetingDate}}.",
+                  "Hello {{memberName}}, you are invited to the meeting on {{meetingDate}}.",
+                  "Hola {{memberName}}, está convocado(a) a la reunión del {{meetingDate}}."
+                )}
               </p>
             </div>
           </div>
@@ -494,7 +507,8 @@ export function DemoEmailsPanel({ locale }: { locale: string }) {
 
 export function DemoMembersPanel({ locale }: { locale: string }) {
   const t = useTranslations("demo");
-  const isFr = locale === "fr";
+  const L = (frText: string, enText: string, esText: string) =>
+    pickDemoLocale(locale, { fr: frText, en: enText, es: esText });
 
   return (
     <div className="space-y-4">
@@ -507,14 +521,14 @@ export function DemoMembersPanel({ locale }: { locale: string }) {
 
       <Card className="border-gold/20 bg-gold/5">
         <CardContent className="py-3 text-sm">
-          🎂 {isFr ? "Anniversaire cette semaine : Camille Petit (12 mars)" : "Birthday this week: Camille Petit (Mar 12)"}
+          🎂 {L("Anniversaire cette semaine : Camille Petit (12 mars)", "Birthday this week: Camille Petit (Mar 12)", "Cumpleaños esta semana: Camille Petit (12 mar)")}
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader><CardTitle className="text-base">{t("mandates")}</CardTitle></CardHeader>
         <CardContent className="grid sm:grid-cols-3 gap-3">
-          {DEMO_MANDATES.map((m) => (
+          {getDemoMandates(locale).map((m) => (
             <div key={m.role} className="rounded-lg border border-gray-100 p-3 text-center">
               <p className="text-xs text-gray-500">{m.role}</p>
               <p className="font-semibold text-sm mt-1">{m.name}</p>
@@ -528,7 +542,7 @@ export function DemoMembersPanel({ locale }: { locale: string }) {
         <CardHeader><CardTitle className="text-base">{t("memberList")}</CardTitle></CardHeader>
         <CardContent>
           <ul className="divide-y divide-gray-100">
-            {DEMO_MEMBERS.map((m) => (
+            {getDemoMembers(locale).map((m) => (
               <li key={m.id} className="flex items-center gap-3 py-3">
                 <div className="h-10 w-10 rounded-full bg-navy/10 flex items-center justify-center text-sm font-semibold text-navy">
                   {m.firstName[0]}{m.lastName[0]}
@@ -594,16 +608,19 @@ export function DemoStatisticsPanel({ locale }: { locale: string }) {
 
 export function DemoDistrictPanel({ locale }: { locale: string }) {
   const t = useTranslations("demo");
-  const isFr = locale === "fr";
+  const L = (frText: string, enText: string, esText: string) =>
+    pickDemoLocale(locale, { fr: frText, en: enText, es: esText });
 
   return (
     <div className="space-y-4">
       <Card className="bg-navy/5 border-navy/10">
         <CardContent className="py-4">
           <p className="text-sm text-gray-600">
-            {isFr
-              ? `Vue gouverneur — District ${DEMO_CLUB.district} · Accès lecture seule aux PV finalisés`
-              : `Governor view — District ${DEMO_CLUB.district} · Read-only access to finalized minutes`}
+            {L(
+              `Vue gouverneur — District ${DEMO_CLUB.district} · Accès lecture seule aux PV finalisés`,
+              `Governor view — District ${DEMO_CLUB.district} · Read-only access to finalized minutes`,
+              `Vista del gobernador — Distrito ${DEMO_CLUB.district} · Acceso de solo lectura a actas finalizadas`
+            )}
           </p>
         </CardContent>
       </Card>
@@ -614,14 +631,14 @@ export function DemoDistrictPanel({ locale }: { locale: string }) {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-gray-500 border-b">
-                <th className="pb-2 font-medium">{isFr ? "Club" : "Club"}</th>
+                <th className="pb-2 font-medium">{L("Club", "Club", "Club")}</th>
                 <th className="pb-2 font-medium">{t("members")}</th>
                 <th className="pb-2 font-medium">{t("attendanceRate")}</th>
                 <th className="pb-2 font-medium">{t("minutes")}</th>
               </tr>
             </thead>
             <tbody>
-              {DEMO_DISTRICT_CLUBS.map((c) => (
+              {getDemoDistrictClubs(locale).map((c) => (
                 <tr key={c.name} className={`border-b border-gray-50 ${"isAvg" in c && c.isAvg ? "bg-gold/5 font-medium" : ""}`}>
                   <td className="py-2.5">{c.name}</td>
                   <td className="py-2.5">{c.members}</td>
@@ -639,7 +656,8 @@ export function DemoDistrictPanel({ locale }: { locale: string }) {
 
 export function DemoSettingsPanel({ locale }: { locale: string }) {
   const t = useTranslations("demo");
-  const isFr = locale === "fr";
+  const L = (frText: string, enText: string, esText: string) =>
+    pickDemoLocale(locale, { fr: frText, en: enText, es: esText });
 
   return (
     <div className="space-y-4 max-w-lg">
@@ -647,18 +665,18 @@ export function DemoSettingsPanel({ locale }: { locale: string }) {
         <CardHeader><CardTitle className="text-base flex items-center gap-2"><Settings className="h-4 w-4" />{t("clubSettings")}</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <p className="text-sm font-medium text-gray-700 mb-2">{isFr ? "Logo du club" : "Club logo"}</p>
+            <p className="text-sm font-medium text-gray-700 mb-2">{L("Logo du club", "Club logo", "Logo del club")}</p>
             <div className="flex items-center gap-3">
               <div className="h-16 w-16 rounded-xl bg-navy flex items-center justify-center text-gold font-bold text-lg">RC</div>
-              <DemoLockedButton label={isFr ? "Choisir une image" : "Upload image"} />
+              <DemoLockedButton label={L("Choisir une image", "Upload image", "Subir imagen")} />
             </div>
           </div>
           {[
-            { label: isFr ? "Nom du club" : "Club name", value: DEMO_CLUB.name },
-            { label: isFr ? "Type de club" : "Club type", value: isFr ? "Club Rotary" : "Rotary club" },
-            { label: "District", value: DEMO_CLUB.district },
-            { label: isFr ? "Ville" : "City", value: DEMO_CLUB.city },
-            { label: isFr ? "Lieu de réunion" : "Meeting location", value: DEMO_CLUB.meetingLocation },
+            { label: L("Nom du club", "Club name", "Nombre del club"), value: DEMO_CLUB.name },
+            { label: L("Type de club", "Club type", "Tipo de club"), value: L("Club Rotary", "Rotary club", "Club Rotary") },
+            { label: L("District", "District", "Distrito"), value: DEMO_CLUB.district },
+            { label: L("Ville", "City", "Ciudad"), value: DEMO_CLUB.city },
+            { label: L("Lieu de réunion", "Meeting location", "Lugar de reunión"), value: DEMO_CLUB.meetingLocation },
           ].map((f) => (
             <div key={f.label}>
               <label className="text-xs font-medium text-gray-500">{f.label}</label>
@@ -688,14 +706,22 @@ export function DemoSettingsPanel({ locale }: { locale: string }) {
       <Card>
         <CardContent className="py-4 flex items-center gap-3 text-sm text-gray-600">
           <QrCode className="h-5 w-5 text-navy" />
-          {isFr ? "PWA : check-in QR hors ligne, consultation PV sans connexion" : "PWA: offline QR check-in, browse minutes offline"}
+          {L(
+            "PWA : check-in QR hors ligne, consultation PV sans connexion",
+            "PWA: offline QR check-in, browse minutes offline",
+            "PWA: registro QR sin conexión, consulta de actas sin conexión"
+          )}
         </CardContent>
       </Card>
 
       <Card>
         <CardContent className="py-4 flex items-center gap-3 text-sm text-gray-600">
           <FileSpreadsheet className="h-5 w-5 text-navy" />
-          {isFr ? "Intégrations : export comptable CSV/OFX, webhooks" : "Integrations: CSV/OFX accounting export, webhooks"}
+          {L(
+            "Intégrations : export comptable CSV/OFX, webhooks",
+            "Integrations: CSV/OFX accounting export, webhooks",
+            "Integraciones: exportación contable CSV/OFX, webhooks"
+          )}
         </CardContent>
       </Card>
 
@@ -707,7 +733,7 @@ export function DemoSettingsPanel({ locale }: { locale: string }) {
           </p>
           <p className="text-xs text-emerald-800">{t("rotaractDiscountHint", { percent: DEMO_SUBSCRIPTION.rotaractDiscountPercent })}</p>
           <p className="text-xs text-gray-600">
-            {isFr ? "Essai en cours" : "Trial in progress"} — {DEMO_SUBSCRIPTION.trialDaysLeft} {isFr ? "jours restants" : "days left"}
+            {L("Essai en cours", "Trial in progress", "Prueba en curso")} — {DEMO_SUBSCRIPTION.trialDaysLeft} {L("jours restants", "days left", "días restantes")}
           </p>
         </CardContent>
       </Card>
@@ -717,7 +743,8 @@ export function DemoSettingsPanel({ locale }: { locale: string }) {
 
 export function DemoSupportPanel({ locale }: { locale: string }) {
   const t = useTranslations("demo");
-  const isFr = locale === "fr";
+  const L = (frText: string, enText: string, esText: string) =>
+    pickDemoLocale(locale, { fr: frText, en: enText, es: esText });
 
   return (
     <Card className="max-w-lg">
@@ -726,15 +753,19 @@ export function DemoSupportPanel({ locale }: { locale: string }) {
       </CardHeader>
       <CardContent className="space-y-3">
         <div>
-          <label className="text-xs font-medium text-gray-500">{isFr ? "Sujet" : "Subject"}</label>
+          <label className="text-xs font-medium text-gray-500">{L("Sujet", "Subject", "Asunto")}</label>
           <div className="mt-1 h-10 rounded-lg border bg-gray-50 px-3 flex items-center text-sm text-gray-400">
-            {isFr ? "Question sur l'export PDF" : "Question about PDF export"}
+            {L("Question sur l'export PDF", "Question about PDF export", "Pregunta sobre la exportación PDF")}
           </div>
         </div>
         <div>
-          <label className="text-xs font-medium text-gray-500">{isFr ? "Message" : "Message"}</label>
+          <label className="text-xs font-medium text-gray-500">{L("Message", "Message", "Mensaje")}</label>
           <div className="mt-1 h-24 rounded-lg border bg-gray-50 px-3 py-2 text-sm text-gray-400">
-            {isFr ? "Comment authentifier un PV avec le QR code ?" : "How do I authenticate minutes with the QR code?"}
+            {L(
+              "Comment authentifier un PV avec le QR code ?",
+              "How do I authenticate minutes with the QR code?",
+              "¿Cómo autenticar un acta con el código QR?"
+            )}
           </div>
         </div>
         <DemoLockedButton label={t("sendTicket")} variant="gold" />
@@ -745,15 +776,16 @@ export function DemoSupportPanel({ locale }: { locale: string }) {
 
 export function DemoMinuteEditorPanel({ locale, onPreviewMinute }: { locale: string; onPreviewMinute: () => void }) {
   const t = useTranslations("demo");
-  const isFr = locale === "fr";
-  const draft = DEMO_MINUTES.find((m) => m.status === "DRAFT")!;
+  const L = (frText: string, enText: string, esText: string) =>
+    pickDemoLocale(locale, { fr: frText, en: enText, es: esText });
+  const draft = getDemoMinutes(locale).find((m) => m.status === "DRAFT")!;
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap justify-between gap-2">
         <div>
           <h2 className="font-semibold text-gray-900">{draft.title}</h2>
-          <Badge variant="muted" className="mt-1">{isFr ? "Brouillon" : "Draft"}</Badge>
+          <Badge variant="muted" className="mt-1">{L("Brouillon", "Draft", "Borrador")}</Badge>
         </div>
         <button type="button" onClick={onPreviewMinute} className="text-sm text-navy font-medium hover:underline">
           {t("previewMinute")}
@@ -761,9 +793,15 @@ export function DemoMinuteEditorPanel({ locale, onPreviewMinute }: { locale: str
       </div>
 
       {[
-        { title: isFr ? "Ouverture & quorum" : "Opening & quorum", content: isFr ? "28 membres présents, quorum atteint." : "28 members present, quorum reached." },
-        { title: isFr ? "Communications" : "Communications", content: isFr ? "Présentation du projet humanitaire Madagascar." : "Humanitarian project Madagascar presentation." },
-        { title: isFr ? "Décisions" : "Decisions", content: "" },
+        {
+          title: L("Ouverture & quorum", "Opening & quorum", "Apertura y quórum"),
+          content: L("28 membres présents, quorum atteint.", "28 members present, quorum reached.", "28 miembros presentes, quórum alcanzado."),
+        },
+        {
+          title: L("Communications", "Communications", "Comunicaciones"),
+          content: L("Présentation du projet humanitaire Madagascar.", "Humanitarian project Madagascar presentation.", "Presentación del proyecto humanitario Madagascar."),
+        },
+        { title: L("Décisions", "Decisions", "Decisiones"), content: "" },
       ].map((item, i) => (
         <Card key={i}>
           <CardHeader className="py-3">
@@ -771,7 +809,7 @@ export function DemoMinuteEditorPanel({ locale, onPreviewMinute }: { locale: str
           </CardHeader>
           <CardContent>
             <div className={`rounded-lg border p-3 text-sm min-h-[60px] ${item.content ? "text-gray-700 bg-white" : "text-gray-400 bg-gray-50 border-dashed"}`}>
-              {item.content || (isFr ? "Cliquez pour rédiger… (lecture seule)" : "Click to write… (read-only)")}
+              {item.content || L("Cliquez pour rédiger… (lecture seule)", "Click to write… (read-only)", "Haga clic para redactar… (solo lectura)")}
             </div>
           </CardContent>
         </Card>
@@ -779,9 +817,9 @@ export function DemoMinuteEditorPanel({ locale, onPreviewMinute }: { locale: str
 
       <div className="flex flex-wrap gap-2">
         <DemoLockedButton label={t("applyTemplate")} icon={LayoutTemplate} variant="gold" />
-        <DemoLockedButton label={isFr ? "Enregistrer" : "Save"} />
-        <DemoLockedButton label={isFr ? "Soumettre en révision" : "Submit for review"} />
-        <DemoLockedButton label={isFr ? "Finaliser" : "Finalize"} />
+        <DemoLockedButton label={L("Enregistrer", "Save", "Guardar")} />
+        <DemoLockedButton label={L("Soumettre en révision", "Submit for review", "Enviar a revisión")} />
+        <DemoLockedButton label={L("Finaliser", "Finalize", "Finalizar")} />
       </div>
     </div>
   );
@@ -789,7 +827,8 @@ export function DemoMinuteEditorPanel({ locale, onPreviewMinute }: { locale: str
 
 export function DemoDuesPanel({ locale }: { locale: string }) {
   const t = useTranslations("demo");
-  const isFr = locale === "fr";
+  const L = (frText: string, enText: string, esText: string) =>
+    pickDemoLocale(locale, { fr: frText, en: enText, es: esText });
   const dues = getDemoDues(locale);
   const paid = dues.filter((d) => d.status === "PAID").length;
   const pending = dues.filter((d) => d.status === "PENDING").length;
@@ -800,9 +839,9 @@ export function DemoDuesPanel({ locale }: { locale: string }) {
       <div className="flex flex-wrap gap-2">
         <DemoLockedButton label={t("recordPayment")} icon={Plus} variant="gold" />
         <DemoLockedButton label={t("sendDuesReminder")} icon={Mail} />
-        <DemoLockedButton label={isFr ? "Envoyer facture PDF" : "Send invoice PDF"} icon={Mail} />
-        <DemoLockedButton label={isFr ? "Envoyer reçu PDF" : "Send receipt PDF"} icon={FileText} />
-        <DemoLockedButton label={isFr ? "Historique par email" : "Email history"} icon={History} />
+        <DemoLockedButton label={L("Envoyer facture PDF", "Send invoice PDF", "Enviar factura PDF")} icon={Mail} />
+        <DemoLockedButton label={L("Envoyer reçu PDF", "Send receipt PDF", "Enviar recibo PDF")} icon={FileText} />
+        <DemoLockedButton label={L("Historique par email", "Email history", "Historial por correo")} icon={History} />
         <DemoLockedButton label={t("exportDues")} icon={Download} />
       </div>
 
@@ -832,12 +871,12 @@ export function DemoDuesPanel({ locale }: { locale: string }) {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-gray-500 border-b">
-                <th className="pb-2 font-medium">{isFr ? "Membre" : "Member"}</th>
-                <th className="pb-2 font-medium">{isFr ? "Mode" : "Plan"}</th>
+                <th className="pb-2 font-medium">{L("Membre", "Member", "Miembro")}</th>
+                <th className="pb-2 font-medium">{L("Mode", "Plan", "Modalidad")}</th>
                 <th className="pb-2 font-medium">{t("fiscalYear")}</th>
                 <th className="pb-2 font-medium">{t("duesAmount")}</th>
                 <th className="pb-2 font-medium">{t("duesDueDate")}</th>
-                <th className="pb-2 font-medium">{isFr ? "Statut" : "Status"}</th>
+                <th className="pb-2 font-medium">{L("Statut", "Status", "Estado")}</th>
               </tr>
             </thead>
             <tbody>
@@ -845,7 +884,7 @@ export function DemoDuesPanel({ locale }: { locale: string }) {
                 <tr key={d.id} className="border-b border-gray-50">
                   <td className="py-2.5 font-medium text-gray-800">{d.member}</td>
                   <td className="py-2.5 text-xs">
-                    {d.plan === "MONTHLY" ? (isFr ? "Mensuel" : "Monthly") : isFr ? "Annuel" : "Annual"}
+                    {d.plan === "MONTHLY" ? L("Mensuel", "Monthly", "Mensual") : L("Annuel", "Annual", "Anual")}
                     {"periodLabel" in d && d.periodLabel ? ` · ${d.periodLabel}` : ""}
                   </td>
                   <td className="py-2.5">{d.fiscalYear}</td>
@@ -872,7 +911,8 @@ export function DemoDuesPanel({ locale }: { locale: string }) {
 
 export function DemoTreasuryPanel({ locale }: { locale: string }) {
   const tDemo = useTranslations("demo");
-  const isFr = locale === "fr";
+  const L = (frText: string, enText: string, esText: string) =>
+    pickDemoLocale(locale, { fr: frText, en: enText, es: esText });
   const t = DEMO_TREASURY;
   return (
     <div className="space-y-4">
@@ -888,15 +928,15 @@ export function DemoTreasuryPanel({ locale }: { locale: string }) {
       </Card>
 
       <div className="flex flex-wrap gap-2">
-        <DemoLockedButton label={isFr ? "Ajouter une écriture" : "Add entry"} icon={Plus} variant="gold" />
-        <DemoLockedButton label={isFr ? "Rapport PDF trésorier" : "Treasurer PDF report"} icon={Download} />
-        <DemoLockedButton label={isFr ? "Exporter CSV" : "Export CSV"} icon={FileSpreadsheet} />
+        <DemoLockedButton label={L("Ajouter une écriture", "Add entry", "Añadir asiento")} icon={Plus} variant="gold" />
+        <DemoLockedButton label={L("Rapport PDF trésorier", "Treasurer PDF report", "Informe PDF del tesorero")} icon={Download} />
+        <DemoLockedButton label={L("Exporter CSV", "Export CSV", "Exportar CSV")} icon={FileSpreadsheet} />
       </div>
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: isFr ? "Recettes" : "Income", value: t.income, icon: TrendingUp },
-          { label: isFr ? "Dépenses" : "Expenses", value: t.expenses, icon: TrendingDown },
-          { label: isFr ? "Solde" : "Balance", value: t.balance, icon: Wallet },
+          { label: L("Recettes", "Income", "Ingresos"), value: t.income, icon: TrendingUp },
+          { label: L("Dépenses", "Expenses", "Gastos"), value: t.expenses, icon: TrendingDown },
+          { label: L("Solde", "Balance", "Saldo"), value: t.balance, icon: Wallet },
         ].map(({ label, value, icon: Icon }) => (
           <Card key={label}>
             <CardContent className="pt-4 flex items-center gap-3">
@@ -910,9 +950,9 @@ export function DemoTreasuryPanel({ locale }: { locale: string }) {
         ))}
       </div>
       <Card>
-        <CardHeader><CardTitle className="text-base">{isFr ? "Écritures récentes" : "Recent entries"}</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{L("Écritures récentes", "Recent entries", "Asientos recientes")}</CardTitle></CardHeader>
         <CardContent className="space-y-2">
-          {t.entries.map((e) => (
+          {getDemoTreasuryEntries(locale).map((e) => (
             <div key={e.id} className="flex justify-between text-sm border-b border-gray-50 pb-2">
               <span>{e.label}</span>
               <span className={e.type === "INCOME" ? "text-emerald-600" : "text-red-600"}>
@@ -927,16 +967,17 @@ export function DemoTreasuryPanel({ locale }: { locale: string }) {
 }
 
 export function DemoActionsPanel({ locale }: { locale: string }) {
-  const isFr = locale === "fr";
+  const L = (frText: string, enText: string, esText: string) =>
+    pickDemoLocale(locale, { fr: frText, en: enText, es: esText });
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
-        <DemoLockedButton label={isFr ? "Nouvelle action" : "New action"} icon={Plus} variant="gold" />
-        <DemoLockedButton label={isFr ? "Exporter" : "Export"} icon={Download} />
+        <DemoLockedButton label={L("Nouvelle action", "New action", "Nueva acción")} icon={Plus} variant="gold" />
+        <DemoLockedButton label={L("Exporter", "Export", "Exportar")} icon={Download} />
       </div>
       <Card>
         <CardContent className="divide-y divide-gray-50">
-          {DEMO_ACTIONS.map((a) => (
+          {getDemoActions(locale).map((a) => (
             <div key={a.id} className="py-3 flex flex-wrap justify-between gap-2 text-sm">
               <div>
                 <p className="font-medium">{a.title}</p>
@@ -954,17 +995,18 @@ export function DemoActionsPanel({ locale }: { locale: string }) {
 }
 
 export function DemoCalendarPanel({ locale }: { locale: string }) {
-  const isFr = locale === "fr";
+  const L = (frText: string, enText: string, esText: string) =>
+    pickDemoLocale(locale, { fr: frText, en: enText, es: esText });
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
-        <DemoLockedButton label={isFr ? "Exporter ICS" : "Export ICS"} icon={CalendarPlus} />
-        <DemoLockedButton label={isFr ? "Ajouter note" : "Add note"} icon={Plus} variant="gold" />
+        <DemoLockedButton label={L("Exporter ICS", "Export ICS", "Exportar ICS")} icon={CalendarPlus} />
+        <DemoLockedButton label={L("Ajouter note", "Add note", "Añadir nota")} icon={Plus} variant="gold" />
       </div>
       <Card>
-        <CardHeader><CardTitle className="text-base">{isFr ? "Juillet 2026" : "July 2026"}</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{L("Juillet 2026", "July 2026", "Julio 2026")}</CardTitle></CardHeader>
         <CardContent className="space-y-2">
-          {DEMO_CALENDAR_EVENTS.map((e) => (
+          {getDemoCalendarEvents(locale).map((e) => (
             <div key={e.id} className="flex items-center gap-3 text-sm">
               <span className={`h-2 w-2 rounded-full ${e.color}`} />
               <span className="text-gray-500 w-24 shrink-0">{e.date}</span>
@@ -978,21 +1020,22 @@ export function DemoCalendarPanel({ locale }: { locale: string }) {
 }
 
 export function DemoEventsPanel({ locale }: { locale: string }) {
-  const isFr = locale === "fr";
+  const L = (frText: string, enText: string, esText: string) =>
+    pickDemoLocale(locale, { fr: frText, en: enText, es: esText });
   return (
     <div className="space-y-4">
-      <DemoLockedButton label={isFr ? "Créer un événement" : "Create event"} icon={Plus} variant="gold" />
+      <DemoLockedButton label={L("Créer un événement", "Create event", "Crear evento")} icon={Plus} variant="gold" />
       <div className="grid gap-4 sm:grid-cols-2">
-        {DEMO_CLUB_EVENTS.map((ev) => (
+        {getDemoClubEvents(locale).map((ev) => (
           <Card key={ev.id}>
             <CardHeader className="pb-2">
               <CardTitle className="text-base">{ev.title}</CardTitle>
               <p className="text-xs text-gray-500">{ev.date} · {ev.location}</p>
             </CardHeader>
             <CardContent className="text-sm space-y-2">
-              <p>{ev.registrations}/{ev.capacity} {isFr ? "inscrits" : "registered"}</p>
-              <p className="text-gray-500">{ev.fee > 0 ? `${ev.fee} EUR` : isFr ? "Gratuit" : "Free"}</p>
-              <DemoLockedButton label={isFr ? "Liste participants" : "Participant list"} icon={Users} />
+              <p>{ev.registrations}/{ev.capacity} {L("inscrits", "registered", "inscritos")}</p>
+              <p className="text-gray-500">{ev.fee > 0 ? `${ev.fee} EUR` : L("Gratuit", "Free", "Gratuito")}</p>
+              <DemoLockedButton label={L("Liste participants", "Participant list", "Lista de participantes")} icon={Users} />
             </CardContent>
           </Card>
         ))}
@@ -1002,22 +1045,23 @@ export function DemoEventsPanel({ locale }: { locale: string }) {
 }
 
 export function DemoPortalPanel({ locale }: { locale: string }) {
-  const isFr = locale === "fr";
+  const L = (frText: string, enText: string, esText: string) =>
+    pickDemoLocale(locale, { fr: frText, en: enText, es: esText });
   const p = DEMO_PORTAL;
   return (
     <Card className="max-w-lg">
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
           <UserCircle className="h-5 w-5" />
-          {isFr ? "Mon compte" : "My account"} — {p.member}
+          {L("Mon compte", "My account", "Mi cuenta")} — {p.member}
         </CardTitle>
       </CardHeader>
       <CardContent className="grid grid-cols-2 gap-4 text-sm">
         {[
-          { label: isFr ? "Cotisation" : "Dues", value: isFr ? "À jour" : "Up to date" },
-          { label: isFr ? "Assiduité" : "Attendance", value: `${p.attendanceRate}%` },
-          { label: isFr ? "Actions en cours" : "Open actions", value: String(p.openActions) },
-          { label: isFr ? "Documents reçus" : "Documents received", value: String(p.documentsReceived) },
+          { label: L("Cotisation", "Dues", "Cuota"), value: L("À jour", "Up to date", "Al día") },
+          { label: L("Assiduité", "Attendance", "Asistencia"), value: `${p.attendanceRate}%` },
+          { label: L("Actions en cours", "Open actions", "Acciones en curso"), value: String(p.openActions) },
+          { label: L("Documents reçus", "Documents received", "Documentos recibidos"), value: String(p.documentsReceived) },
         ].map((item) => (
           <div key={item.label} className="rounded-lg border p-3">
             <p className="text-xs text-gray-500">{item.label}</p>
@@ -1031,7 +1075,8 @@ export function DemoPortalPanel({ locale }: { locale: string }) {
 
 export function DemoDocumentsPanel({ locale }: { locale: string }) {
   const t = useTranslations("demo");
-  const isFr = locale === "fr";
+  const L = (frText: string, enText: string, esText: string) =>
+    pickDemoLocale(locale, { fr: frText, en: enText, es: esText });
   return (
     <div className="space-y-4">
       <Card>
@@ -1049,7 +1094,7 @@ export function DemoDocumentsPanel({ locale }: { locale: string }) {
       </Card>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
-        {DEMO_DOCUMENT_FOLDERS.filter((f) => !f.parentId).map((folder) => (
+        {getDemoDocumentFolders(locale).filter((f) => !f.parentId).map((folder) => (
           <div
             key={folder.id}
             className="flex items-center gap-2 p-3 rounded-lg border border-gray-200 bg-white text-sm"
@@ -1057,7 +1102,7 @@ export function DemoDocumentsPanel({ locale }: { locale: string }) {
             <FolderOpen className="h-4 w-4 text-gold shrink-0" />
             <div>
               <p className="font-medium">{folder.name}</p>
-              <p className="text-xs text-gray-400">{folder.documentCount} {isFr ? "fichiers" : "files"}</p>
+              <p className="text-xs text-gray-400">{folder.documentCount} {L("fichiers", "files", "archivos")}</p>
             </div>
           </div>
         ))}
@@ -1065,7 +1110,7 @@ export function DemoDocumentsPanel({ locale }: { locale: string }) {
 
       <Card>
         <CardContent className="divide-y divide-gray-50">
-          {DEMO_DOCUMENTS.map((d) => (
+          {getDemoDocuments(locale).map((d) => (
             <div key={d.id} className="py-3 flex flex-wrap justify-between gap-2 text-sm">
               <div className="flex items-center gap-2 min-w-0">
                 <FileText className="h-4 w-4 text-navy/50 shrink-0" />
@@ -1078,7 +1123,7 @@ export function DemoDocumentsPanel({ locale }: { locale: string }) {
                 {d.shared && (
                   <Badge variant="gold" className="gap-1 text-[10px]">
                     <Share2 className="h-3 w-3" />
-                    {isFr ? "Partagé" : "Shared"}
+                    {L("Partagé", "Shared", "Compartido")}
                   </Badge>
                 )}
                 <Badge variant="muted">{d.category}</Badge>
@@ -1093,7 +1138,8 @@ export function DemoDocumentsPanel({ locale }: { locale: string }) {
 
 export function DemoRegistrationPanel({ locale }: { locale: string }) {
   const t = useTranslations("demo");
-  const isFr = locale === "fr";
+  const L = (frText: string, enText: string, esText: string) =>
+    pickDemoLocale(locale, { fr: frText, en: enText, es: esText });
 
   return (
     <div className="space-y-4 max-w-2xl mx-auto">
@@ -1119,7 +1165,7 @@ export function DemoRegistrationPanel({ locale }: { locale: string }) {
             <div className="relative mb-2">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <div className="h-10 rounded-lg border border-gray-200 bg-gray-50 pl-9 flex items-center text-sm text-gray-500">
-                {isFr ? "Paris" : "Paris"}
+                {L("Paris", "Paris", "París")}
               </div>
             </div>
             <div className="rounded-lg border border-gray-200 divide-y divide-gray-100">
@@ -1142,10 +1188,10 @@ export function DemoRegistrationPanel({ locale }: { locale: string }) {
 
           <div className="grid sm:grid-cols-2 gap-3">
             <div className="h-10 rounded-lg border border-gray-200 bg-gray-50 px-3 flex items-center text-sm text-gray-400">
-              {isFr ? "Prénom" : "First name"}
+              {L("Prénom", "First name", "Nombre")}
             </div>
             <div className="h-10 rounded-lg border border-gray-200 bg-gray-50 px-3 flex items-center text-sm text-gray-400">
-              {isFr ? "Nom" : "Last name"}
+              {L("Nom", "Last name", "Apellidos")}
             </div>
           </div>
           <div className="h-10 rounded-lg border border-gray-200 bg-gray-50 px-3 flex items-center text-sm text-gray-400">

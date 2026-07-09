@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { CompanyLegalFooter } from "@/components/legal/company-legal-footer";
 import { loginUser } from "@/actions/auth";
+import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 
 export default function LoginPage() {
   const t = useTranslations("auth");
@@ -57,13 +58,16 @@ export default function LoginPage() {
       <div className="h-1 bg-gold" />
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
-          <div className="text-center mb-8">
+          <div className="text-center mb-8 space-y-4">
             <Link
               href={`/${locale}`}
               className="font-display text-2xl font-bold text-navy"
             >
               Rotary Minutes
             </Link>
+            <div className="flex justify-center">
+              <LocaleSwitcher variant="light" />
+            </div>
           </div>
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
             <h1 className="text-xl font-semibold text-gray-900 mb-6">

@@ -12,6 +12,8 @@ import { ANALYTICS_EVENTS } from "@/lib/analytics-events";
 import { trackEvent } from "@/lib/analytics";
 import { CompanyLegalFooter } from "@/components/legal/company-legal-footer";
 import { ROTARACT_DISCOUNT_PERCENT } from "@/lib/registration-constants";
+import { uiLocaleToClubLanguage } from "@/lib/locale-utils";
+import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { Building2, User, Search } from "lucide-react";
 
 type RegisterMode = "member" | "club";
@@ -91,7 +93,7 @@ export function RegisterForm({ referredByCode }: { referredByCode?: string }) {
       lastName: form.get("lastName") as string,
       email: form.get("email") as string,
       password,
-      language: (locale === "en" ? "EN" : "FR") as "FR" | "EN",
+      language: uiLocaleToClubLanguage(locale),
     };
 
     if (mode === "member") {
@@ -145,14 +147,17 @@ export function RegisterForm({ referredByCode }: { referredByCode?: string }) {
       <div className="h-1 bg-gold" />
       <div className="flex-1 flex items-center justify-center p-4 py-8">
         <div className="w-full max-w-md">
-          <div className="text-center mb-6">
+          <div className="text-center mb-6 space-y-3">
             <Link
               href={`/${locale}`}
               className="font-display text-2xl font-bold text-navy"
             >
               Rotary Minutes
             </Link>
-            <p className="text-sm text-gray-500 mt-2">
+            <div className="flex justify-center">
+              <LocaleSwitcher variant="light" />
+            </div>
+            <p className="text-sm text-gray-500">
               {mode === "club" ? t("trialInfo") : tReg("memberTrialHint")}
             </p>
           </div>

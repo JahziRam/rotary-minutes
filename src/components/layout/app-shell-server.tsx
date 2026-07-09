@@ -1,5 +1,7 @@
+import { headers } from "next/headers";
 import { getSession } from "@/lib/cached-auth";
 import { AppShell } from "./app-shell";
+import { clubLanguageToLocale, resolveUiLocale } from "@/lib/locale-utils";
 import { DEMO_CLUB } from "@/lib/demo-data";
 import { getUserNotifications } from "@/lib/queries/notifications";
 import { getClubContext } from "@/lib/club-context";
@@ -33,7 +35,10 @@ export async function AppShellServer({
   const canManageSubscription =
     !isSuperAdmin &&
     (await hasRolePermission(role, "settings.manage", false));
-  const planLocale = ctx?.club.language === "EN" ? "en" : "fr";
+  const headersList = await headers();
+  const routeLocale = resolveUiLocale(headersList.get("x-locale"));
+  const clubLocale = clubLanguageToLocale(ctx?.club.language);
+  const planLocale = routeLocale || clubLocale;
   const subscriptionPlan = ctx?.club.subscription?.plan
     ? getPlanLabel(ctx.club.subscription.plan, planLocale)
     : getPlanLabel("TRIAL", planLocale);
@@ -45,7 +50,7 @@ export async function AppShellServer({
     subscription.trialEndsAt != null &&
     new Date(subscription.trialEndsAt) > new Date();
 
-  const shellLocale = planLocale;
+  const shellLocale = routeLocale;
 
   return (
     <AppShell

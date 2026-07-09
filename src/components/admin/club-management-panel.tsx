@@ -159,6 +159,7 @@ export function ClubManagementPanel({
             >
               <option value="FR">Français</option>
               <option value="EN">English</option>
+              <option value="ES">Español</option>
             </select>
           </div>
           <div className="sm:col-span-2 lg:col-span-3 flex justify-end">

@@ -1,6 +1,11 @@
 /** Static demo data — read-only sandbox, no DB required */
 
 import { DEMO_CLUB_SLUG } from "@/lib/demo-constants";
+import { pickDemoLocale } from "@/lib/demo-i18n";
+
+function L(locale: string, fr: string, en: string, es: string) {
+  return pickDemoLocale(locale, { fr, en, es });
+}
 
 export const DEMO_CLUB = {
   id: "demo-club",
@@ -257,73 +262,358 @@ export const DEMO_ACTIONS = [
   { id: "a4", title: "Envoyer rapport district Q2", responsible: "Marie Martin", due: "2026-07-10", status: "COMPLETED", priority: "MEDIUM" },
 ];
 
+export function getDemoMeetings(locale: string) {
+  const titles: Record<string, [string, string, string]> = {
+    meet1: ["Réunion statutaire", "Statutory meeting", "Reunión estatutaria"],
+    meet2: ["Commission International", "International Commission", "Comisión Internacional"],
+    meet3: ["Réunion statutaire", "Statutory meeting", "Reunión estatutaria"],
+  };
+  return DEMO_MEETINGS.map((m) => {
+    const [fr, en, es] = titles[m.id] ?? [m.title, m.title, m.title];
+    return { ...m, title: L(locale, fr, en, es) };
+  });
+}
+
+export function getDemoMinutes(locale: string) {
+  const titles: Record<string, [string, string, string]> = {
+    pv1: [
+      "PV Réunion statutaire — 1er juillet 2026",
+      "Statutory meeting minutes — July 1, 2026",
+      "Acta reunión estatutaria — 1 de julio de 2026",
+    ],
+    pv2: [
+      "PV Commission International — 24 juin 2026",
+      "International Commission minutes — June 24, 2026",
+      "Acta Comisión Internacional — 24 de junio de 2026",
+    ],
+    pv3: [
+      "PV Réunion statutaire — 17 juin 2026",
+      "Statutory meeting minutes — June 17, 2026",
+      "Acta reunión estatutaria — 17 de junio de 2026",
+    ],
+  };
+  return DEMO_MINUTES.map((m) => {
+    const [fr, en, es] = titles[m.id] ?? [m.title, m.title, m.title];
+    return { ...m, title: L(locale, fr, en, es) };
+  });
+}
+
+export function getDemoLiveAgenda(locale: string) {
+  const copy: Record<string, { title: [string, string, string]; note: [string, string, string] }> = {
+    l1: {
+      title: ["Ouverture & quorum", "Opening & quorum", "Apertura y quórum"],
+      note: ["28 présents, 4 excusés", "28 present, 4 excused", "28 presentes, 4 excusados"],
+    },
+    l2: {
+      title: ["Mot du président", "President's remarks", "Palabras del presidente"],
+      note: ["Bilan actions humanitaires Q1", "Q1 humanitarian actions review", "Balance de acciones humanitarias T1"],
+    },
+    l3: {
+      title: ["Décisions du conseil", "Board decisions", "Decisiones del consejo"],
+      note: ["Budget 2026-2027 en discussion…", "2026-2027 budget under discussion…", "Presupuesto 2026-2027 en debate…"],
+    },
+    l4: {
+      title: ["Communications", "Communications", "Comunicaciones"],
+      note: ["", "", ""],
+    },
+    l5: {
+      title: ["Clôture", "Closing", "Clausura"],
+      note: ["", "", ""],
+    },
+  };
+  return DEMO_LIVE_AGENDA.map((item) => {
+    const c = copy[item.id];
+    if (!c) return item;
+    return {
+      ...item,
+      title: L(locale, c.title[0], c.title[1], c.title[2]),
+      note: c.note[0] ? L(locale, c.note[0], c.note[1], c.note[2]) : "",
+    };
+  });
+}
+
+export function getDemoMembers(locale: string) {
+  const positions: Record<string, [string, string, string]> = {
+    m1: ["Président", "President", "Presidente"],
+    m2: ["Secrétaire", "Secretary", "Secretario"],
+    m3: ["Trésorier", "Treasurer", "Tesorero"],
+    m4: ["Présidente Commission Intl.", "Intl. Commission Chair", "Presidenta Comisión Intl."],
+    m5: ["Membre", "Member", "Miembro"],
+    m6: ["Membre", "Member", "Miembro"],
+  };
+  return DEMO_MEMBERS.map((m) => {
+    const [fr, en, es] = positions[m.id] ?? [m.position, m.position, m.position];
+    return { ...m, position: L(locale, fr, en, es) };
+  });
+}
+
 export function getDemoDues(locale: string) {
-  const isFr = locale === "fr";
   return DEMO_DUES.map((d) => ({
     ...d,
-    dueDateLabel: isFr
-      ? d.dueDate === "2026-03-31"
-        ? "31 mars 2026"
-        : d.dueDate
-      : "Mar 31, 2026",
+    dueDateLabel:
+      d.dueDate === "2026-03-31"
+        ? L(locale, "31 mars 2026", "Mar 31, 2026", "31 mar 2026")
+        : d.dueDate,
+    periodLabel: d.periodLabel
+      ? L(
+          locale,
+          d.periodLabel,
+          d.periodLabel.replace("mars", "Mar").replace("avril", "Apr"),
+          d.periodLabel.replace("mars", "mar").replace("avril", "abr")
+        )
+      : d.periodLabel,
     statusLabel:
       d.status === "PAID"
-        ? isFr
-          ? "Payée"
-          : "Paid"
+        ? L(locale, "Payée", "Paid", "Pagada")
         : d.status === "OVERDUE"
-          ? isFr
-            ? "En retard"
-            : "Overdue"
-          : isFr
-            ? "En attente"
-            : "Pending",
+          ? L(locale, "En retard", "Overdue", "Vencida")
+          : L(locale, "En attente", "Pending", "Pendiente"),
   }));
 }
 
 export function getDemoPendingJoinRequests(locale: string) {
-  const isFr = locale === "fr";
   return DEMO_PENDING_JOIN_REQUESTS.map((r) => ({
     ...r,
-    requestedLabel: isFr ? "Demandé récemment" : "Requested recently",
+    requestedLabel: L(locale, "Demandé récemment", "Requested recently", "Solicitado recientemente"),
   }));
 }
 
 export function getDemoData(locale: string) {
-  const isFr = locale === "fr";
-  const notificationEn: Record<string, { title: string; message: string; time: string }> = {
-    n0: { title: "Join request", message: "Thomas Girard wants to join the club", time: "45 min ago" },
-    n1: { title: "Minutes pending review", message: "International Commission minutes — Jun 24, 2026", time: "2 h ago" },
-    n2: { title: "Meeting tomorrow", message: "Statutory meeting — Hôtel Lutetia, 12:30 PM", time: "1 d ago" },
-    n3: { title: "Action assigned", message: "Publish event calendar — Sophie Leroy", time: "3 d ago" },
+  const notificationCopy: Record<string, { title: [string, string, string]; message: [string, string, string]; time: [string, string, string] }> = {
+    n0: {
+      title: ["Demande d'adhésion", "Join request", "Solicitud de adhesión"],
+      message: ["Thomas Girard souhaite rejoindre le club", "Thomas Girard wants to join the club", "Thomas Girard desea unirse al club"],
+      time: ["Il y a 45 min", "45 min ago", "Hace 45 min"],
+    },
+    n1: {
+      title: ["PV en attente de validation", "Minutes pending review", "Acta pendiente de revisión"],
+      message: ["PV Commission International — 24 juin 2026", "International Commission minutes — Jun 24, 2026", "Acta Comisión Internacional — 24 jun 2026"],
+      time: ["Il y a 2 h", "2 h ago", "Hace 2 h"],
+    },
+    n2: {
+      title: ["Réunion demain", "Meeting tomorrow", "Reunión mañana"],
+      message: ["Réunion statutaire — Hôtel Lutetia, 12h30", "Statutory meeting — Hôtel Lutetia, 12:30 PM", "Reunión estatutaria — Hôtel Lutetia, 12:30"],
+      time: ["Il y a 1 j", "1 d ago", "Hace 1 d"],
+    },
+    n3: {
+      title: ["Action assignée", "Action assigned", "Tarea asignada"],
+      message: ["Publier le calendrier des événements — Sophie Leroy", "Publish event calendar — Sophie Leroy", "Publicar calendario de eventos — Sophie Leroy"],
+      time: ["Il y a 3 j", "3 d ago", "Hace 3 d"],
+    },
+  };
+  const actionCopy: Record<string, { title: [string, string, string]; due: [string, string, string] }> = {
+    a1: {
+      title: ["Publier le calendrier 2026-2027", "Publish 2026-2027 calendar", "Publicar calendario 2026-2027"],
+      due: ["15 mars 2026", "Mar 15, 2026", "15 mar 2026"],
+    },
+    a2: {
+      title: ["Coordonner campagne vaccination OMS", "Coordinate WHO vaccination campaign", "Coordinar campaña de vacunación OMS"],
+      due: ["30 mars 2026", "Mar 30, 2026", "30 mar 2026"],
+    },
+    a3: {
+      title: ["Valider budget commission", "Validate commission budget", "Validar presupuesto de comisión"],
+      due: ["1 avril 2026", "Apr 1, 2026", "1 abr 2026"],
+    },
+  };
+  const monthCopy: Record<string, [string, string, string]> = {
+    Sep: ["Sep", "Sep", "Sep"],
+    Oct: ["Oct", "Oct", "Oct"],
+    Nov: ["Nov", "Nov", "Nov"],
+    Déc: ["Déc", "Dec", "Dic"],
+    Jan: ["Jan", "Jan", "Ene"],
+    Fév: ["Fév", "Feb", "Feb"],
   };
   return {
     pendingJoinRequests: getDemoPendingJoinRequests(locale),
-    notifications: isFr
-      ? DEMO_NOTIFICATIONS
-      : DEMO_NOTIFICATIONS.map((n) => ({
-          ...n,
-          title: notificationEn[n.id]?.title ?? n.title,
-          message: notificationEn[n.id]?.message ?? n.message,
-          time: notificationEn[n.id]?.time ?? n.time,
-        })),
-    openActions: isFr
-      ? DEMO_OPEN_ACTIONS
-      : DEMO_OPEN_ACTIONS.map((a) => ({
-          ...a,
-          title:
-            a.id === "a1"
-              ? "Publish 2026-2027 calendar"
-              : a.id === "a2"
-                ? "Coordinate WHO vaccination campaign"
-                : "Validate commission budget",
-          due: a.id === "a1" ? "Mar 15, 2026" : a.id === "a2" ? "Mar 30, 2026" : "Apr 1, 2026",
-        })),
-    months: isFr
-      ? DEMO_ATTENDANCE_MONTHS
-      : DEMO_ATTENDANCE_MONTHS.map((m) => ({
-          ...m,
-          month: { Sep: "Sep", Oct: "Oct", Nov: "Nov", Déc: "Dec", Jan: "Jan", Fév: "Feb" }[m.month] ?? m.month,
-        })),
+    notifications: DEMO_NOTIFICATIONS.map((n) => {
+      const c = notificationCopy[n.id];
+      if (!c) return n;
+      return {
+        ...n,
+        title: L(locale, c.title[0], c.title[1], c.title[2]),
+        message: L(locale, c.message[0], c.message[1], c.message[2]),
+        time: L(locale, c.time[0], c.time[1], c.time[2]),
+      };
+    }),
+    openActions: DEMO_OPEN_ACTIONS.map((a) => {
+      const c = actionCopy[a.id];
+      if (!c) return a;
+      return {
+        ...a,
+        title: L(locale, c.title[0], c.title[1], c.title[2]),
+        due: L(locale, c.due[0], c.due[1], c.due[2]),
+      };
+    }),
+    months: DEMO_ATTENDANCE_MONTHS.map((m) => {
+      const [fr, en, es] = monthCopy[m.month] ?? [m.month, m.month, m.month];
+      return { ...m, month: L(locale, fr, en, es) };
+    }),
   };
+}
+
+export function getDemoActions(locale: string) {
+  const copy: Record<string, [string, string, string]> = {
+    a1: ["Publier le calendrier 2026-2027", "Publish 2026-2027 calendar", "Publicar calendario 2026-2027"],
+    a2: ["Coordonner campagne vaccination OMS", "Coordinate WHO vaccination campaign", "Coordinar campaña de vacunación OMS"],
+    a3: ["Valider budget commission", "Validate commission budget", "Validar presupuesto de comisión"],
+    a4: ["Envoyer rapport district Q2", "Send district Q2 report", "Enviar informe distrito T2"],
+  };
+  return DEMO_ACTIONS.map((a) => {
+    const [fr, en, es] = copy[a.id] ?? [a.title, a.title, a.title];
+    return { ...a, title: L(locale, fr, en, es) };
+  });
+}
+
+export function getDemoCalendarEvents(locale: string) {
+  const copy: Record<string, [string, string, string]> = {
+    ce1: ["Réunion statutaire", "Statutory meeting", "Reunión estatutaria"],
+    ce2: ["Échéance cotisation — Luc Moreau", "Dues due — Luc Moreau", "Vencimiento cuota — Luc Moreau"],
+    ce3: ["Gala humanitaire", "Humanitarian gala", "Gala humanitario"],
+    ce4: ["Publier calendrier 2026-2027", "Publish 2026-2027 calendar", "Publicar calendario 2026-2027"],
+    ce5: ["Anniversaire — Sophie Leroy", "Birthday — Sophie Leroy", "Cumpleaños — Sophie Leroy"],
+  };
+  return DEMO_CALENDAR_EVENTS.map((e) => {
+    const [fr, en, es] = copy[e.id] ?? [e.title, e.title, e.title];
+    return { ...e, title: L(locale, fr, en, es) };
+  });
+}
+
+export function getDemoClubEvents(locale: string) {
+  const copy: Record<string, [string, string, string]> = {
+    ev1: ["Gala humanitaire 2026", "Humanitarian gala 2026", "Gala humanitario 2026"],
+    ev2: ["Conférence Paix & éducation", "Peace & education conference", "Conferencia Paz y educación"],
+  };
+  return DEMO_CLUB_EVENTS.map((e) => {
+    const [fr, en, es] = copy[e.id] ?? [e.title, e.title, e.title];
+    return { ...e, title: L(locale, fr, en, es) };
+  });
+}
+
+export function getDemoEmailTemplates(locale: string) {
+  const copy: Record<string, { name: [string, string, string]; subject: [string, string, string] }> = {
+    t1: {
+      name: ["Convocation réunion", "Meeting invitation", "Convocatoria reunión"],
+      subject: ["Convocation — {{meetingDate}}", "Invitation — {{meetingDate}}", "Convocatoria — {{meetingDate}}"],
+    },
+    t2: {
+      name: ["Rappel assiduité", "Attendance reminder", "Recordatorio asistencia"],
+      subject: ["Votre participation — {{clubName}}", "Your attendance — {{clubName}}", "Su participación — {{clubName}}"],
+    },
+    t3: {
+      name: ["PV finalisé", "Minutes finalized", "Acta finalizada"],
+      subject: ["Procès-verbal disponible — {{minuteTitle}}", "Minutes available — {{minuteTitle}}", "Acta disponible — {{minuteTitle}}"],
+    },
+  };
+  return DEMO_EMAIL_TEMPLATES.map((t) => {
+    const c = copy[t.id];
+    if (!c) return t;
+    return {
+      ...t,
+      name: L(locale, c.name[0], c.name[1], c.name[2]),
+      subject: L(locale, c.subject[0], c.subject[1], c.subject[2]),
+    };
+  });
+}
+
+export function getDemoEmailCampaigns(locale: string) {
+  const copy: Record<string, { name: [string, string, string]; sentAt: [string, string, string] }> = {
+    c1: {
+      name: ["Convocation mars 2026", "March 2026 invitation", "Convocatoria marzo 2026"],
+      sentAt: ["28 fév. 2026", "Feb 28, 2026", "28 feb 2026"],
+    },
+    c2: {
+      name: ["Newsletter district 1660", "District 1660 newsletter", "Boletín distrito 1660"],
+      sentAt: ["8 mars 2026", "Mar 8, 2026", "8 mar 2026"],
+    },
+  };
+  return DEMO_EMAIL_CAMPAIGNS.map((c) => {
+    const t = copy[c.id];
+    if (!t) return c;
+    return {
+      ...c,
+      name: L(locale, t.name[0], t.name[1], t.name[2]),
+      sentAt: L(locale, t.sentAt[0], t.sentAt[1], t.sentAt[2]),
+    };
+  });
+}
+
+export function getDemoDistrictClubs(locale: string) {
+  return DEMO_DISTRICT_CLUBS.map((c) => ({
+    ...c,
+    name: c.isAvg
+      ? L(locale, "Moyenne district", "District average", "Media del distrito")
+      : c.name,
+  }));
+}
+
+export function getDemoMandates(locale: string) {
+  const roles: Record<string, [string, string, string]> = {
+    "Président": ["Président", "President", "Presidente"],
+    "Secrétaire": ["Secrétaire", "Secretary", "Secretario"],
+    "Trésorier": ["Trésorier", "Treasurer", "Tesorero"],
+  };
+  return DEMO_MANDATES.map((m) => {
+    const [fr, en, es] = roles[m.role] ?? [m.role, m.role, m.role];
+    return { ...m, role: L(locale, fr, en, es) };
+  });
+}
+
+export function getDemoTreasuryEntries(locale: string) {
+  const copy: Record<string, { label: [string, string, string]; category: [string, string, string] }> = {
+    b1: {
+      label: ["Cotisations Q1", "Q1 dues", "Cuotas T1"],
+      category: ["Cotisations", "Dues", "Cuotas"],
+    },
+    b2: {
+      label: ["Gala humanitaire", "Humanitarian gala", "Gala humanitario"],
+      category: ["Événements", "Events", "Eventos"],
+    },
+    b3: {
+      label: ["Location salle mars", "March venue rental", "Alquiler sala marzo"],
+      category: ["Réunions", "Meetings", "Reuniones"],
+    },
+    b4: {
+      label: ["Projet Madagascar", "Madagascar project", "Proyecto Madagascar"],
+      category: ["Actions", "Projects", "Proyectos"],
+    },
+  };
+  return DEMO_TREASURY.entries.map((e) => {
+    const c = copy[e.id];
+    if (!c) return e;
+    return {
+      ...e,
+      label: L(locale, c.label[0], c.label[1], c.label[2]),
+      category: L(locale, c.category[0], c.category[1], c.category[2]),
+    };
+  });
+}
+
+export function getDemoDocumentFolders(locale: string) {
+  const copy: Record<string, [string, string, string]> = {
+    f1: ["Gouvernance", "Governance", "Gobernanza"],
+    f2: ["PV archivés", "Archived minutes", "Actas archivadas"],
+    f3: ["Budget 2025-2026", "Budget 2025-2026", "Presupuesto 2025-2026"],
+  };
+  return DEMO_DOCUMENT_FOLDERS.map((f) => {
+    const [fr, en, es] = copy[f.id] ?? [f.name, f.name, f.name];
+    return { ...f, name: L(locale, fr, en, es) };
+  });
+}
+
+export function getDemoDocuments(locale: string) {
+  const copy: Record<string, [string, string, string]> = {
+    doc1: ["Statuts du club", "Club bylaws", "Estatutos del club"],
+    doc2: ["Budget 2025-2026", "Budget 2025-2026", "Presupuesto 2025-2026"],
+    doc3: ["PV Réunion statutaire — 1er juillet 2026", "Statutory meeting minutes — July 1, 2026", "Acta reunión estatutaria — 1 de julio de 2026"],
+    doc4: ["Mandat président 2025-2026", "President mandate 2025-2026", "Mandato presidente 2025-2026"],
+    doc5: ["Rapport trésorerie Q2", "Treasury report Q2", "Informe tesorería T2"],
+  };
+  return DEMO_DOCUMENTS.map((d) => {
+    const [fr, en, es] = copy[d.id] ?? [d.title, d.title, d.title];
+    return { ...d, title: L(locale, fr, en, es) };
+  });
+}
+
+export function getDemoSubscriptionPlanLabel(locale: string) {
+  return L(locale, DEMO_SUBSCRIPTION.planLabelFr, DEMO_SUBSCRIPTION.planLabelEn, "Prueba gratuita");
 }

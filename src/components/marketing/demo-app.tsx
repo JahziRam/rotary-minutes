@@ -31,6 +31,7 @@ import { MinutePreview } from "@/components/minutes/minute-preview";
 import { getDemoMinutePreview } from "@/lib/demo-minute-preview";
 import { DEMO_CLUB } from "@/lib/demo-data";
 import { cn } from "@/lib/utils";
+import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { DemoReadOnlyBanner } from "./demo-ui";
 import { DemoLiveMeeting } from "./demo-live-meeting";
 import {
@@ -347,7 +348,7 @@ function DemoSidebar({
   return (
     <aside className={cn("lg:flex-col lg:w-[var(--sidebar-w)] lg:fixed lg:inset-y-0 bg-navy-dark text-white", className)}>
       <div className="h-1 bg-gold" />
-      <div className="p-5 border-b border-white/10">
+      <div className="p-5 border-b border-white/10 space-y-3">
         <Link href={`/${locale}`} className="block">
           <h1 className="font-display text-xl font-bold">Rotary Minutes</h1>
           <p className="text-xs text-white/60 mt-1 truncate">{clubName}</p>
@@ -356,6 +357,7 @@ function DemoSidebar({
             DEMO
           </Badge>
         </Link>
+        <LocaleSwitcher variant="dark" className="w-full justify-center" />
       </div>
       <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
         {NAV.map(({ id, icon: Icon, labelKey }) => (

@@ -24,7 +24,7 @@ export async function registerClub(data: {
   clubType: ClubType;
   country: string;
   city: string;
-  language: "FR" | "EN";
+  language: "FR" | "EN" | "ES";
   referredByCode?: string;
 }) {
   const existingUser = await prisma.user.findUnique({
@@ -111,7 +111,8 @@ export async function registerClub(data: {
   const { syncClubFeaturesFromPlan } = await import("@/lib/features");
   await syncClubFeaturesFromPlan(createdClubId, "TRIAL");
 
-  const locale = data.language === "EN" ? "en" : "fr";
+  const locale =
+    data.language === "EN" ? "en" : data.language === "ES" ? "es" : "fr";
   const { getAppBaseUrl } = await import("@/lib/app-url");
   const baseUrl = getAppBaseUrl();
   const welcome = await welcomeClubEmail({
@@ -170,7 +171,7 @@ export async function registerMember(data: {
   email: string;
   password: string;
   clubId: string;
-  language: "FR" | "EN";
+  language: "FR" | "EN" | "ES";
 }) {
   const normalizedEmail = data.email.trim().toLowerCase();
 

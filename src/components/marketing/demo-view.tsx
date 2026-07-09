@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { initDemoSession } from "@/actions/demo";
 import { DemoApp } from "./demo-app";
+import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 
 export function DemoView({
   locale,
@@ -35,12 +36,15 @@ export function DemoView({
           <Link href={`/${locale}`} className="font-display text-lg font-bold">
             Rotary Minutes
           </Link>
-          <Link
-            href={`/${locale}`}
-            className="text-xs text-white/70 hover:text-white"
-          >
-            ← {t("backHome")}
-          </Link>
+          <div className="flex items-center gap-2">
+            <LocaleSwitcher variant="dark" />
+            <Link
+              href={`/${locale}`}
+              className="text-xs text-white/70 hover:text-white"
+            >
+              ← {t("backHome")}
+            </Link>
+          </div>
         </div>
       </div>
       <DemoApp locale={locale} />

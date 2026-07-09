@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -163,6 +164,7 @@ export function Sidebar({
               </div>
             </Link>
           )}
+          <LocaleSwitcher variant="dark" className="w-full justify-center" />
           <SignOutButton label={tAuth("logout")} />
         </div>
       </div>

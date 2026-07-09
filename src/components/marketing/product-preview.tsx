@@ -1,7 +1,8 @@
 import { CheckCircle2, FileText, Users } from "lucide-react";
+import { pickDemoLocale } from "@/lib/demo-i18n";
 
 export function ProductPreview({ locale }: { locale: string }) {
-  const isFr = locale === "fr";
+  const L = (fr: string, en: string, es: string) => pickDemoLocale(locale, { fr, en, es });
 
   return (
     <div className="relative mx-auto w-full max-w-lg lg:max-w-none">
@@ -31,21 +32,37 @@ export function ProductPreview({ locale }: { locale: string }) {
             <div className="mb-4 flex items-center justify-between gap-2">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-gold">
-                  {isFr ? "Procès-verbal" : "Meeting minutes"}
+                  {L("Procès-verbal", "Meeting minutes", "Acta de reunión")}
                 </p>
                 <p className="text-sm font-semibold text-white">
-                  {isFr ? "Réunion statutaire — Mars 2026" : "Statutory meeting — Mar 2026"}
+                  {L(
+                    "Réunion statutaire — Mars 2026",
+                    "Statutory meeting — Mar 2026",
+                    "Reunión estatutaria — mar 2026"
+                  )}
                 </p>
               </div>
               <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-300">
-                {isFr ? "En révision" : "In review"}
+                {L("En révision", "In review", "En revisión")}
               </span>
             </div>
             <div className="space-y-2 rounded-xl border border-white/10 bg-white/5 p-3">
               {[
-                isFr ? "Ouverture & quorum validé" : "Opening & quorum confirmed",
-                isFr ? "Décisions du conseil d'administration" : "Board decisions recorded",
-                isFr ? "Actions assignées aux membres" : "Action items assigned",
+                L(
+                  "Ouverture & quorum validé",
+                  "Opening & quorum confirmed",
+                  "Apertura y quórum confirmado"
+                ),
+                L(
+                  "Décisions du conseil d'administration",
+                  "Board decisions recorded",
+                  "Decisiones de la junta registradas"
+                ),
+                L(
+                  "Actions assignées aux membres",
+                  "Action items assigned",
+                  "Acciones asignadas a los miembros"
+                ),
               ].map((line) => (
                 <div key={line} className="flex items-start gap-2 text-xs text-white/75">
                   <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gold" />
@@ -55,10 +72,10 @@ export function ProductPreview({ locale }: { locale: string }) {
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
               <span className="rounded-lg bg-gold px-3 py-1.5 text-xs font-semibold text-navy-dark">
-                {isFr ? "Exporter PDF" : "Export PDF"}
+                {L("Exporter PDF", "Export PDF", "Exportar PDF")}
               </span>
               <span className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/70">
-                QR {isFr ? "authentifié" : "verified"}
+                QR {L("authentifié", "verified", "verificado")}
               </span>
             </div>
           </div>

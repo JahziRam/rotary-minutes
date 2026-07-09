@@ -54,7 +54,9 @@ export default function middleware(request: NextRequest) {
 
   const response = intlMiddleware(request);
   const res = response instanceof NextResponse ? response : NextResponse.next();
+  const uiLocale = pathname.match(LOCALE_PATTERN)?.[1] || defaultLocale;
   res.headers.set("x-pathname", pathnameWithoutLocale);
+  res.headers.set("x-locale", uiLocale);
   return res;
 }
 

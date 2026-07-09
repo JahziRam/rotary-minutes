@@ -4,8 +4,9 @@ import { useTranslations } from "next-intl";
 import { Circle, CheckCircle2, Clock, Radio } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DEMO_LIVE_AGENDA, DEMO_CLUB } from "@/lib/demo-data";
+import { DEMO_CLUB, getDemoLiveAgenda } from "@/lib/demo-data";
 import { DemoLockedButton } from "./demo-ui";
+import { pickDemoLocale } from "@/lib/demo-i18n";
 
 const STATUS_STYLE = {
   COMPLETED: { icon: CheckCircle2, color: "text-emerald-600", badge: "success" as const },
@@ -21,7 +22,7 @@ export function DemoLiveMeeting({
   onBack: () => void;
 }) {
   const t = useTranslations("demo");
-  const isFr = locale === "fr";
+  const L = (fr: string, en: string, es: string) => pickDemoLocale(locale, { fr, en, es });
 
   return (
     <div className="space-y-4">
@@ -33,11 +34,11 @@ export function DemoLiveMeeting({
               <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
             </span>
             <h2 className="text-lg font-bold text-gray-900">
-              {isFr ? "Mode réunion en direct" : "Live meeting mode"}
+              {L("Mode réunion en direct", "Live meeting mode", "Modo reunión en vivo")}
             </h2>
           </div>
           <p className="text-sm text-gray-500 mt-1">
-            {DEMO_CLUB.name} · {isFr ? "Réunion statutaire" : "Statutory meeting"}
+            {DEMO_CLUB.name} · {L("Réunion statutaire", "Statutory meeting", "Reunión estatutaria")}
           </p>
         </div>
         <button
@@ -56,16 +57,16 @@ export function DemoLiveMeeting({
             <span className="font-medium">12:30 – 14:00</span>
             <span className="text-gray-500">· {DEMO_CLUB.meetingLocation}</span>
           </div>
-          <Badge variant="gold">{isFr ? "En cours" : "In progress"}</Badge>
+          <Badge variant="gold">{L("En cours", "In progress", "En curso")}</Badge>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">{isFr ? "Ordre du jour" : "Agenda"}</CardTitle>
+          <CardTitle className="text-base">{L("Ordre du jour", "Agenda", "Orden del día")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {DEMO_LIVE_AGENDA.map((item, i) => {
+          {getDemoLiveAgenda(locale).map((item, i) => {
             const style = STATUS_STYLE[item.status as keyof typeof STATUS_STYLE];
             const Icon = style.icon;
             return (
@@ -87,10 +88,10 @@ export function DemoLiveMeeting({
                       <p className="font-medium text-gray-900">{item.title}</p>
                       <Badge variant={style.badge} className="text-[10px]">
                         {item.status === "COMPLETED"
-                          ? isFr ? "Terminé" : "Done"
+                          ? L("Terminé", "Done", "Hecho")
                           : item.status === "IN_PROGRESS"
-                            ? isFr ? "En cours" : "Live"
-                            : isFr ? "À venir" : "Upcoming"}
+                            ? L("En cours", "Live", "En vivo")
+                            : L("À venir", "Upcoming", "Próximo")}
                       </Badge>
                     </div>
                     {item.note && (
@@ -101,7 +102,11 @@ export function DemoLiveMeeting({
                     {item.status === "IN_PROGRESS" && (
                       <div className="mt-2 space-y-2">
                         <div className="h-9 rounded-lg border border-dashed border-gray-200 bg-gray-50 px-3 flex items-center text-sm text-gray-400">
-                          {isFr ? "Saisie des décisions en direct…" : "Recording decisions live…"}
+                          {L(
+                            "Saisie des décisions en direct…",
+                            "Recording decisions live…",
+                            "Registrando decisiones en vivo…"
+                          )}
                         </div>
                       </div>
                     )}
@@ -115,10 +120,12 @@ export function DemoLiveMeeting({
 
       <div className="flex flex-wrap gap-2">
         <DemoLockedButton
-          label={isFr ? "Enregistrer le PV" : "Save minutes"}
+          label={L("Enregistrer le PV", "Save minutes", "Guardar acta")}
           variant="gold"
         />
-        <DemoLockedButton label={isFr ? "Ajouter un point" : "Add agenda item"} />
+        <DemoLockedButton
+          label={L("Ajouter un point", "Add agenda item", "Añadir punto")}
+        />
       </div>
     </div>
   );

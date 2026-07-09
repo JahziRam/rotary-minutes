@@ -12,6 +12,7 @@ datasource db {
 enum Language {
   FR
   EN
+  ES
 }
 
 enum ClubType {
