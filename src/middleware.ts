@@ -20,6 +20,7 @@ const publicPaths = [
   "/terms",
   "/status",
   "/demo",
+  "/pitch",
   "/case-studies",
 ];
 

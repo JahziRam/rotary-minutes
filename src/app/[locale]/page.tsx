@@ -92,6 +92,7 @@ export default async function LandingPage({
         navLinks={[
           { href: `/${locale}#solution`, label: t("landing.solution.nav") },
           { href: `/${locale}#pricing`, label: t("landing.pricing.title") },
+          { href: "/pitch/", label: t("landing.pitchLink") },
         ]}
       />
 
@@ -164,6 +165,9 @@ export default async function LandingPage({
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-4 px-4 sm:gap-6">
           <Link href={`/${locale}/demo`} className="transition-colors hover:text-white">
             {t("landing.tryDemo")}
+          </Link>
+          <Link href="/pitch/" className="transition-colors hover:text-white">
+            {t("landing.pitchLink")}
           </Link>
           <Link href={`/${locale}/login`} className="transition-colors hover:text-white">
             {t("auth.login")}
