@@ -90,6 +90,7 @@ export default async function LandingPage({
         ctaLabel={t("landing.cta")}
         pricingLabel={t("landing.pricing.title")}
         demoLabel={t("landing.tryDemo")}
+        contactLabel={t("landing.contact.nav")}
         navLinks={[
           { href: `/${locale}#solution`, label: t("landing.solution.nav") },
           { href: `/${locale}#pricing`, label: t("landing.pricing.title") },
