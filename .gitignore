@@ -47,16 +47,18 @@ next-env.d.ts
 
 /src/generated/prisma
 
-# Capacitor / Android
+# Capacitor / Android — ne jamais versionner les binaires (APK/AAB)
 .android-sdk/
 .android-keystore/
+/dist/
 dist/android/
+*.apk
+*.aab
+**/outputs/apk/**
+**/outputs/bundle/**
 android/local.properties
 android/.gradle/
 android/app/build/
 android/build/
-android/local.properties
 android/.idea/
 android/capacitor-cordova-android-plugins/
-*.apk
-*.aab
