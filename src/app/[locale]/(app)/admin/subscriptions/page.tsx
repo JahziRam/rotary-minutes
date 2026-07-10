@@ -1,9 +1,10 @@
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getSubscriptionBreakdown } from "@/lib/queries/admin";
 import { prisma } from "@/lib/prisma";
 import { adminQuery } from "@/lib/admin-safe";
 import { getAllPlanConfigs, getBillingSettings } from "@/lib/plans";
 import { ensureAddonConfigs } from "@/lib/billing";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SubscriptionBreakdown } from "@/components/admin/subscription-breakdown";
 import { PlansEditor } from "@/components/admin/plans-editor";
@@ -19,6 +20,8 @@ export default async function AdminSubscriptionsPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const tNav = await getTranslations("adminNav");
+  const tPages = await getTranslations("adminPages");
 
   await adminQuery("ensureAddonConfigs", () => ensureAddonConfigs(), undefined);
 
@@ -66,6 +69,7 @@ export default async function AdminSubscriptionsPage({
 
   return (
     <div className="space-y-6">
+      <AdminPageHeader title={tNav("subscriptions")} description={tPages("subscriptions")} />
       <SubscriptionBreakdown data={breakdown} locale={locale} />
 
       <Card>

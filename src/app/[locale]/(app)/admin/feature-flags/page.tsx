@@ -1,10 +1,10 @@
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { FeatureFlagsPanel } from "@/components/admin/feature-flags-panel";
 import { ModulesFeatureFlagsPanel } from "@/components/admin/modules-feature-flags-panel";
 import { AdminErrorBanner } from "@/components/admin/admin-error-banner";
 import { listFeatureFlags, getDefaultClubFeatures } from "@/actions/feature-flags";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Flag } from "lucide-react";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default async function AdminFeatureFlagsPage({
   params,
@@ -13,6 +13,8 @@ export default async function AdminFeatureFlagsPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const tNav = await getTranslations("adminNav");
+  const tPages = await getTranslations("adminPages");
 
   const [result, defaultsResult] = await Promise.all([
     listFeatureFlags(),
@@ -26,14 +28,10 @@ export default async function AdminFeatureFlagsPage({
       : null;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Flag className="h-5 w-5 text-navy" />
-          Feature flags
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="space-y-6">
+      <AdminPageHeader title={tNav("featureFlags")} description={tPages("featureFlags")} />
+      <Card>
+        <CardContent className="pt-6 space-y-4">
         {hasError ? (
           <AdminErrorBanner message="Accès refusé ou erreur de chargement des feature flags." />
         ) : null}
@@ -47,7 +45,8 @@ export default async function AdminFeatureFlagsPage({
           <h3 className="text-sm font-semibold text-gray-800">Feature flags (rollout)</h3>
           <FeatureFlagsPanel flags={flags} />
         </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

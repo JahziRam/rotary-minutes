@@ -24,7 +24,53 @@
     "notifications": "Notificaciones",
     "subscription": "Suscripción",
     "changePlan": "Cambiar plan",
-    "support": "Soporte"
+    "support": "Soporte",
+    "superAdmin": "Super Admin",
+    "openMenu": "Abrir menú",
+    "mobileTabs": "Navegación principal"
+  },
+  "adminNav": {
+    "badge": "Plataforma",
+    "title": "Administración",
+    "subtitle": "Gestión global del SaaS",
+    "openMenu": "Menú administración",
+    "backToClub": "Volver al club",
+    "overview": "Resumen",
+    "clubs": "Clubes",
+    "users": "Usuarios",
+    "subscriptions": "Suscripciones",
+    "roles": "Roles y permisos",
+    "announcements": "Anuncios",
+    "support": "Soporte",
+    "contacts": "Contactos",
+    "featureFlags": "Feature flags",
+    "settings": "Configuración SaaS",
+    "export": "Exportar datos",
+    "groups": {
+      "overview": "Panel",
+      "platform": "Plataforma",
+      "billing": "Facturación",
+      "system": "Sistema"
+    }
+  },
+  "adminPages": {
+    "clubs": "Cree, active y configure clubes. Gestione suscripciones, miembros y funciones por club.",
+    "users": "Cuentas de usuario, vinculaciones a clubes y accesos de distrito.",
+    "subscriptions": "Planes, códigos promo, complementos y seguimiento de suscripciones.",
+    "roles": "Permisos de roles integrados y personalizados para los clubes.",
+    "announcements": "Difunda anuncios a todos los clubes o a una selección específica.",
+    "support": "Tickets de soporte enviados por los clubes y seguimiento de solicitudes.",
+    "contacts": "Mensajes recibidos mediante el formulario de contacto público.",
+    "featureFlags": "Módulos por defecto y feature flags de despliegue progresivo.",
+    "settings": "Identidad de la plataforma, integraciones, analytics y copias de seguridad.",
+    "export": "Exporte las estadísticas globales en formato JSON o PDF."
+  },
+  "viewAsClub": {
+    "banner": "Modo inspección — está visualizando el club {club}",
+    "exit": "Salir del modo club",
+    "switcherLabel": "Ver como club",
+    "selectClub": "Elegir un club…",
+    "viewClub": "Ver este club"
   },
   "notifications": {
     "title": "Notificaciones y anuncios",
@@ -584,6 +630,7 @@
   },
   "dashboard": {
     "welcome": "Bienvenido",
+    "selectClubHint": "Seleccione un club en la barra lateral para ver su panel.",
     "nextMeeting": "Próxima reunión",
     "openActions": "Tareas pendientes",
     "openActionsSubtitle": "Gestión de tareas",

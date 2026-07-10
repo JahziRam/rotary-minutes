@@ -1,5 +1,6 @@
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { listContactSubmissions } from "@/actions/admin-contacts";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { ContactsInbox } from "@/components/admin/contacts-inbox";
 
 export const dynamic = "force-dynamic";
@@ -11,6 +12,8 @@ export default async function AdminContactsPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const tNav = await getTranslations("adminNav");
+  const tPages = await getTranslations("adminPages");
 
   const result = await listContactSubmissions();
   const rows = "items" in result && result.items ? result.items : [];
@@ -20,13 +23,8 @@ export default async function AdminContactsPage({
   }));
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-xl font-bold text-gray-900">Messages contact</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Demandes reçues via le formulaire de la page d&apos;accueil.
-        </p>
-      </div>
+    <div className="space-y-6">
+      <AdminPageHeader title={tNav("contacts")} description={tPages("contacts")} />
       <ContactsInbox items={items} />
     </div>
   );

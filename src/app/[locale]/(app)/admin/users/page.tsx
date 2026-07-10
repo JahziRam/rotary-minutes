@@ -1,11 +1,11 @@
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { adminQuery } from "@/lib/admin-safe";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { Card, CardContent } from "@/components/ui/card";
 import { DistrictAccessPanel } from "@/components/admin/district-access-panel";
 import { UsersTable } from "@/components/admin/users-table";
 import { listDistrictAccessGrants, listDistinctDistricts } from "@/lib/queries/district";
-import { Users } from "lucide-react";
 
 export default async function AdminUsersPage({
   params,
@@ -14,6 +14,8 @@ export default async function AdminUsersPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const tNav = await getTranslations("adminNav");
+  const tPages = await getTranslations("adminPages");
 
   const [users, clubs, districtGrants, districts] = await Promise.all([
     adminQuery("users", () =>
@@ -60,18 +62,12 @@ export default async function AdminUsersPage({
 
   return (
     <div className="space-y-6">
+      <AdminPageHeader title={tNav("users")} description={tPages("users")} />
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-navy" />
-            Utilisateurs plateforme
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <UsersTable users={rows} clubs={clubs} />
         </CardContent>
       </Card>
-
       <DistrictAccessPanel grants={grantRows} districts={districts} />
     </div>
   );

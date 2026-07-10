@@ -20,6 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrialAlerts } from "@/components/admin/trial-alerts";
 import { SubscriptionBreakdown } from "@/components/admin/subscription-breakdown";
 import { AuditLogList } from "@/components/admin/audit-log-list";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import {
   Building2,
   Users,
@@ -81,10 +82,7 @@ export default async function SuperAdminPage({
 
   return (
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t("title")}</h1>
-          <p className="text-gray-500 mt-1">{t("subtitle")}</p>
-        </div>
+        <AdminPageHeader title={t("title")} description={t("subtitle")} />
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard

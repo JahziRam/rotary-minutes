@@ -1,6 +1,7 @@
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getPlatformExportData } from "@/actions/admin-platform";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { Card, CardContent } from "@/components/ui/card";
 import { AdminErrorBanner } from "@/components/admin/admin-error-banner";
 import { Download, FileText } from "lucide-react";
 
@@ -11,6 +12,8 @@ export default async function AdminExportPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const tNav = await getTranslations("adminNav");
+  const tPages = await getTranslations("adminPages");
 
   let result: Awaited<ReturnType<typeof getPlatformExportData>>;
   try {
@@ -24,17 +27,10 @@ export default async function AdminExportPage({
   const json = result.success ? JSON.stringify(result.data, null, 2) : "{}";
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Download className="h-5 w-5 text-navy" />
-          Export des statistiques
-        </CardTitle>
-        <p className="text-sm text-gray-500 mt-1">
-          Téléchargez les statistiques globales de la plateforme au format JSON ou PDF.
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="space-y-6">
+      <AdminPageHeader title={tNav("export")} description={tPages("export")} />
+      <Card>
+        <CardContent className="pt-6 space-y-4">
         {hasError ? (
           <AdminErrorBanner message="Impossible de charger les données d'export. Réessayez plus tard." />
         ) : null}
@@ -74,7 +70,8 @@ export default async function AdminExportPage({
         <pre className="text-xs bg-gray-50 rounded-lg p-4 overflow-auto max-h-96 border border-gray-200">
           {hasError ? "{}" : json}
         </pre>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

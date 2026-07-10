@@ -24,7 +24,53 @@
     "notifications": "Notifications",
     "subscription": "Abonnement",
     "changePlan": "Changer d'offre",
-    "support": "Support"
+    "support": "Support",
+    "superAdmin": "Super Admin",
+    "openMenu": "Ouvrir le menu",
+    "mobileTabs": "Navigation principale"
+  },
+  "adminNav": {
+    "badge": "Plateforme",
+    "title": "Administration",
+    "subtitle": "Gestion globale du SaaS",
+    "openMenu": "Menu administration",
+    "backToClub": "Retour au club",
+    "overview": "Vue d'ensemble",
+    "clubs": "Clubs",
+    "users": "Utilisateurs",
+    "subscriptions": "Abonnements",
+    "roles": "Rôles & permissions",
+    "announcements": "Annonces",
+    "support": "Support",
+    "contacts": "Contacts",
+    "featureFlags": "Feature flags",
+    "settings": "Paramètres SaaS",
+    "export": "Export données",
+    "groups": {
+      "overview": "Tableau de bord",
+      "platform": "Plateforme",
+      "billing": "Facturation",
+      "system": "Système"
+    }
+  },
+  "adminPages": {
+    "clubs": "Créez, activez et configurez les clubs. Gérez abonnements, membres et fonctionnalités par club.",
+    "users": "Comptes utilisateurs, rattachements aux clubs et accès district.",
+    "subscriptions": "Offres, codes promo, addons et suivi des abonnements par club.",
+    "roles": "Permissions des rôles intégrés et rôles personnalisés pour les clubs.",
+    "announcements": "Diffusez des annonces à tous les clubs ou à une sélection ciblée.",
+    "support": "Tickets de support soumis par les clubs et suivi des demandes.",
+    "contacts": "Messages reçus via le formulaire de contact de la page d'accueil.",
+    "featureFlags": "Modules par défaut et feature flags de déploiement progressif.",
+    "settings": "Identité de la plateforme, intégrations, analytics et sauvegardes.",
+    "export": "Exportez les statistiques globales au format JSON ou PDF."
+  },
+  "viewAsClub": {
+    "banner": "Mode inspection — vous visualisez le club {club}",
+    "exit": "Quitter le mode club",
+    "switcherLabel": "Voir comme club",
+    "selectClub": "Choisir un club…",
+    "viewClub": "Voir ce club"
   },
   "notifications": {
     "title": "Notifications & Annonces",
@@ -120,6 +166,7 @@
   },
   "dashboard": {
     "welcome": "Bienvenue",
+    "selectClubHint": "Sélectionnez un club dans la barre latérale pour afficher son tableau de bord.",
     "nextMeeting": "Prochaine réunion",
     "openActions": "Tâches en attente",
     "openActionsSubtitle": "Gestion des tâches",

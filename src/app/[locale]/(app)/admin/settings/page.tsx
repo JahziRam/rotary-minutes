@@ -1,12 +1,12 @@
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { adminQuery } from "@/lib/admin-safe";
 import { getIntegrationAdminView } from "@/lib/platform-integrations";
 import { getAnalyticsAdminView } from "@/lib/analytics-config";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { Card, CardContent } from "@/components/ui/card";
 import { AppSettingsForm } from "@/components/admin/app-settings-form";
 import { IntegrationsConfigPanel } from "@/components/admin/integrations-config-panel";
-import { Settings } from "lucide-react";
 import { PlatformBackupPanel } from "@/components/admin/platform-backup-panel";
 import { DEFAULT_APP_NAME } from "@/lib/app-branding-shared";
 
@@ -17,6 +17,8 @@ export default async function AdminSettingsPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const tNav = await getTranslations("adminNav");
+  const tPages = await getTranslations("adminPages");
 
   const [settings, integration, analytics] = await Promise.all([
     adminQuery(
@@ -45,14 +47,10 @@ export default async function AdminSettingsPage({
   ]);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Settings className="h-5 w-5 text-navy" />
-          Paramètres de la plateforme SaaS
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div className="space-y-6">
+      <AdminPageHeader title={tNav("settings")} description={tPages("settings")} />
+      <Card>
+        <CardContent className="pt-6">
         <AppSettingsForm
           settings={{
             appName: settings?.appName ?? DEFAULT_APP_NAME,
@@ -70,7 +68,8 @@ export default async function AdminSettingsPage({
         />
         <IntegrationsConfigPanel integration={integration} />
         <PlatformBackupPanel />
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

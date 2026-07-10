@@ -3,6 +3,8 @@ import { MobileNav } from "./mobile-nav";
 import { AppMobileShell } from "./app-mobile-shell";
 import type { HeaderNotification } from "./header";
 import { TrialBanner } from "@/components/subscription/trial-banner";
+import { ViewAsClubBanner } from "./view-as-club-banner";
+import type { ViewAsClubOption } from "./club-view-as-switcher";
 import { OfflineIndicator } from "./offline-indicator";
 import { NotificationSound } from "@/components/notifications/notification-sound";
 import { PwaInstallPrompt } from "@/components/pwa/pwa-install-prompt";
@@ -28,6 +30,9 @@ export function AppShell({
   notificationCount,
   notifications,
   isSuperAdmin,
+  isViewingAsClub = false,
+  viewAsClubs = [],
+  viewAsClubId = null,
   hiddenNavKeys = [],
   lockedNavKeys = [],
   userRole,
@@ -36,6 +41,7 @@ export function AppShell({
   trialEndsAt = null,
   shellLocale = "fr",
   pwaEnhanced = true,
+  showDistrictNav = false,
   usageGuide = null,
   assistance = null,
 }: {
@@ -45,6 +51,9 @@ export function AppShell({
   notificationCount?: number;
   notifications?: HeaderNotification[];
   isSuperAdmin?: boolean;
+  isViewingAsClub?: boolean;
+  viewAsClubs?: ViewAsClubOption[];
+  viewAsClubId?: string | null;
   hiddenNavKeys?: string[];
   lockedNavKeys?: string[];
   userRole?: string;
@@ -53,6 +62,7 @@ export function AppShell({
   trialEndsAt?: Date | string | null;
   shellLocale?: string;
   pwaEnhanced?: boolean;
+  showDistrictNav?: boolean;
   usageGuide?: UsageGuideShellProps | null;
   assistance?: AssistanceState | null;
 }) {
@@ -62,12 +72,17 @@ export function AppShell({
       <Sidebar
         clubName={clubName}
         isSuperAdmin={isSuperAdmin}
+        isViewingAsClub={isViewingAsClub}
+        viewAsClubs={viewAsClubs}
+        viewAsClubId={viewAsClubId}
+        shellLocale={shellLocale}
         hiddenNavKeys={hiddenNavKeys}
         lockedNavKeys={lockedNavKeys}
         userRole={userRole}
         notificationCount={notificationCount}
         canManageSubscription={canManageSubscription}
         subscriptionPlan={subscriptionPlan}
+        showDistrictNav={showDistrictNav}
         showUsageGuide={usageGuide?.guideEnabled && usageGuide.clubSetupComplete}
       />
       <div className="lg:pl-[var(--sidebar-w)]">
@@ -83,6 +98,9 @@ export function AppShell({
           subscriptionPlan={subscriptionPlan}
           showUsageGuide={usageGuide?.guideEnabled && usageGuide.clubSetupComplete}
         >
+          {isViewingAsClub && clubName && (
+            <ViewAsClubBanner clubName={clubName} locale={shellLocale} />
+          )}
           {trialEndsAt && (
             <TrialBanner trialEndsAt={trialEndsAt} locale={shellLocale} />
           )}
@@ -91,7 +109,7 @@ export function AppShell({
           </main>
         </AppMobileShell>
       </div>
-      <MobileNav />
+      <MobileNav hiddenNavKeys={hiddenNavKeys} notificationCount={notificationCount} />
       <OfflineIndicator />
       {pwaEnhanced && <PwaInstallPrompt />}
       {usageGuide && <UsageAssistant />}

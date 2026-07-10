@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Rotary Minutes</string>
+    <string name="title_activity_main">Rotary Minutes</string>
+    <string name="package_name">mg.api.clubminutes.app</string>
+    <string name="custom_url_scheme">mg.api.clubminutes.app</string>
+</resources>

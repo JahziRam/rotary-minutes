@@ -5,7 +5,9 @@ import { clubLanguageToLocale, resolveUiLocale } from "@/lib/locale-utils";
 import { DEMO_CLUB } from "@/lib/demo-data";
 import { getUserNotifications } from "@/lib/queries/notifications";
 import { getClubContext } from "@/lib/club-context";
-import { getHiddenNavKeys, getLockedNavKeys } from "@/lib/nav-access";
+import { getHiddenNavKeys, getLockedNavKeys, shouldShowDistrictNav } from "@/lib/nav-access";
+import { getViewAsClubId } from "@/lib/view-as-club";
+import { prisma } from "@/lib/prisma";
 import { getUsageGuideContext } from "@/actions/usage-guide";
 import { getAssistanceState } from "@/actions/assistance";
 import { DEFAULT_FEATURES } from "@/lib/features";
@@ -22,18 +24,36 @@ export async function AppShellServer({
 }) {
   const session = await getSession();
   const isSuperAdmin = session?.user?.isSuperAdmin ?? false;
-  const clubName =
-    session?.user?.memberships?.[0]?.clubName ?? DEMO_CLUB.name;
+  const viewAsClubId = isSuperAdmin ? await getViewAsClubId() : null;
+  const ctx = !isSuperAdmin || viewAsClubId ? await getClubContext() : null;
+  const isViewingAsClub = isSuperAdmin && !!viewAsClubId && !!ctx;
+  const clubName = ctx?.clubName
+    ?? (!isSuperAdmin
+      ? session?.user?.memberships?.[0]?.clubName ?? DEMO_CLUB.name
+      : undefined);
+
+  const viewAsClubs = isSuperAdmin
+    ? await prisma.club.findMany({
+        where: { isActive: true },
+        select: { id: true, name: true, city: true },
+        orderBy: { name: "asc" },
+      })
+    : [];
 
   const notifData = session?.user?.id
     ? await getUserNotifications(session.user.id)
     : { items: [], unreadCount: 0 };
 
-  const ctx = isSuperAdmin ? null : await getClubContext();
   const role = (ctx?.role ?? session?.user?.memberships?.[0]?.role ?? "READER") as ClubRoleType;
   const features = ctx?.features ?? DEFAULT_FEATURES;
-  const hiddenNavKeys = getHiddenNavKeys(role, features, isSuperAdmin);
-  const lockedNavKeys = getLockedNavKeys(role, features, isSuperAdmin);
+  const hiddenNavKeys = getHiddenNavKeys(role, features, isSuperAdmin && !isViewingAsClub);
+  const lockedNavKeys = getLockedNavKeys(role, features, isSuperAdmin && !isViewingAsClub);
+  const hasDistrictAccess =
+    isSuperAdmin ||
+    (session?.user?.id
+      ? (await prisma.districtAccess.count({ where: { userId: session.user.id } })) > 0
+      : false);
+  const showDistrictNav = shouldShowDistrictNav(hasDistrictAccess, features, isSuperAdmin);
   const canManageSubscription =
     !isSuperAdmin &&
     (await hasRolePermission(role, "settings.manage", false));
@@ -68,6 +88,9 @@ export async function AppShellServer({
         link: n.link,
       }))}
       isSuperAdmin={isSuperAdmin}
+      isViewingAsClub={isViewingAsClub}
+      viewAsClubs={viewAsClubs}
+      viewAsClubId={viewAsClubId}
       hiddenNavKeys={hiddenNavKeys}
       lockedNavKeys={lockedNavKeys}
       userRole={role}
@@ -76,6 +99,7 @@ export async function AppShellServer({
       trialEndsAt={showTrialBanner ? subscription!.trialEndsAt! : null}
       shellLocale={shellLocale}
       pwaEnhanced={features.pwaEnhancedEnabled || isSuperAdmin}
+      showDistrictNav={showDistrictNav}
       usageGuide={
         usageGuide
           ? {

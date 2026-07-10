@@ -24,7 +24,53 @@
     "notifications": "Notifications",
     "subscription": "Subscription",
     "changePlan": "Change plan",
-    "support": "Support"
+    "support": "Support",
+    "superAdmin": "Super Admin",
+    "openMenu": "Open menu",
+    "mobileTabs": "Main navigation"
+  },
+  "adminNav": {
+    "badge": "Platform",
+    "title": "Administration",
+    "subtitle": "Global SaaS management",
+    "openMenu": "Admin menu",
+    "backToClub": "Back to club",
+    "overview": "Overview",
+    "clubs": "Clubs",
+    "users": "Users",
+    "subscriptions": "Subscriptions",
+    "roles": "Roles & permissions",
+    "announcements": "Announcements",
+    "support": "Support",
+    "contacts": "Contacts",
+    "featureFlags": "Feature flags",
+    "settings": "SaaS settings",
+    "export": "Data export",
+    "groups": {
+      "overview": "Dashboard",
+      "platform": "Platform",
+      "billing": "Billing",
+      "system": "System"
+    }
+  },
+  "adminPages": {
+    "clubs": "Create, activate and configure clubs. Manage subscriptions, members and per-club features.",
+    "users": "User accounts, club memberships and district access grants.",
+    "subscriptions": "Plans, promo codes, add-ons and per-club subscription tracking.",
+    "roles": "Built-in and custom role permissions for clubs.",
+    "announcements": "Broadcast announcements to all clubs or a targeted selection.",
+    "support": "Support tickets submitted by clubs and request tracking.",
+    "contacts": "Messages received via the public contact form.",
+    "featureFlags": "Default modules and progressive rollout feature flags.",
+    "settings": "Platform identity, integrations, analytics and backups.",
+    "export": "Export global platform statistics as JSON or PDF."
+  },
+  "viewAsClub": {
+    "banner": "Inspection mode — you are viewing club {club}",
+    "exit": "Exit club view",
+    "switcherLabel": "View as club",
+    "selectClub": "Select a club…",
+    "viewClub": "View this club"
   },
   "notifications": {
     "title": "Notifications & Announcements",
@@ -120,6 +166,7 @@
   },
   "dashboard": {
     "welcome": "Welcome",
+    "selectClubHint": "Select a club in the sidebar to display its dashboard.",
     "nextMeeting": "Next meeting",
     "openActions": "Open tasks",
     "openActionsSubtitle": "Task management",

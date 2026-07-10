@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Calendar, FileText, Users, Mail, Plus, ArrowRight, CheckSquare, Wallet } from "lucide-react";
+import { Calendar, Users, Mail, ArrowRight, CheckSquare, Wallet } from "lucide-react";
 import { getSession } from "@/lib/cached-auth";
 import { getClubContext } from "@/lib/club-context";
 import { prisma } from "@/lib/prisma";
@@ -14,6 +14,8 @@ import { hasRolePermission } from "@/lib/roles";
 import { getMinuteStatusLabel, getMinuteStatusVariant } from "@/lib/minute-status";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { StatCard } from "@/components/dashboard/stat-card";
+import { DashboardHero } from "@/components/dashboard/dashboard-hero";
+import { DashboardSection } from "@/components/dashboard/dashboard-section";
 import { ClubHealthScorePanel } from "@/components/dashboard/club-health-score-panel";
 import {
   PendingJoinRequests,
@@ -38,6 +40,7 @@ export default async function DashboardPage({
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations();
+  const tDashboard = await getTranslations("dashboard");
   const session = await getSession();
   const ctx = await getClubContext();
 
@@ -120,113 +123,101 @@ export default async function DashboardPage({
 
         <DashboardAssistance />
 
-        {/* Hero */}
-        <section className="rounded-2xl bg-gradient-to-br from-navy to-navy-dark text-white p-6 sm:p-8">
-          <h1 className="text-2xl sm:text-3xl font-bold">
-            {t("dashboard.welcome")}{userName ? `, ${userName}` : ""}
-          </h1>
-          <p className="text-white/70 mt-1">{clubName}</p>
-          <div className="flex flex-wrap gap-3 mt-6">
-            <Link
-              href={`/${locale}/meetings/new`}
-              className="inline-flex items-center justify-center gap-2 h-10 px-4 py-2 rounded-lg text-sm font-semibold bg-gold text-navy-dark hover:bg-gold-light shadow-sm transition-all"
-            >
-              <Plus className="h-4 w-4" />
-              {t("dashboard.newMeeting")}
-            </Link>
-            <Link
-              href={`/${locale}/minutes/new`}
-              className="inline-flex items-center justify-center gap-2 h-10 px-4 py-2 rounded-lg text-sm font-medium border border-white/20 bg-white/10 hover:bg-white/20 text-white transition-all"
-            >
-              <FileText className="h-4 w-4" />
-              {t("dashboard.newMinute")}
-            </Link>
-          </div>
-        </section>
+        {session?.user?.isSuperAdmin && !ctx ? (
+          <Card className="border-dashed border-amber-200 bg-amber-50/50">
+            <CardContent className="py-8 text-center">
+              <p className="text-sm text-amber-900">{tDashboard("selectClubHint")}</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            <DashboardHero
+              greeting={`${tDashboard("welcome")}${userName ? `, ${userName}` : ""}`}
+              clubName={clubName}
+              newMeetingLabel={tDashboard("newMeeting")}
+              newMinuteLabel={tDashboard("newMinute")}
+              locale={locale}
+            />
 
-        {ctx && (
-          <ClubHealthScorePanel clubId={ctx.clubId} locale={locale} />
-        )}
-
-        {/* Stats */}
-        <section>
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
-            {t("dashboard.statsSection")}
-          </h2>
-          <div
-            className={`grid sm:grid-cols-2 ${treasurySummary ? "lg:grid-cols-5" : "lg:grid-cols-4"} gap-4`}
-          >
-            {treasurySummary && ctx && (
-              <Link href={`/${locale}/treasury`}>
-                <StatCard
-                  title={t("dashboard.treasuryBalance")}
-                  value={formatBudgetMoney(treasurySummary.balance, ctx.club.currency, locale)}
-                  subtitle={
-                    duesOverview && duesOverview.overdueCount > 0
-                      ? t("dashboard.treasuryOverdue", { count: duesOverview.overdueCount })
-                      : treasurySummary.fiscalYearLabel
-                  }
-                  icon={Wallet}
-                  className="hover:shadow-md transition-shadow cursor-pointer h-full"
-                />
-              </Link>
+            {ctx && (
+              <ClubHealthScorePanel clubId={ctx.clubId} locale={locale} />
             )}
-            <Link href={`/${locale}/statistics`}>
-              <StatCard
-                title={t("dashboard.attendanceRate")}
-                value={`${stats?.annualAttendance ?? 0}%`}
-                subtitle={
-                  stats?.mandateLabel
-                    ? `${t("attendance.annualRate")} · ${stats.mandateLabel}`
-                    : t("attendance.annualRate")
-                }
-                icon={Users}
-                trend={stats && stats.annualAttendance >= 75 ? "up" : "neutral"}
-                className="hover:shadow-md transition-shadow cursor-pointer h-full"
-              />
-            </Link>
-            <Link href={`/${locale}/meetings`}>
-              <StatCard
-                title={t("dashboard.meetingsThisMonth")}
-                value={stats?.meetingsThisMonth ?? 0}
-                subtitle={
-                  stats?.meetingsCount !== undefined
-                    ? `${stats.meetingsCount} ${t("dashboard.pastMeetings")} (${stats.mandateLabel})`
-                    : undefined
-                }
-                icon={Calendar}
-                className="hover:shadow-md transition-shadow cursor-pointer h-full"
-              />
-            </Link>
-            <Link href={`/${locale}/actions`}>
-              <StatCard
-                title={t("dashboard.openActions")}
-                value={stats?.openActions ?? 0}
-                subtitle={t("dashboard.openActionsSubtitle")}
-                icon={CheckSquare}
-                className="hover:shadow-md transition-shadow cursor-pointer h-full"
-              />
-            </Link>
-            <Link href={`/${locale}/emails`}>
-              <StatCard
-                title={t("dashboard.scheduledEmails")}
-                value={stats?.scheduledEmails ?? 0}
-                icon={Mail}
-                className="hover:shadow-md transition-shadow cursor-pointer h-full"
-              />
-            </Link>
-          </div>
-        </section>
 
-        {/* Meetings & minutes */}
-        <section>
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
-            {t("dashboard.activitySection")}
-          </h2>
-          <div className="grid lg:grid-cols-2 gap-6">
+            <DashboardSection title={tDashboard("statsSection")}>
+              <div
+                className={`grid sm:grid-cols-2 ${treasurySummary ? "lg:grid-cols-5" : "lg:grid-cols-4"} gap-4`}
+              >
+                {treasurySummary && ctx && (
+                  <Link href={`/${locale}/treasury`}>
+                    <StatCard
+                      title={tDashboard("treasuryBalance")}
+                      value={formatBudgetMoney(treasurySummary.balance, ctx.club.currency, locale)}
+                      subtitle={
+                        duesOverview && duesOverview.overdueCount > 0
+                          ? tDashboard("treasuryOverdue", { count: duesOverview.overdueCount })
+                          : treasurySummary.fiscalYearLabel
+                      }
+                      icon={Wallet}
+                      accent="gold"
+                      className="hover:shadow-md transition-shadow cursor-pointer h-full"
+                    />
+                  </Link>
+                )}
+                <Link href={`/${locale}/statistics`}>
+                  <StatCard
+                    title={tDashboard("attendanceRate")}
+                    value={`${stats?.annualAttendance ?? 0}%`}
+                    subtitle={
+                      stats?.mandateLabel
+                        ? `${t("attendance.annualRate")} · ${stats.mandateLabel}`
+                        : t("attendance.annualRate")
+                    }
+                    icon={Users}
+                    trend={stats && stats.annualAttendance >= 75 ? "up" : "neutral"}
+                    accent="green"
+                    className="hover:shadow-md transition-shadow cursor-pointer h-full"
+                  />
+                </Link>
+                <Link href={`/${locale}/meetings`}>
+                  <StatCard
+                    title={tDashboard("meetingsThisMonth")}
+                    value={stats?.meetingsThisMonth ?? 0}
+                    subtitle={
+                      stats?.meetingsCount !== undefined
+                        ? `${stats.meetingsCount} ${tDashboard("pastMeetings")} (${stats.mandateLabel})`
+                        : undefined
+                    }
+                    icon={Calendar}
+                    accent="navy"
+                    className="hover:shadow-md transition-shadow cursor-pointer h-full"
+                  />
+                </Link>
+                <Link href={`/${locale}/actions`}>
+                  <StatCard
+                    title={tDashboard("openActions")}
+                    value={stats?.openActions ?? 0}
+                    subtitle={tDashboard("openActionsSubtitle")}
+                    icon={CheckSquare}
+                    accent="amber"
+                    className="hover:shadow-md transition-shadow cursor-pointer h-full"
+                  />
+                </Link>
+                <Link href={`/${locale}/emails`}>
+                  <StatCard
+                    title={tDashboard("scheduledEmails")}
+                    value={stats?.scheduledEmails ?? 0}
+                    icon={Mail}
+                    className="hover:shadow-md transition-shadow cursor-pointer h-full"
+                  />
+                </Link>
+              </div>
+            </DashboardSection>
+
+            <DashboardSection title={tDashboard("activitySection")}>
+              <div className="grid lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader className="flex-row items-center justify-between">
-                <CardTitle>{t("dashboard.nextMeeting")}</CardTitle>
+                <CardTitle>{tDashboard("nextMeeting")}</CardTitle>
                 <Link href={`/${locale}/meetings`} className="text-sm text-navy hover:underline flex items-center gap-1">
                   {t("common.viewAll")}<ArrowRight className="h-3 w-3" />
                 </Link>
@@ -267,7 +258,7 @@ export default async function DashboardPage({
 
             <Card>
               <CardHeader className="flex-row items-center justify-between">
-                <CardTitle>{t("dashboard.recentMinutes")}</CardTitle>
+                <CardTitle>{tDashboard("recentMinutes")}</CardTitle>
                 <Link href={`/${locale}/minutes`} className="text-sm text-navy hover:underline flex items-center gap-1">
                   {t("common.viewAll")}<ArrowRight className="h-3 w-3" />
                 </Link>
@@ -301,8 +292,10 @@ export default async function DashboardPage({
                 )}
               </CardContent>
             </Card>
-          </div>
-        </section>
+              </div>
+            </DashboardSection>
+          </>
+        )}
       </div>
     </AppShellServer>
   );

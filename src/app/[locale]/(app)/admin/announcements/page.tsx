@@ -1,6 +1,7 @@
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { adminQuery } from "@/lib/admin-safe";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AnnouncementForm } from "@/components/admin/announcement-form";
 import { Megaphone } from "lucide-react";
@@ -14,6 +15,8 @@ export default async function AdminAnnouncementsPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const tNav = await getTranslations("adminNav");
+  const tPages = await getTranslations("adminPages");
 
   const [clubs, history] = await Promise.all([
     adminQuery(
@@ -34,7 +37,9 @@ export default async function AdminAnnouncementsPage({
   ]);
 
   return (
-    <div className="grid lg:grid-cols-2 gap-6">
+    <div className="space-y-6">
+      <AdminPageHeader title={tNav("announcements")} description={tPages("announcements")} />
+      <div className="grid lg:grid-cols-2 gap-6">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -67,6 +72,7 @@ export default async function AdminAnnouncementsPage({
           )}
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

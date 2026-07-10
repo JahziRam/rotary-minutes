@@ -3,7 +3,9 @@
 import { Fragment, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
-import { Search, Power, Clock, Building2, SlidersHorizontal, Settings2, Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { Search, Power, Clock, Building2, SlidersHorizontal, Settings2, Plus, Eye } from "lucide-react";
+import { setViewAsClub } from "@/actions/view-as-club";
 import { ClubFeaturesPanel } from "@/components/admin/club-features-panel";
 import {
   ClubManagementPanel,
@@ -72,6 +74,7 @@ export function ClubsTable({
   customRoles: Array<{ id: string; key: string; labelFr: string; labelEn: string }>;
 }) {
   const locale = useLocale();
+  const tViewAs = useTranslations("viewAsClub");
   const router = useRouter();
   const dateLocale = locale === "fr" ? fr : enUS;
   const [search, setSearch] = useState("");
@@ -303,6 +306,20 @@ export function ClubsTable({
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-1">
+                        {club.isActive && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={pending}
+                            title={tViewAs("viewClub")}
+                            onClick={() =>
+                              startTransition(() => setViewAsClub(club.id, locale))
+                            }
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                            <span className="hidden sm:inline ml-1">{tViewAs("viewClub")}</span>
+                          </Button>
+                        )}
                         <Button
                           variant="outline"
                           size="sm"

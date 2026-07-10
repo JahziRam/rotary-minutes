@@ -1,10 +1,10 @@
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getAllRoleConfigs, getAllCustomRoles } from "@/lib/roles";
 import { adminQuery } from "@/lib/admin-safe";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { Card, CardContent } from "@/components/ui/card";
 import { AdminErrorBanner } from "@/components/admin/admin-error-banner";
 import { RolesEditor } from "@/components/admin/roles-editor";
-import { Shield } from "lucide-react";
 
 export default async function AdminRolesPage({
   params,
@@ -13,6 +13,8 @@ export default async function AdminRolesPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const tNav = await getTranslations("adminNav");
+  const tPages = await getTranslations("adminPages");
 
   const [roles, customRoles] = await Promise.all([
     adminQuery("roleConfigs", () => getAllRoleConfigs(), []),
@@ -20,17 +22,10 @@ export default async function AdminRolesPage({
   ]);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Shield className="h-5 w-5 text-navy" />
-          Rôles et permissions
-        </CardTitle>
-        <p className="text-sm text-gray-500 mt-1">
-          Définissez les permissions de chaque rôle club. Le Super Admin a toujours un accès illimité.
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="space-y-6">
+      <AdminPageHeader title={tNav("roles")} description={tPages("roles")} />
+      <Card>
+        <CardContent className="pt-6 space-y-4">
         {roles.length === 0 ? (
           <AdminErrorBanner message="Aucun rôle chargé. Vérifiez que la base est à jour (prisma db push)." />
         ) : null}
@@ -54,7 +49,8 @@ export default async function AdminRolesPage({
             membershipCount: r._count.memberships,
           }))}
         />
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

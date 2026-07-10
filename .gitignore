@@ -46,3 +46,17 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+
+# Capacitor / Android
+.android-sdk/
+.android-keystore/
+dist/android/
+android/local.properties
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+android/.idea/
+android/capacitor-cordova-android-plugins/
+*.apk
+*.aab

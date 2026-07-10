@@ -2,11 +2,11 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getAdminClubs, getAdminClubsManagementData } from "@/lib/queries/admin";
 import { adminQuery } from "@/lib/admin-safe";
 import { AdminErrorBanner } from "@/components/admin/admin-error-banner";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { Card, CardContent } from "@/components/ui/card";
 import { DEFAULT_FEATURES } from "@/lib/features";
 import { ClubsTable, type AdminClubRow } from "@/components/admin/clubs-table";
 import type { AdminClubManagementData } from "@/components/admin/club-management-panel";
-import { FileText } from "lucide-react";
 
 export default async function AdminClubsPage({
   params,
@@ -15,7 +15,8 @@ export default async function AdminClubsPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const t = await getTranslations("admin");
+  const tNav = await getTranslations("adminNav");
+  const tPages = await getTranslations("adminPages");
 
   const [clubs, managementData] = await Promise.all([
     adminQuery("clubs", () => getAdminClubs(), []),
@@ -134,24 +135,21 @@ export default async function AdminClubsPage({
   }));
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="h-5 w-5 text-navy" />
-          {t("clubs.title")}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {clubs.length === 0 ? (
-          <AdminErrorBanner message="Aucun club chargé. Vérifiez la connexion à la base de données." />
-        ) : null}
-        <ClubsTable
-          clubs={clubRows}
-          managementByClubId={managementByClubId}
-          platformUsers={managementData.platformUsers}
-          customRoles={managementData.customRoles}
-        />
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      <AdminPageHeader title={tNav("clubs")} description={tPages("clubs")} />
+      <Card>
+        <CardContent className="pt-6 space-y-4">
+          {clubs.length === 0 ? (
+            <AdminErrorBanner message="Aucun club chargé. Vérifiez la connexion à la base de données." />
+          ) : null}
+          <ClubsTable
+            clubs={clubRows}
+            managementByClubId={managementByClubId}
+            platformUsers={managementData.platformUsers}
+            customRoles={managementData.customRoles}
+          />
+        </CardContent>
+      </Card>
+    </div>
   );
 }

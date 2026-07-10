@@ -3,58 +3,23 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
-import {
-  Home,
-  Calendar,
-  FileText,
-  Mail,
-  Users,
-  BarChart3,
-  Map,
-  Settings,
-  Shield,
-  Bell,
-  Lock,
-  CreditCard,
-  LifeBuoy,
-  UserCircle,
-  ClipboardList,
-  PartyPopper,
-  FolderOpen,
-  Wallet,
-  CheckSquare,
-  CalendarDays,
-} from "lucide-react";
+import { Shield, Lock, CreditCard } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { cn } from "@/lib/utils";
 import { UsageGuideLauncher } from "@/components/assistant/usage-guide-launcher";
 import { AppBrandName } from "@/components/brand/app-brand-name";
-
-const navItems = [
-  { key: "dashboard", href: "/dashboard", icon: Home },
-  { key: "notifications", href: "/notifications", icon: Bell },
-  { key: "meetings", href: "/meetings", icon: Calendar },
-  { key: "minutes", href: "/minutes", icon: FileText },
-  { key: "emails", href: "/emails", icon: Mail },
-  { key: "members", href: "/members", icon: Users },
-  { key: "treasury", href: "/treasury", icon: Wallet },
-  { key: "actions", href: "/actions", icon: CheckSquare },
-  { key: "calendar", href: "/calendar", icon: CalendarDays },
-  { key: "myAccount", href: "/my-account", icon: UserCircle },
-  { key: "attendanceReports", href: "/attendance-reports", icon: ClipboardList },
-  { key: "events", href: "/events", icon: PartyPopper },
-  { key: "documents", href: "/documents", icon: FolderOpen },
-  { key: "statistics", href: "/statistics", icon: BarChart3 },
-  { key: "district", href: "/district", icon: Map },
-  { key: "settings", href: "/settings", icon: Settings },
-  { key: "support", href: "/support", icon: LifeBuoy },
-] as const;
+import { CLUB_NAV_ITEMS } from "@/lib/nav-config";
+import { ClubViewAsSwitcher, type ViewAsClubOption } from "./club-view-as-switcher";
 
 export function Sidebar({
   clubName,
   isSuperAdmin = false,
+  isViewingAsClub = false,
+  viewAsClubs = [],
+  viewAsClubId = null,
+  shellLocale = "fr",
   hiddenNavKeys = [],
   userRole,
   notificationCount = 0,
@@ -66,6 +31,10 @@ export function Sidebar({
 }: {
   clubName?: string;
   isSuperAdmin?: boolean;
+  isViewingAsClub?: boolean;
+  viewAsClubs?: ViewAsClubOption[];
+  viewAsClubId?: string | null;
+  shellLocale?: string;
   hiddenNavKeys?: string[];
   lockedNavKeys?: string[];
   userRole?: string;
@@ -92,7 +61,7 @@ export function Sidebar({
             {clubName && (
               <p className="text-xs text-white/60 mt-1 truncate">{clubName}</p>
             )}
-            {userRole && !isSuperAdmin && (
+            {userRole && (!isSuperAdmin || isViewingAsClub) && (
               <p className="text-[10px] text-white/40 mt-0.5 uppercase tracking-wide">{userRole}</p>
             )}
           </Link>
@@ -100,20 +69,28 @@ export function Sidebar({
 
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
           {isSuperAdmin && (
-            <Link
-              href={`/${locale}/admin`}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors mb-2",
-                pathname.startsWith(`/${locale}/admin`)
-                  ? "bg-gold/20 text-gold"
-                  : "text-gold/80 hover:bg-gold/10 hover:text-gold"
-              )}
-            >
-              <Shield className="h-5 w-5 shrink-0" />
-              Super Admin
-            </Link>
+            <>
+              <Link
+                href={`/${locale}/admin`}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors mb-2",
+                  pathname.startsWith(`/${locale}/admin`)
+                    ? "bg-gold/20 text-gold"
+                    : "text-gold/80 hover:bg-gold/10 hover:text-gold"
+                )}
+              >
+                <Shield className="h-5 w-5 shrink-0" />
+                {t("superAdmin")}
+              </Link>
+              <ClubViewAsSwitcher
+                clubs={viewAsClubs}
+                currentClubId={viewAsClubId}
+                locale={shellLocale}
+                className="mb-3"
+              />
+            </>
           )}
-          {navItems.map(({ key, href, icon: Icon }) => {
+          {CLUB_NAV_ITEMS.map(({ key, href, icon: Icon }) => {
             if (key === "district" && !showDistrictNav) return null;
             if (hiddenNavKeys.includes(key)) return null;
             const fullHref = `/${locale}${href}`;

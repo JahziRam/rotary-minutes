@@ -1,8 +1,7 @@
 import { redirect } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import { getSession } from "@/lib/cached-auth";
-import { AppShellServer } from "@/components/layout/app-shell-server";
-import { AdminNav } from "@/components/admin/admin-nav";
+import { AdminShellServer } from "@/components/layout/admin-shell-server";
 
 export const dynamic = "force-dynamic";
 
@@ -21,12 +20,5 @@ export default async function AdminLayout({
     redirect(`/${locale}/dashboard`);
   }
 
-  return (
-    <AppShellServer title="Super Admin">
-      <div className="space-y-6">
-        <AdminNav />
-        {children}
-      </div>
-    </AppShellServer>
-  );
+  return <AdminShellServer>{children}</AdminShellServer>;
 }

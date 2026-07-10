@@ -2,6 +2,7 @@ import { cache } from "react";
 import { getSession } from "@/lib/cached-auth";
 import { prisma } from "@/lib/prisma";
 import { getClubFeatures, type ClubFeatureSet } from "@/lib/features";
+import { getViewAsClubId } from "@/lib/view-as-club";
 import type { ClubRoleType } from "@/lib/rotary";
 import type { Club, Member, Subscription } from "@/generated/prisma/client";
 
@@ -33,13 +34,9 @@ async function resolveClubContext(includeMembers: boolean): Promise<ClubContext 
   let customRoleId = membership?.customRoleId ?? null;
 
   if (!clubId && session.user.isSuperAdmin) {
-    const firstClub = await prisma.club.findFirst({
-      where: { isActive: true },
-      orderBy: { createdAt: "asc" },
-      select: { id: true },
-    });
-    if (!firstClub) return null;
-    clubId = firstClub.id;
+    const viewAsClubId = await getViewAsClubId();
+    if (!viewAsClubId) return null;
+    clubId = viewAsClubId;
     role = "ADMIN";
   }
 

@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { locales, type Locale } from "@/i18n/config";
 import { RegisterSW } from "@/components/pwa/register-sw";
+import { CapacitorBridge } from "@/components/native/capacitor-bridge";
 import { GoogleAnalyticsConsentDefault } from "@/components/analytics/google-analytics-consent-default";
 import { AnalyticsConfigProvider } from "@/components/analytics/analytics-config-provider";
 import { CookieConsentProvider } from "@/components/analytics/cookie-consent-provider";
@@ -15,6 +16,13 @@ import { getAppBranding } from "@/lib/app-settings";
 import { patchMessagesWithBranding } from "@/lib/i18n-branding";
 import { AppBrandingProvider } from "@/components/brand/app-branding-provider";
 import "../globals.css";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#0d2d52",
+};
 
 export async function generateMetadata({
   params,
@@ -28,7 +36,17 @@ export async function generateMetadata({
     appleWebApp: {
       capable: true,
       title: appName,
-      statusBarStyle: "default",
+      statusBarStyle: "black-translucent",
+    },
+    icons: {
+      icon: [
+        { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+        { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+      ],
+      apple: [{ url: "/icon-192.png", sizes: "192x192", type: "image/png" }],
+    },
+    other: {
+      "mobile-web-app-capable": "yes",
     },
   };
 }
@@ -64,6 +82,7 @@ export default async function LocaleLayout({
                 <GoogleAnalytics />
                 <CookieBanner />
                 <RegisterSW />
+                <CapacitorBridge />
                 {children}
               </CookieConsentProvider>
             </AnalyticsConfigProvider>
