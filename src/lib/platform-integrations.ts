@@ -42,6 +42,8 @@ export async function getStoredIntegrations(): Promise<PlatformIntegrations> {
 
 export async function resolveIntegrations(): Promise<Required<PlatformIntegrations>> {
   const stored = await getStoredIntegrations();
+  const { getAppName } = await import("@/lib/app-settings");
+  const appName = await getAppName();
   return {
     stripeSecretKey:
       stored.stripeSecretKey?.trim() || process.env.STRIPE_SECRET_KEY?.trim() || "",
@@ -58,7 +60,7 @@ export async function resolveIntegrations(): Promise<Required<PlatformIntegratio
     emailFrom:
       stored.emailFrom?.trim() ||
       process.env.EMAIL_FROM?.trim() ||
-      "Rotary Minutes <noreply@rotaryminutes.app>",
+      `${appName} <noreply@rotaryminutes.app>`,
   };
 }
 

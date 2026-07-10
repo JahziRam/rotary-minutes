@@ -64,6 +64,7 @@ export interface DuesHistoryPDFData {
   totalPending: string;
   generatedAt: string;
   locale: string;
+  appName: string;
 }
 
 export function DuesHistoryPDFDocument({ data }: { data: DuesHistoryPDFData }) {
@@ -112,7 +113,7 @@ export function DuesHistoryPDFDocument({ data }: { data: DuesHistoryPDFData }) {
           </Text>
         </View>
         <Text style={styles.footer}>
-          {isFr ? "Généré le" : "Generated on"} {data.generatedAt} — Rotary Minutes
+          {isFr ? "Généré le" : "Generated on"} {data.generatedAt} — {data.appName}
         </Text>
       </Page>
     </Document>

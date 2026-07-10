@@ -1,3 +1,5 @@
+import { DEFAULT_APP_NAME } from "@/lib/app-settings";
+
 /** Known nested relation keys to process separately (not as scalar columns). */
 const RELATION_KEYS = new Set([
   "members",
@@ -140,7 +142,7 @@ function processEntity(table: string, data: unknown, statements: string[]): void
  */
 export function jsonToSqlDump(data: unknown): string {
   const statements: string[] = [
-    "-- Rotary Minutes SQL backup",
+    `-- ${DEFAULT_APP_NAME} SQL backup`,
     `-- Generated: ${new Date().toISOString()}`,
     "BEGIN;",
   ];

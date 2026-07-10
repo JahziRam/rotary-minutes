@@ -85,14 +85,16 @@ export function MeetingForm({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid sm:grid-cols-2 gap-4">
-            <Input
-              name="date"
-              type="date"
-              label={t("date")}
-              defaultValue={new Date().toISOString().split("T")[0]}
-              required
-            />
-            <div className="space-y-1.5">
+            <div data-assist="meeting-form-date">
+              <Input
+                name="date"
+                type="date"
+                label={t("date")}
+                defaultValue={new Date().toISOString().split("T")[0]}
+                required
+              />
+            </div>
+            <div className="space-y-1.5" data-assist="meeting-form-type">
               <label className="text-sm font-medium text-gray-700">{t("type")}</label>
               <select
                 value={type}
@@ -106,7 +108,9 @@ export function MeetingForm({
             </div>
           </div>
 
-          <Input name="location" label={t("location")} defaultValue={defaults.location} />
+          <div data-assist="meeting-form-location">
+            <Input name="location" label={t("location")} defaultValue={defaults.location} />
+          </div>
 
           <div className="grid sm:grid-cols-2 gap-4">
             <Input name="startTime" type="time" label={t("startTime")} defaultValue={defaults.startTime} />
@@ -150,7 +154,7 @@ export function MeetingForm({
         </CardContent>
       </Card>
 
-      <div className="flex justify-end gap-3">
+      <div className="flex justify-end gap-3" data-assist="meeting-form-submit">
         <Button type="submit" variant="gold" disabled={pending}>
           {pending ? "..." : t("new")}
         </Button>

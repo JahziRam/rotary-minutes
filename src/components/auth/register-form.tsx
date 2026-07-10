@@ -14,6 +14,7 @@ import { CompanyLegalFooter } from "@/components/legal/company-legal-footer";
 import { ROTARACT_DISCOUNT_PERCENT } from "@/lib/registration-constants";
 import { uiLocaleToClubLanguage } from "@/lib/locale-utils";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
+import { AppBrandName } from "@/components/brand/app-brand-name";
 import { Building2, User, Search } from "lucide-react";
 
 type RegisterMode = "member" | "club";
@@ -152,7 +153,7 @@ export function RegisterForm({ referredByCode }: { referredByCode?: string }) {
               href={`/${locale}`}
               className="font-display text-2xl font-bold text-navy"
             >
-              Rotary Minutes
+              <AppBrandName />
             </Link>
             <div className="flex justify-center">
               <LocaleSwitcher variant="light" />

@@ -1,6 +1,8 @@
-/** Legal entity operating Rotary Minutes / Club Minutes. */
+import { DEFAULT_APP_NAME } from "@/lib/app-settings";
+
+/** Legal entity operating the SaaS platform (default product name). */
 export const COMPANY_LEGAL = {
-  productName: "Rotary Minutes",
+  productName: DEFAULT_APP_NAME,
   productAlias: "Club Minutes",
   companyName: "Visa Guard USA, LLC",
   addressLine1: "169 Madison Ave STE 15839",

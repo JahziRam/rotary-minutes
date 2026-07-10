@@ -13,6 +13,7 @@ import {
 } from "@/actions/minutes";
 import { ANALYTICS_EVENTS } from "@/lib/analytics-events";
 import { trackEvent } from "@/lib/analytics";
+import { ActionHint } from "@/components/assistance/action-hint";
 
 export function MinuteWorkflowActions({
   minuteId,
@@ -48,6 +49,8 @@ export function MinuteWorkflowActions({
 
       <div className="flex flex-wrap gap-2">
         {canSubmit && ["DRAFT", "IN_PROGRESS"].includes(status) && (
+          <div className="relative" data-assist="minute-submit-review">
+            <ActionHint hintId="minute_submit_action" when={canSubmit} />
           <Button
             variant="gold"
             size="sm"
@@ -65,10 +68,13 @@ export function MinuteWorkflowActions({
             <Send className="h-4 w-4" />
             {isFr ? "Soumettre au président" : "Submit for review"}
           </Button>
+          </div>
         )}
 
         {canApprove && status === "REVIEW" && (
           <>
+            <div className="relative" data-assist="minute-finalize-btn">
+              <ActionHint hintId="minute_finalize_action" when={canApprove} />
             <Button
               variant="gold"
               size="sm"
@@ -88,6 +94,7 @@ export function MinuteWorkflowActions({
               <Shield className="h-4 w-4" />
               {isFr ? "Approuver et finaliser" : "Approve & finalize"}
             </Button>
+            </div>
             {!rejecting ? (
               <Button variant="outline" size="sm" onClick={() => setRejecting(true)}>
                 <XCircle className="h-4 w-4" />

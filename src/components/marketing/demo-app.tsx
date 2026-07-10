@@ -27,6 +27,7 @@ import {
   FolderOpen,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { AppBrandName } from "@/components/brand/app-brand-name";
 import { MinutePreview } from "@/components/minutes/minute-preview";
 import { getDemoMinutePreview } from "@/lib/demo-minute-preview";
 import { DEMO_CLUB } from "@/lib/demo-data";
@@ -350,7 +351,7 @@ function DemoSidebar({
       <div className="h-1 bg-gold" />
       <div className="p-5 border-b border-white/10 space-y-3">
         <Link href={`/${locale}`} className="block">
-          <h1 className="font-display text-xl font-bold">Rotary Minutes</h1>
+          <AppBrandName className="font-display text-xl font-bold" />
           <p className="text-xs text-white/60 mt-1 truncate">{clubName}</p>
           <Badge variant="gold" className="mt-2 text-[10px] gap-1">
             <Lock className="h-2.5 w-2.5" />

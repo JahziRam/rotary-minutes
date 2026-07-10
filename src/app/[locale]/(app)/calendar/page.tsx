@@ -5,6 +5,7 @@ import { isFeatureEnabled } from "@/lib/feature-gate";
 import { getCalendarData } from "@/actions/calendar";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { UnifiedCalendar } from "@/components/calendar/unified-calendar";
+import { PageAssistance } from "@/components/assistance/page-assistance";
 
 export default async function CalendarPage({
   params,
@@ -29,6 +30,7 @@ export default async function CalendarPage({
 
   return (
     <AppShellServer title={t("title")}>
+      <PageAssistance hints={["calendar_intro", "calendar_export_action"]} />
       <UnifiedCalendar
         events={data.events}
         month={data.month}

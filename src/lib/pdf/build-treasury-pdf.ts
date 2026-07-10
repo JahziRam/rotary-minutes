@@ -5,6 +5,7 @@ import { isDataUrl } from "@/lib/image-storage";
 import { resolveClubLogoUrl } from "@/lib/media-url";
 import type { BudgetEntryType } from "@/generated/prisma/client";
 import type { TreasuryFilters } from "@/lib/queries/treasury";
+import { getAppName } from "@/lib/app-settings";
 
 type ClubForPdf = {
   id: string;
@@ -72,6 +73,7 @@ export async function buildTreasuryReportPdfBuffer(
   const baseUrl = getAppBaseUrl();
   const dateLocale = locale === "en" ? enUS : fr;
   const { renderTreasuryReportPdf } = await import("@/lib/pdf/render");
+  const appName = await getAppName();
 
   const data = {
     club: {
@@ -97,6 +99,7 @@ export async function buildTreasuryReportPdfBuffer(
       amountClass: (e.type === "INCOME" ? "income" : "expense") as "income" | "expense",
     })),
     locale,
+    appName,
   };
 
   const buffer = await renderTreasuryReportPdf(data);

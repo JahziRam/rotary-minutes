@@ -8,6 +8,7 @@ import { AppSettingsForm } from "@/components/admin/app-settings-form";
 import { IntegrationsConfigPanel } from "@/components/admin/integrations-config-panel";
 import { Settings } from "lucide-react";
 import { PlatformBackupPanel } from "@/components/admin/platform-backup-panel";
+import { DEFAULT_APP_NAME } from "@/lib/app-settings";
 
 export default async function AdminSettingsPage({
   params,
@@ -54,7 +55,7 @@ export default async function AdminSettingsPage({
       <CardContent>
         <AppSettingsForm
           settings={{
-            appName: settings?.appName ?? "Rotary Minutes",
+            appName: settings?.appName ?? DEFAULT_APP_NAME,
             tagline: settings?.tagline ?? "",
             supportEmail: settings?.supportEmail ?? "",
             contactToEmail: settings?.contactToEmail ?? "",

@@ -1,3 +1,9 @@
+import { DEFAULT_APP_NAME } from "@/lib/app-settings";
+
+function icsProdId(appName: string = DEFAULT_APP_NAME): string {
+  return `PRODID:-//${appName}//FR`;
+}
+
 export interface CalendarMeetingInput {
   id: string;
   title?: string | null;
@@ -41,7 +47,10 @@ function resolveEventTimes(meeting: CalendarMeetingInput): { start: Date; end: D
   return { start, end };
 }
 
-export function generateMeetingIcs(meeting: CalendarMeetingInput): string {
+export function generateMeetingIcs(
+  meeting: CalendarMeetingInput,
+  appName: string = DEFAULT_APP_NAME
+): string {
   const { start, end } = resolveEventTimes(meeting);
   const summary = escapeIcs(meeting.title ?? `Réunion ${meeting.clubName}`);
   const location = escapeIcs(meeting.location ?? "");
@@ -53,7 +62,7 @@ export function generateMeetingIcs(meeting: CalendarMeetingInput): string {
   return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Rotary Minutes//FR",
+    icsProdId(appName),
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     "BEGIN:VEVENT",
@@ -107,7 +116,8 @@ export function icsAttachment(meeting: CalendarMeetingInput) {
 
 export function generateClubCalendarIcs(
   clubName: string,
-  meetings: CalendarMeetingInput[]
+  meetings: CalendarMeetingInput[],
+  appName: string = DEFAULT_APP_NAME
 ): string {
   const events = meetings.map((meeting) => {
     const { start, end } = resolveEventTimes(meeting);
@@ -135,7 +145,7 @@ export function generateClubCalendarIcs(
   return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Rotary Minutes//FR",
+    icsProdId(appName),
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     `X-WR-CALNAME:${escapeIcs(clubName)}`,

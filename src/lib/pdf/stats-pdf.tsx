@@ -63,6 +63,7 @@ const styles = StyleSheet.create({
 });
 
 export interface StatsPDFData {
+  appName: string;
   exportedAt: string;
   overview: {
     clubsActive: number;
@@ -96,7 +97,7 @@ export function StatsPDFDocument({ data }: { data: StatsPDFData }) {
     <Document>
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
-          <Text style={styles.title}>Rotary Minutes — Statistiques plateforme</Text>
+          <Text style={styles.title}>{data.appName} — Statistiques plateforme</Text>
           <Text style={styles.subtitle}>Export généré le {date}</Text>
         </View>
 
@@ -139,7 +140,7 @@ export function StatsPDFDocument({ data }: { data: StatsPDFData }) {
         </View>
 
         <Text style={styles.footer} fixed>
-          Rotary Minutes SaaS — Document confidentiel
+          {data.appName} SaaS — Document confidentiel
         </Text>
       </Page>
     </Document>

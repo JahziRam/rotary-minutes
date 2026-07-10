@@ -15,6 +15,8 @@ import { TreasuryPanel } from "@/components/treasury/treasury-panel";
 import { TreasuryMandatePanel } from "@/components/treasury/treasury-mandate-panel";
 import { BankReconciliationPanel } from "@/components/treasury/bank-reconciliation-panel";
 import { hasRolePermission } from "@/lib/roles";
+import { GuidedEmptyState } from "@/components/assistance/guided-empty-state";
+import { Wallet } from "lucide-react";
 import type { BudgetEntryType } from "@/generated/prisma/client";
 
 export const dynamic = "force-dynamic";
@@ -30,6 +32,7 @@ export default async function TreasuryPage({
   const sp = await searchParams;
   setRequestLocale(locale);
   const t = await getTranslations("treasury");
+  const tEmpty = await getTranslations("assistance.emptyStates.treasury");
   const ctx = await getClubContext();
   if (!ctx) return null;
 
@@ -69,6 +72,17 @@ export default async function TreasuryPage({
         />
         <BankReconciliationPanel canManage={canManageTreasury} />
       </div>
+      {data.entries.length === 0 && (
+        <GuidedEmptyState
+          locale={locale}
+          icon={Wallet}
+          title={tEmpty("title")}
+          description={tEmpty("description")}
+          primaryLabel={tEmpty("primaryLabel")}
+          primaryHref="/treasury"
+          helpAnchor="dues"
+        />
+      )}
       <TreasuryPanel
         entries={data.entries}
         categories={data.categories}

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { locales } from "@/i18n/config";
+import { getAppBranding } from "@/lib/app-settings";
 
 export async function GET(
   _request: Request,
@@ -7,10 +8,18 @@ export async function GET(
 ) {
   const { locale } = await params;
   const safeLocale = locales.includes(locale as (typeof locales)[number]) ? locale : "fr";
+  const { appName, tagline } = await getAppBranding();
+  const taglineSuffix =
+    tagline ??
+    (safeLocale === "es"
+      ? "Gestión de club"
+      : safeLocale === "en"
+        ? "Club management"
+        : "Gestion de club");
 
   const manifest = {
-    name: "Rotary Minutes — Gestion de club",
-    short_name: "Rotary Minutes",
+    name: `${appName} — ${taglineSuffix}`,
+    short_name: appName,
     description:
       "Gestion complète de club Rotary : membres, réunions, cotisations, PV authentifiés et communications.",
     start_url: `/${safeLocale}/dashboard`,

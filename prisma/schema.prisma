@@ -365,6 +365,8 @@ model User {
   clubAnnouncementsAuthored ClubAnnouncement[]
   deletionRequests   DeletionRequest[]
   consentRecords     ConsentRecord[]
+  assistanceAnalyticsEvents AssistanceAnalyticsEvent[]
+  assistanceFeedback AssistanceFeedback[]
 }
 
 model Club {
@@ -440,6 +442,8 @@ model Club {
   treasurySubAccounts TreasurySubAccount[]
   emailSettings   ClubEmailSettings?
   duesPaymentSettings ClubDuesPaymentSettings?
+  assistanceAnalyticsEvents AssistanceAnalyticsEvent[]
+  assistanceFeedback AssistanceFeedback[]
 }
 
 model ClubMembership {
@@ -450,6 +454,15 @@ model ClubMembership {
   customRoleId   String?
   approvalStatus MembershipApprovalStatus @default(APPROVED)
   isActive       Boolean                  @default(true)
+  usageGuideCompletedAt DateTime?
+  usageGuideDismissedAt DateTime?
+  usageGuideStartedAt   DateTime?
+  usageGuideLastStep    String?
+  assistanceFocusRole   String?
+  dismissedHints        String[]                 @default([])
+  coachStartedAt        DateTime?
+  missionsDismissedAt   DateTime?
+  walkthroughState      Json?
   joinedAt       DateTime                 @default(now())
   updatedAt      DateTime                 @updatedAt
 
@@ -858,6 +871,38 @@ model AuditLog {
 
   club       Club?    @relation(fields: [clubId], references: [id], onDelete: SetNull)
   user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([clubId, createdAt])
+  @@index([userId])
+}
+
+model AssistanceAnalyticsEvent {
+  id        String   @id @default(cuid())
+  clubId    String
+  userId    String
+  eventType String
+  payload   Json?
+  createdAt DateTime @default(now())
+
+  club Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([clubId, eventType, createdAt])
+  @@index([userId, createdAt])
+  @@index([eventType, createdAt])
+}
+
+model AssistanceFeedback {
+  id        String   @id @default(cuid())
+  clubId    String
+  userId    String
+  rating    Int
+  comment   String?  @db.Text
+  context   String?
+  createdAt DateTime @default(now())
+
+  club Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([clubId, createdAt])
   @@index([userId])

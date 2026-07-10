@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { initDemoSession } from "@/actions/demo";
 import { DemoApp } from "./demo-app";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
+import { AppBrandName } from "@/components/brand/app-brand-name";
 
 export function DemoView({
   locale,
@@ -34,7 +35,7 @@ export function DemoView({
         <div className="h-1 bg-gold" />
         <div className="px-4 py-3 flex items-center justify-between">
           <Link href={`/${locale}`} className="font-display text-lg font-bold">
-            Rotary Minutes
+            <AppBrandName />
           </Link>
           <div className="flex items-center gap-2">
             <LocaleSwitcher variant="dark" />

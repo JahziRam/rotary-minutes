@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Scale } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { CompanyLegalNotice } from "@/components/legal/company-legal-notice";
+import { AppBrandNameServer } from "@/components/brand/app-brand-name-server";
 
 export default async function TermsPage({
   params,
@@ -32,7 +33,7 @@ export default async function TermsPage({
         <div className="h-1 bg-gold" />
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href={`/${locale}`} className="font-display text-xl font-bold hover:opacity-90">
-            Rotary Minutes
+            <AppBrandNameServer accentClassName="text-gold" />
           </Link>
           <Link href={`/${locale}/login`} className="text-sm text-white/80 hover:text-white">
             {locale === "fr" ? "Connexion" : "Login"}

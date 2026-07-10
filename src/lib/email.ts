@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getAppName } from "@/lib/app-settings";
 import { getResend, getEmailFrom } from "@/lib/platform-integrations";
 import { prepareBrandedEmail } from "@/lib/email-branding";
 
@@ -67,18 +68,19 @@ export async function trialReminderEmail(opts: {
   upgradeUrl: string;
   logoUrl?: string;
 }) {
+  const appName = await getAppName();
   const isFr = opts.locale === "fr";
   const isEs = opts.locale === "es";
   const subject = isFr
-    ? `Votre essai Rotary Minutes expire dans ${opts.daysLeft} jour${opts.daysLeft > 1 ? "s" : ""}`
+    ? `Votre essai ${appName} expire dans ${opts.daysLeft} jour${opts.daysLeft > 1 ? "s" : ""}`
     : isEs
-      ? `Su prueba de Rotary Minutes expira en ${opts.daysLeft} día${opts.daysLeft > 1 ? "s" : ""}`
-      : `Your Rotary Minutes trial expires in ${opts.daysLeft} day${opts.daysLeft > 1 ? "s" : ""}`;
+      ? `Su prueba de ${appName} expira en ${opts.daysLeft} día${opts.daysLeft > 1 ? "s" : ""}`
+      : `Your ${appName} trial expires in ${opts.daysLeft} day${opts.daysLeft > 1 ? "s" : ""}`;
   const body = isFr
-    ? `<p>Bonjour,</p><p>L'essai gratuit de <strong>${opts.clubName}</strong> sur Rotary Minutes expire dans <strong>${opts.daysLeft} jour(s)</strong>.</p><p><a class="cta-button" href="${opts.upgradeUrl}">Choisir une offre</a></p><p style="font-size:14px;color:#64748b">Continuez à rédiger vos procès-verbaux sans interruption.</p>`
+    ? `<p>Bonjour,</p><p>L'essai gratuit de <strong>${opts.clubName}</strong> sur ${appName} expire dans <strong>${opts.daysLeft} jour(s)</strong>.</p><p><a class="cta-button" href="${opts.upgradeUrl}">Choisir une offre</a></p><p style="font-size:14px;color:#64748b">Continuez à rédiger vos procès-verbaux sans interruption.</p>`
     : isEs
-      ? `<p>Hola,</p><p>La prueba gratuita de <strong>${opts.clubName}</strong> en Rotary Minutes expira en <strong>${opts.daysLeft} día(s)</strong>.</p><p><a class="cta-button" href="${opts.upgradeUrl}">Elegir un plan</a></p><p style="font-size:14px;color:#64748b">Siga redactando sus actas sin interrupción.</p>`
-      : `<p>Hello,</p><p>The free trial for <strong>${opts.clubName}</strong> on Rotary Minutes expires in <strong>${opts.daysLeft} day(s)</strong>.</p><p><a class="cta-button" href="${opts.upgradeUrl}">Choose a plan</a></p><p style="font-size:14px;color:#64748b">Keep writing your minutes without interruption.</p>`;
+      ? `<p>Hola,</p><p>La prueba gratuita de <strong>${opts.clubName}</strong> en ${appName} expira en <strong>${opts.daysLeft} día(s)</strong>.</p><p><a class="cta-button" href="${opts.upgradeUrl}">Elegir un plan</a></p><p style="font-size:14px;color:#64748b">Siga redactando sus actas sin interrupción.</p>`
+      : `<p>Hello,</p><p>The free trial for <strong>${opts.clubName}</strong> on ${appName} expires in <strong>${opts.daysLeft} day(s)</strong>.</p><p><a class="cta-button" href="${opts.upgradeUrl}">Choose a plan</a></p><p style="font-size:14px;color:#64748b">Keep writing your minutes without interruption.</p>`;
   const branded = await prepareBrandedEmail(body, {
     clubName: opts.clubName,
     clubId: opts.clubId,
@@ -98,17 +100,18 @@ export async function welcomeClubEmail(opts: {
   dashboardUrl: string;
   logoUrl?: string;
 }) {
+  const appName = await getAppName();
   const isFr = opts.locale === "fr";
   const body = isFr
-    ? `<p>Félicitations ! <strong>${opts.clubName}</strong> est prêt sur Rotary Minutes.</p><p><a class="cta-button" href="${opts.dashboardUrl}">Accéder au tableau de bord</a></p>`
-    : `<p>Congratulations! <strong>${opts.clubName}</strong> is ready on Rotary Minutes.</p><p><a class="cta-button" href="${opts.dashboardUrl}">Go to dashboard</a></p>`;
+    ? `<p>Félicitations ! <strong>${opts.clubName}</strong> est prêt sur ${appName}.</p><p><a class="cta-button" href="${opts.dashboardUrl}">Accéder au tableau de bord</a></p>`
+    : `<p>Congratulations! <strong>${opts.clubName}</strong> is ready on ${appName}.</p><p><a class="cta-button" href="${opts.dashboardUrl}">Go to dashboard</a></p>`;
   const branded = await prepareBrandedEmail(body, {
     clubName: opts.clubName,
     clubId: opts.clubId,
     logoUrl: opts.logoUrl,
   });
   return {
-    subject: isFr ? `Bienvenue sur Rotary Minutes — ${opts.clubName}` : `Welcome to Rotary Minutes — ${opts.clubName}`,
+    subject: isFr ? `Bienvenue sur ${appName} — ${opts.clubName}` : `Welcome to ${appName} — ${opts.clubName}`,
     html: branded.html,
     attachments: branded.attachments,
   };

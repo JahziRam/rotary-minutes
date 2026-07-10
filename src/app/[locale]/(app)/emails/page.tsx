@@ -9,6 +9,7 @@ import { getClubEmailSettings } from "@/actions/club-email-settings";
 import { getSession } from "@/lib/cached-auth";
 import { hasRolePermission } from "@/lib/roles";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageAssistance } from "@/components/assistance/page-assistance";
 
 const sections = [
   { key: "compose", icon: Send, href: "compose" },
@@ -72,9 +73,14 @@ export default async function EmailsPage({
   return (
     <AppShellServer title={t("title")}>
       <div className="space-y-6">
+        <PageAssistance hints={["emails_intro", "emails_compose_action"]} />
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {sections.map(({ key, icon: Icon, href }) => (
-            <Link key={key} href={`/${locale}/emails/${href}`}>
+            <Link
+              key={key}
+              href={`/${locale}/emails/${href}`}
+              data-assist={key === "compose" ? "emails-compose-link" : undefined}
+            >
               <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
                 <CardHeader>
                   <div className="flex items-center gap-3">

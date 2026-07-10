@@ -22,6 +22,8 @@ import { BirthdayBanner } from "@/components/members/birthday-banner";
 import { MandatesPanel } from "@/components/members/mandates-panel";
 import { OnboardingChecklist } from "@/components/members/onboarding-checklist";
 import { resolveMemberPhotoUrl } from "@/lib/media-url";
+import { GuidedEmptyState } from "@/components/assistance/guided-empty-state";
+import { Users } from "lucide-react";
 
 export default async function MembersPage({
   params,
@@ -31,6 +33,7 @@ export default async function MembersPage({
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations();
+  const tEmpty = await getTranslations("assistance.emptyStates.members");
   const ctx = await getClubContext();
   if (!ctx) return null;
 
@@ -95,6 +98,19 @@ export default async function MembersPage({
           </div>
         </div>
 
+        {members.length === 0 ? (
+          <GuidedEmptyState
+            locale={locale}
+            icon={Users}
+            title={tEmpty("title")}
+            description={tEmpty("description")}
+            primaryLabel={tEmpty("primaryLabel")}
+            primaryHref="/members"
+            secondaryLabel={tEmpty("secondaryLabel")}
+            secondaryHref="/help#dues"
+            helpAnchor="dues"
+          />
+        ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {members.map((member) => (
             <Link key={member.id} href={`/${locale}/members/${member.id}`}>
@@ -135,6 +151,7 @@ export default async function MembersPage({
             </Link>
           ))}
         </div>
+        )}
       </div>
     </AppShellServer>
   );

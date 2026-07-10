@@ -6,6 +6,7 @@ import { Bell, Globe } from "lucide-react";
 import { useLocale } from "next-intl";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { UsageGuideLauncher } from "@/components/assistant/usage-guide-launcher";
 
 export interface HeaderNotification {
   id: string;
@@ -18,10 +19,12 @@ export function Header({
   title,
   notificationCount = 0,
   notifications = [],
+  showUsageGuide = false,
 }: {
   title: string;
   notificationCount?: number;
   notifications?: HeaderNotification[];
+  showUsageGuide?: boolean;
 }) {
   const locale = useLocale();
   const router = useRouter();
@@ -43,6 +46,7 @@ export function Header({
       <div className="flex items-center justify-between h-full px-4 lg:px-6">
         <h2 className="text-lg font-semibold text-gray-900 truncate">{title}</h2>
         <div className="flex items-center gap-2 relative">
+          {showUsageGuide && <UsageGuideLauncher variant="header" />}
           <button
             type="button"
             onClick={toggleLocale}

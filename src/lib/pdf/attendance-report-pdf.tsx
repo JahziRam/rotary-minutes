@@ -91,6 +91,7 @@ export interface AttendanceReportPDFData {
     generated: string;
   };
   meetingTypeLabels: Record<string, string>;
+  appName: string;
 }
 
 export function AttendanceReportPDFDocument({ data }: { data: AttendanceReportPDFData }) {
@@ -150,7 +151,7 @@ export function AttendanceReportPDFDocument({ data }: { data: AttendanceReportPD
           ))}
         </View>
 
-        <Text style={styles.footer}>Rotary Minutes — {data.clubName}</Text>
+        <Text style={styles.footer}>{data.appName} — {data.clubName}</Text>
       </Page>
 
       <Page size="A4" style={styles.page}>
@@ -176,7 +177,7 @@ export function AttendanceReportPDFDocument({ data }: { data: AttendanceReportPD
           ))}
         </View>
 
-        <Text style={styles.footer}>Rotary Minutes — {data.clubName}</Text>
+        <Text style={styles.footer}>{data.appName} — {data.clubName}</Text>
       </Page>
     </Document>
   );

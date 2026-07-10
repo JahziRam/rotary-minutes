@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getSystemStatus } from "@/lib/status-checks";
 import { CompanyLegalNotice } from "@/components/legal/company-legal-notice";
+import { AppBrandNameServer } from "@/components/brand/app-brand-name-server";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 
@@ -42,7 +43,7 @@ export default async function StatusPage({
         <div className="h-1 bg-gold" />
         <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href={`/${locale}`} className="font-display text-xl font-bold hover:opacity-90">
-            Rotary Minutes
+            <AppBrandNameServer accentClassName="text-gold" />
           </Link>
           <Link href={`/${locale}/privacy`} className="text-sm text-white/80 hover:text-white">
             {locale === "fr" ? "Confidentialité" : "Privacy"}

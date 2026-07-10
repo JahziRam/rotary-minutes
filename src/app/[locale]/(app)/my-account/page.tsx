@@ -5,6 +5,7 @@ import { getMyAccountData } from "@/actions/member-portal";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { FeatureUnavailable } from "@/components/layout/feature-unavailable";
 import { MyAccountPanel } from "@/components/member-portal/my-account-panel";
+import { PageAssistance } from "@/components/assistance/page-assistance";
 
 export default async function MyAccountPage({
   params,
@@ -74,6 +75,7 @@ export default async function MyAccountPage({
 
   return (
     <AppShellServer title={t("title")}>
+      <PageAssistance hints={["profile_intro", "profile_save_action"]} />
       <MyAccountPanel data={panelData} locale={locale} />
     </AppShellServer>
   );

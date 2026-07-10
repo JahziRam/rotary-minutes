@@ -18,6 +18,8 @@ import {
 } from "@/lib/offline";
 import { MinuteWorkflowActions } from "./minute-workflow-actions";
 import { MinuteAssistPanel } from "./minute-assist-panel";
+import { ContextualHintBanner } from "@/components/assistance/contextual-hint-banner";
+import { GlossaryTerm } from "@/components/assistance/glossary-term";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 
@@ -204,7 +206,9 @@ export function MinuteEditor({
         : t("draft");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-assist="minute-editor-content">
+      <ContextualHintBanner hintId="minute_editor_intro" />
+      <ContextualHintBanner hintId="minute_editor_workflow" />
       <MinuteWorkflowActions
         minuteId={minute.id}
         status={status}
@@ -280,7 +284,9 @@ export function MinuteEditor({
 
       <div className="space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-2">
-          <h3 className="font-semibold text-gray-900">{t("agenda")}</h3>
+          <h3 className="font-semibold text-gray-900">
+            {t("agenda")} — <GlossaryTerm term="minute">{locale === "fr" ? "compte-rendu" : "minutes record"}</GlossaryTerm>
+          </h3>
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -297,6 +303,8 @@ export function MinuteEditor({
             </Button>
           </div>
         </div>
+
+        <ContextualHintBanner hintId="minute_editor_agenda" />
 
         {items.map((item, index) => (
           <Card key={item.id}>

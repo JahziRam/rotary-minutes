@@ -4,6 +4,7 @@ import { AppShellServer } from "@/components/layout/app-shell-server";
 import { FeatureUnavailable } from "@/components/layout/feature-unavailable";
 import { AttendanceReportsPanel } from "@/components/attendance/attendance-reports-panel";
 import { getClubContext } from "@/lib/club-context";
+import { PageAssistance } from "@/components/assistance/page-assistance";
 
 export default async function AttendanceReportsPage({
   params,
@@ -37,6 +38,7 @@ export default async function AttendanceReportsPage({
 
   return (
     <AppShellServer title={t("title")}>
+      <PageAssistance hints={["attendance_intro", "attendance_export_action"]} />
       <AttendanceReportsPanel
         clubRate={data.clubRate}
         mandateLabel={data.mandateLabel}

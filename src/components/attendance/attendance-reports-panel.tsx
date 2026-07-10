@@ -50,7 +50,7 @@ export function AttendanceReportsPanel({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4" data-assist="attendance-overview">
         <p className="text-sm text-gray-500">
           {t("mandate")} {mandateLabel}
         </p>
@@ -60,6 +60,7 @@ export function AttendanceReportsPanel({
               href={`/api/attendance-reports/export?locale=${locale}`}
               target="_blank"
               rel="noopener noreferrer"
+              data-assist="attendance-export"
               className="inline-flex items-center justify-center gap-2 h-8 rounded-md px-3 text-xs font-medium border border-gray-200 bg-white hover:bg-gray-50 text-gray-900"
             >
               <Download className="h-4 w-4" />

@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getAdminStats } from "@/lib/queries/admin";
 import { renderStatsPdf } from "@/lib/pdf/render";
+import { getAppName } from "@/lib/app-settings";
 
 export async function GET() {
   try {
@@ -34,7 +35,9 @@ export async function GET() {
     ]);
 
     const exportedAt = new Date().toISOString();
+    const appName = await getAppName();
     const pdfData = {
+      appName,
       exportedAt,
       overview: {
         clubsActive: stats.clubsActive,
@@ -60,7 +63,8 @@ export async function GET() {
     };
 
     const buffer = await renderStatsPdf(pdfData);
-    const filename = `rotary-minutes-stats-${exportedAt.split("T")[0]}.pdf`;
+    const slug = appName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const filename = `${slug}-stats-${exportedAt.split("T")[0]}.pdf`;
 
     return new NextResponse(new Uint8Array(buffer), {
       headers: {

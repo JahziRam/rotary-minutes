@@ -122,7 +122,9 @@ export async function exportCalendarIcs(month?: string) {
   const to = endOfMonth(addMonths(from, 2));
 
   const events = await getUnifiedCalendarEvents(ctx.clubId, { from, to });
-  const ics = generateUnifiedCalendarIcs(events, ctx.club.name);
+  const { getAppName } = await import("@/lib/app-settings");
+  const appName = await getAppName();
+  const ics = generateUnifiedCalendarIcs(events, ctx.club.name, appName);
   const slug = ctx.club.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 
   return { success: true, ics, filename: `calendrier-${slug}.ics` };

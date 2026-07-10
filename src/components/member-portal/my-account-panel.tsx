@@ -142,7 +142,7 @@ export function MyAccountPanel({
 
   if (!("member" in data)) {
     return (
-      <Card className="max-w-lg mx-auto">
+      <Card className="max-w-lg mx-auto" data-assist="profile-info">
         <CardContent className="p-8 text-center space-y-4">
           <div className="mx-auto h-14 w-14 rounded-full bg-navy/10 flex items-center justify-center">
             <User className="h-7 w-7 text-navy" />
@@ -158,6 +158,7 @@ export function MyAccountPanel({
               </p>
               <Button
                 disabled={pending}
+                data-assist="profile-save"
                 onClick={() =>
                   startTransition(async () => {
                     const result = await linkMyMemberAccount();

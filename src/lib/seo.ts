@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getAppBaseUrl } from "@/lib/app-url";
 import { locales, type Locale } from "@/i18n/config";
 
-const SITE_NAME = "Rotary Minutes";
+import { DEFAULT_APP_NAME } from "@/lib/app-settings";
 
 export function getSeoBaseUrl(): string {
   return getAppBaseUrl();
@@ -13,7 +13,9 @@ export function buildPageMetadata(opts: {
   title: string;
   description: string;
   path?: string;
+  siteName?: string;
 }): Metadata {
+  const siteName = opts.siteName ?? DEFAULT_APP_NAME;
   const base = getSeoBaseUrl();
   const path = opts.path ?? "";
   const normalizedPath = path.startsWith("/") ? path : path ? `/${path}` : "";
@@ -36,7 +38,7 @@ export function buildPageMetadata(opts: {
       type: "website",
       locale: opts.locale === "fr" ? "fr_FR" : opts.locale === "es" ? "es_ES" : "en_US",
       url,
-      siteName: SITE_NAME,
+      siteName,
       title: opts.title,
       description: opts.description,
       images: [

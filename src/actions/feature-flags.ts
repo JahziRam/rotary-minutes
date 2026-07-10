@@ -9,6 +9,7 @@ import {
   getPlatformDefaultClubFeatures,
   type ClubFeatureSet,
 } from "@/lib/features";
+import { DEFAULT_APP_NAME } from "@/lib/app-settings";
 
 function revalidateAdminPaths(locale: string) {
   for (const loc of ["fr", "en"]) {
@@ -158,7 +159,7 @@ export async function updateDefaultClubFeatures(
     },
     create: {
       id: "global",
-      appName: "Rotary Minutes",
+      appName: DEFAULT_APP_NAME,
       config: { defaultClubFeatures: { ...DEFAULT_FEATURES, ...features } },
     },
   });

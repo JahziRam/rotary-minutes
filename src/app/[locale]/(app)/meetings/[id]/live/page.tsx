@@ -8,6 +8,7 @@ import { FeatureUnavailable } from "@/components/layout/feature-unavailable";
 import { requireFeature } from "@/lib/require-feature";
 import { MinuteEditor } from "@/components/minutes/minute-editor";
 import { UnifiedAttendanceSheet } from "@/components/meetings/unified-attendance-sheet";
+import { LiveMeetingGuide } from "@/components/assistance/live-meeting-guide";
 
 export default async function LiveMeetingPage({
   params,
@@ -57,14 +58,17 @@ export default async function LiveMeetingPage({
 
   return (
     <AppShellServer title={t("meetings.live")}>
+      <LiveMeetingGuide hasMinute={!!minute} />
       <div className="grid lg:grid-cols-2 gap-6">
+        <div data-assist="live-attendance-panel">
         <UnifiedAttendanceSheet
           members={members}
           meetingId={meeting.id}
           initialEntries={initialEntries}
         />
+        </div>
         {minute ? (
-          <div className="space-y-3">
+          <div className="space-y-3" data-assist="live-minute-panel">
             <a
               href={`/${locale}/minutes/${minute.id}/edit`}
               className="text-sm text-navy hover:underline"
@@ -91,9 +95,7 @@ export default async function LiveMeetingPage({
             }}
           />
           </div>
-        ) : (
-          <p className="text-gray-500">Aucun PV associé</p>
-        )}
+        ) : null}
       </div>
     </AppShellServer>
   );

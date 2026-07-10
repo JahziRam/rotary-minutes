@@ -340,6 +340,133 @@
       }
     }
   },
+  "usageGuide": {
+    "launcher": "Guía de uso",
+    "start": "Iniciar recorrido",
+    "finish": "Finalizar",
+    "dismiss": "Omitir guía",
+    "close": "Cerrar guía",
+    "stepOf": "Paso {current} de {total}",
+    "stepListLabel": "Pasos de la guía",
+    "ariaStep": "Paso {current} de {total}: {title}",
+    "keyboardHints": "Use las flechas izquierda y derecha para navegar. Pulse Escape para cerrar.",
+    "openSection": "Abrir esta sección",
+    "helpCenter": "Visitar centro de ayuda",
+    "welcomePoints": {
+      "1": "Descubra las secciones clave de la navegación",
+      "2": "Aprenda el flujo reunión → actas → cuotas",
+      "3": "Reinicie esta guía en cualquier momento con el botón ?"
+    },
+    "steps": {
+      "WELCOME": {
+        "title": "Bienvenido a Rotary Minutes",
+        "body": "Esta guía interactiva le presenta las funciones esenciales para administrar su club día a día."
+      },
+      "DASHBOARD": {
+        "title": "Panel",
+        "body": "Su punto de entrada: próxima reunión, actas recientes, estadísticas de asistencia y acciones abiertas."
+      },
+      "MEETINGS": {
+        "title": "Reuniones",
+        "body": "Programe reuniones estatutarias y use el modo en vivo para redactar el acta durante la sesión."
+      },
+      "MINUTES": {
+        "title": "Actas",
+        "body": "Redacte, envíe y finalice sus actas. Cada documento puede exportarse como PDF autenticado con código QR."
+      },
+      "MEMBERS": {
+        "title": "Miembros",
+        "body": "Gestione la lista de miembros, sus datos de contacto y el seguimiento de cuotas."
+      },
+      "TREASURY": {
+        "title": "Tesorería",
+        "body": "Controle ingresos y gastos, genere informes financieros y mantenga una visión clara de las finanzas del club."
+      },
+      "SETTINGS": {
+        "title": "Ajustes",
+        "body": "Configure el perfil del club, usuarios, roles, suscripción y preferencias de flujo de trabajo."
+      },
+      "COMPLETE": {
+        "title": "¡Listo!",
+        "body": "Ya conoce lo básico de Rotary Minutes. Pruebe el modo reunión en vivo en su próxima sesión estatutaria."
+      }
+    }
+  },
+  "assistance": {
+    "learnMore": "Más información",
+    "dismissHint": "Ocultar consejo",
+    "dismissMissions": "Ocultar lista",
+    "emptyStates": {
+      "meetings": { "title": "Sin reuniones planificadas", "description": "Planifique su próxima reunión estatutaria. Se creará un borrador de acta automáticamente.", "primaryLabel": "Planificar reunión", "primaryHref": "/meetings/new" },
+      "minutes": { "title": "Sin actas aún", "description": "Cree una reunión para generar un borrador o use el modo en vivo.", "primaryLabel": "Crear reunión", "primaryHref": "/meetings/new", "secondaryLabel": "Ver reuniones", "secondaryHref": "/meetings" },
+      "members": { "title": "Añada los miembros del club", "description": "Importe desde Excel o añada miembros uno a uno.", "primaryLabel": "Añadir miembro", "primaryHref": "/members", "secondaryLabel": "Guía de importación", "secondaryHref": "/help#dues" },
+      "treasury": { "title": "Inicie la tesorería", "description": "Registre su primer ingreso o gasto.", "primaryLabel": "Abrir tesorería", "primaryHref": "/treasury" },
+      "emails": { "title": "Comunique con los miembros", "description": "Cree plantillas y envíe recordatorios.", "primaryLabel": "Redactar email", "primaryHref": "/emails/compose" },
+      "dashboard_meetings": { "title": "Planifique su próxima reunión", "description": "Una reunión planificada facilita el orden del día.", "primaryLabel": "Nueva reunión", "primaryHref": "/meetings/new" },
+      "dashboard_minutes": { "title": "Redacte su primera acta", "description": "Complete el borrador y finalícelo para obtener el PDF.", "primaryLabel": "Ver actas", "primaryHref": "/minutes" },
+      "live_no_minute": { "title": "Sin acta vinculada", "description": "Cree una reunión con plantilla de acta.", "primaryLabel": "Gestionar reuniones", "primaryHref": "/meetings" }
+    },
+    "missions": {
+      "title": "Sus primeras misiones",
+      "progress": "{done} de {total} completadas",
+      "intro": {
+        "SECRETARY": "Como secretario, estas son las tareas esenciales.",
+        "TREASURER": "Como tesorero, empiece por miembros y finanzas.",
+        "PRESIDENT": "Como presidente, siga estos pasos para liderar el club.",
+        "READER": "Descubra cómo consultar la información del club."
+      },
+      "items": {
+        "schedule_meeting": { "title": "Planificar reunión", "hint": "Fecha, lugar y tipo" },
+        "run_live_meeting": { "title": "Usar modo en vivo", "hint": "Asistencia y notas" },
+        "draft_minute": { "title": "Redactar acta", "hint": "Completar el borrador" },
+        "finalize_minute": { "title": "Finalizar acta", "hint": "PDF con código QR" },
+        "add_members": { "title": "Añadir miembros", "hint": "Lista actualizada" },
+        "record_dues": { "title": "Registrar cuota", "hint": "Pagos de miembros" },
+        "treasury_entry": { "title": "Movimiento financiero", "hint": "Ingreso o gasto" },
+        "invite_team": { "title": "Invitar al equipo", "hint": "Secretario, tesorero" }
+      }
+    },
+    "hints": {
+      "minute_editor_intro": { "title": "Redacción del acta", "body": "Complete cada punto del orden del día. Guardado automático cada 30 segundos." },
+      "minute_editor_workflow": { "title": "Validación", "body": "Envíe al presidente y finalice para el PDF oficial." },
+      "minute_editor_agenda": { "title": "Orden del día", "body": "Anote decisiones y acciones con responsable y fecha." },
+      "live_meeting_intro": { "title": "Modo reunión en vivo", "body": "Asistencia a la izquierda, acta a la derecha." },
+      "live_attendance": { "title": "Hoja de asistencia", "body": "Marque presentes, ausentes o excusados." },
+      "dashboard_missions": { "title": "Lista de inicio", "body": "Siga las misiones para dominar Rotary Minutes." }
+    },
+    "coach": {
+      "weekLabel": "Semana {week} — consejo",
+      "tips": {
+        "week1_meetings": { "title": "Planifique con antelación", "body": "El calendario ayuda a preparar reuniones." },
+        "week1_minutes": { "title": "Pruebe el modo en vivo", "body": "Redacte el acta durante la sesión." },
+        "week2_members": { "title": "Actualice miembros", "body": "Importe Excel o añada nuevos miembros." },
+        "week2_dues": { "title": "Siga las cuotas", "body": "Registre pagos para recordatorios." },
+        "week3_treasury": { "title": "Tesorería al día", "body": "Saisissez movimientos tras cada reunión." },
+        "week4_emails": { "title": "Email a miembros", "body": "Envíe convocatorias desde Emails." },
+        "week4_calendar": { "title": "Comparta el calendario", "body": "Centraliza reuniones y plazos." }
+      }
+    },
+    "rolePrompt": {
+      "title": "¿Cuál es su rol principal?",
+      "subtitle": "Adaptaremos misiones y consejos a su función.",
+      "skip": "Cerrar",
+      "useClubRole": "Usar mi rol actual",
+      "roles": {
+        "SECRETARY": { "title": "Secretario", "desc": "Actas y reuniones" },
+        "TREASURER": { "title": "Tesorero", "desc": "Cuotas y tesorería" },
+        "PRESIDENT": { "title": "Presidente", "desc": "Validación y visión global" },
+        "READER": { "title": "Miembro / lector", "desc": "Consulta de actas" }
+      }
+    },
+    "glossary": {
+      "minute": { "term": "Acta", "definition": "Registro oficial de una reunión." },
+      "live_mode": { "term": "Modo en vivo", "definition": "Notas y asistencia en tiempo real." },
+      "finalize": { "term": "Finalizar", "definition": "Bloquear el acta y generar el PDF oficial." },
+      "dues": { "term": "Cuota", "definition": "Contribución anual de cada miembro." },
+      "mandate": { "term": "Mandato", "definition": "Período del equipo directivo del club." },
+      "statutory": { "term": "Reunión estatutaria", "definition": "Reunión regular con acta obligatoria." }
+    }
+  },
   "onboarding": {
     "title": "Configure su club",
     "subtitle": "Unos pasos para comenzar con Rotary Minutes",
@@ -1453,7 +1580,7 @@
     }
   },
   "pwa": {
-    "installTitle": "Instalar Rotary Minutes",
+    "installTitle": "Instalar {appName}",
     "installDescription": "Acceso rápido desde la pantalla de inicio, con soporte sin conexión.",
     "installCta": "Instalar",
     "installDismiss": "Más tarde",

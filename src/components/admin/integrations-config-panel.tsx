@@ -13,6 +13,7 @@ import {
   testResendConnection,
 } from "@/actions/admin-platform";
 import type { IntegrationAdminView } from "@/lib/platform-integrations";
+import { useAppBranding } from "@/components/brand/app-branding-provider";
 
 export function IntegrationsConfigPanel({
   integration,
@@ -20,6 +21,7 @@ export function IntegrationsConfigPanel({
   integration: IntegrationAdminView;
 }) {
   const locale = useLocale();
+  const { appName } = useAppBranding();
   const [pending, startTransition] = useTransition();
   const [toast, setToast] = useState<string | null>(null);
   const [stripeEnabled, setStripeEnabled] = useState(integration.stripeEnabled);
@@ -211,7 +213,7 @@ export function IntegrationsConfigPanel({
               name="emailFrom"
               label="Expéditeur (From)"
               defaultValue={integration.emailFrom}
-              placeholder="Rotary Minutes <noreply@votredomaine.com>"
+              placeholder={`${appName} <noreply@votredomaine.com>`}
             />
             <div className="flex flex-wrap gap-2">
               <Button type="submit" size="sm" variant="gold" disabled={pending}>

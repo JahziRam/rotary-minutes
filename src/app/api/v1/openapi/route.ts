@@ -1,13 +1,15 @@
 import { apiJson } from "@/lib/api-response";
 import { COMPANY_LEGAL } from "@/lib/company-legal";
+import { getAppName } from "@/lib/app-settings";
 
-const spec = {
+function buildSpec(appName: string) {
+  return {
   openapi: "3.0.3",
   info: {
-    title: "Rotary Minutes API",
+    title: `${appName} API`,
     version: "1.0.0",
     description:
-      "REST API for Rotary Minutes / Club Minutes. Operated by Visa Guard USA, LLC. Authenticate with Authorization: Bearer rm_live_...",
+      `REST API for ${appName} / Club Minutes. Operated by Visa Guard USA, LLC. Authenticate with Authorization: Bearer rm_live_...`,
     contact: {
       name: COMPANY_LEGAL.companyName,
       email: COMPANY_LEGAL.legalEmail,
@@ -54,7 +56,9 @@ const spec = {
     },
   },
 };
+}
 
 export async function GET() {
-  return apiJson(spec);
+  const appName = await getAppName();
+  return apiJson(buildSpec(appName));
 }

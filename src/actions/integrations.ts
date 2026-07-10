@@ -246,9 +246,11 @@ export async function testWebhook(webhookId: string, locale: string) {
   if (!webhook) return { error: "NOT_FOUND" as const };
 
   const event = webhook.events[0] ?? "MEETING_CREATED";
+  const { getAppName } = await import("@/lib/app-settings");
+  const appName = await getAppName();
   await dispatchClubWebhook(auth.ctx.clubId, event, {
     test: true,
-    message: "Rotary Minutes webhook test",
+    message: `${appName} webhook test`,
     webhookId,
   });
 

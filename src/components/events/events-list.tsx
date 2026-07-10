@@ -76,10 +76,10 @@ export function EventsList({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-assist="events-list">
       {canManage && (
         <div className="flex justify-end">
-          <Button onClick={() => setShowForm(!showForm)}>
+          <Button onClick={() => setShowForm(!showForm)} data-assist="events-new-btn">
             <Plus className="h-4 w-4" />
             {t("create")}
           </Button>

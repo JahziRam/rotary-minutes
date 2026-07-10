@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { COMPANY_LEGAL, formatCompanyAddress } from "@/lib/company-legal";
+import { getAppName } from "@/lib/app-settings";
 import { cn } from "@/lib/utils";
 
 export async function CompanyLegalNotice({
@@ -13,6 +14,7 @@ export async function CompanyLegalNotice({
 }) {
   const t = await getTranslations("legal.company");
   const year = new Date().getFullYear();
+  const productName = await getAppName();
 
   if (variant === "compact") {
     return (
@@ -33,7 +35,7 @@ export async function CompanyLegalNotice({
         <p className="font-medium text-gray-900">{t("publisherTitle")}</p>
         <p className="mt-2">
           {t("operatedBy", {
-            product: COMPANY_LEGAL.productName,
+            product: productName,
             alias: COMPANY_LEGAL.productAlias,
             company: COMPANY_LEGAL.companyName,
           })}
@@ -48,7 +50,7 @@ export async function CompanyLegalNotice({
       <span className="block">
         {t("copyright", {
           year,
-          product: COMPANY_LEGAL.productName,
+          product: productName,
           company: COMPANY_LEGAL.companyName,
         })}
       </span>

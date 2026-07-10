@@ -108,7 +108,7 @@ export function UnifiedCalendar({
     <>
       <div className="space-y-4">
         <div className="flex flex-wrap justify-between items-center gap-3">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2" data-assist="calendar-month-nav">
             <Link href={`/${locale}/calendar?month=${prevMonth.slice(0, 10)}`}>
               <Button size="sm" variant="outline">
                 <ChevronLeft className="h-4 w-4" />
@@ -142,6 +142,7 @@ export function UnifiedCalendar({
               size="sm"
               variant="outline"
               disabled={pending}
+              data-assist="calendar-export"
               onClick={() => run(() => exportCalendarIcs(month), t("icsExported"))}
             >
               <Download className="h-4 w-4 mr-1" />

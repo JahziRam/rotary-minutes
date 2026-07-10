@@ -5,6 +5,7 @@ import { getSession } from "@/lib/cached-auth";
 import { logoutUser } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Clock, LogOut } from "lucide-react";
+import { AppBrandNameServer } from "@/components/brand/app-brand-name-server";
 
 export default async function PendingApprovalPage({
   params,
@@ -40,7 +41,7 @@ export default async function PendingApprovalPage({
               href={`/${locale}`}
               className="font-display text-2xl font-bold text-navy"
             >
-              Rotary Minutes
+              <AppBrandNameServer accentClassName="text-gold" />
             </Link>
           </div>
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 text-center space-y-4">

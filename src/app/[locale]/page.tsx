@@ -22,6 +22,7 @@ import { RotaryDisclaimer } from "@/components/marketing/rotary-disclaimer";
 import { CompanyLegalNotice } from "@/components/legal/company-legal-notice";
 import { ManageCookiesButton } from "@/components/analytics/manage-cookies-button";
 import { buildPageMetadata } from "@/lib/seo";
+import { getAppBranding } from "@/lib/app-settings";
 import { locales } from "@/i18n/config";
 
 export function generateStaticParams() {
@@ -35,10 +36,12 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "seo.landing" });
+  const { appName } = await getAppBranding();
   return buildPageMetadata({
     locale,
     title: t("title"),
     description: t("description"),
+    siteName: appName,
   });
 }
 

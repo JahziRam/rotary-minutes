@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { addMonths, subMonths } from "date-fns";
 import { prisma } from "@/lib/prisma";
 import { generateClubCalendarIcs } from "@/lib/calendar-ics";
+import { getAppName } from "@/lib/app-settings";
 
 export async function GET(
   _request: Request,
@@ -35,6 +36,7 @@ export async function GET(
     },
   });
 
+  const appName = await getAppName();
   const ics = generateClubCalendarIcs(
     club.name,
     meetings.map((m) => ({
@@ -45,7 +47,8 @@ export async function GET(
       startTime: m.startTime,
       endTime: m.endTime,
       clubName: club.name,
-    }))
+    })),
+    appName
   );
 
   return new NextResponse(ics, {

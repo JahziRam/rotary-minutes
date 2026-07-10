@@ -6,6 +6,20 @@ import { TrialBanner } from "@/components/subscription/trial-banner";
 import { OfflineIndicator } from "./offline-indicator";
 import { NotificationSound } from "@/components/notifications/notification-sound";
 import { PwaInstallPrompt } from "@/components/pwa/pwa-install-prompt";
+import { UsageGuideProvider } from "@/components/assistant/usage-guide-context";
+import { UsageAssistant } from "@/components/assistant/usage-assistant";
+import { AssistanceProvider } from "@/components/assistance/assistance-context";
+import { AssistanceOverlays } from "@/components/assistance/assistance-overlays";
+import type { AssistanceState } from "@/actions/assistance";
+
+export type UsageGuideShellProps = {
+  shouldAutoStart: boolean;
+  guideEnabled: boolean;
+  clubSetupComplete: boolean;
+  completed: boolean;
+  dismissed: boolean;
+  hiddenNavKeys: string[];
+};
 
 export function AppShell({
   children,
@@ -22,6 +36,8 @@ export function AppShell({
   trialEndsAt = null,
   shellLocale = "fr",
   pwaEnhanced = true,
+  usageGuide = null,
+  assistance = null,
 }: {
   children: React.ReactNode;
   title: string;
@@ -37,8 +53,10 @@ export function AppShell({
   trialEndsAt?: Date | string | null;
   shellLocale?: string;
   pwaEnhanced?: boolean;
+  usageGuide?: UsageGuideShellProps | null;
+  assistance?: AssistanceState | null;
 }) {
-  return (
+  const shell = (
     <div className="min-h-screen bg-gray-50">
       <NotificationSound notificationCount={notificationCount} />
       <Sidebar
@@ -50,6 +68,7 @@ export function AppShell({
         notificationCount={notificationCount}
         canManageSubscription={canManageSubscription}
         subscriptionPlan={subscriptionPlan}
+        showUsageGuide={usageGuide?.guideEnabled && usageGuide.clubSetupComplete}
       />
       <div className="lg:pl-[var(--sidebar-w)]">
         <AppMobileShell
@@ -62,6 +81,7 @@ export function AppShell({
           lockedNavKeys={lockedNavKeys}
           canManageSubscription={canManageSubscription}
           subscriptionPlan={subscriptionPlan}
+          showUsageGuide={usageGuide?.guideEnabled && usageGuide.clubSetupComplete}
         >
           {trialEndsAt && (
             <TrialBanner trialEndsAt={trialEndsAt} locale={shellLocale} />
@@ -74,6 +94,20 @@ export function AppShell({
       <MobileNav />
       <OfflineIndicator />
       {pwaEnhanced && <PwaInstallPrompt />}
+      {usageGuide && <UsageAssistant />}
     </div>
   );
+
+  const wrapped = assistance ? (
+    <AssistanceProvider state={assistance}>
+      {shell}
+      <AssistanceOverlays />
+    </AssistanceProvider>
+  ) : (
+    shell
+  );
+
+  if (!usageGuide) return wrapped;
+
+  return <UsageGuideProvider config={usageGuide}>{wrapped}</UsageGuideProvider>;
 }

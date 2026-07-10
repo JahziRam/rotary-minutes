@@ -126,7 +126,7 @@ export function DuesPanel({
 
   return (
     <>
-      <div className="space-y-4">
+      <div className="space-y-4" data-assist="dues-overview">
         <div className="flex flex-wrap justify-between items-center gap-3">
           <div>
             <p className="text-sm text-gray-500">
@@ -284,6 +284,7 @@ export function DuesPanel({
                                   variant="outline"
                                   className="h-7 text-xs"
                                   disabled={pending}
+                                  data-assist="dues-record-payment"
                                   onClick={() =>
                                     run(
                                       () =>

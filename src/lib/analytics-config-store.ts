@@ -1,5 +1,6 @@
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
+import { DEFAULT_APP_NAME } from "@/lib/app-settings";
 
 type AppConfig = {
   analytics?: {
@@ -25,7 +26,7 @@ export async function saveGaMeasurementId(gaMeasurementId: string | null): Promi
     update: { config: next as unknown as Prisma.InputJsonValue },
     create: {
       id: "global",
-      appName: "Rotary Minutes",
+      appName: DEFAULT_APP_NAME,
       config: next as unknown as Prisma.InputJsonValue,
     },
   });

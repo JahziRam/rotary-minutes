@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
+import { getAppBranding, splitAppBrandName } from "@/lib/app-settings";
 
-export const runtime = "edge";
-export const alt = "Rotary Minutes";
+export const runtime = "nodejs";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -11,12 +11,15 @@ export default async function Image({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  const { appName, tagline: appTagline } = await getAppBranding();
+  const { lead, accent } = splitAppBrandName(appName);
   const tagline =
-    locale === "fr"
+    appTagline ??
+    (locale === "fr"
       ? "Procès-verbaux modernes pour clubs Rotary"
       : locale === "es"
         ? "Actas modernas para clubes Rotary"
-        : "Modern meeting minutes for Rotary clubs";
+        : "Modern meeting minutes for Rotary clubs");
 
   return new ImageResponse(
     (
@@ -43,7 +46,13 @@ export default async function Image({
           }}
         />
         <div style={{ fontSize: 64, fontWeight: 700, letterSpacing: -1 }}>
-          Rotary <span style={{ color: "#f5a623" }}>Minutes</span>
+          {accent ? (
+            <>
+              {lead} <span style={{ color: "#f5a623" }}>{accent}</span>
+            </>
+          ) : (
+            lead
+          )}
         </div>
         <div style={{ fontSize: 28, marginTop: 20, color: "rgba(255,255,255,0.8)", maxWidth: 800 }}>
           {tagline}

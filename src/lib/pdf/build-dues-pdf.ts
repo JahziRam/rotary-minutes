@@ -5,6 +5,7 @@ import { isDataUrl } from "@/lib/image-storage";
 import { resolveClubLogoUrl } from "@/lib/media-url";
 import { fiscalYearLabel, formatDuesMoney } from "@/lib/dues";
 import type { DuesPaymentPlan, DuesStatus } from "@/generated/prisma/client";
+import { getAppName } from "@/lib/app-settings";
 
 type ClubForPdf = {
   id: string;
@@ -67,6 +68,7 @@ export async function buildDuesInvoicePdfBuffer(
   const baseUrl = getAppBaseUrl();
   const dateLocale = locale === "en" ? enUS : fr;
   const { renderDuesInvoicePdf } = await import("@/lib/pdf/render");
+  const appName = await getAppName();
 
   const data = {
     club: {
@@ -79,6 +81,7 @@ export async function buildDuesInvoicePdfBuffer(
       lastName: member.lastName,
       email: member.email ?? undefined,
     },
+    appName,
     invoiceNumber: dues.invoiceNumber ?? `INV-${dues.fiscalYear}`,
     fiscalYear: fiscalYearLabel(dues.fiscalYear),
     periodLabel: dues.periodLabel ?? fiscalYearLabel(dues.fiscalYear),
@@ -135,6 +138,7 @@ export async function buildDuesHistoryPdfBuffer(
   const baseUrl = getAppBaseUrl();
   const dateLocale = locale === "en" ? enUS : fr;
   const { renderDuesHistoryPdf } = await import("@/lib/pdf/render");
+  const appName = await getAppName();
 
   const fiscalYear = duesRows[0]?.fiscalYear ?? new Date().getFullYear();
   let totalPaid = 0;
@@ -173,6 +177,7 @@ export async function buildDuesHistoryPdfBuffer(
     totalPending: formatDuesMoney(totalPending, currency, locale),
     generatedAt: format(new Date(), "d MMMM yyyy HH:mm", { locale: dateLocale }),
     locale,
+    appName,
   };
 
   const buffer = await renderDuesHistoryPdf(data);

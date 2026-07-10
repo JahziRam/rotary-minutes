@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 import { computeRecordedAttendanceRate } from "@/lib/rotary";
 import { CalendarExport } from "@/components/meetings/calendar-export";
+import { GuidedEmptyState } from "@/components/assistance/guided-empty-state";
 
 
 export default async function MeetingsPage({
@@ -20,6 +21,7 @@ export default async function MeetingsPage({
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations();
+  const tEmpty = await getTranslations("assistance.emptyStates.meetings");
   const ctx = await getClubContext();
   const dateLocale = locale === "fr" ? fr : enUS;
 
@@ -61,7 +63,15 @@ export default async function MeetingsPage({
 
         <div className="space-y-3">
           {meetings.length === 0 ? (
-            <p className="text-gray-500 text-sm text-center py-12">{t("common.noResults")}</p>
+            <GuidedEmptyState
+              locale={locale}
+              icon={Calendar}
+              title={tEmpty("title")}
+              description={tEmpty("description")}
+              primaryLabel={tEmpty("primaryLabel")}
+              primaryHref="/meetings/new"
+              helpAnchor="meetings"
+            />
           ) : (
             meetings.map((meeting) => {
               const rate = computeRecordedAttendanceRate(meeting.attendances);

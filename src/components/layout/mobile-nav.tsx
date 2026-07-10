@@ -47,6 +47,7 @@ export function MobileNav() {
             <Link
               key={href}
               href={fullHref}
+              data-guide={key}
               className={cn(
                 "flex flex-1 flex-col items-center justify-center gap-0.5 min-w-0 py-1.5 transition-colors",
                 isActive ? "text-navy" : "text-gray-400"

@@ -29,6 +29,8 @@ import { Badge } from "@/components/ui/badge";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { cn } from "@/lib/utils";
+import { UsageGuideLauncher } from "@/components/assistant/usage-guide-launcher";
+import { AppBrandName } from "@/components/brand/app-brand-name";
 
 const navItems = [
   { key: "dashboard", href: "/dashboard", icon: Home },
@@ -60,6 +62,7 @@ export function Sidebar({
   canManageSubscription = false,
   subscriptionPlan,
   showDistrictNav = false,
+  showUsageGuide = false,
 }: {
   clubName?: string;
   isSuperAdmin?: boolean;
@@ -70,6 +73,7 @@ export function Sidebar({
   canManageSubscription?: boolean;
   subscriptionPlan?: string;
   showDistrictNav?: boolean;
+  showUsageGuide?: boolean;
 }) {
   const t = useTranslations("nav");
   const tAuth = useTranslations("auth");
@@ -83,7 +87,7 @@ export function Sidebar({
         <div className="p-5 border-b border-white/10">
           <Link href={`/${locale}/dashboard`} className="block">
             <h1 className="font-display text-xl font-bold text-white">
-              Rotary Minutes
+              <AppBrandName />
             </h1>
             {clubName && (
               <p className="text-xs text-white/60 mt-1 truncate">{clubName}</p>
@@ -119,6 +123,7 @@ export function Sidebar({
               <Link
                 key={key}
                 href={fullHref}
+                data-guide={key}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                   isActive
@@ -164,6 +169,7 @@ export function Sidebar({
               </div>
             </Link>
           )}
+          {showUsageGuide && <UsageGuideLauncher variant="sidebar" />}
           <LocaleSwitcher variant="dark" className="w-full justify-center" />
           <SignOutButton label={tAuth("logout")} />
         </div>

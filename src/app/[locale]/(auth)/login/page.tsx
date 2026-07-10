@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { CompanyLegalFooter } from "@/components/legal/company-legal-footer";
 import { loginUser } from "@/actions/auth";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
+import { AppBrandName } from "@/components/brand/app-brand-name";
 
 export default function LoginPage() {
   const t = useTranslations("auth");
@@ -63,7 +64,7 @@ export default function LoginPage() {
               href={`/${locale}`}
               className="font-display text-2xl font-bold text-navy"
             >
-              Rotary Minutes
+              <AppBrandName />
             </Link>
             <div className="flex justify-center">
               <LocaleSwitcher variant="light" />

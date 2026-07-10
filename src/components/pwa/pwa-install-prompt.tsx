@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Download, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAppBranding } from "@/components/brand/app-branding-provider";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -14,6 +15,7 @@ const DISMISS_KEY = "pwa-install-dismissed";
 
 export function PwaInstallPrompt() {
   const t = useTranslations("pwa");
+  const { appName } = useAppBranding();
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [visible, setVisible] = useState(false);
 
@@ -52,7 +54,9 @@ export function PwaInstallPrompt() {
       <div className="flex items-start gap-3">
         <Download className="h-5 w-5 text-navy shrink-0 mt-0.5" />
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-gray-900 text-sm">{t("installTitle")}</p>
+          <p className="font-semibold text-gray-900 text-sm">
+            {t("installTitle", { appName })}
+          </p>
           <p className="text-xs text-gray-500 mt-1">{t("installDescription")}</p>
           <div className="flex gap-2 mt-3">
             <Button size="sm" variant="gold" onClick={install}>

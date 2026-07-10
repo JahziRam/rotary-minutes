@@ -10,6 +10,7 @@ import type { ClubRole, SubscriptionPlan, SubscriptionStatus } from "@/generated
 import type { Permission } from "@/lib/permissions";
 import { getBillingSettings } from "@/lib/plans";
 import { shouldWarnStripePriceChange } from "@/lib/plans-stripe";
+import { DEFAULT_APP_NAME } from "@/lib/app-settings";
 
 async function admin() {
   const session = await auth();
@@ -221,7 +222,7 @@ export async function updateBillingSettings(
     update: { annualDiscountPercent: discount, currency },
     create: {
       id: "global",
-      appName: "Rotary Minutes",
+      appName: DEFAULT_APP_NAME,
       annualDiscountPercent: discount,
       currency,
     },
@@ -403,8 +404,10 @@ export async function updateAppSettings(
   });
 
   revalidateAdmin(locale);
-  for (const loc of ["fr", "en"]) {
+  for (const loc of ["fr", "en", "es"]) {
     revalidatePath(`/${loc}`, "layout");
+    revalidatePath(`/${loc}/manifest.webmanifest`);
+    revalidatePath(`/${loc}/opengraph-image`);
   }
   return { success: true };
 }

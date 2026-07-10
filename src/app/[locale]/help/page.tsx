@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ArrowLeft, BookOpen, Calendar, CreditCard, FileText, Mail, Map, Rocket, Wallet } from "lucide-react";
 import { HELP_ARTICLES } from "@/lib/help-articles";
 import { buildPageMetadata } from "@/lib/seo";
+import { getAppBranding } from "@/lib/app-settings";
 
 const ICONS = {
   rocket: Rocket,
@@ -22,11 +23,13 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "seo.help" });
+  const { appName } = await getAppBranding();
   return buildPageMetadata({
     locale,
     title: t("title"),
     description: t("description"),
     path: "/help",
+    siteName: appName,
   });
 }
 

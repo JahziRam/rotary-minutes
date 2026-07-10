@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { generateMeetingIcs } from "@/lib/calendar-ics";
+import { getAppName } from "@/lib/app-settings";
 
 export async function GET(
   _request: Request,
@@ -28,6 +29,7 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const appName = await getAppName();
   const ics = generateMeetingIcs({
     id: meeting.id,
     title: meeting.title,
@@ -36,7 +38,7 @@ export async function GET(
     startTime: meeting.startTime,
     endTime: meeting.endTime,
     clubName: meeting.club.name,
-  });
+  }, appName);
 
   const slug = (meeting.title ?? "reunion").replace(/\s+/g, "-").toLowerCase();
 

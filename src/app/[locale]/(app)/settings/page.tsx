@@ -20,6 +20,7 @@ import { listClubBackups } from "@/actions/backup";
 import { ClubAnnouncementsPanel } from "@/components/notifications/club-announcements-panel";
 import { ClubDuesPaymentPanel } from "@/components/settings/club-dues-payment-panel";
 import { getClubDuesPaymentSettings } from "@/actions/club-dues-payment-settings";
+import { PageAssistance } from "@/components/assistance/page-assistance";
 
 export default async function SettingsPage({
   params,
@@ -59,9 +60,10 @@ export default async function SettingsPage({
   return (
     <AppShellServer title={t("settings.title")}>
       <div className="max-w-2xl space-y-6">
+        <PageAssistance hints={["settings_intro", "settings_guide_action"]} />
         {club ? (
           <>
-            <Card>
+            <Card data-assist="settings-club-tab">
               <CardHeader><CardTitle>{t("settings.club")}</CardTitle></CardHeader>
               <CardContent>
                 <ClubSettingsForm club={club} />
@@ -139,7 +141,7 @@ export default async function SettingsPage({
             {canManageSettings && (
               <Card>
                 <CardHeader><CardTitle>{t("settings.workflow.title")}</CardTitle></CardHeader>
-                <CardContent>
+                <CardContent data-assist="settings-workflow-tab">
                   <ClubWorkflowSettings
                     settings={{
                       presidentApprovalRequired: club.presidentApprovalRequired,

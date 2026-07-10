@@ -6,6 +6,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { CompanyLegalFooter } from "@/components/legal/company-legal-footer";
+import { AppBrandName } from "@/components/brand/app-brand-name";
 
 export default function ForgotPasswordPage() {
   const t = useTranslations("auth");
@@ -19,7 +20,7 @@ export default function ForgotPasswordPage() {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <Link href={`/${locale}`} className="font-display text-2xl font-bold text-navy">
-              Rotary Minutes
+              <AppBrandName />
             </Link>
           </div>
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">

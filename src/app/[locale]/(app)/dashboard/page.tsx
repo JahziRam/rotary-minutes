@@ -22,10 +22,13 @@ import {
 import { getPendingJoinRequests } from "@/actions/registration";
 import { getClubOnboarding } from "@/actions/onboarding";
 import { OnboardingChecklist } from "@/components/members/onboarding-checklist";
+import { DashboardAssistance } from "@/components/assistance/dashboard-assistance";
+import { GuidedEmptyStateClient } from "@/components/assistance/guided-empty-state-client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
+import { getAppName } from "@/lib/app-settings";
 
 export default async function DashboardPage({
   params,
@@ -75,7 +78,8 @@ export default async function DashboardPage({
         )
       : null;
 
-  const clubName = ctx?.clubName ?? "Rotary Minutes";
+  const appName = await getAppName();
+  const clubName = ctx?.clubName ?? appName;
   const liveVisible = ctx
     ? isFeatureVisibleInUi(ctx.features, "liveMeetings", ctx.isSuperAdmin)
     : true;
@@ -113,6 +117,8 @@ export default async function DashboardPage({
             currentStep={onboardingGuide.currentStep}
           />
         )}
+
+        <DashboardAssistance />
 
         {/* Hero */}
         <section className="rounded-2xl bg-gradient-to-br from-navy to-navy-dark text-white p-6 sm:p-8">
@@ -252,15 +258,8 @@ export default async function DashboardPage({
                     )}
                   </div>
                 ) : (
-                  <div className="text-center py-4 space-y-3">
-                    <p className="text-gray-500 text-sm">{t("common.noResults")}</p>
-                    <Link
-                      href={`/${locale}/meetings/new`}
-                      className="inline-flex items-center gap-2 text-sm text-navy font-medium hover:underline"
-                    >
-                      <Plus className="h-4 w-4" />
-                      {t("dashboard.newMeeting")}
-                    </Link>
+                  <div className="py-2">
+                    <GuidedEmptyStateClient stateKey="dashboard_meetings" />
                   </div>
                 )}
               </CardContent>
@@ -296,15 +295,8 @@ export default async function DashboardPage({
                     ))}
                   </ul>
                 ) : (
-                  <div className="text-center py-4 space-y-3">
-                    <p className="text-gray-500 text-sm">{t("common.noResults")}</p>
-                    <Link
-                      href={`/${locale}/meetings/new`}
-                      className="inline-flex items-center gap-2 text-sm text-navy font-medium hover:underline"
-                    >
-                      <Plus className="h-4 w-4" />
-                      {t("dashboard.newMeeting")}
-                    </Link>
+                  <div className="py-2">
+                    <GuidedEmptyStateClient stateKey="dashboard_minutes" />
                   </div>
                 )}
               </CardContent>

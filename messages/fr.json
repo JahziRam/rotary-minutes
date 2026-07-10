@@ -892,6 +892,411 @@
     "previous": "Précédent",
     "viewAll": "Voir tout"
   },
+  "usageGuide": {
+    "launcher": "Guide d'utilisation",
+    "start": "Commencer la visite",
+    "finish": "Terminer",
+    "dismiss": "Passer le guide",
+    "close": "Fermer le guide",
+    "stepOf": "Étape {current} sur {total}",
+    "stepListLabel": "Étapes du guide",
+    "ariaStep": "Étape {current} sur {total} : {title}",
+    "keyboardHints": "Utilisez les flèches gauche et droite pour naviguer entre les étapes. Appuyez sur Échap pour fermer.",
+    "openSection": "Ouvrir cette section",
+    "helpCenter": "Consulter le centre d'aide",
+    "welcomePoints": {
+      "1": "Découvrez les sections clés de la navigation",
+      "2": "Apprenez le flux réunion → PV → cotisations",
+      "3": "Reprenez ce guide à tout moment via le bouton ?"
+    },
+    "steps": {
+      "WELCOME": {
+        "title": "Bienvenue dans Rotary Minutes",
+        "body": "Ce guide interactif vous présente les fonctionnalités essentielles pour administrer votre club au quotidien."
+      },
+      "DASHBOARD": {
+        "title": "Tableau de bord",
+        "body": "Votre point d'entrée : prochaine réunion, PV récents, statistiques de présence et actions en cours. Créez une réunion ou un PV en un clic."
+      },
+      "MEETINGS": {
+        "title": "Réunions",
+        "body": "Planifiez vos réunions statutaires et accédez au mode live pour rédiger le PV en direct pendant la séance."
+      },
+      "MINUTES": {
+        "title": "Procès-verbaux",
+        "body": "Rédigez, soumettez et finalisez vos PV. Chaque document peut être exporté en PDF authentifié avec QR code."
+      },
+      "MEMBERS": {
+        "title": "Membres",
+        "body": "Gérez la liste des membres, leurs coordonnées et le suivi des cotisations du club."
+      },
+      "TREASURY": {
+        "title": "Trésorerie",
+        "body": "Suivez les entrées et sorties, générez les rapports financiers et gardez une vue claire sur la santé financière du club."
+      },
+      "EMAILS": {
+        "title": "Emails",
+        "body": "Composez des messages, gérez vos modèles et envoyez convocations ou rappels de cotisation à vos membres."
+      },
+      "CALENDAR": {
+        "title": "Calendrier",
+        "body": "Visualisez réunions, échéances et événements sur un calendrier unifié. Exportez en fichier ICS."
+      },
+      "EVENTS": {
+        "title": "Événements",
+        "body": "Créez des événements du club (gala, formation, collecte) et suivez les inscriptions."
+      },
+      "ATTENDANCE": {
+        "title": "Assiduité",
+        "body": "Consultez les taux de présence par membre, période et type de réunion. Exportez un rapport PDF."
+      },
+      "PROFILE": {
+        "title": "Mon compte",
+        "body": "Liez votre profil membre, consultez vos cotisations et vos procès-verbaux accessibles."
+      },
+      "SETTINGS": {
+        "title": "Paramètres",
+        "body": "Configurez le profil du club, les utilisateurs, les rôles, l'abonnement et les préférences de workflow."
+      },
+      "COMPLETE": {
+        "title": "Vous êtes prêt !",
+        "body": "Vous connaissez maintenant les bases de Rotary Minutes. Lancez un essai de réunion live lors de votre prochaine séance statutaire."
+      }
+    }
+  },
+  "assistance": {
+    "learnMore": "En savoir plus",
+    "dismissHint": "Masquer ce conseil",
+    "dismissMissions": "Masquer la checklist",
+    "walkthroughNext": "Étape suivante",
+    "walkthroughPrev": "Précédent",
+    "walkthroughFinish": "Terminer le guide",
+    "emptyStates": {
+      "meetings": {
+        "title": "Aucune réunion planifiée",
+        "description": "Commencez par planifier votre prochaine réunion statutaire. Un brouillon de procès-verbal sera créé automatiquement.",
+        "primaryLabel": "Planifier une réunion",
+        "primaryHref": "/meetings/new"
+      },
+      "minutes": {
+        "title": "Pas encore de procès-verbal",
+        "description": "Créez une réunion pour générer un brouillon de PV, ou ouvrez le mode live pendant une séance.",
+        "primaryLabel": "Créer une réunion",
+        "primaryHref": "/meetings/new",
+        "secondaryLabel": "Voir les réunions",
+        "secondaryHref": "/meetings"
+      },
+      "members": {
+        "title": "Ajoutez les membres de votre club",
+        "description": "Importez votre liste depuis Excel ou ajoutez les membres un par un pour suivre les cotisations et présences.",
+        "primaryLabel": "Ajouter un membre",
+        "primaryHref": "/members",
+        "secondaryLabel": "Guide d'import",
+        "secondaryHref": "/help#dues"
+      },
+      "treasury": {
+        "title": "Démarrez la trésorerie du club",
+        "description": "Enregistrez votre première entrée ou sortie pour suivre la santé financière du club.",
+        "primaryLabel": "Voir la trésorerie",
+        "primaryHref": "/treasury"
+      },
+      "emails": {
+        "title": "Communiquez avec vos membres",
+        "description": "Créez un modèle d'email puis envoyez des rappels de réunion ou de cotisation.",
+        "primaryLabel": "Composer un email",
+        "primaryHref": "/emails/compose"
+      },
+      "dashboard_meetings": {
+        "title": "Planifiez votre prochaine réunion",
+        "description": "Une réunion planifiée permet de préparer l'ordre du jour et le procès-verbal à l'avance.",
+        "primaryLabel": "Nouvelle réunion",
+        "primaryHref": "/meetings/new"
+      },
+      "dashboard_minutes": {
+        "title": "Rédigez votre premier PV",
+        "description": "Après une réunion, complétez le brouillon généré puis finalisez-le pour obtenir un PDF authentifié.",
+        "primaryLabel": "Voir les PV",
+        "primaryHref": "/minutes"
+      },
+      "live_no_minute": {
+        "title": "Aucun PV lié à cette réunion",
+        "description": "Créez une réunion avec modèle de PV ou ouvrez une réunion existante qui inclut un brouillon.",
+        "primaryLabel": "Gérer les réunions",
+        "primaryHref": "/meetings"
+      },
+      "calendar": {
+        "title": "Votre calendrier est vide",
+        "description": "Planifiez une réunion pour la voir apparaître dans le calendrier unifié.",
+        "primaryLabel": "Planifier une réunion",
+        "primaryHref": "/meetings/new"
+      },
+      "events": {
+        "title": "Aucun événement",
+        "description": "Créez votre premier événement club (formation, gala, collecte).",
+        "primaryLabel": "Créer un événement",
+        "primaryHref": "/events"
+      },
+      "settings": {
+        "title": "Configurez votre club",
+        "description": "Complétez le profil du club, les rôles et les préférences de workflow.",
+        "primaryLabel": "Paramètres club",
+        "primaryHref": "/settings"
+      },
+      "attendance": {
+        "title": "Pas encore de données d'assiduité",
+        "description": "Enregistrez les présences lors d'une réunion live ou statutaire.",
+        "primaryLabel": "Voir les réunions",
+        "primaryHref": "/meetings"
+      },
+      "profile": {
+        "title": "Liez votre profil membre",
+        "description": "Associez votre compte utilisateur à votre fiche membre pour accéder à vos cotisations et PV.",
+        "primaryLabel": "Mon compte",
+        "primaryHref": "/my-account"
+      },
+      "dues": {
+        "title": "Suivez les cotisations",
+        "description": "Enregistrez les paiements des membres pour un suivi fiable du mandat.",
+        "primaryLabel": "Cotisations",
+        "primaryHref": "/members/dues"
+      }
+    },
+    "missions": {
+      "title": "Vos premières missions",
+      "progress": "{done} sur {total} terminées",
+      "startBtn": "Démarrer",
+      "stepsBtn": "Étapes",
+      "launchWalkthrough": "Lancer le guide pas-à-pas",
+      "intro": {
+        "SECRETARY": "En tant que secrétaire, voici les gestes essentiels pour tenir l'administration du club.",
+        "TREASURER": "En tant que trésorier, commencez par les membres et les finances du club.",
+        "PRESIDENT": "En tant que président, suivez ces étapes pour piloter le club sereinement.",
+        "READER": "Découvrez comment consulter les informations essentielles de votre club."
+      },
+      "items": {
+        "schedule_meeting": { "title": "Planifier une réunion", "hint": "Date, lieu et type statutaire" },
+        "run_live_meeting": { "title": "Utiliser le mode live", "hint": "Présences et notes pendant la séance" },
+        "draft_minute": { "title": "Rédiger un procès-verbal", "hint": "Compléter le brouillon généré" },
+        "finalize_minute": { "title": "Finaliser un PV", "hint": "Obtenir le PDF avec QR code" },
+        "add_members": { "title": "Ajouter les membres", "hint": "Liste à jour du club" },
+        "record_dues": { "title": "Enregistrer une cotisation", "hint": "Suivi des paiements membres" },
+        "treasury_entry": { "title": "Saisir un mouvement financier", "hint": "Entrée ou sortie en trésorerie" },
+        "invite_team": { "title": "Inviter le bureau", "hint": "Secrétaire, trésorier, lecteurs" },
+        "send_email": { "title": "Envoyer un email", "hint": "Convocation ou rappel aux membres" },
+        "explore_calendar": { "title": "Explorer le calendrier", "hint": "Vue unifiée des activités du club" },
+        "create_event": { "title": "Créer un événement", "hint": "Gala, formation ou action sociale" },
+        "configure_settings": { "title": "Configurer le club", "hint": "Profil, workflow et préférences" },
+        "review_attendance": { "title": "Consulter l'assiduité", "hint": "Taux par membre et par période" },
+        "update_profile": { "title": "Mettre à jour mon profil", "hint": "Lier votre compte à votre fiche membre" }
+      }
+    },
+    "hints": {
+      "minute_editor_intro": {
+        "title": "Rédaction du procès-verbal",
+        "body": "Complétez chaque point de l'ordre du jour pendant ou après la réunion. L'enregistrement est automatique toutes les 30 secondes."
+      },
+      "minute_editor_workflow": {
+        "title": "Validation du PV",
+        "body": "Soumettez au président pour relecture, puis finalisez pour générer le PDF officiel authentifié."
+      },
+      "minute_editor_agenda": {
+        "title": "Ordre du jour",
+        "body": "Pour chaque point : notez les décisions prises et les actions à suivre, avec un responsable et une échéance."
+      },
+      "live_meeting_intro": {
+        "title": "Mode réunion live",
+        "body": "Utilisez cet écran pendant la séance : présences à gauche, notes du PV à droite. Pas besoin de reprendre Word après la réunion."
+      },
+      "live_attendance": {
+        "title": "Feuille de présence",
+        "body": "Cochez les membres présents, absents ou excusés. Les présences alimenteront automatiquement vos statistiques."
+      },
+      "dashboard_missions": {
+        "title": "Checklist de démarrage",
+        "body": "Suivez les missions ci-dessous pour maîtriser Rotary Minutes en quelques sessions."
+      },
+      "minute_finalize_action": {
+        "title": "Finaliser le PV",
+        "body": "Une fois le contenu validé, le président peut approuver et verrouiller le document.",
+        "action": "Cliquez ici pour approuver et finaliser"
+      },
+      "minute_submit_action": {
+        "title": "Soumettre en révision",
+        "body": "Envoyez le brouillon au président pour validation avant finalisation.",
+        "action": "Cliquez ici pour soumettre au président"
+      },
+      "emails_intro": {
+        "title": "Communication par email",
+        "body": "Centralisez modèles, contacts et envois depuis cette section."
+      },
+      "emails_compose_action": {
+        "title": "Composer un message",
+        "body": "Rédigez un email et choisissez les destinataires.",
+        "action": "Cliquez ici pour composer un email"
+      },
+      "calendar_intro": {
+        "title": "Calendrier unifié",
+        "body": "Réunions, échéances et événements sur une seule vue mensuelle."
+      },
+      "calendar_export_action": {
+        "title": "Exporter le calendrier",
+        "body": "Téléchargez un fichier ICS pour Google Calendar ou Outlook.",
+        "action": "Cliquez ici pour exporter en ICS"
+      },
+      "events_intro": {
+        "title": "Événements du club",
+        "body": "Organisez des activés hors réunion statutaire avec inscriptions."
+      },
+      "events_create_action": {
+        "title": "Nouvel événement",
+        "body": "Définissez date, lieu et capacité d'accueil.",
+        "action": "Cliquez ici pour créer un événement"
+      },
+      "settings_intro": {
+        "title": "Paramètres du club",
+        "body": "Profil, utilisateurs, workflow et modules activés pour votre club."
+      },
+      "settings_guide_action": {
+        "title": "Profil du club",
+        "body": "Vérifiez lieu de réunion, bureau et coordonnées affichées sur les PV.",
+        "action": "Complétez le profil du club ici"
+      },
+      "attendance_intro": {
+        "title": "Rapports d'assiduité",
+        "body": "Suivez les taux de présence requis par Rotary International."
+      },
+      "attendance_export_action": {
+        "title": "Exporter le rapport",
+        "body": "Générez un PDF pour le district ou le bureau.",
+        "action": "Cliquez ici pour exporter le PDF"
+      },
+      "profile_intro": {
+        "title": "Espace membre",
+        "body": "Consultez vos cotisations, présences et procès-verbaux finalisés."
+      },
+      "profile_save_action": {
+        "title": "Lier votre compte",
+        "body": "Associez votre email à votre fiche membre du club.",
+        "action": "Cliquez ici pour lier votre profil"
+      },
+      "dues_intro": {
+        "title": "Gestion des cotisations",
+        "body": "Suivez les paiements par membre et par période du mandat."
+      },
+      "dues_record_action": {
+        "title": "Enregistrer un paiement",
+        "body": "Marquez une cotisation comme payée après encaissement.",
+        "action": "Cliquez ici pour marquer comme payée"
+      }
+    },
+    "coach": {
+      "weekLabel": "Semaine {week} — conseil du jour",
+      "tips": {
+        "week1_meetings": { "title": "Planifiez vos réunions à l'avance", "body": "Le calendrier club vous aide à préparer l'ordre du jour et les rappels." },
+        "week1_minutes": { "title": "Testez le mode live", "body": "Lors de la prochaine séance, rédigez le PV en direct — vous gagnerez des heures chaque mois." },
+        "week2_members": { "title": "Mettez à jour la liste des membres", "body": "Importez votre fichier Excel ou ajoutez les nouveaux membres du mandat." },
+        "week2_dues": { "title": "Suivez les cotisations", "body": "Enregistrez les paiements au fur et à mesure pour des relances ciblées." },
+        "week3_treasury": { "title": "Tenez la trésorerie à jour", "body": "Saisissez les mouvements après chaque réunion pour un rapport trésorier fiable." },
+        "week4_emails": { "title": "Communiquez par email", "body": "Envoyez convocations et rappels depuis la section Emails." },
+        "week4_calendar": { "title": "Partagez le calendrier", "body": "Le calendrier unifié centralise réunions, échéances et événements." },
+        "week4_events": { "title": "Animez le club", "body": "Créez un événement pour mobiliser vos membres hors réunion statutaire." },
+        "week4_attendance": { "title": "Pilotez l'assiduité", "body": "Consultez les rapports pour identifier les membres à accompagner." },
+        "week4_profile": { "title": "Profil à jour", "body": "Encouragez chaque membre à lier son compte dans Mon compte." }
+      }
+    },
+    "walkthrough": {
+      "flowLabel": "Guide : {flow}",
+      "stepOf": "Étape {current} sur {total}",
+      "flows": {
+        "create_meeting": "Créer une réunion",
+        "live_meeting": "Réunion live",
+        "finalize_minute": "Finaliser un PV",
+        "send_email": "Envoyer un email",
+        "explore_calendar": "Calendrier",
+        "create_event": "Événement",
+        "configure_settings": "Paramètres",
+        "review_attendance": "Assiduité",
+        "update_profile": "Mon profil",
+        "manage_dues": "Cotisations"
+      },
+      "create_meeting": {
+        "date": { "title": "Date de la réunion", "body": "Choisissez la date de votre prochaine séance statutaire." },
+        "type": { "title": "Type de réunion", "body": "Sélectionnez Statutaire pour une réunion avec PV obligatoire." },
+        "location": { "title": "Lieu", "body": "Indiquez le lieu habituel ou une adresse exceptionnelle." },
+        "submit": { "title": "Enregistrer", "body": "Validez pour créer la réunion et le brouillon de PV associé." }
+      },
+      "live_meeting": {
+        "attendance": { "title": "Feuille de présence", "body": "Cochez les membres présents pendant la séance." },
+        "minute": { "title": "Notes du PV", "body": "Rédigez le procès-verbal en direct à droite." },
+        "save": { "title": "Sauvegarde auto", "body": "Vos modifications sont enregistrées automatiquement." }
+      },
+      "finalize_minute": {
+        "content": { "title": "Contenu du PV", "body": "Complétez chaque point de l'ordre du jour." },
+        "submit": { "title": "Soumission", "body": "Le secrétaire soumet le PV au président pour relecture." },
+        "finalize": { "title": "Finalisation", "body": "Le président approuve et génère le PDF officiel." }
+      },
+      "send_email": {
+        "compose": { "title": "Composer", "body": "Accédez à l'éditeur d'email du club." },
+        "templates": { "title": "Modèles", "body": "Réutilisez des modèles pour gagner du temps." }
+      },
+      "explore_calendar": {
+        "nav": { "title": "Navigation", "body": "Parcourez les mois pour anticiper les échéances." },
+        "export": { "title": "Export ICS", "body": "Partagez le calendrier avec les membres." }
+      },
+      "create_event": {
+        "new": { "title": "Créer", "body": "Ouvrez le formulaire de nouvel événement." },
+        "list": { "title": "Liste", "body": "Retrouvez ici tous les événements du mandat." }
+      },
+      "configure_settings": {
+        "club": { "title": "Profil club", "body": "Nom, lieu, bureau et coordonnées." },
+        "workflow": { "title": "Workflow", "body": "Validation PV, rappels et assistance." }
+      },
+      "review_attendance": {
+        "overview": { "title": "Vue d'ensemble", "body": "Taux global et par membre du mandat en cours." },
+        "export": { "title": "Export PDF", "body": "Téléchargez le rapport pour le district." }
+      },
+      "update_profile": {
+        "info": { "title": "Vos informations", "body": "Vérifiez le lien entre compte utilisateur et fiche membre." },
+        "save": { "title": "Lier le compte", "body": "Confirmez l'association pour accéder à vos données." }
+      },
+      "manage_dues": {
+        "overview": { "title": "Vue cotisations", "body": "État des paiements par membre." },
+        "payment": { "title": "Enregistrer", "body": "Marquez une cotisation comme payée." }
+      }
+    },
+    "feedback": {
+      "open": "Donner votre avis sur l'assistance",
+      "title": "Votre avis nous intéresse",
+      "subtitle": "Aidez-nous à améliorer l'accompagnement des clubs.",
+      "ratingLabel": "Note de satisfaction",
+      "star": "{n} étoiles",
+      "commentPlaceholder": "Commentaire optionnel…",
+      "submit": "Envoyer",
+      "close": "Fermer",
+      "thanksTitle": "Merci !",
+      "thanksBody": "Votre retour a bien été enregistré."
+    },
+    "rolePrompt": {
+      "title": "Quel est votre rôle principal ?",
+      "subtitle": "Nous adapterons vos missions et conseils à votre fonction dans le club.",
+      "skip": "Fermer",
+      "useClubRole": "Utiliser mon rôle actuel dans le club",
+      "roles": {
+        "SECRETARY": { "title": "Secrétaire", "desc": "PV, réunions, mode live" },
+        "TREASURER": { "title": "Trésorier", "desc": "Cotisations, trésorerie, rapports" },
+        "PRESIDENT": { "title": "Président", "desc": "Validation, pilotage, vision globale" },
+        "READER": { "title": "Membre / lecteur", "desc": "Consultation PV et informations club" }
+      }
+    },
+    "glossary": {
+      "minute": { "term": "Procès-verbal", "definition": "Compte-rendu officiel d'une réunion, archivé et parfois authentifié par QR code." },
+      "live_mode": { "term": "Mode live", "definition": "Prise de notes et présences pendant la réunion, en temps réel." },
+      "finalize": { "term": "Finaliser", "definition": "Verrouiller le PV et générer le PDF officiel non modifiable." },
+      "dues": { "term": "Cotisation", "definition": "Contribution financière annuelle de chaque membre au club." },
+      "mandate": { "term": "Mandat", "definition": "Période de fonction du bureau du club (généralement 1 an rotarien)." },
+      "statutory": { "term": "Réunion statutaire", "definition": "Réunion régulière du club avec ordre du jour officiel et PV obligatoire." }
+    }
+  },
   "onboarding": {
     "title": "Configuration de votre club",
     "subtitle": "Quelques étapes pour démarrer avec Rotary Minutes",
@@ -1072,7 +1477,7 @@
     }
   },
   "pwa": {
-    "installTitle": "Installer Rotary Minutes",
+    "installTitle": "Installer {appName}",
     "installDescription": "Accédez rapidement au club depuis votre écran d'accueil, même hors ligne.",
     "installCta": "Installer",
     "installDismiss": "Plus tard",

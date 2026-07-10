@@ -7,6 +7,7 @@ import { Menu, X } from "lucide-react";
 import { ContactModal } from "@/components/marketing/contact-modal";
 import { locales, localeLabels, type Locale } from "@/i18n/config";
 import { trackLandingCta, trackContactFormOpen } from "@/lib/landing-analytics";
+import { AppBrandName } from "@/components/brand/app-brand-name";
 
 export function LandingHeader({
   locale,
@@ -47,7 +48,7 @@ export function LandingHeader({
         <div className="h-1 bg-gradient-to-r from-gold via-gold-light to-gold" />
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-3 py-3 sm:px-4">
           <Link href={`/${locale}`} className="font-display text-lg font-bold tracking-tight sm:text-xl">
-            Rotary <span className="text-gold">Minutes</span>
+            <AppBrandName />
           </Link>
 
           <nav className="hidden items-center gap-3 md:flex">

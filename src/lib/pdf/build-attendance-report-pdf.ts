@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 import { getAttendanceReportSummary } from "@/lib/queries/attendance-reports";
 import type { AttendanceReportPDFData } from "@/lib/pdf/attendance-report-pdf";
+import { getAppName } from "@/lib/app-settings";
 
 const MEETING_TYPE_LABELS: Record<string, { fr: string; en: string }> = {
   STATUTORY: { fr: "Statutaire", en: "Statutory" },
@@ -23,8 +24,10 @@ export async function buildAttendanceReportPdfBuffer(
   const dateLocale = locale === "en" ? enUS : fr;
   const isFr = locale === "fr";
 
+  const appName = await getAppName();
   const data: AttendanceReportPDFData = {
     clubName,
+    appName,
     mandateLabel: summary.memberData.mandate.label,
     exportedAt: format(new Date(), "PPP", { locale: dateLocale }),
     clubRate: summary.clubRate,

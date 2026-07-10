@@ -12,6 +12,7 @@ import { getHealthChecks } from "@/lib/queries/health";
 import { getProductAnalytics } from "@/lib/queries/analytics";
 import { HealthDashboard } from "@/components/admin/health-dashboard";
 import { AnalyticsPanel } from "@/components/admin/analytics-panel";
+import { AssistanceAnalyticsPanel } from "@/components/admin/assistance-analytics-panel";
 
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -131,6 +132,8 @@ export default async function SuperAdminPage({
         <HealthDashboard health={health} />
 
         <AnalyticsPanel analytics={analytics} locale={locale} />
+
+        <AssistanceAnalyticsPanel />
 
         <div className="grid lg:grid-cols-2 gap-6">
           <TrialAlerts trials={expiringTrials} locale={locale} />

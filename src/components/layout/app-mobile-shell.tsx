@@ -28,6 +28,8 @@ import Link from "next/link";
 import { Header, type HeaderNotification } from "./header";
 import { MobileMenuDrawer } from "./mobile-menu-drawer";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { UsageGuideLauncher } from "@/components/assistant/usage-guide-launcher";
+import { useAppBranding } from "@/components/brand/app-branding-provider";
 
 const navItems = [
   { key: "dashboard", href: "/dashboard", icon: Home },
@@ -59,6 +61,7 @@ export function AppMobileShell({
   lockedNavKeys,
   canManageSubscription,
   subscriptionPlan,
+  showUsageGuide = false,
   children,
 }: {
   title: string;
@@ -70,12 +73,14 @@ export function AppMobileShell({
   lockedNavKeys?: string[];
   canManageSubscription?: boolean;
   subscriptionPlan?: string;
+  showUsageGuide?: boolean;
   children: React.ReactNode;
 }) {
   const t = useTranslations("nav");
   const tAuth = useTranslations("auth");
   const locale = useLocale();
   const [menuOpen, setMenuOpen] = useState(false);
+  const { appName } = useAppBranding();
 
   const drawerItems = [
     ...(isSuperAdmin
@@ -109,6 +114,7 @@ export function AppMobileShell({
               <p className="text-[10px] text-gray-500 truncate">{clubName}</p>
             )}
           </div>
+          {showUsageGuide && <UsageGuideLauncher variant="header" />}
         </div>
       </div>
       <div className="hidden lg:block">
@@ -116,12 +122,13 @@ export function AppMobileShell({
           title={title}
           notificationCount={notificationCount}
           notifications={notifications}
+          showUsageGuide={showUsageGuide}
         />
       </div>
       <MobileMenuDrawer
         open={menuOpen}
         onClose={() => setMenuOpen(false)}
-        title="Rotary Minutes"
+        title={appName}
         subtitle={clubName}
         items={drawerItems}
         footer={

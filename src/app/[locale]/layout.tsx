@@ -11,6 +11,9 @@ import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import { CookieBanner } from "@/components/analytics/cookie-banner";
 import { AnalyticsConfigHydrator } from "@/components/analytics/analytics-config-hydrator";
 import { getEnvAnalyticsConfig } from "@/lib/analytics-env";
+import { getAppBranding } from "@/lib/app-settings";
+import { patchMessagesWithBranding } from "@/lib/i18n-branding";
+import { AppBrandingProvider } from "@/components/brand/app-branding-provider";
 import "../globals.css";
 
 export async function generateMetadata({
@@ -19,11 +22,12 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
+  const { appName } = await getAppBranding();
   return {
     manifest: `/${locale}/manifest.webmanifest`,
     appleWebApp: {
       capable: true,
-      title: "Rotary Minutes",
+      title: appName,
       statusBarStyle: "default",
     },
   };
@@ -44,7 +48,8 @@ export default async function LocaleLayout({
   if (!locales.includes(locale as Locale)) notFound();
 
   setRequestLocale(locale);
-  const messages = await getMessages();
+  const branding = await getAppBranding();
+  const messages = patchMessagesWithBranding(await getMessages(), branding);
   const { measurementId, enabled: analyticsEnabled } = getEnvAnalyticsConfig();
 
   return (
@@ -52,15 +57,17 @@ export default async function LocaleLayout({
       <body className="min-h-screen antialiased">
         <GoogleAnalyticsConsentDefault enabled />
         <NextIntlClientProvider messages={messages}>
-          <AnalyticsConfigProvider measurementId={measurementId} enabled={analyticsEnabled}>
-            <AnalyticsConfigHydrator />
-            <CookieConsentProvider>
-              <GoogleAnalytics />
-              <CookieBanner />
-              <RegisterSW />
-              {children}
-            </CookieConsentProvider>
-          </AnalyticsConfigProvider>
+          <AppBrandingProvider branding={branding}>
+            <AnalyticsConfigProvider measurementId={measurementId} enabled={analyticsEnabled}>
+              <AnalyticsConfigHydrator />
+              <CookieConsentProvider>
+                <GoogleAnalytics />
+                <CookieBanner />
+                <RegisterSW />
+                {children}
+              </CookieConsentProvider>
+            </AnalyticsConfigProvider>
+          </AppBrandingProvider>
         </NextIntlClientProvider>
       </body>
     </html>

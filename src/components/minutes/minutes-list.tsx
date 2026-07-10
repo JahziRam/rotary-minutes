@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Search, FileText } from "lucide-react";
+import { GuidedEmptyStateClient } from "@/components/assistance/guided-empty-state-client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getMinuteStatusLabel, getMinuteStatusVariant } from "@/lib/minute-status";
@@ -140,7 +141,7 @@ export function MinutesList({
 
       <div className="space-y-3">
         {minutes.length === 0 ? (
-          <p className="text-gray-500 text-sm text-center py-12">{t("common.noResults")}</p>
+          <GuidedEmptyStateClient stateKey="minutes" />
         ) : (
           minutes.map((pv) => (
             <Link key={pv.id} href={`/${locale}/minutes/${pv.id}`}>

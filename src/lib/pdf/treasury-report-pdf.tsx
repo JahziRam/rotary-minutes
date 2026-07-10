@@ -78,6 +78,7 @@ export interface TreasuryReportPDFData {
     amountClass: "income" | "expense";
   }>;
   locale: string;
+  appName: string;
 }
 
 export function TreasuryReportPDFDocument({ data }: { data: TreasuryReportPDFData }) {
@@ -138,7 +139,7 @@ export function TreasuryReportPDFDocument({ data }: { data: TreasuryReportPDFDat
         ))}
 
         <Text style={styles.footer}>
-          Rotary Minutes · {isFr ? "Document généré automatiquement" : "Auto-generated document"}
+          {data.appName} · {isFr ? "Document généré automatiquement" : "Auto-generated document"}
         </Text>
       </Page>
     </Document>

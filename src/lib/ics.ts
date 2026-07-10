@@ -7,6 +7,11 @@ export {
 } from "@/lib/calendar-ics";
 
 import type { UnifiedCalendarEvent } from "@/lib/queries/calendar";
+import { DEFAULT_APP_NAME } from "@/lib/app-settings";
+
+function icsProdId(appName: string = DEFAULT_APP_NAME): string {
+  return `PRODID:-//${appName}//FR`;
+}
 
 function formatIcsDate(date: Date): string {
   return date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
@@ -22,7 +27,8 @@ function escapeIcs(text: string): string {
 
 export function generateUnifiedCalendarIcs(
   events: UnifiedCalendarEvent[],
-  calendarName: string
+  calendarName: string,
+  appName: string = DEFAULT_APP_NAME
 ): string {
   const vevents = events.map((event) => {
     const start = event.startAt;
@@ -50,7 +56,7 @@ export function generateUnifiedCalendarIcs(
   return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Rotary Minutes//FR",
+    icsProdId(appName),
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     `X-WR-CALNAME:${escapeIcs(calendarName)}`,

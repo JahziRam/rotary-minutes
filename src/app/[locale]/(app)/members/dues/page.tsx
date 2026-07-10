@@ -6,6 +6,7 @@ import { isFeatureEnabled } from "@/lib/feature-gate";
 import { listMemberDues } from "@/actions/dues";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { DuesPanel } from "@/components/members/dues-panel";
+import { PageAssistance } from "@/components/assistance/page-assistance";
 
 export default async function MemberDuesPage({
   params,
@@ -28,6 +29,7 @@ export default async function MemberDuesPage({
   return (
     <AppShellServer title={t("title")}>
       <div className="space-y-4">
+        <PageAssistance hints={["dues_intro", "dues_record_action"]} />
         <Link href={`/${locale}/members`} className="text-sm text-navy hover:underline">
           ← {t("backToMembers")}
         </Link>

@@ -4,6 +4,7 @@ import { AppShellServer } from "@/components/layout/app-shell-server";
 import { FeatureUnavailable } from "@/components/layout/feature-unavailable";
 import { EventsList } from "@/components/events/events-list";
 import { getClubContext } from "@/lib/club-context";
+import { PageAssistance } from "@/components/assistance/page-assistance";
 
 export default async function EventsPage({
   params,
@@ -37,6 +38,7 @@ export default async function EventsPage({
 
   return (
     <AppShellServer title={t("title")}>
+      <PageAssistance hints={["events_intro", "events_create_action"]} />
       <EventsList events={data.events} canManage={data.canManage} locale={locale} />
     </AppShellServer>
   );
