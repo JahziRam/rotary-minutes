@@ -16,7 +16,14 @@ export async function getClubAnnualAttendance(clubId: string) {
   for (const meeting of meetings) {
     for (const a of meeting.attendances) {
       totalSlots++;
-      if (a.category === "PRESENT") totalPresent++;
+      if (
+        a.category === "PRESENT" ||
+        a.category === "TRAVEL_RETURN" ||
+        a.category === "EXTERNAL_ATTENDANCE" ||
+        a.category === "TRAVELING"
+      ) {
+        totalPresent++;
+      }
     }
   }
 

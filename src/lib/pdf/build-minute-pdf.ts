@@ -82,7 +82,9 @@ export async function buildMinutePdfData(
   const memberAttendances = minute.meeting.attendances.filter((a) =>
     (MEMBER_ATTENDANCE_CATEGORIES as readonly string[]).includes(a.category)
   );
-  const present = memberAttendances.filter((a) => a.category === "PRESENT").length;
+  const present = memberAttendances.filter(
+    (a) => a.category === "PRESENT" || a.category === "TRAVEL_RETURN"
+  ).length;
   const total = memberAttendances.length;
   const rate = computeRecordedAttendanceRate(memberAttendances) ?? 0;
 

@@ -64,6 +64,7 @@ export default async function LiveMeetingPage({
         <UnifiedAttendanceSheet
           members={members}
           meetingId={meeting.id}
+          minuteId={meeting.minute?.id}
           initialEntries={initialEntries}
         />
         </div>

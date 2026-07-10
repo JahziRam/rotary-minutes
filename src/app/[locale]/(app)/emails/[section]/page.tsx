@@ -7,7 +7,6 @@ import { FeatureUnavailable } from "@/components/layout/feature-unavailable";
 import { ContactsManager } from "@/components/emails/contacts-manager";
 import { TemplatesPanel } from "@/components/emails/templates-panel";
 import { ComposeForm } from "@/components/emails/compose-form";
-import { CampaignsList } from "@/components/emails/campaigns-list";
 import { HistoryList } from "@/components/emails/history-list";
 import { requireFeature } from "@/lib/require-feature";
 import { hasRolePermission } from "@/lib/roles";
@@ -16,12 +15,12 @@ import {
   getEmailContacts,
   getEmailGroups,
   getEmailTemplates,
-  getEmailCampaigns,
   getEmailHistory,
 } from "@/lib/queries/emails";
 import { ensureEmailSystemTemplates } from "@/lib/email-system-templates";
 
-const VALID = ["compose", "templates", "campaigns", "contacts", "history"] as const;
+/** "campaigns" is intentionally omitted — section hidden from product UI. */
+const VALID = ["compose", "templates", "contacts", "history"] as const;
 
 export default async function EmailSectionPage({
   params,
@@ -85,11 +84,6 @@ export default async function EmailSectionPage({
           emailEnabled={emailEnabled}
         />
       );
-      break;
-    }
-    case "campaigns": {
-      const campaigns = await getEmailCampaigns(ctx.clubId);
-      content = <CampaignsList campaigns={campaigns} canSend={canSend} locale={locale} />;
       break;
     }
     case "history": {

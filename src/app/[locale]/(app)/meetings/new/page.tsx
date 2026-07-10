@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getClubContext } from "@/lib/club-context";
 import { getLastMeetingDefaults } from "@/actions/meetings";
+import { getAgendaTemplateForMeeting } from "@/lib/minute-templates";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { MeetingForm } from "@/components/meetings/meeting-form";
 
@@ -18,6 +19,9 @@ export default async function NewMeetingPage({
   const ctx = await getClubContext(true);
 
   const lastMeeting = ctx ? await getLastMeetingDefaults(ctx.clubId) : null;
+  const initialAgenda = ctx
+    ? await getAgendaTemplateForMeeting("STATUTORY", locale, ctx.clubId)
+    : [];
 
   return (
     <AppShellServer title={t("meetings.new")}>
@@ -27,6 +31,7 @@ export default async function NewMeetingPage({
           members={ctx.club.members ?? []}
           lastMeeting={lastMeeting}
           fromLast={from === "last"}
+          initialAgenda={initialAgenda}
         />
       ) : (
         <p className="text-gray-500">Accès non autorisé</p>

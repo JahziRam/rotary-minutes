@@ -16,6 +16,7 @@ import {
 
 const MANDATE_PRESENT_CATEGORIES = new Set([
   "PRESENT",
+  "TRAVEL_RETURN",
   "EXTERNAL_ATTENDANCE",
   "TRAVELING",
 ]);
@@ -194,7 +195,9 @@ export async function getMyAccountData() {
     paid: member.memberDues.filter((d) => d.status === "PAID"),
   };
 
-  const presentCount = member.attendances.filter((a) => a.category === "PRESENT").length;
+  const presentCount = member.attendances.filter(
+    (a) => a.category === "PRESENT" || a.category === "TRAVEL_RETURN"
+  ).length;
   const attendanceRate = computeRecordedAttendanceRate(member.attendances);
   const mandateAttendance = computeMandateAttendance(mandateMeetings);
   const locale = ctx.club.language === "EN" ? "en" : "fr";

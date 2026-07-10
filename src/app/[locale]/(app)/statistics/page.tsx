@@ -75,7 +75,9 @@ export default async function StatisticsPage({
       if (!a.memberId) continue;
       if (!memberAttendance[a.memberId]) memberAttendance[a.memberId] = { present: 0, total: 0 };
       memberAttendance[a.memberId].total++;
-      if (a.category === "PRESENT") memberAttendance[a.memberId].present++;
+      if (a.category === "PRESENT" || a.category === "TRAVEL_RETURN") {
+        memberAttendance[a.memberId].present++;
+      }
     }
   }
 
@@ -83,7 +85,9 @@ export default async function StatisticsPage({
     const monthMeetings = meetings.filter((m) => m.date.getMonth() === i);
     let p = 0, tot = 0;
     for (const m of monthMeetings) {
-      p += m.attendances.filter((a) => a.category === "PRESENT").length;
+      p += m.attendances.filter(
+        (a) => a.category === "PRESENT" || a.category === "TRAVEL_RETURN"
+      ).length;
       tot += m.attendances.length;
     }
     return tot > 0 ? Math.round((p / tot) * 100) : 0;

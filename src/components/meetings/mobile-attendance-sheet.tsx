@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useTranslations } from "next-intl";
-import { Save, UserCheck, UserPlus } from "lucide-react";
+import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
+import { FileText, Save, UserCheck, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Toast } from "@/components/ui/toast";
 import { saveMeetingAttendance, type AttendanceEntry } from "@/actions/attendance";
+import { isAttendancePresent } from "@/lib/rotary";
 import { cn } from "@/lib/utils";
 
 const MEMBER_CATEGORIES = [
@@ -40,14 +42,18 @@ interface GuestRow {
 export function MobileAttendanceSheet({
   members,
   meetingId,
+  minuteId,
   initialEntries = [],
 }: {
   members: MemberOption[];
   meetingId: string;
+  /** Linked minute for "start PV notes" after save */
+  minuteId?: string | null;
   initialEntries?: AttendanceEntry[];
 }) {
   const t = useTranslations("attendance");
   const tCommon = useTranslations("common");
+  const locale = useLocale();
   const [selected, setSelected] = useState<Record<string, string>>(() => {
     const map: Record<string, string> = {};
     for (const e of initialEntries) {
@@ -66,6 +72,7 @@ export function MobileAttendanceSheet({
   );
   const [pending, startTransition] = useTransition();
   const [toast, setToast] = useState<string | null>(null);
+  const [saved, setSaved] = useState(initialEntries.length > 0);
 
   const categoryLabels: Record<string, string> = {
     PRESENT: t("present"),
@@ -80,8 +87,11 @@ export function MobileAttendanceSheet({
     VISITOR: t("visitor"),
   };
 
-  const present = Object.values(selected).filter((c) => c === "PRESENT").length;
+  const present = Object.values(selected).filter((c) => isAttendancePresent(c)).length;
   const marked = Object.keys(selected).length;
+  const minuteHref = minuteId
+    ? `/${locale}/minutes/${minuteId}/edit`
+    : `/${locale}/meetings/${meetingId}/live`;
 
   function handleSave() {
     const attendances: AttendanceEntry[] = [
@@ -96,7 +106,10 @@ export function MobileAttendanceSheet({
     ];
     startTransition(async () => {
       const result = await saveMeetingAttendance(meetingId, attendances);
-      if (result.success) setToast(tCommon("save") + " ✓");
+      if (result.success) {
+        setSaved(true);
+        setToast(tCommon("save") + " ✓");
+      }
     });
   }
 
@@ -117,7 +130,7 @@ export function MobileAttendanceSheet({
             {marked}/{members.length}
           </span>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button variant="outline" size="sm" onClick={markAllPresent} disabled={pending}>
             <UserCheck className="h-4 w-4" />
             {t("markAllPresent")}
@@ -128,6 +141,22 @@ export function MobileAttendanceSheet({
           </Button>
         </div>
       </div>
+
+      {saved && (
+        <div className="rounded-xl border border-navy/20 bg-navy/5 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <p className="font-medium text-sm text-gray-900">{t("startMinuteTitle")}</p>
+            <p className="text-xs text-gray-500 mt-0.5">{t("startMinuteHint")}</p>
+          </div>
+          <Link
+            href={minuteHref}
+            className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-lg text-sm font-semibold bg-gold text-navy-dark hover:bg-gold-light transition-colors shrink-0"
+          >
+            <FileText className="h-4 w-4" />
+            {t("startMinute")}
+          </Link>
+        </div>
+      )}
 
       <div className="space-y-2">
         {members.map((member) => (
@@ -147,7 +176,7 @@ export function MobileAttendanceSheet({
                   className={cn(
                     "px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors min-h-[36px]",
                     selected[member.id] === cat
-                      ? cat === "PRESENT"
+                      ? isAttendancePresent(cat)
                         ? "bg-green-100 text-green-800 ring-1 ring-green-300"
                         : "bg-navy/10 text-navy ring-1 ring-navy/20"
                       : "bg-gray-50 text-gray-500 hover:bg-gray-100"

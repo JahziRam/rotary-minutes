@@ -13,7 +13,7 @@ import { logoSrcFromResult, resolveLogoForEmail } from "@/lib/email-logo";
 function revalidateEmails() {
   for (const loc of ["fr", "en"]) {
     revalidatePath(`/${loc}/emails`);
-    for (const section of ["compose", "templates", "campaigns", "contacts", "history"]) {
+    for (const section of ["compose", "templates", "contacts", "history"]) {
       revalidatePath(`/${loc}/emails/${section}`);
     }
     revalidatePath(`/${loc}/dashboard`);

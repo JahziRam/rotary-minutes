@@ -433,7 +433,7 @@ export function DemoEmailsPanel({ locale }: { locale: string }) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-1 border-b border-gray-200 pb-2">
-        {["compose", "templates", "campaigns", "contacts"].map((s) => (
+        {["compose", "templates", "contacts"].map((s) => (
           <span
             key={s}
             className={`rounded-lg px-3 py-1.5 text-xs font-medium ${

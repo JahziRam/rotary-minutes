@@ -9,6 +9,150 @@ import { getAgendaTemplateForMeeting } from "@/lib/minute-templates";
 import { sendClubEmail } from "@/lib/club-smtp";
 import { prepareBrandedEmail } from "@/lib/email-branding";
 import { icsAttachment } from "@/lib/ics";
+import { isFeatureEnabled } from "@/lib/feature-gate";
+
+/** Parse YYYY-MM-DD as local calendar date (noon) to avoid UTC day-shift. */
+export function parseLocalDate(dateStr: string): Date {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr.trim());
+  if (match) {
+    const year = Number(match[1]);
+    const month = Number(match[2]) - 1;
+    const day = Number(match[3]);
+    return new Date(year, month, day, 12, 0, 0, 0);
+  }
+  return new Date(dateStr);
+}
+
+function revalidateMeetingPaths(locale: string, meetingId?: string) {
+  for (const loc of ["fr", "en", "es"]) {
+    revalidatePath(`/${loc}/meetings`);
+    revalidatePath(`/${loc}/dashboard`);
+    if (meetingId) {
+      revalidatePath(`/${loc}/meetings/${meetingId}/attendance`);
+      revalidatePath(`/${loc}/meetings/${meetingId}/live`);
+    }
+  }
+  revalidatePath(`/${locale}/meetings`);
+}
+
+export type AgendaDraftItem = {
+  title: string;
+  description?: string | null;
+  status?: string;
+};
+
+function parseAgendaFromForm(data: Record<string, string>): AgendaDraftItem[] | null {
+  const raw = data.agendaItems?.trim();
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return null;
+    const items: AgendaDraftItem[] = [];
+    for (const item of parsed) {
+      if (!item || typeof item !== "object") continue;
+      const row = item as Record<string, unknown>;
+      const title = typeof row.title === "string" ? row.title.trim() : "";
+      if (!title) continue;
+      items.push({
+        title,
+        description:
+          typeof row.description === "string" && row.description.trim()
+            ? row.description.trim()
+            : null,
+        status: typeof row.status === "string" ? row.status : "OPEN",
+      });
+    }
+    return items.length > 0 ? items : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Returns the agenda template for a meeting type (club/district/system). */
+export async function fetchAgendaTemplate(meetingType: string, locale: string) {
+  const auth = await requirePermission("meetings.create");
+  if (auth.error) return { error: auth.error, items: [] as AgendaDraftItem[] };
+  const type = (meetingType as MeetingType) || "STATUTORY";
+  const items = await getAgendaTemplateForMeeting(type, locale, auth.ctx.clubId);
+  return { items };
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function formatMeetingDate(date: Date, locale: string) {
+  if (locale === "en") return date.toLocaleDateString("en-GB");
+  if (locale === "es") return date.toLocaleDateString("es-ES");
+  return date.toLocaleDateString("fr-FR");
+}
+
+async function buildMeetingInvitationEmail(params: {
+  club: { id: string; name: string; logoUrl?: string | null };
+  meeting: {
+    id: string;
+    title?: string | null;
+    date: Date;
+    location?: string | null;
+    startTime?: string | null;
+    endTime?: string | null;
+  };
+  clubName: string;
+  locale: string;
+  agendaTitles?: string[];
+}) {
+  const { club, meeting, locale, agendaTitles = [] } = params;
+  const ics = icsAttachment({
+    id: meeting.id,
+    title: meeting.title,
+    date: meeting.date,
+    location: meeting.location,
+    startTime: meeting.startTime,
+    endTime: meeting.endTime,
+    clubName: params.clubName,
+  });
+  const { getAppBaseUrl } = await import("@/lib/app-url");
+  const baseUrl = getAppBaseUrl();
+  const agendaHtml =
+    agendaTitles.length > 0
+      ? `<ol>${agendaTitles.map((title) => `<li>${escapeHtml(title)}</li>`).join("")}</ol>`
+      : "";
+  const when = formatMeetingDate(meeting.date, locale);
+  const timePart = meeting.startTime ? ` — ${meeting.startTime}` : "";
+  const locationPart = meeting.location
+    ? locale === "fr"
+      ? `<p><strong>Lieu :</strong> ${escapeHtml(meeting.location)}</p>`
+      : locale === "es"
+        ? `<p><strong>Lugar:</strong> ${escapeHtml(meeting.location)}</p>`
+        : `<p><strong>Location:</strong> ${escapeHtml(meeting.location)}</p>`
+    : "";
+  const body =
+    locale === "fr"
+      ? `<p>Vous êtes convoqué(e) à la réunion du <strong>${when}${timePart}</strong>.</p>${locationPart}${agendaHtml ? `<p><strong>Ordre du jour</strong></p>${agendaHtml}` : ""}`
+      : locale === "es"
+        ? `<p>Está convocado/a a la reunión del <strong>${when}${timePart}</strong>.</p>${locationPart}${agendaHtml ? `<p><strong>Orden del día</strong></p>${agendaHtml}` : ""}`
+        : `<p>You are invited to the meeting on <strong>${when}${timePart}</strong>.</p>${locationPart}${agendaHtml ? `<p><strong>Agenda</strong></p>${agendaHtml}` : ""}`;
+
+  const branded = await prepareBrandedEmail(body, {
+    clubName: club.name,
+    clubId: club.id,
+    logoUrl: club.logoUrl,
+    baseUrl,
+  });
+
+  const subject =
+    locale === "fr"
+      ? `Convocation — ${club.name}`
+      : locale === "es"
+        ? `Convocatoria — ${club.name}`
+        : `Meeting invitation — ${club.name}`;
+
+  return { ...branded, subject, ics };
+}
 
 export async function createMeeting(
   data: Record<string, string>,
@@ -18,6 +162,7 @@ export async function createMeeting(
   if (auth.error) return { error: auth.error };
   const { ctx } = auth;
 
+  const mode = data.mode === "now" ? "now" : "scheduled";
   const typeMetadata: Record<string, string> = {};
   for (const [key, value] of Object.entries(data)) {
     if (
@@ -28,28 +173,47 @@ export async function createMeeting(
     }
   }
 
+  const now = new Date();
+  const liveEnabled = isFeatureEnabled(ctx.features, "liveMeetings", ctx.isSuperAdmin);
+  const meetingDate =
+    mode === "now"
+      ? now
+      : data.date
+        ? parseLocalDate(data.date)
+        : now;
+  const startTime =
+    mode === "now"
+      ? `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`
+      : data.startTime || ctx.club.meetingTime || undefined;
+
+  // Live only when mode is "now" AND the feature is available
+  const goLive = mode === "now" && liveEnabled;
+
   const meeting = await prisma.meeting.create({
     data: {
       clubId: ctx.clubId,
-      date: new Date(data.date),
+      date: meetingDate,
       location: data.location || ctx.club.meetingLocation,
-      startTime: data.startTime || ctx.club.meetingTime,
-      endTime: data.endTime || undefined,
+      startTime,
+      endTime: mode === "now" ? undefined : data.endTime || undefined,
       presidedBy: data.presidedBy || ctx.club.presidentName,
       secretary: data.secretary || ctx.club.secretaryName,
       type: (data.type as MeetingType) || "STATUTORY",
       typeMetadata: Object.keys(typeMetadata).length ? typeMetadata : undefined,
+      isLive: goLive,
     },
   });
 
   const meetingType = (data.type as MeetingType) || "STATUTORY";
-  const templateItems = await getAgendaTemplateForMeeting(meetingType, locale, ctx.clubId);
+  const formAgenda = parseAgendaFromForm(data);
+  const templateItems =
+    formAgenda ?? (await getAgendaTemplateForMeeting(meetingType, locale, ctx.clubId));
 
   await prisma.minute.create({
     data: {
       clubId: ctx.clubId,
       meetingId: meeting.id,
-      title: `PV — ${new Date(data.date).toLocaleDateString(locale === "en" ? "en-GB" : "fr-FR")}`,
+      title: `PV — ${formatMeetingDate(meetingDate, locale)}`,
       authorId: ctx.userId,
       agendaItems: {
         create: templateItems.map((item, i) => ({
@@ -61,39 +225,6 @@ export async function createMeeting(
       },
     },
   });
-
-  if (ctx.club.email) {
-    const ics = icsAttachment({
-      id: meeting.id,
-      title: meeting.title,
-      date: meeting.date,
-      location: meeting.location,
-      startTime: meeting.startTime,
-      endTime: meeting.endTime,
-      clubName: ctx.club.name,
-    });
-    const { getAppBaseUrl } = await import("@/lib/app-url");
-    const baseUrl = getAppBaseUrl();
-    const body =
-      locale === "fr"
-        ? `<p>Réunion planifiée le ${new Date(data.date).toLocaleDateString("fr-FR")}.</p>`
-        : `<p>Meeting scheduled on ${new Date(data.date).toLocaleDateString("en-GB")}.</p>`;
-    const branded = await prepareBrandedEmail(body, {
-      clubName: ctx.club.name,
-      clubId: ctx.club.id,
-      logoUrl: ctx.club.logoUrl,
-      baseUrl,
-    });
-    await sendClubEmail(ctx.clubId, {
-      to: ctx.club.email,
-      subject:
-        locale === "fr"
-          ? `Convocation — ${ctx.club.name}`
-          : `Meeting invitation — ${ctx.club.name}`,
-      html: branded.html,
-      attachments: [...(branded.attachments ?? []), ics],
-    });
-  }
 
   await prisma.auditLog.create({
     data: {
@@ -113,10 +244,128 @@ export async function createMeeting(
     location: meeting.location,
   });
 
-  revalidatePath(`/${locale}/meetings`);
-  revalidatePath(`/${locale}/dashboard`);
+  revalidateMeetingPaths(locale, meeting.id);
 
-  redirect(`/${locale}/meetings/${meeting.id}/attendance`);
+  if (mode === "now") {
+    // Live feature on → live room; otherwise attendance + CTA to start PV notes
+    if (goLive) {
+      redirect(`/${locale}/meetings/${meeting.id}/live`);
+    }
+    redirect(`/${locale}/meetings/${meeting.id}/attendance`);
+  }
+
+  // Scheduled: list view with invitation banner (not attendance)
+  redirect(`/${locale}/meetings?scheduled=${meeting.id}`);
+}
+
+/** Mark a scheduled meeting as live and open the live room. */
+export async function startLiveMeeting(meetingId: string, locale: string) {
+  const auth = await requirePermission("meetings.edit");
+  if (auth.error) return { error: auth.error };
+  const { ctx } = auth;
+
+  if (!isFeatureEnabled(ctx.features, "liveMeetings", ctx.isSuperAdmin)) {
+    return { error: "FEATURE_DISABLED" as const };
+  }
+
+  const meeting = await prisma.meeting.findFirst({
+    where: { id: meetingId, clubId: ctx.clubId },
+  });
+  if (!meeting) return { error: "NOT_FOUND" as const };
+
+  if (!meeting.isLive) {
+    await prisma.meeting.update({
+      where: { id: meetingId },
+      data: { isLive: true },
+    });
+  }
+
+  await prisma.auditLog.create({
+    data: {
+      clubId: ctx.clubId,
+      userId: ctx.userId,
+      action: "MEETING_LIVE_STARTED",
+      entity: "Meeting",
+      entityId: meetingId,
+    },
+  });
+
+  revalidateMeetingPaths(locale, meetingId);
+  redirect(`/${locale}/meetings/${meetingId}/live`);
+}
+
+/** Send meeting invitation (convocation) to club members with an email. */
+export async function sendMeetingInvitation(meetingId: string, locale: string) {
+  const auth = await requirePermission("meetings.create");
+  if (auth.error) return { error: auth.error };
+  const { ctx } = auth;
+
+  const meeting = await prisma.meeting.findFirst({
+    where: { id: meetingId, clubId: ctx.clubId },
+    include: {
+      minute: {
+        include: {
+          agendaItems: { orderBy: { sortOrder: "asc" }, select: { title: true } },
+        },
+      },
+    },
+  });
+  if (!meeting) return { error: "NOT_FOUND" as const };
+
+  const members = await prisma.member.findMany({
+    where: { clubId: ctx.clubId, isActive: true, email: { not: null } },
+    select: { email: true },
+  });
+  const recipients = [
+    ...new Set(
+      members
+        .map((m) => m.email?.trim().toLowerCase())
+        .filter((e): e is string => !!e && e.includes("@"))
+    ),
+  ];
+  if (ctx.club.email?.includes("@")) {
+    const clubEmail = ctx.club.email.trim().toLowerCase();
+    if (!recipients.includes(clubEmail)) recipients.push(clubEmail);
+  }
+
+  if (recipients.length === 0) {
+    return { error: "NO_RECIPIENTS" as const };
+  }
+
+  const email = await buildMeetingInvitationEmail({
+    club: ctx.club,
+    meeting,
+    clubName: ctx.club.name,
+    locale,
+    agendaTitles: meeting.minute?.agendaItems.map((i) => i.title) ?? [],
+  });
+
+  let sent = 0;
+  let failed = 0;
+  for (const to of recipients) {
+    const result = await sendClubEmail(ctx.clubId, {
+      to,
+      subject: email.subject,
+      html: email.html,
+      attachments: [...(email.attachments ?? []), email.ics],
+    });
+    if (result.ok) sent++;
+    else failed++;
+  }
+
+  await prisma.auditLog.create({
+    data: {
+      clubId: ctx.clubId,
+      userId: ctx.userId,
+      action: "MEETING_INVITATION_SENT",
+      entity: "Meeting",
+      entityId: meeting.id,
+      metadata: { sent, failed, recipients: recipients.length },
+    },
+  });
+
+  revalidateMeetingPaths(locale, meetingId);
+  return { success: true as const, sent, failed, recipients: recipients.length };
 }
 
 export async function getLastMeetingDefaults(clubId: string) {

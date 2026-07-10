@@ -1,11 +1,13 @@
 import { prisma } from "@/lib/prisma";
-import { getRotaryMandateYear, calculateAttendanceRate } from "@/lib/rotary";
+import {
+  getRotaryMandateYear,
+  calculateAttendanceRate,
+  isAttendancePresent,
+} from "@/lib/rotary";
 import type { MeetingType } from "@/generated/prisma/client";
 
-const PRESENT_CATEGORIES = new Set(["PRESENT", "EXTERNAL_ATTENDANCE", "TRAVELING"]);
-
 function isPresent(category: string): boolean {
-  return PRESENT_CATEGORIES.has(category);
+  return isAttendancePresent(category);
 }
 
 export type MemberAttendanceRate = {

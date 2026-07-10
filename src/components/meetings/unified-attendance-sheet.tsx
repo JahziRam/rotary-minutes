@@ -17,10 +17,12 @@ interface MemberOption {
 export function UnifiedAttendanceSheet({
   members,
   meetingId,
+  minuteId,
   initialEntries = [],
 }: {
   members: MemberOption[];
   meetingId: string;
+  minuteId?: string | null;
   initialEntries?: AttendanceEntry[];
 }) {
   const t = useTranslations("attendance");
@@ -34,6 +36,7 @@ export function UnifiedAttendanceSheet({
       <MobileAttendanceSheet
         members={members}
         meetingId={meetingId}
+        minuteId={minuteId}
         initialEntries={initialEntries}
       />
     </div>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Mail, FileText, Users, Send, Clock } from "lucide-react";
+import { FileText, Users, Send, Clock } from "lucide-react";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { FeatureUnavailable } from "@/components/layout/feature-unavailable";
 import { SmtpSettingsPanel } from "@/components/emails/smtp-settings-panel";
@@ -11,10 +11,10 @@ import { hasRolePermission } from "@/lib/roles";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageAssistance } from "@/components/assistance/page-assistance";
 
+/** Campaigns section is hidden from the UI (compose covers one-off sends). */
 const sections = [
   { key: "compose", icon: Send, href: "compose" },
   { key: "templates", icon: FileText, href: "templates" },
-  { key: "campaigns", icon: Mail, href: "campaigns" },
   { key: "contacts", icon: Users, href: "contacts" },
   { key: "history", icon: Clock, href: "history" },
 ] as const;

@@ -6,11 +6,17 @@ import { Save } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Toast } from "@/components/ui/toast";
-import { computeLiveAttendanceRate } from "@/lib/rotary";
+import { computeLiveAttendanceRate, isAttendancePresent } from "@/lib/rotary";
 import { saveMeetingAttendance } from "@/actions/attendance";
 import { cn } from "@/lib/utils";
 
-const CATEGORIES = ["PRESENT", "EXCUSED_ABSENT", "UNEXCUSED_ABSENT", "TRAVELING"] as const;
+const CATEGORIES = [
+  "PRESENT",
+  "EXCUSED_ABSENT",
+  "UNEXCUSED_ABSENT",
+  "TRAVELING",
+  "TRAVEL_RETURN",
+] as const;
 
 interface MemberOption {
   id: string;
@@ -33,7 +39,7 @@ export function AttendancePanel({
   const [pending, startTransition] = useTransition();
   const [toast, setToast] = useState<string | null>(null);
 
-  const present = Object.values(selected).filter((c) => c === "PRESENT").length;
+  const present = Object.values(selected).filter((c) => isAttendancePresent(c)).length;
   const marked = Object.keys(selected).length;
   const rate = computeLiveAttendanceRate(present, members.length);
 
@@ -42,6 +48,7 @@ export function AttendancePanel({
     EXCUSED_ABSENT: t("excusedAbsent"),
     UNEXCUSED_ABSENT: t("unexcusedAbsent"),
     TRAVELING: t("traveling"),
+    TRAVEL_RETURN: t("travelReturn"),
   };
 
   function handleSave() {
@@ -93,7 +100,9 @@ export function AttendancePanel({
                       className={cn(
                         "px-2 py-1 rounded text-xs transition-colors",
                         selected[member.id] === cat
-                          ? cat === "PRESENT" ? "bg-green-100 text-green-800" : "bg-navy/10 text-navy"
+                          ? isAttendancePresent(cat)
+                            ? "bg-green-100 text-green-800"
+                            : "bg-navy/10 text-navy"
                           : "bg-gray-100 text-gray-500 hover:bg-gray-200"
                       )}
                     >

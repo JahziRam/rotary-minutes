@@ -102,6 +102,13 @@ export async function saveMinute(
     })),
   });
 
+  if (minute.status === "DRAFT") {
+    await prisma.minute.update({
+      where: { id: minuteId },
+      data: { status: "IN_PROGRESS" },
+    });
+  }
+
   revalidateMinutePaths(minuteId);
   return { success: true };
 }

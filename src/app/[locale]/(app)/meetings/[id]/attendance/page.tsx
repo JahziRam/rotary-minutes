@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { format } from "date-fns";
-import { fr, enUS } from "date-fns/locale";
+import { fr, enUS, es } from "date-fns/locale";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { getClubContext } from "@/lib/club-context";
@@ -18,12 +18,17 @@ export default async function MeetingAttendancePage({
   const { locale, id } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("attendance");
+  const tMeetings = await getTranslations("meetings");
   const ctx = await getClubContext();
   if (!ctx) notFound();
 
   const meeting = await prisma.meeting.findFirst({
     where: { id, clubId: ctx.clubId },
-    include: { attendances: true, club: { select: { name: true } } },
+    include: {
+      attendances: true,
+      club: { select: { name: true } },
+      minute: { select: { id: true } },
+    },
   });
   if (!meeting) notFound();
 
@@ -39,7 +44,7 @@ export default async function MeetingAttendancePage({
     category: a.category,
   }));
 
-  const dateLocale = locale === "fr" ? fr : enUS;
+  const dateLocale = locale === "fr" ? fr : locale === "es" ? es : enUS;
 
   return (
     <AppShellServer title={t("title")}>
@@ -47,7 +52,7 @@ export default async function MeetingAttendancePage({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
             <Link href={`/${locale}/meetings`} className="text-sm text-navy hover:underline">
-              ← {locale === "fr" ? "Réunions" : "Meetings"}
+              ← {tMeetings("title")}
             </Link>
             <p className="font-semibold text-gray-900 mt-1">
               {format(meeting.date, "EEEE d MMMM yyyy", { locale: dateLocale })}
@@ -72,9 +77,11 @@ export default async function MeetingAttendancePage({
             <AttendanceQrPanel meetingId={meeting.id} />
           </div>
         </div>
+
         <UnifiedAttendanceSheet
           members={members}
           meetingId={meeting.id}
+          minuteId={meeting.minute?.id}
           initialEntries={initialEntries}
         />
       </div>

@@ -48,13 +48,34 @@ export function calculateAttendanceRate(
   return { present, absent, total, rate };
 }
 
+/**
+ * Categories that count as "present" for attendance rate.
+ * TRAVEL_RETURN (retour de voyage) counts as present, same as PRESENT.
+ */
+export const ATTENDANCE_PRESENT_CATEGORIES = new Set([
+  "PRESENT",
+  "TRAVEL_RETURN",
+  "EXTERNAL_ATTENDANCE",
+  "TRAVELING",
+]);
+
+export function isAttendancePresent(category: string): boolean {
+  return ATTENDANCE_PRESENT_CATEGORIES.has(category);
+}
+
 /** Taux basé sur les présences enregistrées (liste réunions, PV). */
 export function computeRecordedAttendanceRate(
   attendances: Array<{ category: string }>
 ): number | null {
   if (attendances.length === 0) return null;
-  const present = attendances.filter((a) => a.category === "PRESENT").length;
+  const present = attendances.filter((a) => isAttendancePresent(a.category)).length;
   return Math.round(calculateAttendanceRate(present, attendances.length).rate);
+}
+
+export function countPresentAttendances(
+  attendances: Array<{ category: string }>
+): number {
+  return attendances.filter((a) => isAttendancePresent(a.category)).length;
 }
 
 /** Taux en direct : présents / membres actifs du club. */

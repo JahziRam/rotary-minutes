@@ -57,7 +57,7 @@ export async function getMembersWithLowAttendance(
       const att = meeting.attendances.find((a) => a.memberId === member.id);
       if (att) {
         total++;
-        if (att.category === "PRESENT") present++;
+        if (att.category === "PRESENT" || att.category === "TRAVEL_RETURN") present++;
       }
     }
     if (total >= minMeetings) {
