@@ -7,7 +7,7 @@ export {
 } from "@/lib/calendar-ics";
 
 import type { UnifiedCalendarEvent } from "@/lib/queries/calendar";
-import { DEFAULT_APP_NAME } from "@/lib/app-settings";
+import { DEFAULT_APP_NAME } from "@/lib/app-branding-shared";
 
 function icsProdId(appName: string = DEFAULT_APP_NAME): string {
   return `PRODID:-//${appName}//FR`;

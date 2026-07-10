@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
-import { getAppBranding, splitAppBrandName } from "@/lib/app-settings";
+import { getAppBranding } from "@/lib/app-settings";
+import { splitAppBrandName } from "@/lib/app-branding-shared";
 
 export const runtime = "nodejs";
 export const size = { width: 1200, height: 630 };

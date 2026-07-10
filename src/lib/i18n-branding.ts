@@ -1,4 +1,4 @@
-import { DEFAULT_APP_NAME, type AppBranding } from "@/lib/app-settings";
+import { DEFAULT_APP_NAME, type AppBranding } from "@/lib/app-branding-shared";
 
 function replaceInMessages<T>(value: T, from: string, to: string): T {
   if (typeof value === "string") return value.replaceAll(from, to) as T;

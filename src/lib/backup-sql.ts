@@ -1,4 +1,4 @@
-import { DEFAULT_APP_NAME } from "@/lib/app-settings";
+import { DEFAULT_APP_NAME } from "@/lib/app-branding-shared";
 
 /** Known nested relation keys to process separately (not as scalar columns). */
 const RELATION_KEYS = new Set([

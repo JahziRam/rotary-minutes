@@ -1,4 +1,4 @@
-import { DEFAULT_APP_NAME } from "@/lib/app-settings";
+import { DEFAULT_APP_NAME } from "@/lib/app-branding-shared";
 
 /** Legal entity operating the SaaS platform (default product name). */
 export const COMPANY_LEGAL = {

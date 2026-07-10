@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, type ReactNode } from "react";
-import { DEFAULT_APP_NAME, type AppBranding } from "@/lib/app-settings";
+import { DEFAULT_APP_NAME, type AppBranding } from "@/lib/app-branding-shared";
 
 const AppBrandingContext = createContext<AppBranding>({
   appName: DEFAULT_APP_NAME,

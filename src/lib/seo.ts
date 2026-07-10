@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getAppBaseUrl } from "@/lib/app-url";
 import { locales, type Locale } from "@/i18n/config";
 
-import { DEFAULT_APP_NAME } from "@/lib/app-settings";
+import { DEFAULT_APP_NAME } from "@/lib/app-branding-shared";
 
 export function getSeoBaseUrl(): string {
   return getAppBaseUrl();

@@ -10,7 +10,7 @@ import type { ClubRole, SubscriptionPlan, SubscriptionStatus } from "@/generated
 import type { Permission } from "@/lib/permissions";
 import { getBillingSettings } from "@/lib/plans";
 import { shouldWarnStripePriceChange } from "@/lib/plans-stripe";
-import { DEFAULT_APP_NAME } from "@/lib/app-settings";
+import { DEFAULT_APP_NAME } from "@/lib/app-branding-shared";
 
 async function admin() {
   const session = await auth();

@@ -1,4 +1,5 @@
-import { getAppName, splitAppBrandName } from "@/lib/app-settings";
+import { getAppName } from "@/lib/app-settings";
+import { splitAppBrandName } from "@/lib/app-branding-shared";
 
 export async function AppBrandNameServer({
   className,

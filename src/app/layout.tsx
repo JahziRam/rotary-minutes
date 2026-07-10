@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DEFAULT_APP_NAME } from "@/lib/app-settings";
+import { DEFAULT_APP_NAME } from "@/lib/app-branding-shared";
 
 export const metadata: Metadata = {
   title: `${DEFAULT_APP_NAME} — Procès-verbaux modernes`,

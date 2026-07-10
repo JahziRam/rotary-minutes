@@ -9,7 +9,7 @@ import {
   getPlatformDefaultClubFeatures,
   type ClubFeatureSet,
 } from "@/lib/features";
-import { DEFAULT_APP_NAME } from "@/lib/app-settings";
+import { DEFAULT_APP_NAME } from "@/lib/app-branding-shared";
 
 function revalidateAdminPaths(locale: string) {
   for (const loc of ["fr", "en"]) {

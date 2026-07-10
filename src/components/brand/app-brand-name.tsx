@@ -1,8 +1,7 @@
 "use client";
 
-import { splitAppBrandName } from "@/lib/app-settings";
+import { splitAppBrandName } from "@/lib/app-branding-shared";
 import { useAppBranding } from "./app-branding-provider";
-import { cn } from "@/lib/utils";
 
 export function AppBrandName({
   name,
