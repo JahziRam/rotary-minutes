@@ -1,20 +1,16 @@
 "use client";
 
-import { useCallback, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { User } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  ListPagination,
-  ListToolbar,
-  useClientList,
-} from "@/components/ui/list-controls";
-import { matchesAny } from "@/lib/client-list";
+import { ServerListPagination } from "@/components/ui/list-controls";
 import { MemberDuesBadge } from "@/components/treasury/member-dues-badge";
 import { resolveMemberPhotoUrl } from "@/lib/media-url";
+import type { PaginatedResult } from "@/lib/server-list";
 
 export type MemberCard = {
   id: string;
@@ -37,39 +33,44 @@ export function MembersDirectory({
   members,
   locale,
   duesByMemberId,
+  initialQuery = "",
+  initialStatus = "all",
+  listParams,
 }: {
-  members: MemberCard[];
+  members: PaginatedResult<MemberCard>;
   locale: string;
   duesByMemberId?: Record<string, DuesBadge>;
+  initialQuery?: string;
+  initialStatus?: string;
+  listParams: Record<string, string | undefined>;
 }) {
   const t = useTranslations();
-  const [activeFilter, setActiveFilter] = useState<"all" | "active" | "inactive">(
-    "all"
-  );
+  const router = useRouter();
+  const basePath = `/${locale}/members`;
 
-  const filterFn = useCallback(
-    (m: MemberCard, q: string) => {
-      if (activeFilter === "active" && !m.isActive) return false;
-      if (activeFilter === "inactive" && m.isActive) return false;
-      return matchesAny(
-        [m.firstName, m.lastName, m.position, m.commissionName, m.email],
-        q
-      );
-    },
-    [activeFilter]
-  );
+  function applyFilters(fd: FormData) {
+    const params = new URLSearchParams();
+    const q = (fd.get("q") as string)?.trim();
+    const status = fd.get("status") as string;
+    if (q) params.set("q", q);
+    if (status && status !== "all") params.set("status", status);
+    router.push(`${basePath}?${params.toString()}`);
+  }
 
-  const { query, setQuery, page, setPage, pageSlice, filtered } = useClientList(
-    members,
-    filterFn,
-    12
-  );
-
-  if (members.length === 0) return null;
+  if (members.total === 0 && !initialQuery && initialStatus === "all") return null;
 
   return (
     <div className="space-y-4">
-      <ListToolbar query={query} onQueryChange={setQuery}>
+      <form action={applyFilters} className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="relative flex-1 min-w-[12rem] max-w-md">
+          <input
+            name="q"
+            type="search"
+            defaultValue={initialQuery}
+            placeholder={t("common.search")}
+            className="w-full h-10 px-3 rounded-lg border border-gray-200 bg-white text-sm focus:border-navy focus:outline-none focus:ring-2 focus:ring-navy/20"
+          />
+        </div>
         <div className="flex rounded-lg border border-gray-200 overflow-hidden text-xs font-medium">
           {(
             [
@@ -80,10 +81,11 @@ export function MembersDirectory({
           ).map(([key, label]) => (
             <button
               key={key}
-              type="button"
-              onClick={() => setActiveFilter(key)}
+              type="submit"
+              name="status"
+              value={key}
               className={`px-3 h-10 ${
-                activeFilter === key
+                initialStatus === key
                   ? "bg-navy text-white"
                   : "bg-white text-gray-600 hover:bg-gray-50"
               }`}
@@ -92,15 +94,19 @@ export function MembersDirectory({
             </button>
           ))}
         </div>
-      </ListToolbar>
+        <button
+          type="submit"
+          className="h-10 px-4 rounded-lg bg-navy text-white text-sm font-medium hover:bg-navy-light"
+        >
+          {t("common.filter")}
+        </button>
+      </form>
 
-      {filtered.length === 0 ? (
-        <p className="text-sm text-gray-500 text-center py-8">
-          {t("common.noResults")}
-        </p>
+      {members.items.length === 0 ? (
+        <p className="text-sm text-gray-500 text-center py-8">{t("common.noResults")}</p>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {pageSlice.items.map((member) => (
+          {members.items.map((member) => (
             <Link key={member.id} href={`/${locale}/members/${member.id}`}>
               <Card
                 className={`hover:shadow-md transition-shadow cursor-pointer h-full ${
@@ -111,8 +117,7 @@ export function MembersDirectory({
                   {member.photoUrl ? (
                     <Image
                       src={
-                        resolveMemberPhotoUrl(member.id, member.photoUrl) ??
-                        member.photoUrl
+                        resolveMemberPhotoUrl(member.id, member.photoUrl) ?? member.photoUrl
                       }
                       alt=""
                       width={40}
@@ -138,9 +143,7 @@ export function MembersDirectory({
                       <MemberDuesBadge dues={duesByMemberId[member.id] as never} />
                     )}
                     <Badge variant={member.isActive ? "success" : "muted"}>
-                      {member.isActive
-                        ? t("members.active")
-                        : t("members.inactive")}
+                      {member.isActive ? t("members.active") : t("members.inactive")}
                     </Badge>
                   </div>
                 </CardContent>
@@ -150,13 +153,14 @@ export function MembersDirectory({
         </div>
       )}
 
-      <ListPagination
-        page={page}
-        totalPages={pageSlice.totalPages}
-        total={pageSlice.total}
-        start={pageSlice.start}
-        end={pageSlice.end}
-        onPageChange={setPage}
+      <ServerListPagination
+        basePath={basePath}
+        page={members.page}
+        totalPages={members.totalPages}
+        total={members.total}
+        start={members.start}
+        end={members.end}
+        searchParams={listParams}
       />
     </div>
   );

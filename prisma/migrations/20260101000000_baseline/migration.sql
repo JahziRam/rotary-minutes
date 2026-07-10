@@ -1,0 +1,2 @@
+-- Baseline: schema déjà appliqué en production via `prisma db push` avant juillet 2026.
+-- Les nouvelles évolutions passent par des migrations incrémentales suivantes.

@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Plus } from "lucide-react";
 import { getClubContext } from "@/lib/club-context";
 import { searchMinutes } from "@/actions/minutes";
+import { parseListParams, listParamsToRecord } from "@/lib/server-list";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { MinutesList } from "@/components/minutes/minutes-list";
 
@@ -17,6 +18,7 @@ export default async function MinutesPage({
     type?: string;
     year?: string;
     archived?: string;
+    page?: string;
   }>;
 }) {
   const { locale } = await params;
@@ -25,6 +27,8 @@ export default async function MinutesPage({
   const t = await getTranslations();
   const ctx = await getClubContext();
 
+  const listParams = parseListParams({ q: sp.q, page: sp.page });
+
   const minutes = ctx
     ? await searchMinutes({
         q: sp.q,
@@ -32,8 +36,18 @@ export default async function MinutesPage({
         meetingType: sp.type,
         year: sp.year ? parseInt(sp.year, 10) : undefined,
         includeArchived: sp.archived === "1",
+        page: listParams.page,
+        pageSize: listParams.pageSize,
       })
-    : [];
+    : {
+        items: [],
+        total: 0,
+        page: 1,
+        pageSize: listParams.pageSize,
+        totalPages: 1,
+        start: 0,
+        end: 0,
+      };
 
   return (
     <AppShellServer title={t("minutes.title")}>
@@ -54,6 +68,13 @@ export default async function MinutesPage({
           initialType={sp.type ?? ""}
           initialYear={sp.year ?? ""}
           showArchived={sp.archived === "1"}
+          listParams={{
+            ...listParamsToRecord(listParams),
+            status: sp.status,
+            type: sp.type,
+            year: sp.year,
+            archived: sp.archived === "1" ? "1" : undefined,
+          }}
         />
       </div>
     </AppShellServer>

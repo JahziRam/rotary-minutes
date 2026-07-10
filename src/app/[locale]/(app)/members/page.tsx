@@ -7,8 +7,10 @@ import { hasRolePermission } from "@/lib/roles";
 import { prisma } from "@/lib/prisma";
 import { getUpcomingBirthdays } from "@/lib/queries/members";
 import { getMembersDuesOverview } from "@/lib/queries/dues-overview";
+import { searchMembersPaginated } from "@/lib/queries/members-list";
 import { getOfficerMandates } from "@/actions/mandates";
 import { getClubOnboarding } from "@/actions/onboarding";
+import { parseListParams, listParamsToRecord } from "@/lib/server-list";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { MembersDuesSummary } from "@/components/treasury/members-dues-summary";
 import { AddMemberForm } from "@/components/members/add-member-form";
@@ -21,28 +23,35 @@ import { GuidedEmptyState } from "@/components/assistance/guided-empty-state";
 
 export default async function MembersPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ q?: string; page?: string; status?: string }>;
 }) {
   const { locale } = await params;
+  const sp = await searchParams;
   setRequestLocale(locale);
   const t = await getTranslations();
   const tEmpty = await getTranslations("assistance.emptyStates.members");
   const ctx = await getClubContext();
   if (!ctx) return null;
 
+  const listParams = parseListParams({
+    q: sp.q,
+    page: sp.page,
+    status: sp.status,
+  });
+
   const showDues = isFeatureEnabled(ctx.features, "duesEnabled", ctx.isSuperAdmin);
   const canViewDues =
     showDues &&
     (await hasRolePermission(ctx.role, "dues.view", ctx.isSuperAdmin));
 
-  const [members, birthdays, mandates, onboarding, canManage, duesOverview] =
+  const [membersPage, activeCount, totalCount, birthdays, mandates, onboarding, canManage, duesOverview] =
     await Promise.all([
-      prisma.member.findMany({
-        where: { clubId: ctx.clubId },
-        include: { commission: true },
-        orderBy: [{ isActive: "desc" }, { lastName: "asc" }],
-      }),
+      searchMembersPaginated(ctx.clubId, listParams),
+      prisma.member.count({ where: { clubId: ctx.clubId, isActive: true } }),
+      prisma.member.count({ where: { clubId: ctx.clubId } }),
       getUpcomingBirthdays(ctx.clubId),
       getOfficerMandates(),
       getClubOnboarding(),
@@ -50,7 +59,7 @@ export default async function MembersPage({
       canViewDues ? getMembersDuesOverview(ctx.clubId) : Promise.resolve(null),
     ]);
 
-  const active = members.filter((m) => m.isActive);
+  const inactiveCount = totalCount - activeCount;
 
   return (
     <AppShellServer title={t("members.title")}>
@@ -74,9 +83,13 @@ export default async function MembersPage({
 
         <div className="flex flex-wrap justify-between items-center gap-3">
           <p className="text-sm text-gray-500">
-            {active.length} {t("members.active").toLowerCase()}
-            {members.length > active.length &&
-              ` · ${members.length - active.length} ${t("members.inactive").toLowerCase()}`}
+            {listParams.q || listParams.status
+              ? `${membersPage.total} ${t("common.results")}`
+              : `${activeCount} ${t("members.active").toLowerCase()}${
+                  inactiveCount > 0
+                    ? ` · ${inactiveCount} ${t("members.inactive").toLowerCase()}`
+                    : ""
+                }`}
           </p>
           <div className="flex items-center gap-2">
             {showDues && (
@@ -92,7 +105,7 @@ export default async function MembersPage({
           </div>
         </div>
 
-        {members.length === 0 ? (
+        {totalCount === 0 ? (
           <GuidedEmptyState
             locale={locale}
             icon={Users}
@@ -108,16 +121,10 @@ export default async function MembersPage({
           <MembersDirectory
             locale={locale}
             duesByMemberId={duesOverview?.duesByMemberId}
-            members={members.map((m) => ({
-              id: m.id,
-              firstName: m.firstName,
-              lastName: m.lastName,
-              photoUrl: m.photoUrl,
-              position: m.position,
-              isActive: m.isActive,
-              commissionName: m.commission?.name ?? null,
-              email: m.email,
-            }))}
+            members={membersPage}
+            initialQuery={sp.q ?? ""}
+            initialStatus={sp.status ?? "all"}
+            listParams={listParamsToRecord(listParams)}
           />
         )}
       </div>

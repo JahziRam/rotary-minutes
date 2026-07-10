@@ -94,6 +94,12 @@ enum BillingInterval {
   ANNUAL
 }
 
+enum SubscriptionPaymentKind {
+  CHECKOUT
+  INVOICE
+  REFUND
+}
+
 enum NotificationType {
   MEETING_REMINDER
   ACTION_REMINDER
@@ -431,6 +437,7 @@ model Club {
   webhooks        ClubWebhook[]
   memberDues      MemberDues[]
   duesPayments    DuesPayment[]
+  subscriptionPayments SubscriptionPayment[]
   budgetCategories BudgetCategory[]
   budgetEntries   BudgetEntry[]
   clubActions     ClubAction[]
@@ -837,6 +844,32 @@ model Subscription {
 
   club                 Club               @relation(fields: [clubId], references: [id], onDelete: Cascade)
   promoCode            PromoCode?         @relation(fields: [promoCodeId], references: [id], onDelete: SetNull)
+  payments             SubscriptionPayment[]
+}
+
+model SubscriptionPayment {
+  id                    String                  @id @default(cuid())
+  clubId                String
+  subscriptionId        String?
+  kind                  SubscriptionPaymentKind @default(INVOICE)
+  stripeInvoiceId       String?                 @unique
+  stripePaymentIntentId String?
+  stripeSessionId       String?
+  amountCents           Int
+  currency              String                  @default("EUR")
+  status                String
+  plan                  SubscriptionPlan?
+  billingInterval       BillingInterval?
+  paidAt                DateTime                @default(now())
+  metadata              Json?
+  createdAt             DateTime                @default(now())
+
+  club                  Club                    @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  subscription          Subscription?           @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+
+  @@index([clubId, paidAt])
+  @@index([paidAt])
+  @@index([subscriptionId])
 }
 
 // ─── District Dashboard ──────────────────────────────────────────────────────

@@ -522,9 +522,25 @@ export async function searchMinutes(filters: {
   meetingType?: string;
   year?: number;
   includeArchived?: boolean;
+  page?: number;
+  pageSize?: number;
 }) {
   const ctx = await getClubContext();
-  if (!ctx) return [];
+  if (!ctx) {
+    return {
+      items: [],
+      total: 0,
+      page: 1,
+      pageSize: filters.pageSize ?? 12,
+      totalPages: 1,
+      start: 0,
+      end: 0,
+    };
+  }
+
+  const page = Math.max(1, filters.page ?? 1);
+  const pageSize = Math.min(100, Math.max(1, filters.pageSize ?? 12));
+  const skip = (page - 1) * pageSize;
 
   const where: Prisma.MinuteWhereInput = {
     clubId: ctx.clubId,
@@ -558,17 +574,21 @@ export async function searchMinutes(filters: {
     };
   }
 
-  const rows = await prisma.minute.findMany({
-    where,
-    include: {
-      meeting: { select: { date: true, type: true } },
-      author: { select: { firstName: true, lastName: true } },
-    },
-    orderBy: { updatedAt: "desc" },
-    take: 200,
-  });
+  const [total, rows] = await Promise.all([
+    prisma.minute.count({ where }),
+    prisma.minute.findMany({
+      where,
+      include: {
+        meeting: { select: { date: true, type: true } },
+        author: { select: { firstName: true, lastName: true } },
+      },
+      orderBy: { updatedAt: "desc" },
+      skip,
+      take: pageSize,
+    }),
+  ]);
 
-  return rows.map((pv) => ({
+  const items = rows.map((pv) => ({
     id: pv.id,
     title: pv.title,
     status: pv.status,
@@ -576,6 +596,19 @@ export async function searchMinutes(filters: {
     meetingType: pv.meeting.type,
     authorName: pv.author ? `${pv.author.firstName} ${pv.author.lastName}` : undefined,
   }));
+
+  const totalPages = Math.max(1, Math.ceil(total / pageSize) || 1);
+  const safePage = Math.min(page, totalPages);
+
+  return {
+    items,
+    total,
+    page: safePage,
+    pageSize,
+    totalPages,
+    start: total === 0 ? 0 : (safePage - 1) * pageSize + 1,
+    end: Math.min(safePage * pageSize, total),
+  };
 }
 
 export async function duplicateMinute(minuteId: string, locale: string) {

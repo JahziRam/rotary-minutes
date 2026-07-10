@@ -33,6 +33,9 @@ import { fr, enUS } from "date-fns/locale";
 import { getAppName } from "@/lib/app-settings";
 import { getViewAsClubId } from "@/lib/view-as-club";
 import { ViewAsClubPicker } from "@/components/layout/view-as-club-picker";
+import { getMemberHubSummary } from "@/lib/queries/member-hub";
+import { getVapidPublicKey } from "@/lib/web-push";
+import { MemberMobileHub } from "@/components/member-portal/member-mobile-hub";
 
 export default async function DashboardPage({
   params,
@@ -119,6 +122,15 @@ export default async function DashboardPage({
       : [];
   const viewAsClubId = session?.user?.isSuperAdmin ? await getViewAsClubId() : null;
 
+  const memberPortalOn =
+    ctx && isFeatureEnabled(ctx.features, "memberPortalEnabled", ctx.isSuperAdmin);
+  const isReaderMember = ctx?.role === "READER" && !ctx.isSuperAdmin;
+  const memberHubSummary =
+    ctx && memberPortalOn && isReaderMember && session?.user?.id
+      ? await getMemberHubSummary(ctx.clubId, session.user.id)
+      : null;
+  const vapidPublicKey = memberHubSummary ? getVapidPublicKey() : null;
+
   return (
     <AppShellServer title={t("nav.dashboard")}>
       <div className="space-y-8">
@@ -150,6 +162,14 @@ export default async function DashboardPage({
               newMinuteLabel={tDashboard("newMinute")}
               locale={locale}
             />
+
+            {memberHubSummary && (
+              <MemberMobileHub
+                locale={locale}
+                summary={memberHubSummary}
+                vapidPublicKey={vapidPublicKey}
+              />
+            )}
 
             {ctx && (
               <ClubHealthScorePanel clubId={ctx.clubId} locale={locale} />

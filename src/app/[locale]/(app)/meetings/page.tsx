@@ -6,8 +6,9 @@ import { prisma } from "@/lib/prisma";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { format } from "date-fns";
 import { fr, enUS, es } from "date-fns/locale";
-import { computeRecordedAttendanceRate } from "@/lib/rotary";
 import { isFeatureEnabled } from "@/lib/feature-gate";
+import { searchMeetingsPaginated } from "@/lib/queries/meetings-list";
+import { parseListParams, listParamsToRecord } from "@/lib/server-list";
 import { GuidedEmptyState } from "@/components/assistance/guided-empty-state";
 import { MeetingInvitationButton } from "@/components/meetings/meeting-invitation-button";
 import { MeetingsList } from "@/components/meetings/meetings-list";
@@ -17,10 +18,10 @@ export default async function MeetingsPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ scheduled?: string }>;
+  searchParams: Promise<{ scheduled?: string; q?: string; page?: string }>;
 }) {
   const { locale } = await params;
-  const { scheduled: scheduledId } = await searchParams;
+  const sp = await searchParams;
   setRequestLocale(locale);
   const t = await getTranslations();
   const tEmpty = await getTranslations("assistance.emptyStates.meetings");
@@ -30,59 +31,29 @@ export default async function MeetingsPage({
     ? isFeatureEnabled(ctx.features, "liveMeetings", ctx.isSuperAdmin)
     : false;
 
-  const meetings = ctx
-    ? await prisma.meeting.findMany({
-        where: { clubId: ctx.clubId },
-        include: {
-          attendances: true,
-          minute: {
-            select: {
-              id: true,
-              agendaItems: {
-                orderBy: { sortOrder: "asc" },
-                select: { id: true, title: true },
-              },
-            },
-          },
-          club: { select: { name: true } },
-        },
-        orderBy: { date: "desc" },
-      })
-    : [];
+  const listParams = parseListParams({ q: sp.q, page: sp.page }, 10);
 
-  const scheduledMeeting =
-    scheduledId && ctx
-      ? meetings.find((m) => m.id === scheduledId) ??
-        (await prisma.meeting.findFirst({
-          where: { id: scheduledId, clubId: ctx.clubId },
-          include: {
-            minute: {
-              select: {
-                agendaItems: {
-                  orderBy: { sortOrder: "asc" },
-                  select: { title: true },
+  const [meetingsPage, totalMeetings, scheduledMeeting] = ctx
+    ? await Promise.all([
+        searchMeetingsPaginated(ctx.clubId, listParams),
+        prisma.meeting.count({ where: { clubId: ctx.clubId } }),
+        sp.scheduled
+          ? prisma.meeting.findFirst({
+              where: { id: sp.scheduled, clubId: ctx.clubId },
+              include: {
+                minute: {
+                  select: {
+                    agendaItems: {
+                      orderBy: { sortOrder: "asc" },
+                      select: { title: true },
+                    },
+                  },
                 },
               },
-            },
-          },
-        }))
-      : null;
-
-  const listItems = meetings.map((meeting) => ({
-    id: meeting.id,
-    date: meeting.date.toISOString(),
-    type: meeting.type,
-    location: meeting.location,
-    presidedBy: meeting.presidedBy,
-    title: meeting.title,
-    startTime: meeting.startTime,
-    endTime: meeting.endTime,
-    isLive: meeting.isLive,
-    attendanceRate: computeRecordedAttendanceRate(meeting.attendances),
-    agendaTitles: meeting.minute?.agendaItems.map((item) => item.title) ?? [],
-    minuteId: meeting.minute?.id ?? null,
-    clubName: meeting.club.name,
-  }));
+            })
+          : Promise.resolve(null),
+      ])
+    : [{ items: [], total: 0, page: 1, pageSize: 10, totalPages: 1, start: 0, end: 0 }, 0, null];
 
   return (
     <AppShellServer title={t("meetings.title")}>
@@ -105,8 +76,7 @@ export default async function MeetingsPage({
                 {scheduledMeeting.startTime ? ` · ${scheduledMeeting.startTime}` : ""}
                 {scheduledMeeting.location ? ` · ${scheduledMeeting.location}` : ""}
               </p>
-              {"minute" in scheduledMeeting &&
-                scheduledMeeting.minute?.agendaItems &&
+              {scheduledMeeting.minute?.agendaItems &&
                 scheduledMeeting.minute.agendaItems.length > 0 && (
                   <p className="text-xs text-gray-500 mt-1 truncate">
                     <span className="font-medium text-gray-600">{t("meetings.agenda")}:</span>{" "}
@@ -123,7 +93,9 @@ export default async function MeetingsPage({
 
         <div className="flex items-center justify-between gap-4">
           <p className="text-gray-500 text-sm">
-            {meetings.length} {t("meetings.title").toLowerCase()}
+            {sp.q
+              ? `${meetingsPage.total} ${t("common.results")}`
+              : `${totalMeetings} ${t("meetings.title").toLowerCase()}`}
           </p>
           <div className="flex gap-2">
             <Link
@@ -142,7 +114,7 @@ export default async function MeetingsPage({
           </div>
         </div>
 
-        {meetings.length === 0 ? (
+        {totalMeetings === 0 ? (
           <GuidedEmptyState
             locale={locale}
             icon={Calendar}
@@ -154,10 +126,15 @@ export default async function MeetingsPage({
           />
         ) : (
           <MeetingsList
-            meetings={listItems}
+            meetings={meetingsPage}
             locale={locale}
             liveEnabled={liveEnabled}
-            scheduledId={scheduledId}
+            scheduledId={sp.scheduled}
+            initialQuery={sp.q ?? ""}
+            listParams={{
+              ...listParamsToRecord(listParams),
+              scheduled: sp.scheduled,
+            }}
           />
         )}
       </div>

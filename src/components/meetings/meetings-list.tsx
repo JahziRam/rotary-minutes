@@ -1,21 +1,17 @@
 "use client";
 
-import { useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { format, isSameDay, startOfDay } from "date-fns";
 import { fr, enUS, es } from "date-fns/locale";
-import { Calendar } from "lucide-react";
+import { Calendar, Search } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  ListPagination,
-  ListToolbar,
-  useClientList,
-} from "@/components/ui/list-controls";
-import { matchesAny } from "@/lib/client-list";
+import { ServerListPagination } from "@/components/ui/list-controls";
 import { CalendarExport } from "@/components/meetings/calendar-export";
 import { MeetingListActions } from "@/components/meetings/meeting-list-actions";
+import type { PaginatedResult } from "@/lib/server-list";
 
 export type MeetingListItem = {
   id: string;
@@ -38,51 +34,50 @@ export function MeetingsList({
   locale,
   liveEnabled,
   scheduledId,
+  initialQuery = "",
+  listParams,
 }: {
-  meetings: MeetingListItem[];
+  meetings: PaginatedResult<MeetingListItem>;
   locale: string;
   liveEnabled: boolean;
   scheduledId?: string | null;
+  initialQuery?: string;
+  listParams: Record<string, string | undefined>;
 }) {
   const t = useTranslations();
+  const router = useRouter();
   const dateLocale = locale === "fr" ? fr : locale === "es" ? es : enUS;
   const today = startOfDay(new Date());
+  const basePath = `/${locale}/meetings`;
 
-  const filterFn = useCallback(
-    (m: MeetingListItem, q: string) =>
-      matchesAny(
-        [
-          m.type,
-          m.location,
-          m.presidedBy,
-          m.title,
-          ...m.agendaTitles,
-          t(`meetings.types.${m.type}` as "meetings.types.STATUTORY"),
-        ],
-        q
-      ),
-    [t]
-  );
+  function applySearch(fd: FormData) {
+    const q = (fd.get("q") as string)?.trim();
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (scheduledId) params.set("scheduled", scheduledId);
+    router.push(`${basePath}?${params.toString()}`);
+  }
 
-  const { query, setQuery, page, setPage, pageSlice, filtered } = useClientList(
-    meetings,
-    filterFn,
-    10
-  );
-
-  if (meetings.length === 0) return null;
+  if (meetings.total === 0 && !initialQuery) return null;
 
   return (
     <div className="space-y-4">
-      <ListToolbar query={query} onQueryChange={setQuery} />
+      <form action={applySearch} className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+        <input
+          name="q"
+          type="search"
+          defaultValue={initialQuery}
+          placeholder={t("common.search")}
+          className="w-full h-10 pl-10 pr-3 rounded-lg border border-gray-200 bg-white text-sm focus:border-navy focus:outline-none focus:ring-2 focus:ring-navy/20"
+        />
+      </form>
 
-      {filtered.length === 0 ? (
-        <p className="text-sm text-gray-500 text-center py-8">
-          {t("common.noResults")}
-        </p>
+      {meetings.items.length === 0 ? (
+        <p className="text-sm text-gray-500 text-center py-8">{t("common.noResults")}</p>
       ) : (
         <div className="space-y-3">
-          {pageSlice.items.map((meeting) => {
+          {meetings.items.map((meeting) => {
             const meetingDate = new Date(meeting.date);
             const isToday = isSameDay(meetingDate, today);
             const isUpcomingOrToday = startOfDay(meetingDate) >= today;
@@ -181,13 +176,14 @@ export function MeetingsList({
         </div>
       )}
 
-      <ListPagination
-        page={page}
-        totalPages={pageSlice.totalPages}
-        total={pageSlice.total}
-        start={pageSlice.start}
-        end={pageSlice.end}
-        onPageChange={setPage}
+      <ServerListPagination
+        basePath={basePath}
+        page={meetings.page}
+        totalPages={meetings.totalPages}
+        total={meetings.total}
+        start={meetings.start}
+        end={meetings.end}
+        searchParams={listParams}
       />
     </div>
   );

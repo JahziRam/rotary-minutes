@@ -19,8 +19,11 @@ if [[ -z "${DIRECT_URL:-}" ]]; then
   echo ">>> WARNING: DIRECT_URL not set — db push will use DATABASE_URL (use db.prisma.io for migrations)"
 fi
 
-echo ">>> Prisma db push (schema sync)..."
-npx prisma db push --accept-data-loss
+echo ">>> Prisma migrate deploy..."
+if ! npx prisma migrate deploy; then
+  echo ">>> Migrate deploy failed — falling back to db push..."
+  npx prisma db push
+fi
 
 if [[ "${RUN_DB_SEED:-}" == "1" ]]; then
   echo ">>> Seeding database..."

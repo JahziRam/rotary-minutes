@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -8,11 +7,11 @@ import { Search, FileText } from "lucide-react";
 import { GuidedEmptyStateClient } from "@/components/assistance/guided-empty-state-client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ListPagination, useClientList } from "@/components/ui/list-controls";
-import { matchesAny } from "@/lib/client-list";
+import { ServerListPagination } from "@/components/ui/list-controls";
 import { getMinuteStatusLabel, getMinuteStatusVariant } from "@/lib/minute-status";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
+import type { PaginatedResult } from "@/lib/server-list";
 
 export interface MinuteListItem {
   id: string;
@@ -43,26 +42,21 @@ export function MinutesList({
   initialType = "",
   initialYear = "",
   showArchived = false,
+  listParams,
 }: {
-  minutes: MinuteListItem[];
+  minutes: PaginatedResult<MinuteListItem>;
   initialQuery?: string;
   initialStatus?: string;
   initialType?: string;
   initialYear?: string;
   showArchived?: boolean;
+  listParams: Record<string, string | undefined>;
 }) {
   const locale = useLocale();
   const router = useRouter();
   const t = useTranslations();
   const dateLocale = locale === "fr" ? fr : enUS;
   const base = `/${locale}/minutes`;
-
-  const filterFn = useCallback(
-    (pv: MinuteListItem, q: string) =>
-      matchesAny([pv.title, pv.status, pv.meetingType, pv.authorName], q),
-    []
-  );
-  const { page, setPage, pageSlice, filtered } = useClientList(minutes, filterFn, 12);
 
   function applyFilters(fd: FormData) {
     const params = new URLSearchParams();
@@ -150,12 +144,10 @@ export function MinutesList({
       </form>
 
       <div className="space-y-3">
-        {minutes.length === 0 ? (
+        {minutes.total === 0 ? (
           <GuidedEmptyStateClient stateKey="minutes" />
-        ) : filtered.length === 0 ? (
-          <p className="text-sm text-gray-500 py-6 text-center">{t("common.noResults")}</p>
         ) : (
-          pageSlice.items.map((pv) => (
+          minutes.items.map((pv) => (
             <Link key={pv.id} href={`/${locale}/minutes/${pv.id}`}>
               <Card className="hover:shadow-md transition-shadow cursor-pointer">
                 <CardContent className="p-4 flex items-center gap-4">
@@ -180,13 +172,14 @@ export function MinutesList({
         )}
       </div>
 
-      <ListPagination
-        page={page}
-        totalPages={pageSlice.totalPages}
-        total={pageSlice.total}
-        start={pageSlice.start}
-        end={pageSlice.end}
-        onPageChange={setPage}
+      <ServerListPagination
+        basePath={base}
+        page={minutes.page}
+        totalPages={minutes.totalPages}
+        total={minutes.total}
+        start={minutes.start}
+        end={minutes.end}
+        searchParams={listParams}
       />
     </div>
   );

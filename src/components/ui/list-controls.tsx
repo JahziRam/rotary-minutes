@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import {
@@ -8,6 +9,7 @@ import {
   paginateArray,
   type PageSlice,
 } from "@/lib/client-list";
+import { buildListQueryString } from "@/lib/server-list";
 import { cn } from "@/lib/utils";
 
 export function ListSearch({
@@ -156,6 +158,87 @@ export function ListToolbar({
     <div className={cn("flex flex-col sm:flex-row sm:items-center gap-3", className)}>
       <ListSearch value={query} onChange={onQueryChange} />
       {children}
+    </div>
+  );
+}
+
+/** URL-driven pagination for server-side lists. */
+export function ServerListPagination({
+  basePath,
+  page,
+  totalPages,
+  total,
+  start,
+  end,
+  searchParams,
+  className,
+}: {
+  basePath: string;
+  page: number;
+  totalPages: number;
+  total: number;
+  start: number;
+  end: number;
+  searchParams: Record<string, string | undefined>;
+  className?: string;
+}) {
+  const t = useTranslations("common");
+  if (total === 0) return null;
+
+  const prevHref =
+    page > 1
+      ? `${basePath}${buildListQueryString(searchParams, { page: String(page - 1) })}`
+      : undefined;
+  const nextHref =
+    page < totalPages
+      ? `${basePath}${buildListQueryString(searchParams, { page: String(page + 1) })}`
+      : undefined;
+
+  return (
+    <div
+      className={cn(
+        "flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-2",
+        className
+      )}
+    >
+      <p className="text-xs text-gray-500">
+        {t("listRange", { start, end, total })}
+      </p>
+      {totalPages > 1 && (
+        <div className="flex items-center gap-2">
+          {prevHref ? (
+            <Link
+              href={prevHref}
+              className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg border border-gray-200 bg-white text-xs font-medium text-gray-700 hover:bg-gray-50"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+              {t("previous")}
+            </Link>
+          ) : (
+            <span className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg border border-gray-200 bg-white text-xs font-medium text-gray-400 opacity-40 pointer-events-none">
+              <ChevronLeft className="h-3.5 w-3.5" />
+              {t("previous")}
+            </span>
+          )}
+          <span className="text-xs text-gray-600 tabular-nums">
+            {t("pageOf", { page, totalPages })}
+          </span>
+          {nextHref ? (
+            <Link
+              href={nextHref}
+              className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg border border-gray-200 bg-white text-xs font-medium text-gray-700 hover:bg-gray-50"
+            >
+              {t("next")}
+              <ChevronRight className="h-3.5 w-3.5" />
+            </Link>
+          ) : (
+            <span className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg border border-gray-200 bg-white text-xs font-medium text-gray-400 opacity-40 pointer-events-none">
+              {t("next")}
+              <ChevronRight className="h-3.5 w-3.5" />
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }

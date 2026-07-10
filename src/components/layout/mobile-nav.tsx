@@ -17,7 +17,7 @@ export function MobileNav({
   const locale = useLocale();
   const t = useTranslations("nav");
 
-  const items = getMobileTabItems().filter((item) => !hiddenNavKeys.includes(item.key));
+  const items = getMobileTabItems(hiddenNavKeys);
 
   if (pathname.includes("/admin")) return null;
 

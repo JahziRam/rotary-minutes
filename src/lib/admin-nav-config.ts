@@ -27,6 +27,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { key: "overview", href: "/admin", icon: LayoutDashboard, group: "overview", exact: true },
   { key: "clubs", href: "/admin/clubs", icon: Building2, group: "platform" },
   { key: "users", href: "/admin/users", icon: Users, group: "platform" },
+  { key: "billing", href: "/admin/billing", icon: CreditCard, group: "billing" },
   { key: "subscriptions", href: "/admin/subscriptions", icon: CreditCard, group: "billing" },
   { key: "roles", href: "/admin/roles", icon: Shield, group: "platform" },
   { key: "announcements", href: "/admin/announcements", icon: Megaphone, group: "platform" },

@@ -38,7 +38,7 @@ export const CLUB_NAV_ITEMS: ClubNavItem[] = [
   { key: "treasury", href: "/treasury", icon: Wallet },
   { key: "actions", href: "/actions", icon: CheckSquare },
   { key: "calendar", href: "/calendar", icon: CalendarDays },
-  { key: "myAccount", href: "/my-account", icon: UserCircle },
+  { key: "myAccount", href: "/my-account", icon: UserCircle, mobileTab: true },
   { key: "attendanceReports", href: "/attendance-reports", icon: ClipboardList },
   { key: "events", href: "/events", icon: PartyPopper },
   { key: "documents", href: "/documents", icon: FolderOpen },
@@ -48,6 +48,17 @@ export const CLUB_NAV_ITEMS: ClubNavItem[] = [
   { key: "support", href: "/support", icon: LifeBuoy },
 ];
 
-export function getMobileTabItems(): ClubNavItem[] {
-  return CLUB_NAV_ITEMS.filter((item) => item.mobileTab);
+export function getMobileTabItems(hiddenNavKeys: string[] = []): ClubNavItem[] {
+  const tabs = CLUB_NAV_ITEMS.filter((item) => item.mobileTab);
+  const visible = tabs.filter((item) => !hiddenNavKeys.includes(item.key));
+
+  if (visible.length <= 4) return visible.slice(0, 4);
+
+  if (hiddenNavKeys.includes("members") && !hiddenNavKeys.includes("myAccount")) {
+    return visible
+      .filter((item) => item.key !== "members")
+      .slice(0, 4);
+  }
+
+  return visible.slice(0, 4);
 }

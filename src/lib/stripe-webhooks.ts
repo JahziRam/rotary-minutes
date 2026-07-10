@@ -4,6 +4,7 @@ import {
   activateSubscriptionFromStripe,
   mapStripeSubscriptionStatus,
 } from "@/lib/stripe-checkout";
+import { recordSubscriptionPayment } from "@/lib/subscription-payments";
 import type { BillingInterval, SubscriptionPlan } from "@/generated/prisma/client";
 
 function parseMetadata(
@@ -62,6 +63,30 @@ export async function handleCheckoutSessionCompleted(
       },
     },
   });
+
+  const subscription = await prisma.subscription.findUnique({
+    where: { clubId: meta.clubId },
+    select: { id: true },
+  });
+
+  if (session.amount_total && session.amount_total > 0) {
+    await recordSubscriptionPayment({
+      clubId: meta.clubId,
+      subscriptionId: subscription?.id,
+      kind: "CHECKOUT",
+      stripeSessionId: session.id,
+      amountCents: session.amount_total,
+      currency: (session.currency ?? "eur").toUpperCase(),
+      status: session.payment_status ?? "paid",
+      plan: meta.planKey,
+      billingInterval: meta.billingInterval,
+      paidAt: new Date(),
+      metadata: {
+        customerEmail: session.customer_email,
+        mode: session.mode,
+      },
+    });
+  }
 }
 
 export async function handleSubscriptionUpdated(
@@ -144,6 +169,39 @@ export async function handleInvoicePaid(invoice: Stripe.Invoice): Promise<void> 
         status: "ACTIVE",
         currentPeriodEnd: periodEnd,
         cancelledAt: null,
+      },
+    });
+  }
+
+  const amountCents = invoice.amount_paid ?? invoice.total ?? 0;
+  const rawPaymentIntent = (
+    invoice as Stripe.Invoice & {
+      payment_intent?: string | Stripe.PaymentIntent | null;
+    }
+  ).payment_intent;
+  const paymentIntentId =
+    typeof rawPaymentIntent === "string"
+      ? rawPaymentIntent
+      : rawPaymentIntent?.id;
+
+  if (amountCents > 0) {
+    await recordSubscriptionPayment({
+      clubId: sub.clubId,
+      subscriptionId: sub.id,
+      kind: "INVOICE",
+      stripeInvoiceId: invoice.id,
+      stripePaymentIntentId: paymentIntentId,
+      amountCents,
+      currency: (invoice.currency ?? "eur").toUpperCase(),
+      status: invoice.status ?? "paid",
+      plan: sub.plan,
+      billingInterval: sub.billingInterval,
+      paidAt: invoice.status_transitions?.paid_at
+        ? new Date(invoice.status_transitions.paid_at * 1000)
+        : new Date(),
+      metadata: {
+        invoiceNumber: invoice.number,
+        billingReason: invoice.billing_reason,
       },
     });
   }

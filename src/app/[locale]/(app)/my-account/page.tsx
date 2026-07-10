@@ -7,6 +7,9 @@ import { AppShellServer } from "@/components/layout/app-shell-server";
 import { FeatureUnavailable } from "@/components/layout/feature-unavailable";
 import { MyAccountPanel } from "@/components/member-portal/my-account-panel";
 import { PageAssistance } from "@/components/assistance/page-assistance";
+import { WebPushEnable } from "@/components/notifications/web-push-enable";
+import { getVapidPublicKey } from "@/lib/web-push";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default async function MyAccountPage({
   params,
@@ -78,10 +81,19 @@ export default async function MyAccountPage({
           emailLogs: data.emailLogs,
         };
 
+  const vapidPublicKey = getVapidPublicKey();
+
   return (
     <AppShellServer title={t("title")}>
       <PageAssistance hints={["profile_intro", "profile_save_action"]} />
-      <MyAccountPanel data={panelData} locale={locale} />
+      <div className="space-y-6">
+        <Card className="lg:hidden">
+          <CardContent className="p-4">
+            <WebPushEnable vapidPublicKey={vapidPublicKey} />
+          </CardContent>
+        </Card>
+        <MyAccountPanel data={panelData} locale={locale} />
+      </div>
     </AppShellServer>
   );
 }
