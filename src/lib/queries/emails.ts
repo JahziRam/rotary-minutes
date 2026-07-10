@@ -44,12 +44,19 @@ export async function getEmailCampaigns(clubId: string) {
   });
 }
 
-export async function getEmailHistory(clubId: string, limit = 50) {
+export async function getEmailHistory(clubId: string, limit = 100) {
   return prisma.emailLog.findMany({
     where: { campaign: { clubId } },
     include: {
       campaign: {
-        select: { name: true, subject: true, sentAt: true, status: true },
+        select: {
+          id: true,
+          name: true,
+          subject: true,
+          sentAt: true,
+          status: true,
+          createdAt: true,
+        },
       },
     },
     orderBy: { createdAt: "desc" },

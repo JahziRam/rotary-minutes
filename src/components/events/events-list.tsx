@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useCallback, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -12,6 +12,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Toast } from "@/components/ui/toast";
+import {
+  ListPagination,
+  ListToolbar,
+  useClientList,
+} from "@/components/ui/list-controls";
+import { matchesAny } from "@/lib/client-list";
 import { createEvent } from "@/actions/events";
 import type { ClubEventStatus } from "@/generated/prisma/client";
 
@@ -47,11 +53,29 @@ export function EventsList({
   locale: string;
 }) {
   const t = useTranslations("events");
+  const tCommon = useTranslations("common");
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [toast, setToast] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<"" | ClubEventStatus>("");
   const dateLocale = locale === "fr" ? fr : enUS;
+
+  const filterFn = useCallback(
+    (event: EventRow, q: string) => {
+      if (statusFilter && event.status !== statusFilter) return false;
+      return matchesAny(
+        [event.title, event.location, event.description, event.status],
+        q
+      );
+    },
+    [statusFilter]
+  );
+  const { query, setQuery, page, setPage, pageSlice, filtered } = useClientList(
+    events,
+    filterFn,
+    12
+  );
 
   function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -114,11 +138,32 @@ export function EventsList({
         </Card>
       )}
 
+      {events.length > 0 && (
+        <ListToolbar query={query} onQueryChange={setQuery}>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as "" | ClubEventStatus)}
+            className="h-10 rounded-lg border border-gray-200 px-3 text-sm bg-white"
+          >
+            <option value="">{tCommon("all")}</option>
+            {(["PUBLISHED", "DRAFT", "COMPLETED", "CANCELLED"] as ClubEventStatus[]).map(
+              (s) => (
+                <option key={s} value={s}>
+                  {t(`statuses.${s}`)}
+                </option>
+              )
+            )}
+          </select>
+        </ListToolbar>
+      )}
+
       {events.length === 0 ? (
         <p className="text-gray-500 text-center py-12">{t("noEvents")}</p>
+      ) : filtered.length === 0 ? (
+        <p className="text-gray-500 text-center py-12">{tCommon("noResults")}</p>
       ) : (
         <div className="grid gap-4">
-          {events.map((event) => (
+          {pageSlice.items.map((event) => (
             <Link key={event.id} href={`/${locale}/events/${event.id}`}>
               <Card className="hover:border-navy/30 transition-colors">
                 <CardContent className="p-5">
@@ -160,6 +205,15 @@ export function EventsList({
           ))}
         </div>
       )}
+
+      <ListPagination
+        page={page}
+        totalPages={pageSlice.totalPages}
+        total={pageSlice.total}
+        start={pageSlice.start}
+        end={pageSlice.end}
+        onPageChange={setPage}
+      />
 
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
     </div>

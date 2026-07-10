@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { format } from "date-fns";
@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Toast } from "@/components/ui/toast";
+import { ListPagination } from "@/components/ui/list-controls";
 import { DocumentViewerModal } from "@/components/documents/document-viewer-modal";
 import {
   MAX_UPLOAD_FILES_PER_BATCH,
@@ -224,11 +225,28 @@ export function DocumentsLibrary({
     });
   }
 
-  const filtered = documents.filter((d) => {
-    if (category && d.category !== category) return false;
-    if (fileManagerEnabled && d.folderId !== currentFolderId) return false;
-    return true;
-  });
+  const [docPage, setDocPage] = useState(1);
+  const filteredBase = useMemo(
+    () =>
+      documents.filter((d) => {
+        if (category && d.category !== category) return false;
+        if (fileManagerEnabled && d.folderId !== currentFolderId) return false;
+        return true;
+      }),
+    [documents, category, fileManagerEnabled, currentFolderId]
+  );
+  useEffect(() => {
+    setDocPage(1);
+  }, [category, currentFolderId, query]);
+  const docPageSize = 12;
+  const docTotalPages = Math.max(1, Math.ceil(filteredBase.length / docPageSize) || 1);
+  const safeDocPage = Math.min(Math.max(1, docPage), docTotalPages);
+  const filtered = filteredBase.slice(
+    (safeDocPage - 1) * docPageSize,
+    safeDocPage * docPageSize
+  );
+  const docStart = filteredBase.length === 0 ? 0 : (safeDocPage - 1) * docPageSize + 1;
+  const docEnd = Math.min(safeDocPage * docPageSize, filteredBase.length);
 
   const currentFolder = currentFolderId
     ? folders.find((f) => f.id === currentFolderId)
@@ -362,7 +380,7 @@ export function DocumentsLibrary({
         </Card>
       )}
 
-      {filtered.length === 0 ? (
+      {filteredBase.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
           <FolderOpen className="h-12 w-12 mx-auto mb-3 text-gray-300" />
           <p>{t("noDocuments")}</p>
@@ -454,6 +472,15 @@ export function DocumentsLibrary({
           ))}
         </div>
       )}
+
+      <ListPagination
+        page={safeDocPage}
+        totalPages={docTotalPages}
+        total={filteredBase.length}
+        start={docStart}
+        end={docEnd}
+        onPageChange={setDocPage}
+      />
 
       {viewer?.fileUrl && (
         <DocumentViewerModal

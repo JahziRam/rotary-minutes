@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useCallback, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -18,6 +18,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Toast } from "@/components/ui/toast";
+import {
+  ListPagination,
+  ListToolbar,
+  useClientList,
+} from "@/components/ui/list-controls";
+import { matchesAny } from "@/lib/client-list";
 import {
   createAction,
   updateActionStatus,
@@ -67,6 +73,7 @@ export function ActionsPanel({
   locale: string;
 }) {
   const t = useTranslations("actions");
+  const tCommon = useTranslations("common");
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [toast, setToast] = useState<string | null>(null);
@@ -82,7 +89,21 @@ export function ActionsPanel({
   });
   const dateLocale = locale === "fr" ? fr : enUS;
 
-  const filtered = actions.filter((a) => !statusFilter || a.status === statusFilter);
+  const filterFn = useCallback(
+    (a: ActionRow, q: string) => {
+      if (statusFilter && a.status !== statusFilter) return false;
+      return matchesAny(
+        [a.title, a.description, a.responsibleName, a.minuteTitle, a.status, a.priority],
+        q
+      );
+    },
+    [statusFilter]
+  );
+  const { query, setQuery, page, setPage, pageSlice, filtered } = useClientList(
+    actions,
+    filterFn,
+    15
+  );
 
   function run<T extends { success?: boolean; error?: string; message?: string; csv?: string }>(
     action: () => Promise<T>,
@@ -110,36 +131,38 @@ export function ActionsPanel({
     <>
       <div className="space-y-4">
         <div className="flex flex-wrap justify-between items-center gap-3">
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant={view === "kanban" ? "gold" : "outline"}
-              onClick={() => setView("kanban")}
-            >
-              <LayoutGrid className="h-4 w-4" />
-            </Button>
-            <Button
-              size="sm"
-              variant={view === "table" ? "gold" : "outline"}
-              onClick={() => setView("table")}
-            >
-              <List className="h-4 w-4" />
-            </Button>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as "" | ClubActionStatus)}
-              className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white"
-            >
-              <option value="">{t("allStatuses")}</option>
-              {(["OPEN", "IN_PROGRESS", "COMPLETED", "DEFERRED", "CANCELLED"] as const).map(
-                (s) => (
+          <ListToolbar query={query} onQueryChange={setQuery}>
+            <div className="flex gap-2 flex-wrap">
+              <Button
+                size="sm"
+                variant={view === "kanban" ? "gold" : "outline"}
+                onClick={() => setView("kanban")}
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant={view === "table" ? "gold" : "outline"}
+                onClick={() => setView("table")}
+              >
+                <List className="h-4 w-4" />
+              </Button>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as "" | ClubActionStatus)}
+                className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white h-10"
+              >
+                <option value="">{t("allStatuses")}</option>
+                {(
+                  ["OPEN", "IN_PROGRESS", "COMPLETED", "DEFERRED", "CANCELLED"] as const
+                ).map((s) => (
                   <option key={s} value={s}>
                     {t(`statuses.${s}`)}
                   </option>
-                )
-              )}
-            </select>
-          </div>
+                ))}
+              </select>
+            </div>
+          </ListToolbar>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -322,14 +345,14 @@ export function ActionsPanel({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {filtered.length === 0 ? (
+                {pageSlice.items.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
                       {t("noActions")}
                     </td>
                   </tr>
                 ) : (
-                  filtered.map((action) => (
+                  pageSlice.items.map((action) => (
                     <tr key={action.id} className="hover:bg-gray-50/50">
                       <td className="px-4 py-3">
                         <p className="font-medium text-gray-900">{action.title}</p>
@@ -404,6 +427,20 @@ export function ActionsPanel({
               </tbody>
             </table>
           </div>
+        )}
+
+        {view === "table" && (
+          <ListPagination
+            page={page}
+            totalPages={pageSlice.totalPages}
+            total={pageSlice.total}
+            start={pageSlice.start}
+            end={pageSlice.end}
+            onPageChange={setPage}
+          />
+        )}
+        {view === "kanban" && filtered.length === 0 && (
+          <p className="text-sm text-gray-500 text-center py-6">{tCommon("noResults")}</p>
         )}
       </div>
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}

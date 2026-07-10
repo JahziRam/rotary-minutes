@@ -213,13 +213,34 @@ async function doFinalizeMinute(
       logoUrl: minute.club.logoUrl ?? undefined,
     });
     const { buffer, filename } = await buildMinutePdfBuffer(minute, locale);
-    await sendClubEmail(minute.club.id, {
+    const sent = await sendClubEmail(minute.club.id, {
       to: clubEmail,
       subject: mail.subject,
       html: mail.html,
       attachments: [
         ...(mail.attachments ?? []),
         { filename, content: buffer },
+      ],
+    });
+    const { recordEmailCampaign, emailStatusFromSendResult } = await import(
+      "@/lib/email-history"
+    );
+    await recordEmailCampaign({
+      clubId: minute.club.id,
+      name:
+        locale === "fr"
+          ? `PV finalisé — ${minute.title}`
+          : locale === "es"
+            ? `Acta finalizada — ${minute.title}`
+            : `Minutes finalized — ${minute.title}`,
+      subject: mail.subject,
+      body: mail.html,
+      recipients: [
+        {
+          email: clubEmail,
+          status: emailStatusFromSendResult(sent.ok),
+          error: sent.error ?? null,
+        },
       ],
     });
   }
@@ -319,14 +340,39 @@ export async function submitMinuteForReview(minuteId: string, locale: string) {
       logoUrl: minute.club.logoUrl ?? undefined,
       submittedByName,
     });
+    const historyRecipients: Array<{
+      email: string;
+      status: "sent" | "failed" | "simulated";
+      error?: string | null;
+    }> = [];
     for (const p of presidents) {
       const email = p.user.email?.trim();
       if (!email?.includes("@")) continue;
-      await sendClubEmail(ctx.clubId, {
+      const result = await sendClubEmail(ctx.clubId, {
         to: email,
         subject: mail.subject,
         html: mail.html,
         attachments: mail.attachments,
+      });
+      historyRecipients.push({
+        email,
+        status: result.ok ? "sent" : "failed",
+        error: result.error ?? null,
+      });
+    }
+    if (historyRecipients.length > 0) {
+      const { recordEmailCampaign } = await import("@/lib/email-history");
+      await recordEmailCampaign({
+        clubId: ctx.clubId,
+        name:
+          locale === "fr"
+            ? `PV à valider — ${minute.title}`
+            : locale === "es"
+              ? `Acta por validar — ${minute.title}`
+              : `Minutes to validate — ${minute.title}`,
+        subject: mail.subject,
+        body: mail.html,
+        recipients: historyRecipients,
       });
     }
   }
@@ -673,7 +719,7 @@ async function dispatchMinuteEmail(
     locale,
     logoUrl: minute.club.logoUrl ?? undefined,
   });
-  return sendClubEmail(minute.club.id, {
+  const result = await sendClubEmail(minute.club.id, {
     to: recipientEmail,
     subject: mail.subject,
     html: mail.html,
@@ -682,6 +728,7 @@ async function dispatchMinuteEmail(
       { filename: pdf.filename, content: pdf.buffer },
     ],
   });
+  return { result, subject: mail.subject, html: mail.html };
 }
 
 export async function sendMinuteByEmail(
@@ -710,13 +757,35 @@ export async function sendMinuteByEmail(
   if (!verifyUrl) return { error: "NOT_FINALIZED" };
 
   const pdf = await buildMinutePdfBuffer(minute, locale);
-  const sent = await dispatchMinuteEmail(
+  const { result: sent, subject, html } = await dispatchMinuteEmail(
     minute,
     recipientEmail,
     locale,
     pdf,
     verifyUrl
   );
+
+  const { recordEmailCampaign, emailStatusFromSendResult } = await import(
+    "@/lib/email-history"
+  );
+  await recordEmailCampaign({
+    clubId: ctx.clubId,
+    name:
+      locale === "fr"
+        ? `PV — ${minute.title}`
+        : locale === "es"
+          ? `Acta — ${minute.title}`
+          : `Minutes — ${minute.title}`,
+    subject,
+    body: html,
+    recipients: [
+      {
+        email: recipientEmail,
+        status: emailStatusFromSendResult(sent.ok),
+        error: sent.error ?? null,
+      },
+    ],
+  });
 
   await prisma.notification.create({
     data: {
@@ -788,17 +857,45 @@ export async function sendMinuteToAllMembers(minuteId: string, locale: string) {
 
   const pdf = await buildMinutePdfBuffer(minute, locale);
   let sentCount = 0;
+  let subject = "";
+  let html = "";
+  const historyRecipients: Array<{
+    email: string;
+    status: "sent" | "failed" | "simulated";
+    error?: string | null;
+  }> = [];
 
   for (const email of emails) {
-    const result = await dispatchMinuteEmail(
+    const { result, subject: subj, html: body } = await dispatchMinuteEmail(
       minute,
       email,
       locale,
       pdf,
       verifyUrl
     );
+    subject = subj;
+    html = body;
     if (result.ok) sentCount++;
+    historyRecipients.push({
+      email,
+      status: result.ok ? "sent" : "failed",
+      error: result.error ?? null,
+    });
   }
+
+  const { recordEmailCampaign } = await import("@/lib/email-history");
+  await recordEmailCampaign({
+    clubId: ctx.clubId,
+    name:
+      locale === "fr"
+        ? `PV aux membres — ${minute.title}`
+        : locale === "es"
+          ? `Acta a miembros — ${minute.title}`
+          : `Minutes to members — ${minute.title}`,
+    subject: subject || minute.title,
+    body: html || minute.title,
+    recipients: historyRecipients,
+  });
 
   await prisma.notification.create({
     data: {

@@ -118,6 +118,25 @@ export async function emailReportToDistrict(locale: string) {
     ],
   });
 
+  const { recordEmailCampaign, emailStatusFromSendResult } = await import(
+    "@/lib/email-history"
+  );
+  await recordEmailCampaign({
+    clubId: ctx.clubId,
+    name: isFr
+      ? `Rapport d'assiduité — ${club.name}`
+      : `Attendance report — ${club.name}`,
+    subject,
+    body: branded.html,
+    recipients: [
+      {
+        email: club.email,
+        status: emailStatusFromSendResult(result.ok),
+        error: result.error ?? null,
+      },
+    ],
+  });
+
   if (!result.ok) return { error: result.error ?? "EMAIL_FAILED" as const };
 
   await prisma.auditLog.create({

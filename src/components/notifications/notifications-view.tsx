@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useCallback, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -9,6 +9,12 @@ import { Bell, Megaphone, CheckCheck, ExternalLink } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  ListPagination,
+  ListToolbar,
+  useClientList,
+} from "@/components/ui/list-controls";
+import { matchesAny } from "@/lib/client-list";
 import {
   markNotificationsRead,
   markNotificationRead,
@@ -62,7 +68,20 @@ export function NotificationsView({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const dateLocale = locale === "fr" ? fr : enUS;
-  const t = (fr: string, en: string) => (locale === "fr" ? fr : en);
+  const t = (frText: string, enText: string) => (locale === "fr" ? frText : enText);
+
+  const notifFilter = useCallback(
+    (n: NotificationItem, q: string) =>
+      matchesAny([n.title, n.message, n.type], q),
+    []
+  );
+  const annFilter = useCallback(
+    (a: AnnouncementItem, q: string) =>
+      matchesAny([a.title, a.message, a.authorName], q),
+    []
+  );
+  const notifList = useClientList(notifications, notifFilter, 12);
+  const annList = useClientList(announcements, annFilter, 12);
 
   function run(action: () => Promise<unknown>, refresh = true) {
     startTransition(async () => {
@@ -134,19 +153,29 @@ export function NotificationsView({
 
       {tab === "notifications" && (
         <div className="space-y-3">
+          {notifications.length > 0 && (
+            <ListToolbar
+              query={notifList.query}
+              onQueryChange={notifList.setQuery}
+            />
+          )}
           {notifications.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center text-gray-500 text-sm">
                 {t("Aucune notification", "No notifications")}
               </CardContent>
             </Card>
+          ) : notifList.filtered.length === 0 ? (
+            <p className="text-sm text-gray-500 text-center py-8">
+              {t("Aucun résultat", "No results")}
+            </p>
           ) : (
-            notifications.map((n) => {
+            notifList.pageSlice.items.map((n) => {
               const typeLabel =
                 TYPE_LABELS[n.type]?.[locale === "fr" ? "fr" : "en"] ?? n.type;
               const href = n.link
                 ? n.link.startsWith("/")
-                  ? n.link.match(/^\/(fr|en)/)
+                  ? n.link.match(/^\/(fr|en|es)/)
                     ? n.link
                     : `/${locale}${n.link}`
                   : n.link
@@ -208,13 +237,26 @@ export function NotificationsView({
               );
             })
           )}
+          <ListPagination
+            page={notifList.page}
+            totalPages={notifList.pageSlice.totalPages}
+            total={notifList.pageSlice.total}
+            start={notifList.pageSlice.start}
+            end={notifList.pageSlice.end}
+            onPageChange={notifList.setPage}
+          />
         </div>
       )}
 
       {tab === "announcements" && (
         <div className="space-y-3">
           {announcements.length > 0 && (
-            <div className="flex justify-end">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <ListToolbar
+                query={annList.query}
+                onQueryChange={annList.setQuery}
+                className="flex-1"
+              />
               <Button
                 variant="outline"
                 size="sm"
@@ -232,8 +274,12 @@ export function NotificationsView({
                 {t("Aucune annonce pour votre club", "No announcements for your club")}
               </CardContent>
             </Card>
+          ) : annList.filtered.length === 0 ? (
+            <p className="text-sm text-gray-500 text-center py-8">
+              {t("Aucun résultat", "No results")}
+            </p>
           ) : (
-            announcements.map((a) => (
+            annList.pageSlice.items.map((a) => (
               <Card key={a.id} className="border-l-4 border-l-navy">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -256,6 +302,14 @@ export function NotificationsView({
               </Card>
             ))
           )}
+          <ListPagination
+            page={annList.page}
+            totalPages={annList.pageSlice.totalPages}
+            total={annList.pageSlice.total}
+            start={annList.pageSlice.start}
+            end={annList.pageSlice.end}
+            onPageChange={annList.setPage}
+          />
         </div>
       )}
     </div>

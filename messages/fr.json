@@ -955,7 +955,12 @@
     "back": "Retour",
     "next": "Suivant",
     "previous": "Précédent",
-    "viewAll": "Voir tout"
+    "viewAll": "Voir tout",
+    "listRange": "{start}–{end} sur {total}",
+    "pageOf": "Page {page} / {totalPages}",
+    "active": "Actifs",
+    "inactive": "Inactifs",
+    "all": "Tous"
   },
   "usageGuide": {
     "launcher": "Guide d'utilisation",

@@ -4,16 +4,13 @@ import { Plus, Calendar } from "lucide-react";
 import { getClubContext } from "@/lib/club-context";
 import { prisma } from "@/lib/prisma";
 import { AppShellServer } from "@/components/layout/app-shell-server";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { format, isSameDay, startOfDay } from "date-fns";
+import { format } from "date-fns";
 import { fr, enUS, es } from "date-fns/locale";
 import { computeRecordedAttendanceRate } from "@/lib/rotary";
 import { isFeatureEnabled } from "@/lib/feature-gate";
-import { CalendarExport } from "@/components/meetings/calendar-export";
 import { GuidedEmptyState } from "@/components/assistance/guided-empty-state";
 import { MeetingInvitationButton } from "@/components/meetings/meeting-invitation-button";
-import { MeetingListActions } from "@/components/meetings/meeting-list-actions";
+import { MeetingsList } from "@/components/meetings/meetings-list";
 
 export default async function MeetingsPage({
   params,
@@ -32,7 +29,6 @@ export default async function MeetingsPage({
   const liveEnabled = ctx
     ? isFeatureEnabled(ctx.features, "liveMeetings", ctx.isSuperAdmin)
     : false;
-  const today = startOfDay(new Date());
 
   const meetings = ctx
     ? await prisma.meeting.findMany({
@@ -71,6 +67,22 @@ export default async function MeetingsPage({
           },
         }))
       : null;
+
+  const listItems = meetings.map((meeting) => ({
+    id: meeting.id,
+    date: meeting.date.toISOString(),
+    type: meeting.type,
+    location: meeting.location,
+    presidedBy: meeting.presidedBy,
+    title: meeting.title,
+    startTime: meeting.startTime,
+    endTime: meeting.endTime,
+    isLive: meeting.isLive,
+    attendanceRate: computeRecordedAttendanceRate(meeting.attendances),
+    agendaTitles: meeting.minute?.agendaItems.map((item) => item.title) ?? [],
+    minuteId: meeting.minute?.id ?? null,
+    clubName: meeting.club.name,
+  }));
 
   return (
     <AppShellServer title={t("meetings.title")}>
@@ -130,110 +142,24 @@ export default async function MeetingsPage({
           </div>
         </div>
 
-        <div className="space-y-3">
-          {meetings.length === 0 ? (
-            <GuidedEmptyState
-              locale={locale}
-              icon={Calendar}
-              title={tEmpty("title")}
-              description={tEmpty("description")}
-              primaryLabel={tEmpty("primaryLabel")}
-              primaryHref="/meetings/new"
-              helpAnchor="meetings"
-            />
-          ) : (
-            meetings.map((meeting) => {
-              const rate = computeRecordedAttendanceRate(meeting.attendances);
-              const isToday = isSameDay(meeting.date, today);
-              const isUpcomingOrToday = startOfDay(meeting.date) >= today;
-              const canStartLive = liveEnabled && !meeting.isLive && isUpcomingOrToday;
-              const primaryHref =
-                liveEnabled && meeting.isLive
-                  ? `/${locale}/meetings/${meeting.id}/live`
-                  : `/${locale}/meetings/${meeting.id}/attendance`;
-              const agendaTitles = meeting.minute?.agendaItems.map((item) => item.title) ?? [];
-              const agendaPreview = agendaTitles.slice(0, 3);
-              const agendaMore = agendaTitles.length - agendaPreview.length;
-              const isJustScheduled = scheduledId === meeting.id;
-
-              return (
-                <Card
-                  key={meeting.id}
-                  className={`hover:shadow-md transition-shadow ${
-                    isJustScheduled ? "ring-2 ring-gold/50 border-gold/40" : ""
-                  } ${meeting.isLive ? "border-navy/30" : ""}`}
-                >
-                  <CardContent className="p-4 space-y-3">
-                    <div className="flex items-center gap-4">
-                      <Link href={primaryHref} className="flex items-center gap-4 flex-1 min-w-0">
-                        <div
-                          className={`h-14 w-14 rounded-xl text-white flex flex-col items-center justify-center shrink-0 ${
-                            meeting.isLive ? "bg-green-700" : "bg-navy"
-                          }`}
-                        >
-                          <Calendar className="h-5 w-5 mb-0.5 opacity-70" />
-                          <span className="text-xs font-bold">
-                            {format(meeting.date, "dd/MM", { locale: dateLocale })}
-                          </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <p className="font-medium text-gray-900">
-                              {t(`meetings.types.${meeting.type}` as "meetings.types.STATUTORY")}
-                            </p>
-                            {meeting.isLive && (
-                              <Badge variant="success">{t("meetings.live")}</Badge>
-                            )}
-                            {isToday && !meeting.isLive && (
-                              <Badge variant="muted">{t("meetings.today")}</Badge>
-                            )}
-                          </div>
-                          <p className="text-sm text-gray-500">
-                            {meeting.location} · {meeting.presidedBy}
-                          </p>
-                          {agendaPreview.length > 0 && (
-                            <p className="text-xs text-gray-400 mt-1 truncate">
-                              <span className="font-medium text-gray-500">
-                                {t("meetings.agenda")}:
-                              </span>{" "}
-                              {agendaPreview.join(" · ")}
-                              {agendaMore > 0 ? ` · +${agendaMore}` : ""}
-                            </p>
-                          )}
-                        </div>
-                      </Link>
-                      <div className="flex flex-col items-end gap-2 shrink-0">
-                        {rate !== null && <Badge variant="success">{rate}%</Badge>}
-                        <CalendarExport
-                          meeting={{
-                            id: meeting.id,
-                            title: meeting.title,
-                            date: meeting.date,
-                            location: meeting.location,
-                            startTime: meeting.startTime,
-                            endTime: meeting.endTime,
-                            clubName: meeting.club.name,
-                          }}
-                          locale={locale}
-                          compact
-                        />
-                      </div>
-                    </div>
-
-                    <MeetingListActions
-                      meetingId={meeting.id}
-                      minuteId={meeting.minute?.id}
-                      locale={locale}
-                      isLive={meeting.isLive}
-                      canStartLive={canStartLive}
-                      liveEnabled={liveEnabled}
-                    />
-                  </CardContent>
-                </Card>
-              );
-            })
-          )}
-        </div>
+        {meetings.length === 0 ? (
+          <GuidedEmptyState
+            locale={locale}
+            icon={Calendar}
+            title={tEmpty("title")}
+            description={tEmpty("description")}
+            primaryLabel={tEmpty("primaryLabel")}
+            primaryHref="/meetings/new"
+            helpAnchor="meetings"
+          />
+        ) : (
+          <MeetingsList
+            meetings={listItems}
+            locale={locale}
+            liveEnabled={liveEnabled}
+            scheduledId={scheduledId}
+          />
+        )}
       </div>
     </AppShellServer>
   );

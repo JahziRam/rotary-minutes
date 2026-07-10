@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -7,6 +8,8 @@ import { Search, FileText } from "lucide-react";
 import { GuidedEmptyStateClient } from "@/components/assistance/guided-empty-state-client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ListPagination, useClientList } from "@/components/ui/list-controls";
+import { matchesAny } from "@/lib/client-list";
 import { getMinuteStatusLabel, getMinuteStatusVariant } from "@/lib/minute-status";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
@@ -53,6 +56,13 @@ export function MinutesList({
   const t = useTranslations();
   const dateLocale = locale === "fr" ? fr : enUS;
   const base = `/${locale}/minutes`;
+
+  const filterFn = useCallback(
+    (pv: MinuteListItem, q: string) =>
+      matchesAny([pv.title, pv.status, pv.meetingType, pv.authorName], q),
+    []
+  );
+  const { page, setPage, pageSlice, filtered } = useClientList(minutes, filterFn, 12);
 
   function applyFilters(fd: FormData) {
     const params = new URLSearchParams();
@@ -142,8 +152,10 @@ export function MinutesList({
       <div className="space-y-3">
         {minutes.length === 0 ? (
           <GuidedEmptyStateClient stateKey="minutes" />
+        ) : filtered.length === 0 ? (
+          <p className="text-sm text-gray-500 py-6 text-center">{t("common.noResults")}</p>
         ) : (
-          minutes.map((pv) => (
+          pageSlice.items.map((pv) => (
             <Link key={pv.id} href={`/${locale}/minutes/${pv.id}`}>
               <Card className="hover:shadow-md transition-shadow cursor-pointer">
                 <CardContent className="p-4 flex items-center gap-4">
@@ -167,6 +179,15 @@ export function MinutesList({
           ))
         )}
       </div>
+
+      <ListPagination
+        page={page}
+        totalPages={pageSlice.totalPages}
+        total={pageSlice.total}
+        start={pageSlice.start}
+        end={pageSlice.end}
+        onPageChange={setPage}
+      />
     </div>
   );
 }

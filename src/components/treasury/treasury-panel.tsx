@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { format } from "date-fns";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Toast } from "@/components/ui/toast";
+import { ListPagination } from "@/components/ui/list-controls";
 import { createEntry, deleteEntry, updateEntry } from "@/actions/treasury";
 import { createSubAccount, deleteSubAccount } from "@/actions/treasury-subaccounts";
 import { TreasuryExtras } from "@/components/treasury/treasury-extras";
@@ -121,7 +122,7 @@ export function TreasuryPanel({
   });
   const dateLocale = locale === "fr" ? fr : enUS;
 
-  const filtered = useMemo(() => {
+  const filteredAll = useMemo(() => {
     const q = search.trim().toLowerCase();
     return entries.filter((e) => {
       if (eventFilter && e.eventId !== eventFilter) return false;
@@ -135,6 +136,21 @@ export function TreasuryPanel({
       );
     });
   }, [entries, eventFilter, subAccountFilter, typeFilter, search]);
+
+  const [entryPage, setEntryPage] = useState(1);
+  const entryPageSize = 15;
+  useEffect(() => {
+    setEntryPage(1);
+  }, [search, eventFilter, subAccountFilter, typeFilter]);
+  const entryTotalPages = Math.max(1, Math.ceil(filteredAll.length / entryPageSize) || 1);
+  const safeEntryPage = Math.min(Math.max(1, entryPage), entryTotalPages);
+  const filtered = filteredAll.slice(
+    (safeEntryPage - 1) * entryPageSize,
+    safeEntryPage * entryPageSize
+  );
+  const entryStart =
+    filteredAll.length === 0 ? 0 : (safeEntryPage - 1) * entryPageSize + 1;
+  const entryEnd = Math.min(safeEntryPage * entryPageSize, filteredAll.length);
 
   const maxMonthly = useMemo(
     () =>
@@ -625,7 +641,7 @@ export function TreasuryPanel({
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {filtered.length === 0 ? (
+              {filteredAll.length === 0 ? (
                 <tr>
                   <td colSpan={canManage ? 6 : 5} className="px-4 py-8 text-center text-gray-500">
                     {t("noEntries")}
@@ -721,6 +737,15 @@ export function TreasuryPanel({
             </tbody>
           </table>
         </div>
+
+        <ListPagination
+          page={safeEntryPage}
+          totalPages={entryTotalPages}
+          total={filteredAll.length}
+          start={entryStart}
+          end={entryEnd}
+          onPageChange={setEntryPage}
+        />
 
         {canManage && (
           <Card>

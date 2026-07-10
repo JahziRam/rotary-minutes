@@ -955,7 +955,12 @@
     "back": "Back",
     "next": "Next",
     "previous": "Previous",
-    "viewAll": "View all"
+    "viewAll": "View all",
+    "listRange": "{start}–{end} of {total}",
+    "pageOf": "Page {page} / {totalPages}",
+    "active": "Active",
+    "inactive": "Inactive",
+    "all": "All"
   },
   "usageGuide": {
     "launcher": "Usage guide",

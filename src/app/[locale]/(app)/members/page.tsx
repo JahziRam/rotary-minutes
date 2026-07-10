@@ -1,7 +1,6 @@
 import Link from "next/link";
-import Image from "next/image";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { User, Wallet } from "lucide-react";
+import { Wallet, Users } from "lucide-react";
 import { getClubContext } from "@/lib/club-context";
 import { isFeatureEnabled } from "@/lib/feature-gate";
 import { hasRolePermission } from "@/lib/roles";
@@ -12,18 +11,13 @@ import { getOfficerMandates } from "@/actions/mandates";
 import { getClubOnboarding } from "@/actions/onboarding";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { MembersDuesSummary } from "@/components/treasury/members-dues-summary";
-import { MemberDuesBadge } from "@/components/treasury/member-dues-badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-
 import { AddMemberForm } from "@/components/members/add-member-form";
 import { MemberImportPanel } from "@/components/members/member-import-panel";
 import { BirthdayBanner } from "@/components/members/birthday-banner";
 import { MandatesPanel } from "@/components/members/mandates-panel";
 import { OnboardingChecklist } from "@/components/members/onboarding-checklist";
-import { resolveMemberPhotoUrl } from "@/lib/media-url";
+import { MembersDirectory } from "@/components/members/members-directory";
 import { GuidedEmptyState } from "@/components/assistance/guided-empty-state";
-import { Users } from "lucide-react";
 
 export default async function MembersPage({
   params,
@@ -111,46 +105,20 @@ export default async function MembersPage({
             helpAnchor="dues"
           />
         ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {members.map((member) => (
-            <Link key={member.id} href={`/${locale}/members/${member.id}`}>
-              <Card className={`hover:shadow-md transition-shadow cursor-pointer h-full ${!member.isActive ? "opacity-60" : ""}`}>
-                <CardContent className="p-4 flex items-center gap-3">
-                  {member.photoUrl ? (
-                    <Image
-                      src={resolveMemberPhotoUrl(member.id, member.photoUrl) ?? member.photoUrl}
-                      alt=""
-                      width={40}
-                      height={40}
-                      className="h-10 w-10 rounded-full object-cover shrink-0"
-                      unoptimized
-                    />
-                  ) : (
-                    <div className="h-10 w-10 rounded-full bg-navy/10 flex items-center justify-center shrink-0">
-                      <User className="h-5 w-5 text-navy" />
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 truncate">
-                      {member.firstName} {member.lastName}
-                    </p>
-                    <p className="text-sm text-gray-500 truncate">
-                      {member.position || member.commission?.name || "—"}
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-end gap-1 shrink-0">
-                    {duesOverview && member.isActive && (
-                      <MemberDuesBadge dues={duesOverview.duesByMemberId[member.id]} />
-                    )}
-                    <Badge variant={member.isActive ? "success" : "muted"}>
-                      {member.isActive ? t("members.active") : t("members.inactive")}
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
+          <MembersDirectory
+            locale={locale}
+            duesByMemberId={duesOverview?.duesByMemberId}
+            members={members.map((m) => ({
+              id: m.id,
+              firstName: m.firstName,
+              lastName: m.lastName,
+              photoUrl: m.photoUrl,
+              position: m.position,
+              isActive: m.isActive,
+              commissionName: m.commission?.name ?? null,
+              email: m.email,
+            }))}
+          />
         )}
       </div>
     </AppShellServer>

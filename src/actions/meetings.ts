@@ -387,6 +387,11 @@ export async function sendMeetingInvitation(meetingId: string, locale: string) {
 
   let sent = 0;
   let failed = 0;
+  const historyRecipients: Array<{
+    email: string;
+    status: "sent" | "failed";
+    error?: string | null;
+  }> = [];
   for (const to of recipients) {
     const result = await sendClubEmail(ctx.clubId, {
       to,
@@ -396,7 +401,27 @@ export async function sendMeetingInvitation(meetingId: string, locale: string) {
     });
     if (result.ok) sent++;
     else failed++;
+    historyRecipients.push({
+      email: to,
+      status: result.ok ? "sent" : "failed",
+      error: result.error ?? null,
+    });
   }
+
+  const { recordEmailCampaign } = await import("@/lib/email-history");
+  const meetingLabel = formatMeetingDate(meeting.date, locale);
+  await recordEmailCampaign({
+    clubId: ctx.clubId,
+    name:
+      locale === "fr"
+        ? `Convocation — ${meetingLabel}`
+        : locale === "es"
+          ? `Convocatoria — ${meetingLabel}`
+          : `Meeting invitation — ${meetingLabel}`,
+    subject: email.subject,
+    body: email.html,
+    recipients: historyRecipients,
+  });
 
   await prisma.auditLog.create({
     data: {

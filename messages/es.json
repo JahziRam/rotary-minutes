@@ -1519,7 +1519,12 @@
     "back": "Volver",
     "next": "Siguiente",
     "previous": "Anterior",
-    "viewAll": "Ver todo"
+    "viewAll": "Ver todo",
+    "listRange": "{start}–{end} de {total}",
+    "pageOf": "Página {page} / {totalPages}",
+    "active": "Activos",
+    "inactive": "Inactivos",
+    "all": "Todos"
   },
   "offline": {
     "offline": "Sin conexión",
