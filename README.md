@@ -14,6 +14,8 @@ Plateforme SaaS professionnelle pour la rédaction, l'archivage et l'authentific
 - **Mode hors ligne** — IndexedDB + synchronisation automatique
 - **Stripe** — Abonnements et essai gratuit 14 jours
 - **Super Admin** — Gestion globale du SaaS
+- **Documents** — Bibliothèque, aperçu inline (PDF, images, Office), gestion (renommer, classer, déplacer, archiver)
+- **Trésorerie** — Opérations, exports comptables, **pièces justificatives** (factures, reçus, preuves de paiement)
 
 ## Stack technique
 

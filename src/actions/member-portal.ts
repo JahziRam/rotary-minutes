@@ -123,6 +123,7 @@ export async function getMyAccountData() {
         category: true,
         fileUrl: true,
         fileName: true,
+        mimeType: true,
         createdAt: true,
         minuteId: true,
       },

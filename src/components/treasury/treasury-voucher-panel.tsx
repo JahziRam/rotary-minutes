@@ -92,9 +92,10 @@ export function TreasuryVoucherPanel({
     if (!entity) return;
     startTransition(async () => {
       const result = await listTreasuryVouchers(entity);
-      if ("vouchers" in result) {
-        setVouchers(result.vouchers as VoucherRow[]);
-        onCountChange?.(result.vouchers.length);
+      if ("vouchers" in result && result.vouchers) {
+        const rows = result.vouchers as VoucherRow[];
+        setVouchers(rows);
+        onCountChange?.(rows.length);
       }
     });
   }, [entity, onCountChange]);

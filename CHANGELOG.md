@@ -12,6 +12,28 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 
 ---
 
+## [0.3.0] — 2026-07-10
+
+### Added
+- **Documents — gestion complète**
+  - Renommer, reclassifier, déplacer (dossier), archiver via dialogue de gestion
+  - Upload multipart (`/api/documents/upload`) pour fichiers volumineux
+  - Aperçu inline : PDF, images, Word (mammoth), Excel, texte
+- **Trésorerie — pièces comptables (`TreasuryVoucher`)**
+  - Pièces jointes sur opérations (recettes / dépenses), paiements de cotisations, inscriptions événements
+  - Types : facture, reçu, preuve de paiement, relevé bancaire, contrat
+  - API `/api/treasury/vouchers` (upload + consultation)
+- **Admin** — Page finances plateforme (`/admin/billing`)
+- **CI** — Workflow GitHub Actions (lint, tests, build)
+
+### Fixed
+- **Build Render** — `serverActions.bodySizeLimit` déplacé sous `experimental.serverActions` (Next.js 16)
+- **Build** — champ `mimeType` manquant dans la requête documents du portail membre
+- **Build** — réponses binaires API documents / pièces comptables (`Uint8Array` pour `NextResponse`)
+- **Build** — typage strict du panneau pièces comptables trésorerie
+
+---
+
 ## [0.2.0] — 2026-07-10
 
 Release regroupant les évolutions majeures de la gestion des réunions, des PV, de l’UI listes et de la messagerie.

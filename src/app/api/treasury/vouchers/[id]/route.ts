@@ -81,7 +81,7 @@ export async function GET(
     });
   }
 
-  return new NextResponse(decoded.buffer, {
+  return new NextResponse(new Uint8Array(decoded.buffer), {
     headers: {
       "Content-Type": mimeType || decoded.mime,
       "Content-Disposition": contentDisposition(disposition, fileName),
