@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getMinuteById } from "@/actions/minutes";
 import { getClubContext } from "@/lib/club-context";
+import { prisma } from "@/lib/prisma";
 import { isFeatureEnabled, isFeatureVisibleInUi } from "@/lib/feature-gate";
 import { hasRolePermission } from "@/lib/roles";
 import { AppShellServer } from "@/components/layout/app-shell-server";
@@ -11,10 +12,13 @@ import { MinuteAutoGenerateButton } from "@/components/minutes/minute-auto-gener
 
 export default async function MinuteEditPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; id: string }>;
+  searchParams: Promise<{ ended?: string }>;
 }) {
   const { locale, id } = await params;
+  const { ended } = await searchParams;
   setRequestLocale(locale);
   const t = await getTranslations();
   const minute = await getMinuteById(id);
@@ -22,18 +26,23 @@ export default async function MinuteEditPage({
 
   const ctx = await getClubContext();
   if (!ctx) notFound();
-  const pdfEnabled = ctx
-    ? isFeatureEnabled(ctx.features, "pdfExport", ctx.isSuperAdmin)
-    : true;
-  const pdfVisible = ctx
-    ? isFeatureVisibleInUi(ctx.features, "pdfExport", ctx.isSuperAdmin)
-    : true;
-  const canSubmit = ctx
-    ? await hasRolePermission(ctx.role, "minutes.submit", ctx.isSuperAdmin)
-    : false;
-  const canApprove = ctx
-    ? await hasRolePermission(ctx.role, "minutes.approve", ctx.isSuperAdmin)
-    : false;
+  const pdfEnabled = isFeatureEnabled(ctx.features, "pdfExport", ctx.isSuperAdmin);
+  const pdfVisible = isFeatureVisibleInUi(ctx.features, "pdfExport", ctx.isSuperAdmin);
+  const canSubmit = await hasRolePermission(ctx.role, "minutes.submit", ctx.isSuperAdmin);
+  const canApprove = await hasRolePermission(ctx.role, "minutes.approve", ctx.isSuperAdmin);
+  const canFinalize = await hasRolePermission(ctx.role, "minutes.finalize", ctx.isSuperAdmin);
+
+  const club = await prisma.club.findUnique({
+    where: { id: ctx.clubId },
+    select: { presidentApprovalRequired: true },
+  });
+  const memberEmailCount = await prisma.member.count({
+    where: {
+      clubId: ctx.clubId,
+      isActive: true,
+      email: { not: null },
+    },
+  });
 
   const isLocked = ["FINALIZED", "ARCHIVED"].includes(minute.status);
 
@@ -51,6 +60,10 @@ export default async function MinuteEditPage({
         pdfVisible={pdfVisible}
         canSubmit={canSubmit}
         canApprove={canApprove}
+        canFinalize={canFinalize}
+        presidentApprovalRequired={club?.presidentApprovalRequired ?? true}
+        memberEmailCount={memberEmailCount}
+        highlightPostMeeting={ended === "1"}
         minute={{
           id: minute.id,
           title: minute.title,

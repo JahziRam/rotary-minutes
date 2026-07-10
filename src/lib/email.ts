@@ -208,9 +208,12 @@ export async function minuteFinalizedEmail(opts: {
   logoUrl?: string;
 }) {
   const isFr = opts.locale === "fr";
+  const isEs = opts.locale === "es";
   const body = isFr
     ? `<p>Le procès-verbal <strong>${opts.minuteTitle}</strong> de ${opts.clubName} est disponible.</p><p>Le PDF officiel est joint à cet email.</p><p><a class="cta-button" href="${opts.verifyUrl}">Vérifier l'authenticité en ligne</a></p>`
-    : `<p>The minutes <strong>${opts.minuteTitle}</strong> for ${opts.clubName} are available.</p><p>The official PDF is attached to this email.</p><p><a class="cta-button" href="${opts.verifyUrl}">Verify authenticity online</a></p>`;
+    : isEs
+      ? `<p>El acta <strong>${opts.minuteTitle}</strong> de ${opts.clubName} está disponible.</p><p>El PDF oficial está adjunto.</p><p><a class="cta-button" href="${opts.verifyUrl}">Verificar autenticidad en línea</a></p>`
+      : `<p>The minutes <strong>${opts.minuteTitle}</strong> for ${opts.clubName} are available.</p><p>The official PDF is attached to this email.</p><p><a class="cta-button" href="${opts.verifyUrl}">Verify authenticity online</a></p>`;
   const branded = await prepareBrandedEmail(body, {
     clubName: opts.clubName,
     clubId: opts.clubId,
@@ -219,7 +222,49 @@ export async function minuteFinalizedEmail(opts: {
   return {
     subject: isFr
       ? `PV finalisé — ${opts.minuteTitle}`
-      : `Minutes finalized — ${opts.minuteTitle}`,
+      : isEs
+        ? `Acta finalizada — ${opts.minuteTitle}`
+        : `Minutes finalized — ${opts.minuteTitle}`,
+    html: branded.html,
+    attachments: branded.attachments,
+  };
+}
+
+/** Email asking the president (or approvers) to review draft minutes. */
+export async function minuteReviewRequestEmail(opts: {
+  clubName: string;
+  clubId?: string;
+  minuteTitle: string;
+  reviewUrl: string;
+  locale: string;
+  logoUrl?: string;
+  submittedByName?: string;
+}) {
+  const isFr = opts.locale === "fr";
+  const isEs = opts.locale === "es";
+  const by = opts.submittedByName
+    ? isFr
+      ? ` par ${opts.submittedByName}`
+      : isEs
+        ? ` por ${opts.submittedByName}`
+        : ` by ${opts.submittedByName}`
+    : "";
+  const body = isFr
+    ? `<p>Un procès-verbal a été soumis pour validation${by}.</p><p><strong>${opts.minuteTitle}</strong> — ${opts.clubName}</p><p>Merci de relire et d'approuver ou de demander des corrections.</p><p><a class="cta-button" href="${opts.reviewUrl}">Ouvrir le PV</a></p>`
+    : isEs
+      ? `<p>Se ha enviado un acta para validación${by}.</p><p><strong>${opts.minuteTitle}</strong> — ${opts.clubName}</p><p>Revísela y apruébela o solicite correcciones.</p><p><a class="cta-button" href="${opts.reviewUrl}">Abrir el acta</a></p>`
+      : `<p>Minutes have been submitted for validation${by}.</p><p><strong>${opts.minuteTitle}</strong> — ${opts.clubName}</p><p>Please review and approve or request changes.</p><p><a class="cta-button" href="${opts.reviewUrl}">Open minutes</a></p>`;
+  const branded = await prepareBrandedEmail(body, {
+    clubName: opts.clubName,
+    clubId: opts.clubId,
+    logoUrl: opts.logoUrl,
+  });
+  return {
+    subject: isFr
+      ? `PV à valider — ${opts.minuteTitle}`
+      : isEs
+        ? `Acta por validar — ${opts.minuteTitle}`
+        : `Minutes to validate — ${opts.minuteTitle}`,
     html: branded.html,
     attachments: branded.attachments,
   };

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { FileText, Radio, UserCheck, Play } from "lucide-react";
 import { startLiveMeeting } from "@/actions/meetings";
+import { EndMeetingButton } from "@/components/meetings/end-meeting-button";
 import { cn } from "@/lib/utils";
 
 const actionClass =
@@ -47,14 +48,17 @@ export function MeetingListActions({
       </Link>
 
       {liveEnabled && isLive && (
-        <Link
-          href={liveHref}
-          className={cn(actionClass, "border-navy/30 text-navy bg-navy/5 hover:bg-navy/10")}
-          title={t("live")}
-        >
-          <Radio className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">{t("live")}</span>
-        </Link>
+        <>
+          <Link
+            href={liveHref}
+            className={cn(actionClass, "border-navy/30 text-navy bg-navy/5 hover:bg-navy/10")}
+            title={t("live")}
+          >
+            <Radio className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{t("live")}</span>
+          </Link>
+          <EndMeetingButton meetingId={meetingId} variant="compact" />
+        </>
       )}
 
       {liveEnabled && canStartLive && (

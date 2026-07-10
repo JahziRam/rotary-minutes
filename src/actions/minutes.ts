@@ -9,7 +9,7 @@ import { canViewDistrictMinutes } from "@/lib/district-access";
 import { generateMinuteHash, getVerifyUrl, resolveMinuteVerifyUrl } from "@/lib/hash";
 import { getAppBaseUrl } from "@/lib/app-url";
 import { requirePermission } from "@/lib/require-permission";
-import { minuteFinalizedEmail } from "@/lib/email";
+import { minuteFinalizedEmail, minuteReviewRequestEmail } from "@/lib/email";
 import { sendClubEmail } from "@/lib/club-smtp";
 import {
   attendanceWithMemberInclude,
@@ -252,19 +252,20 @@ export async function submitMinuteForReview(minuteId: string, locale: string) {
 
   const minute = await prisma.minute.findFirst({
     where: { id: minuteId, clubId: ctx.clubId },
+    include: {
+      club: { select: { id: true, name: true, logoUrl: true, presidentApprovalRequired: true } },
+      author: { select: { firstName: true, lastName: true } },
+    },
   });
   if (!minute) return { error: "NOT_FOUND" };
   if (!["DRAFT", "IN_PROGRESS"].includes(minute.status)) {
     return { error: "INVALID_STATUS" };
   }
 
-  const club = await prisma.club.findUnique({
-    where: { id: ctx.clubId },
-    select: { presidentApprovalRequired: true },
-  });
-
-  if (club && !club.presidentApprovalRequired) {
-    return doFinalizeMinute(minuteId, ctx, locale, ctx.userId);
+  if (!minute.club.presidentApprovalRequired) {
+    const fin = await doFinalizeMinute(minuteId, ctx, locale, ctx.userId);
+    if ("error" in fin && fin.error) return fin;
+    return { success: true as const, finalized: true as const };
   }
 
   await prisma.minute.update({
@@ -279,20 +280,55 @@ export async function submitMinuteForReview(minuteId: string, locale: string) {
 
   const presidents = await prisma.clubMembership.findMany({
     where: { clubId: ctx.clubId, role: "PRESIDENT", isActive: true },
-    select: { userId: true },
+    select: {
+      userId: true,
+      user: { select: { email: true, firstName: true, lastName: true } },
+    },
   });
+
+  const baseUrl = getAppBaseUrl();
+  const reviewUrl = `${baseUrl.replace(/\/$/, "")}/${locale}/minutes/${minuteId}`;
+  const submittedByName = minute.author
+    ? `${minute.author.firstName} ${minute.author.lastName}`.trim()
+    : undefined;
+
   if (presidents.length) {
     await prisma.notification.createMany({
       data: presidents.map((p) => ({
         userId: p.userId,
         clubId: ctx.clubId,
         type: "NEW_MINUTE" as const,
-        title: locale === "fr" ? "PV à approuver" : "Minutes awaiting approval",
+        title:
+          locale === "fr"
+            ? "PV à valider"
+            : locale === "es"
+              ? "Acta por validar"
+              : "Minutes awaiting approval",
         message: minute.title,
         link: `/${locale}/minutes/${minuteId}`,
       })),
       skipDuplicates: true,
     });
+
+    const mail = await minuteReviewRequestEmail({
+      clubName: minute.club.name,
+      clubId: minute.club.id,
+      minuteTitle: minute.title,
+      reviewUrl,
+      locale,
+      logoUrl: minute.club.logoUrl ?? undefined,
+      submittedByName,
+    });
+    for (const p of presidents) {
+      const email = p.user.email?.trim();
+      if (!email?.includes("@")) continue;
+      await sendClubEmail(ctx.clubId, {
+        to: email,
+        subject: mail.subject,
+        html: mail.html,
+        attachments: mail.attachments,
+      });
+    }
   }
 
   await prisma.auditLog.create({
@@ -309,7 +345,39 @@ export async function submitMinuteForReview(minuteId: string, locale: string) {
   void syncFromMinuteWorkflow(minuteId, "submit", ctx.userId);
 
   revalidateMinutePaths(minuteId, locale);
-  return { success: true };
+  return { success: true as const, finalized: false as const, emailedPresidents: presidents.length };
+}
+
+/**
+ * Finalize the PV (if needed) then email the official PDF to all active members.
+ */
+export async function finalizeAndSendToMembers(minuteId: string, locale: string) {
+  const finalizeAuth = await requirePermission("minutes.finalize");
+  const submitAuth = finalizeAuth.error
+    ? await requirePermission("minutes.submit")
+    : finalizeAuth;
+  if (submitAuth.error) return { error: submitAuth.error };
+  const { ctx } = submitAuth;
+
+  const minute = await prisma.minute.findFirst({
+    where: { id: minuteId, clubId: ctx.clubId },
+    select: { id: true, status: true },
+  });
+  if (!minute) return { error: "NOT_FOUND" as const };
+
+  if (["DRAFT", "IN_PROGRESS"].includes(minute.status)) {
+    const fin = await doFinalizeMinute(minuteId, ctx, locale, ctx.userId);
+    if ("error" in fin && fin.error) return fin;
+  } else if (minute.status === "REVIEW") {
+    const approveAuth = await requirePermission("minutes.approve");
+    if (approveAuth.error) return { error: "NEEDS_APPROVAL" as const };
+    const fin = await doFinalizeMinute(minuteId, ctx, locale, ctx.userId);
+    if ("error" in fin && fin.error) return fin;
+  } else if (minute.status !== "FINALIZED") {
+    return { error: "INVALID_STATUS" as const };
+  }
+
+  return sendMinuteToAllMembers(minuteId, locale);
 }
 
 export async function approveMinute(minuteId: string, locale: string) {

@@ -56,6 +56,10 @@ export function MinuteEditor({
   pdfVisible = true,
   canSubmit = false,
   canApprove = false,
+  canFinalize = false,
+  presidentApprovalRequired = true,
+  memberEmailCount = 0,
+  highlightPostMeeting = false,
 }: {
   minute: MinuteData;
   clubId: string;
@@ -63,6 +67,10 @@ export function MinuteEditor({
   pdfVisible?: boolean;
   canSubmit?: boolean;
   canApprove?: boolean;
+  canFinalize?: boolean;
+  presidentApprovalRequired?: boolean;
+  memberEmailCount?: number;
+  highlightPostMeeting?: boolean;
 }) {
   const t = useTranslations("minutes");
   const tMeetings = useTranslations("meetings");
@@ -214,7 +222,11 @@ export function MinuteEditor({
         status={status}
         canSubmit={canSubmit}
         canApprove={canApprove}
+        canFinalize={canFinalize}
         reviewComment={minute.reviewComment}
+        presidentApprovalRequired={presidentApprovalRequired}
+        memberEmailCount={memberEmailCount}
+        highlightPostMeeting={highlightPostMeeting}
       />
 
       <MinuteAssistPanel

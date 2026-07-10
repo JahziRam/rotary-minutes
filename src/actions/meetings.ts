@@ -295,6 +295,50 @@ export async function startLiveMeeting(meetingId: string, locale: string) {
   redirect(`/${locale}/meetings/${meetingId}/live`);
 }
 
+/** End a live meeting: clear isLive, set endTime, go to PV or attendance. */
+export async function endLiveMeeting(meetingId: string, locale: string) {
+  const auth = await requirePermission("meetings.edit");
+  if (auth.error) return { error: auth.error };
+  const { ctx } = auth;
+
+  const meeting = await prisma.meeting.findFirst({
+    where: { id: meetingId, clubId: ctx.clubId },
+    include: { minute: { select: { id: true } } },
+  });
+  if (!meeting) return { error: "NOT_FOUND" as const };
+
+  const now = new Date();
+  const endTime =
+    meeting.endTime ||
+    `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+
+  await prisma.meeting.update({
+    where: { id: meetingId },
+    data: {
+      isLive: false,
+      endTime,
+    },
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      clubId: ctx.clubId,
+      userId: ctx.userId,
+      action: "MEETING_LIVE_ENDED",
+      entity: "Meeting",
+      entityId: meetingId,
+      metadata: { endTime },
+    },
+  });
+
+  revalidateMeetingPaths(locale, meetingId);
+
+  if (meeting.minute?.id) {
+    redirect(`/${locale}/minutes/${meeting.minute.id}/edit?ended=1`);
+  }
+  redirect(`/${locale}/meetings/${meetingId}/attendance?ended=1`);
+}
+
 /** Send meeting invitation (convocation) to club members with an email. */
 export async function sendMeetingInvitation(meetingId: string, locale: string) {
   const auth = await requirePermission("meetings.create");
