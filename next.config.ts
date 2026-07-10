@@ -6,6 +6,9 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["pg", "pg-cloudflare"],
+  serverActions: {
+    bodySizeLimit: "50mb",
+  },
   experimental: {
     optimizePackageImports: [
       "lucide-react",

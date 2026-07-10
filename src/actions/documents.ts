@@ -7,6 +7,7 @@ import { requirePermission } from "@/lib/require-permission";
 import { hasRolePermission } from "@/lib/roles";
 import { randomBytes } from "node:crypto";
 import { fileToDocumentDataUrl, validateDocumentDataUrl } from "@/lib/document-storage";
+import { documentDownloadUrl, documentViewUrl } from "@/lib/document-urls";
 import { validateUploadFileSize, validateUploadFiles } from "@/lib/upload-limits";
 import { getClubFeatures } from "@/lib/features";
 import type { DocumentCategory } from "@/generated/prisma/client";
@@ -75,8 +76,11 @@ function mapDocumentRow(d: {
   updatedAt: Date;
   uploadedBy: { firstName: string; lastName: string } | null;
 }) {
+  const rawFileUrl = d.fileUrl;
   return {
     ...d,
+    fileUrl: documentViewUrl(d.id, rawFileUrl),
+    downloadUrl: documentDownloadUrl(d.id, rawFileUrl),
     createdAt: d.createdAt.toISOString(),
     updatedAt: d.updatedAt.toISOString(),
     shareExpiresAt: d.shareExpiresAt?.toISOString() ?? null,
@@ -419,15 +423,15 @@ export async function uploadDocumentFile(formData: FormData) {
   if (sizeError) return { error: sizeError };
 
   try {
-    const fileDataUrl = await fileToDocumentDataUrl(file);
+    const { dataUrl, mimeType } = await fileToDocumentDataUrl(file);
     return uploadDocument({
       title,
       category,
       description,
       tags: tagsRaw ? tagsRaw.split(",").map((t) => t.trim()).filter(Boolean) : [],
-      fileDataUrl,
+      fileDataUrl: dataUrl,
       fileName: file.name,
-      mimeType: file.type,
+      mimeType,
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "UPLOAD_FAILED";
@@ -457,10 +461,6 @@ export async function uploadDocumentFiles(formData: FormData) {
   const batchError = validateUploadFiles(files);
   if (batchError) return { error: batchError };
 
-  if (files.length === 1 && !titleSingle) {
-    return { error: "MISSING_FIELDS" as const };
-  }
-
   const tags = tagsRaw
     ? tagsRaw.split(",").map((t) => t.trim()).filter(Boolean)
     : [];
@@ -469,21 +469,18 @@ export async function uploadDocumentFiles(formData: FormData) {
   const failed: string[] = [];
 
   for (const file of files) {
-    const title =
-      files.length === 1 && titleSingle
-        ? titleSingle
-        : titleFromFileName(file.name);
+    const title = titleSingle || titleFromFileName(file.name);
 
     try {
-      const fileDataUrl = await fileToDocumentDataUrl(file);
+      const { dataUrl, mimeType } = await fileToDocumentDataUrl(file);
       const result = await uploadDocument({
         title,
         category,
         description,
         tags,
-        fileDataUrl,
+        fileDataUrl: dataUrl,
         fileName: file.name,
-        mimeType: file.type,
+        mimeType,
       });
       if ("success" in result && result.success) {
         documentIds.push(result.documentId);

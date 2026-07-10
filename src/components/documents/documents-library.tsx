@@ -44,6 +44,7 @@ type DocumentRow = {
   category: DocumentCategory;
   description: string | null;
   fileUrl: string | null;
+  downloadUrl?: string | null;
   fileName: string | null;
   mimeType: string | null;
   minuteId: string | null;
@@ -423,10 +424,9 @@ export function DocumentsLibrary({
                         <Eye className="h-4 w-4" />
                       </Button>
                       <a
-                        href={doc.fileUrl.startsWith("data:") ? doc.fileUrl : doc.fileUrl}
+                        href={doc.downloadUrl ?? doc.fileUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        download={doc.fileName ?? undefined}
                         className="text-sm text-navy hover:underline"
                       >
                         {t("download")}

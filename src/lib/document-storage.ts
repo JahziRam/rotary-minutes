@@ -14,6 +14,28 @@ export const ALLOWED_DOCUMENT_TYPES = new Set([
   "text/plain",
 ]);
 
+const EXTENSION_MIME: Record<string, string> = {
+  pdf: "application/pdf",
+  doc: "application/msword",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  xls: "application/vnd.ms-excel",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+  txt: "text/plain",
+};
+
+export function resolveFileMimeType(file: File): string {
+  if (file.type && ALLOWED_DOCUMENT_TYPES.has(file.type)) {
+    return file.type;
+  }
+  const ext = file.name.split(".").pop()?.toLowerCase();
+  if (ext && EXTENSION_MIME[ext]) return EXTENSION_MIME[ext];
+  return file.type;
+}
+
 export function isDataUrl(value: string): boolean {
   return value.startsWith("data:");
 }
@@ -29,13 +51,20 @@ export function validateDocumentDataUrl(dataUrl: string): string | null {
   return null;
 }
 
-export async function fileToDocumentDataUrl(file: File): Promise<string> {
+export async function fileToDocumentDataUrl(file: File): Promise<{
+  dataUrl: string;
+  mimeType: string;
+}> {
   const buffer = Buffer.from(await file.arrayBuffer());
   if (buffer.byteLength > MAX_DOCUMENT_BYTES) {
     throw new Error("TOO_LARGE");
   }
-  if (!ALLOWED_DOCUMENT_TYPES.has(file.type)) {
+  const mimeType = resolveFileMimeType(file);
+  if (!ALLOWED_DOCUMENT_TYPES.has(mimeType)) {
     throw new Error("INVALID_TYPE");
   }
-  return `data:${file.type};base64,${buffer.toString("base64")}`;
+  return {
+    dataUrl: `data:${mimeType};base64,${buffer.toString("base64")}`,
+    mimeType,
+  };
 }

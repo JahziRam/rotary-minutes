@@ -56,10 +56,15 @@ export async function GET(
 
   const { buffer, filename } = await buildMinutePdfBuffer(minute, locale);
 
+  const download =
+    new URL(request.url).searchParams.get("download") === "1";
+  const disposition = download ? "attachment" : "inline";
+
   return new NextResponse(new Uint8Array(buffer), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="${filename}"`,
+      "Content-Disposition": `${disposition}; filename="${filename}"`,
+      "Cache-Control": "private, max-age=300",
     },
   });
 }

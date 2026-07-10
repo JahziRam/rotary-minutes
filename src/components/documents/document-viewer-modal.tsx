@@ -16,7 +16,10 @@ export function DocumentViewerModal({
   shareUrl?: string | null;
   onClose: () => void;
 }) {
-  const isPdf = mimeType === "application/pdf" || fileUrl.includes("/api/pdf/");
+  const isPdf =
+    mimeType === "application/pdf" ||
+    fileUrl.includes("/api/pdf/") ||
+    fileUrl.includes("/api/documents/");
   const isImage = mimeType?.startsWith("image/") ?? false;
   const viewUrl = shareUrl ?? fileUrl;
 

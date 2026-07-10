@@ -48,7 +48,7 @@ export function MinutePreviewActions({
       <div className="space-y-2">
         {pdfVisible &&
           (pdfEnabled ? (
-            <a href={`/api/pdf/${minuteId}`} download className={btnClass}>
+            <a href={`/api/pdf/${minuteId}?download=1`} className={btnClass}>
               <Download className="h-4 w-4 text-gray-500" />
               {locale === "fr" ? "Télécharger le PDF" : "Download PDF"}
             </a>

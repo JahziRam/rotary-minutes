@@ -7,6 +7,7 @@ import { requireFeature } from "@/lib/require-feature";
 import { currentFiscalYear } from "@/lib/dues";
 import { createMemberDuesCheckoutSession } from "@/lib/dues-stripe-checkout";
 import { isClubDuesStripeEnabled } from "@/lib/club-stripe";
+import { documentDownloadUrl, documentViewUrl } from "@/lib/document-urls";
 import {
   ROTARY_ATTENDANCE_GOAL,
   computeRecordedAttendanceRate,
@@ -272,7 +273,8 @@ export async function getMyAccountData() {
       id: d.id,
       title: d.title,
       category: d.category,
-      fileUrl: d.fileUrl,
+      fileUrl: documentViewUrl(d.id, d.fileUrl),
+      downloadUrl: documentDownloadUrl(d.id, d.fileUrl),
       fileName: d.fileName,
       createdAt: d.createdAt.toISOString(),
       minuteId: d.minuteId,

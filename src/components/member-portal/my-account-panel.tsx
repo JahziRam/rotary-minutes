@@ -100,6 +100,7 @@ type LinkedData = {
     title: string;
     category: string;
     fileUrl: string | null;
+    downloadUrl?: string | null;
     fileName: string | null;
     createdAt: string;
     minuteId: string | null;
@@ -503,7 +504,7 @@ export function MyAccountPanel({
                   </div>
                   {d.fileUrl && (
                     <a
-                      href={d.fileUrl.startsWith("/") ? d.fileUrl : d.fileUrl}
+                      href={d.downloadUrl ?? d.fileUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-navy text-xs hover:underline"

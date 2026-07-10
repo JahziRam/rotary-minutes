@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getSharedDocument } from "@/actions/documents";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ token: string }> }
 ) {
   const { token } = await params;
@@ -30,5 +30,11 @@ export async function GET(
     });
   }
 
-  return NextResponse.redirect(document.fileUrl);
+  if (document.fileUrl.startsWith("/api/pdf/")) {
+    const target = new URL(document.fileUrl, request.url);
+    target.searchParams.set("inline", "1");
+    return NextResponse.redirect(target);
+  }
+
+  return NextResponse.redirect(new URL(document.fileUrl, request.url));
 }
