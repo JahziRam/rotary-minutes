@@ -9,6 +9,8 @@ import { AppShellServer } from "@/components/layout/app-shell-server";
 import { MinuteEditor } from "@/components/minutes/minute-editor";
 import { MinuteTaskAssignPanel } from "@/components/minutes/minute-task-assign-panel";
 import { MinuteAutoGenerateButton } from "@/components/minutes/minute-auto-generate-button";
+import { MinuteComments } from "@/components/minutes/minute-comments";
+import { listMinuteComments } from "@/actions/minute-comments";
 
 export default async function MinuteEditPage({
   params,
@@ -45,6 +47,7 @@ export default async function MinuteEditPage({
   });
 
   const isLocked = ["FINALIZED", "ARCHIVED"].includes(minute.status);
+  const commentsResult = await listMinuteComments(id);
 
   return (
     <AppShellServer title={t("minutes.title")}>
@@ -82,6 +85,14 @@ export default async function MinuteEditPage({
           })),
         }}
       />
+      <div className="mt-8 max-w-3xl">
+        <MinuteComments
+          minuteId={minute.id}
+          initialComments={commentsResult.comments ?? []}
+          canComment={!!commentsResult.canComment}
+          canModerate={!!commentsResult.canModerate}
+        />
+      </div>
     </AppShellServer>
   );
 }

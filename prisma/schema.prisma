@@ -343,6 +343,7 @@ model User {
   memberships   ClubMembership[]
   minutesAuthored Minute[] @relation("MinuteAuthor")
   minuteVersions  MinuteVersion[]
+  minuteComments  MinuteComment[]
   notifications Notification[]
   auditLogs     AuditLog[]
   districtAccess  DistrictAccess[]
@@ -649,6 +650,7 @@ model Minute {
   approvedBy      User?        @relation("MinuteApprover", fields: [approvedById], references: [id], onDelete: SetNull)
   agendaItems     AgendaItem[]
   versions        MinuteVersion[]
+  comments        MinuteComment[]
   clubActions     ClubAction[]
   clubDocuments   ClubDocument[]
   governanceRecords GovernanceRecord[]
@@ -656,6 +658,22 @@ model Minute {
   @@index([clubId, status])
   @@index([clubId, createdAt])
   @@index([contentHash])
+}
+
+/** Member discussion on a minute (not agenda-item free text). */
+model MinuteComment {
+  id        String   @id @default(cuid())
+  minuteId  String
+  authorId  String
+  body      String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  minute    Minute   @relation(fields: [minuteId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([minuteId, createdAt])
+  @@index([authorId])
 }
 
 model AgendaItem {

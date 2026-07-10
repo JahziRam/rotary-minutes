@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import { auth } from "@/lib/auth";
 import { getMinuteById } from "@/actions/minutes";
+import { listMinuteComments } from "@/actions/minute-comments";
 import { getClubContext } from "@/lib/club-context";
 import { canViewDistrictMinutes } from "@/lib/district-access";
 import { isFeatureEnabled, isFeatureVisibleInUi } from "@/lib/feature-gate";
@@ -11,6 +12,7 @@ import { resolveClubLogoUrl } from "@/lib/media-url";
 import { getMinuteMemberEmailCount } from "@/actions/minutes";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { MinutePreview } from "@/components/minutes/minute-preview";
+import { MinuteComments } from "@/components/minutes/minute-comments";
 
 export default async function MinuteDetailPage({
   params,
@@ -57,48 +59,66 @@ export default async function MinuteDetailPage({
     qrCodeDataUrl = await QRCode.toDataURL(verifyUrl, { width: 128, margin: 1 });
   }
 
+  const commentsResult =
+    isOwnClubMinute && !isDistrictReadOnly
+      ? await listMinuteComments(id)
+      : { comments: [], canComment: false, canModerate: false };
+
   return (
     <AppShellServer title="Aperçu du procès-verbal">
-      <MinutePreview
-        locale={locale}
-        backHref={
-          isDistrictReadOnly ? `/${locale}/district/minutes` : `/${locale}/minutes`
-        }
-        pdfEnabled={pdfEnabled && !isDistrictReadOnly}
-        pdfVisible={pdfVisible && !isDistrictReadOnly}
-        emailsEnabled={emailsEnabled && !isDistrictReadOnly}
-        emailsVisible={emailsVisible && !isDistrictReadOnly}
-        memberEmailCount={memberEmailCount}
-        data={{
-          id: minute.id,
-          title: minute.title,
-          status: minute.status,
-          contentHash: minute.contentHash,
-          verifyUrl,
-          qrCodeDataUrl,
-          club: {
-            name: minute.club.name,
-            address: minute.club.address,
-            district: minute.club.district,
-            country: minute.club.country,
-            logoUrl:
-              resolveClubLogoUrl(minute.club.id, minute.club.logoUrl, baseUrl) ??
-              minute.club.logoUrl,
-          },
-          meeting: {
-            date: minute.meeting.date,
-            location: minute.meeting.location,
-            startTime: minute.meeting.startTime,
-            endTime: minute.meeting.endTime,
-            type: minute.meeting.type,
-            presidedBy: minute.meeting.presidedBy,
-            secretary: minute.meeting.secretary,
-            attendances: minute.meeting.attendances,
-          },
-          agendaItems: minute.agendaItems,
-          versions: minute.versions,
-        }}
-      />
+      <div className="space-y-6">
+        <MinutePreview
+          locale={locale}
+          backHref={
+            isDistrictReadOnly ? `/${locale}/district/minutes` : `/${locale}/minutes`
+          }
+          pdfEnabled={pdfEnabled && !isDistrictReadOnly}
+          pdfVisible={pdfVisible && !isDistrictReadOnly}
+          emailsEnabled={emailsEnabled && !isDistrictReadOnly}
+          emailsVisible={emailsVisible && !isDistrictReadOnly}
+          memberEmailCount={memberEmailCount}
+          data={{
+            id: minute.id,
+            title: minute.title,
+            status: minute.status,
+            contentHash: minute.contentHash,
+            verifyUrl,
+            qrCodeDataUrl,
+            club: {
+              name: minute.club.name,
+              address: minute.club.address,
+              district: minute.club.district,
+              country: minute.club.country,
+              logoUrl:
+                resolveClubLogoUrl(minute.club.id, minute.club.logoUrl, baseUrl) ??
+                minute.club.logoUrl,
+            },
+            meeting: {
+              date: minute.meeting.date,
+              location: minute.meeting.location,
+              startTime: minute.meeting.startTime,
+              endTime: minute.meeting.endTime,
+              type: minute.meeting.type,
+              presidedBy: minute.meeting.presidedBy,
+              secretary: minute.meeting.secretary,
+              attendances: minute.meeting.attendances,
+            },
+            agendaItems: minute.agendaItems,
+            versions: minute.versions,
+          }}
+        />
+
+        {isOwnClubMinute && !isDistrictReadOnly && (
+          <div className="max-w-3xl mx-auto w-full px-0 lg:px-0">
+            <MinuteComments
+              minuteId={minute.id}
+              initialComments={commentsResult.comments ?? []}
+              canComment={!!commentsResult.canComment}
+              canModerate={!!commentsResult.canModerate}
+            />
+          </div>
+        )}
+      </div>
     </AppShellServer>
   );
 }

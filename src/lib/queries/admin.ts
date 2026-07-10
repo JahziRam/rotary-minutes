@@ -116,7 +116,7 @@ export async function getSubscriptionBreakdown() {
   return { byPlan, byStatus };
 }
 
-export async function getAdminAuditLogs(limit = 25) {
+export async function getAdminAuditLogs(limit = 300) {
   return prisma.auditLog.findMany({
     orderBy: { createdAt: "desc" },
     take: limit,

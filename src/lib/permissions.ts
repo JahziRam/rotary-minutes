@@ -12,6 +12,10 @@ export const PERMISSIONS = {
   "minutes.approve": ["PRESIDENT", "ADMIN"],
   "minutes.finalize": ["PRESIDENT", "SECRETARY", "ADMIN"],
   "minutes.delete": ["PRESIDENT", "ADMIN"],
+  "minutes.comment": [
+    "PRESIDENT", "SECRETARY", "PROTOCOL", "TREASURER", "FOUNDATION_CHAIR",
+    "MEMBERSHIP_CHAIR", "PUBLIC_IMAGE_CHAIR", "ADMIN", "READER",
+  ],
   "meetings.create": ["PRESIDENT", "SECRETARY", "PROTOCOL", "ADMIN"],
   "meetings.edit": ["PRESIDENT", "SECRETARY", "PROTOCOL", "ADMIN"],
   "members.manage": ["PRESIDENT", "SECRETARY", "MEMBERSHIP_CHAIR", "ADMIN"],
@@ -59,6 +63,7 @@ export const PERMISSION_LABELS: Record<Permission, { fr: string; en: string }> =
   "minutes.approve": { fr: "Approuver des PV", en: "Approve minutes" },
   "minutes.finalize": { fr: "Finaliser des PV", en: "Finalize minutes" },
   "minutes.delete": { fr: "Archiver des PV", en: "Archive minutes" },
+  "minutes.comment": { fr: "Commenter les PV", en: "Comment on minutes" },
   "meetings.create": { fr: "Créer des réunions", en: "Create meetings" },
   "meetings.edit": { fr: "Modifier des réunions", en: "Edit meetings" },
   "members.manage": { fr: "Gérer les membres", en: "Manage members" },
