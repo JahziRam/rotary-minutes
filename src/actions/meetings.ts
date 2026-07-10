@@ -11,8 +11,9 @@ import { prepareBrandedEmail } from "@/lib/email-branding";
 import { icsAttachment } from "@/lib/ics";
 import { isFeatureEnabled } from "@/lib/feature-gate";
 
-/** Parse YYYY-MM-DD as local calendar date (noon) to avoid UTC day-shift. */
-export function parseLocalDate(dateStr: string): Date {
+/** Parse YYYY-MM-DD as local calendar date (noon) to avoid UTC day-shift.
+ *  Must stay non-exported: "use server" files may only export async actions. */
+function parseLocalDate(dateStr: string): Date {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr.trim());
   if (match) {
     const year = Number(match[1]);
