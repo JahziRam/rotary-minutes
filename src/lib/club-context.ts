@@ -33,11 +33,15 @@ async function resolveClubContext(includeMembers: boolean): Promise<ClubContext 
   let role = (membership?.role ?? "ADMIN") as ClubRoleType;
   let customRoleId = membership?.customRoleId ?? null;
 
-  if (!clubId && session.user.isSuperAdmin) {
+  if (session.user.isSuperAdmin) {
     const viewAsClubId = await getViewAsClubId();
-    if (!viewAsClubId) return null;
-    clubId = viewAsClubId;
-    role = "ADMIN";
+    if (viewAsClubId) {
+      clubId = viewAsClubId;
+      role = "ADMIN";
+      customRoleId = null;
+    } else if (!clubId) {
+      return null;
+    }
   }
 
   const club = await prisma.club.findUnique({

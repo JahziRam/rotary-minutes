@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
+import { getSession } from "@/lib/cached-auth";
 import { getClubContext } from "@/lib/club-context";
 import { getMyAccountData } from "@/actions/member-portal";
 import { AppShellServer } from "@/components/layout/app-shell-server";
@@ -15,8 +16,12 @@ export default async function MyAccountPage({
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("memberPortal");
+  const session = await getSession();
   const ctx = await getClubContext();
-  if (!ctx) redirect(`/${locale}/login`);
+  if (!ctx) {
+    if (session?.user?.isSuperAdmin) redirect(`/${locale}/dashboard`);
+    redirect(`/${locale}/login`);
+  }
 
   const data = await getMyAccountData();
   if ("error" in data) {

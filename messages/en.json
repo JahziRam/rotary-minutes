@@ -70,7 +70,9 @@
     "exit": "Exit club view",
     "switcherLabel": "View as club",
     "selectClub": "Select a club…",
-    "viewClub": "View this club"
+    "viewClub": "View this club",
+    "pickerTitle": "Choose a club to inspect",
+    "pickerDescription": "Select a club to access its dashboard, member portal and all club features."
   },
   "notifications": {
     "title": "Notifications & Announcements",

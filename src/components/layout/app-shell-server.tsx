@@ -46,8 +46,8 @@ export async function AppShellServer({
 
   const role = (ctx?.role ?? session?.user?.memberships?.[0]?.role ?? "READER") as ClubRoleType;
   const features = ctx?.features ?? DEFAULT_FEATURES;
-  const hiddenNavKeys = getHiddenNavKeys(role, features, isSuperAdmin && !isViewingAsClub);
-  const lockedNavKeys = getLockedNavKeys(role, features, isSuperAdmin && !isViewingAsClub);
+  const hiddenNavKeys = getHiddenNavKeys(role, features, isSuperAdmin);
+  const lockedNavKeys = getLockedNavKeys(role, features, isSuperAdmin);
   const hasDistrictAccess =
     isSuperAdmin ||
     (session?.user?.id

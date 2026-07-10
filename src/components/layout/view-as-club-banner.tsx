@@ -1,9 +1,8 @@
 "use client";
 
-import { useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Eye, X } from "lucide-react";
-import { clearViewAsClub } from "@/actions/view-as-club";
+import { clearViewAsClubFromForm } from "@/actions/view-as-club";
 import { Button } from "@/components/ui/button";
 
 export function ViewAsClubBanner({
@@ -14,7 +13,6 @@ export function ViewAsClubBanner({
   locale: string;
 }) {
   const t = useTranslations("viewAsClub");
-  const [pending, startTransition] = useTransition();
 
   return (
     <div className="bg-amber-50 border-b border-amber-200 text-amber-950">
@@ -25,16 +23,18 @@ export function ViewAsClubBanner({
             {t("banner", { club: clubName })}
           </span>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={pending}
-          className="h-8 border-amber-300 bg-white/80 hover:bg-white text-amber-900"
-          onClick={() => startTransition(() => clearViewAsClub(locale))}
-        >
-          <X className="h-3.5 w-3.5 mr-1.5" />
-          {t("exit")}
-        </Button>
+        <form action={clearViewAsClubFromForm}>
+          <input type="hidden" name="locale" value={locale} />
+          <Button
+            type="submit"
+            variant="outline"
+            size="sm"
+            className="h-8 border-amber-300 bg-white/80 hover:bg-white text-amber-900"
+          >
+            <X className="h-3.5 w-3.5 mr-1.5" />
+            {t("exit")}
+          </Button>
+        </form>
       </div>
     </div>
   );

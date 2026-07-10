@@ -14,6 +14,10 @@ import { CLUB_NAV_ITEMS } from "@/lib/nav-config";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useNativeApp } from "@/hooks/use-native-app";
+import {
+  ClubViewAsSwitcher,
+  type ViewAsClubOption,
+} from "./club-view-as-switcher";
 
 export function AppMobileShell({
   title,
@@ -21,6 +25,10 @@ export function AppMobileShell({
   notificationCount,
   notifications,
   isSuperAdmin,
+  isViewingAsClub = false,
+  viewAsClubs = [],
+  viewAsClubId = null,
+  shellLocale = "fr",
   hiddenNavKeys,
   lockedNavKeys,
   canManageSubscription,
@@ -33,6 +41,10 @@ export function AppMobileShell({
   notificationCount?: number;
   notifications?: HeaderNotification[];
   isSuperAdmin?: boolean;
+  isViewingAsClub?: boolean;
+  viewAsClubs?: ViewAsClubOption[];
+  viewAsClubId?: string | null;
+  shellLocale?: string;
   hiddenNavKeys?: string[];
   lockedNavKeys?: string[];
   canManageSubscription?: boolean;
@@ -144,6 +156,15 @@ export function AppMobileShell({
         items={drawerItems}
         footer={
           <div className="space-y-2">
+            {isSuperAdmin && (
+              <ClubViewAsSwitcher
+                clubs={viewAsClubs}
+                currentClubId={viewAsClubId}
+                locale={shellLocale || locale}
+                variant="drawer"
+                className="px-0 pb-2 border-b border-white/10 mb-2"
+              />
+            )}
             {canManageSubscription && (
               <Link
                 href={`/${locale}/settings/subscription`}

@@ -70,7 +70,9 @@
     "exit": "Quitter le mode club",
     "switcherLabel": "Voir comme club",
     "selectClub": "Choisir un club…",
-    "viewClub": "Voir ce club"
+    "viewClub": "Voir ce club",
+    "pickerTitle": "Choisir un club à inspecter",
+    "pickerDescription": "Sélectionnez un club pour accéder à son tableau de bord, à l'espace membre et à toutes les fonctionnalités club."
   },
   "notifications": {
     "title": "Notifications & Annonces",

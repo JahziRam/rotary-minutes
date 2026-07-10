@@ -8,13 +8,25 @@ import { cn } from "@/lib/utils";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { ADMIN_NAV_GROUPS, ADMIN_NAV_ITEMS, type AdminNavGroup } from "@/lib/admin-nav-config";
+import {
+  ClubViewAsSwitcher,
+  type ViewAsClubOption,
+} from "@/components/layout/club-view-as-switcher";
 
 export function AdminSidebar({
   userEmail,
   logoutLabel,
+  isSuperAdmin = false,
+  viewAsClubs = [],
+  viewAsClubId = null,
+  shellLocale = "fr",
 }: {
   userEmail?: string;
   logoutLabel: string;
+  isSuperAdmin?: boolean;
+  viewAsClubs?: ViewAsClubOption[];
+  viewAsClubId?: string | null;
+  shellLocale?: string;
 }) {
   const pathname = usePathname();
   const locale = useLocale();
@@ -44,6 +56,16 @@ export function AdminSidebar({
             <p className="text-[10px] text-white/40 mt-2 truncate">{userEmail}</p>
           )}
         </div>
+
+        {isSuperAdmin && (
+          <ClubViewAsSwitcher
+            clubs={viewAsClubs}
+            currentClubId={viewAsClubId}
+            locale={shellLocale}
+            variant="sidebar"
+            className="border-b border-white/10"
+          />
+        )}
 
         <nav className="flex-1 p-3 overflow-y-auto space-y-4">
           {ADMIN_NAV_GROUPS.map((group) => {

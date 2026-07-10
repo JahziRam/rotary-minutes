@@ -9,15 +9,27 @@ import { cn } from "@/lib/utils";
 import { MobileMenuDrawer } from "@/components/layout/mobile-menu-drawer";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { ADMIN_NAV_GROUPS, ADMIN_NAV_ITEMS, type AdminNavGroup } from "@/lib/admin-nav-config";
+import {
+  ClubViewAsSwitcher,
+  type ViewAsClubOption,
+} from "@/components/layout/club-view-as-switcher";
 
 export function AdminMobileHeader({
   title,
   userEmail,
   logoutLabel,
+  isSuperAdmin = false,
+  viewAsClubs = [],
+  viewAsClubId = null,
+  shellLocale = "fr",
 }: {
   title: string;
   userEmail?: string;
   logoutLabel: string;
+  isSuperAdmin?: boolean;
+  viewAsClubs?: ViewAsClubOption[];
+  viewAsClubId?: string | null;
+  shellLocale?: string;
 }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
@@ -72,6 +84,15 @@ export function AdminMobileHeader({
         items={drawerItems}
         footer={
           <div className="space-y-2">
+            {isSuperAdmin && (
+              <ClubViewAsSwitcher
+                clubs={viewAsClubs}
+                currentClubId={viewAsClubId}
+                locale={shellLocale || locale}
+                variant="drawer"
+                className="px-0 pb-2 border-b border-white/10 mb-2"
+              />
+            )}
             <Link
               href={`/${locale}/dashboard`}
               onClick={() => setOpen(false)}

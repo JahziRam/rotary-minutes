@@ -31,6 +31,8 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 import { getAppName } from "@/lib/app-settings";
+import { getViewAsClubId } from "@/lib/view-as-club";
+import { ViewAsClubPicker } from "@/components/layout/view-as-club-picker";
 
 export default async function DashboardPage({
   params,
@@ -107,6 +109,16 @@ export default async function DashboardPage({
   const onboardingGuide =
     showGuide ? await getClubOnboarding() : null;
 
+  const viewAsClubs =
+    session?.user?.isSuperAdmin && !ctx
+      ? await prisma.club.findMany({
+          where: { isActive: true },
+          select: { id: true, name: true, city: true },
+          orderBy: { name: "asc" },
+        })
+      : [];
+  const viewAsClubId = session?.user?.isSuperAdmin ? await getViewAsClubId() : null;
+
   return (
     <AppShellServer title={t("nav.dashboard")}>
       <div className="space-y-8">
@@ -124,11 +136,11 @@ export default async function DashboardPage({
         <DashboardAssistance />
 
         {session?.user?.isSuperAdmin && !ctx ? (
-          <Card className="border-dashed border-amber-200 bg-amber-50/50">
-            <CardContent className="py-8 text-center">
-              <p className="text-sm text-amber-900">{tDashboard("selectClubHint")}</p>
-            </CardContent>
-          </Card>
+          <ViewAsClubPicker
+            clubs={viewAsClubs}
+            locale={locale}
+            currentClubId={viewAsClubId}
+          />
         ) : (
           <>
             <DashboardHero

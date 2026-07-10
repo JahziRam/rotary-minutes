@@ -93,6 +93,10 @@ export function AppShell({
           notificationCount={notificationCount}
           notifications={notifications}
           isSuperAdmin={isSuperAdmin}
+          isViewingAsClub={isViewingAsClub}
+          viewAsClubs={viewAsClubs}
+          viewAsClubId={viewAsClubId}
+          shellLocale={shellLocale}
           hiddenNavKeys={hiddenNavKeys}
           lockedNavKeys={lockedNavKeys}
           canManageSubscription={canManageSubscription}
