@@ -5,7 +5,17 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
-import { Download, FileText, Plus, Trash2, Link2, Pencil, Search, FolderPlus } from "lucide-react";
+import {
+  Download,
+  FileText,
+  Plus,
+  Trash2,
+  Link2,
+  Pencil,
+  Search,
+  FolderPlus,
+  Paperclip,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,8 +25,17 @@ import { createEntry, deleteEntry, updateEntry } from "@/actions/treasury";
 import { createSubAccount, deleteSubAccount } from "@/actions/treasury-subaccounts";
 import { TreasuryExtras } from "@/components/treasury/treasury-extras";
 import { TreasuryImportPanel } from "@/components/treasury/treasury-import-panel";
+import {
+  TreasuryVoucherModal,
+  TreasuryVoucherPanel,
+  uploadVoucherFilesClient,
+} from "@/components/treasury/treasury-voucher-panel";
 import type { getTreasuryDashboardData } from "@/lib/queries/treasury";
-import type { BudgetEntryType, TreasuryCollectionStatus } from "@/generated/prisma/client";
+import type {
+  BudgetEntryType,
+  TreasuryCollectionStatus,
+  TreasuryVoucherKind,
+} from "@/generated/prisma/client";
 
 type DashboardData = Awaited<ReturnType<typeof getTreasuryDashboardData>>;
 
@@ -41,6 +60,7 @@ type EntryRow = {
   reference: string | null;
   collectionStatus?: TreasuryCollectionStatus;
   eventRegistrationId?: string | null;
+  voucherCount?: number;
 };
 
 type Category = { id: string; name: string; type: BudgetEntryType };
@@ -120,7 +140,21 @@ export function TreasuryPanel({
     eventId: "",
     collectionStatus: "COLLECTED" as TreasuryCollectionStatus,
   });
+  const [pendingVoucherFiles, setPendingVoucherFiles] = useState<File[]>([]);
+  const [voucherKind, setVoucherKind] = useState<TreasuryVoucherKind>("INVOICE");
+  const [voucherModal, setVoucherModal] = useState<{
+    entity:
+      | { type: "budgetEntry"; id: string }
+      | { type: "duesPayment"; id: string }
+      | { type: "eventRegistration"; id: string };
+    title: string;
+    defaultKind?: TreasuryVoucherKind;
+  } | null>(null);
   const dateLocale = locale === "fr" ? fr : enUS;
+
+  function defaultVoucherKindForEntry(type: BudgetEntryType): TreasuryVoucherKind {
+    return type === "EXPENSE" ? "INVOICE" : "RECEIPT";
+  }
 
   const filteredAll = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -386,7 +420,11 @@ export function TreasuryPanel({
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <select
                 value={form.type}
-                onChange={(e) => setForm({ ...form, type: e.target.value as BudgetEntryType })}
+                onChange={(e) => {
+                  const type = e.target.value as BudgetEntryType;
+                  setForm({ ...form, type });
+                  setVoucherKind(defaultVoucherKindForEntry(type));
+                }}
                 className="text-sm border border-gray-200 rounded-lg px-3 py-2"
               >
                 <option value="INCOME">{t("types.INCOME")}</option>
@@ -472,26 +510,77 @@ export function TreasuryPanel({
                 {t("receivable")}
               </label>
             )}
+            <div className="space-y-2 border-t border-gray-100 pt-3">
+              <p className="text-xs font-medium text-gray-600">{t("vouchers.title")}</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <select
+                  value={voucherKind}
+                  onChange={(e) => setVoucherKind(e.target.value as TreasuryVoucherKind)}
+                  className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white"
+                >
+                  <option value="INVOICE">{t("vouchers.kinds.INVOICE")}</option>
+                  <option value="RECEIPT">{t("vouchers.kinds.RECEIPT")}</option>
+                  <option value="PAYMENT_PROOF">{t("vouchers.kinds.PAYMENT_PROOF")}</option>
+                  <option value="BANK_STATEMENT">{t("vouchers.kinds.BANK_STATEMENT")}</option>
+                  <option value="CONTRACT">{t("vouchers.kinds.CONTRACT")}</option>
+                  <option value="OTHER">{t("vouchers.kinds.OTHER")}</option>
+                </select>
+                <label className="text-xs text-navy cursor-pointer hover:underline">
+                  {t("vouchers.addFiles")}
+                  <input
+                    type="file"
+                    multiple
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.webp,.txt"
+                    className="sr-only"
+                    onChange={(e) =>
+                      setPendingVoucherFiles(Array.from(e.target.files ?? []))
+                    }
+                  />
+                </label>
+                {pendingVoucherFiles.length > 0 && (
+                  <span className="text-xs text-gray-500">
+                    {t("vouchers.selected", { count: pendingVoucherFiles.length })}
+                  </span>
+                )}
+              </div>
+              <p className="text-[10px] text-gray-400">{t("vouchers.limitsHint")}</p>
+            </div>
             <Button
               size="sm"
               variant="gold"
               disabled={pending || !form.amount || !form.description}
               onClick={() =>
-                run(
-                  () =>
-                    createEntry({
-                      type: form.type,
-                      amount: parseFloat(form.amount),
-                      date: form.date,
-                      description: form.description,
-                      categoryId: form.categoryId || undefined,
-                      subAccountId: form.subAccountId || undefined,
-                      eventId: form.eventId || undefined,
-                      collectionStatus: form.type === "INCOME" ? form.collectionStatus : undefined,
-                    }),
-                  t("entryCreated"),
-                  () => setShowForm(false)
-                )
+                startTransition(async () => {
+                  const result = await createEntry({
+                    type: form.type,
+                    amount: parseFloat(form.amount),
+                    date: form.date,
+                    description: form.description,
+                    categoryId: form.categoryId || undefined,
+                    subAccountId: form.subAccountId || undefined,
+                    eventId: form.eventId || undefined,
+                    collectionStatus:
+                      form.type === "INCOME" ? form.collectionStatus : undefined,
+                  });
+                  if (!("success" in result) || !result.success) return;
+
+                  if (pendingVoucherFiles.length > 0 && result.entry?.id) {
+                    const upload = await uploadVoucherFilesClient(
+                      { type: "budgetEntry", id: result.entry.id },
+                      pendingVoucherFiles,
+                      voucherKind
+                    );
+                    if (!upload.ok) {
+                      setToast(t("vouchers.uploadPartial"));
+                    }
+                  }
+
+                  setToast(t("entryCreated"));
+                  setShowForm(false);
+                  setPendingVoucherFiles([]);
+                  setVoucherKind(defaultVoucherKindForEntry(form.type));
+                  router.refresh();
+                })
               }
             >
               {t("saveEntry")}
@@ -593,6 +682,11 @@ export function TreasuryPanel({
                 {t("receivable")}
               </label>
             )}
+            <TreasuryVoucherPanel
+              entity={{ type: "budgetEntry", id: editingId }}
+              canManage={canManage}
+              defaultKind={defaultVoucherKindForEntry(editForm.type)}
+            />
             <div className="flex gap-2">
               <Button
                 size="sm"
@@ -635,6 +729,7 @@ export function TreasuryPanel({
                 <th className="px-4 py-3 font-medium">{t("description")}</th>
                 <th className="px-4 py-3 font-medium">{t("amount")}</th>
                 <th className="px-4 py-3 font-medium">{t("links")}</th>
+                <th className="px-4 py-3 font-medium">{t("vouchers.column")}</th>
                 {canManage && (
                   <th className="px-4 py-3 font-medium text-right">{t("actions")}</th>
                 )}
@@ -643,7 +738,7 @@ export function TreasuryPanel({
             <tbody className="divide-y divide-gray-100">
               {filteredAll.length === 0 ? (
                 <tr>
-                  <td colSpan={canManage ? 6 : 5} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={canManage ? 7 : 6} className="px-4 py-8 text-center text-gray-500">
                     {t("noEntries")}
                   </td>
                 </tr>
@@ -706,6 +801,35 @@ export function TreasuryPanel({
                           <span className="text-xs text-gray-400">{entry.eventTitle}</span>
                         )}
                       </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 text-xs gap-1"
+                        onClick={() =>
+                          setVoucherModal({
+                            entity: entry.eventRegistrationId
+                              ? { type: "eventRegistration", id: entry.eventRegistrationId }
+                              : entry.duesPaymentId
+                                ? { type: "duesPayment", id: entry.duesPaymentId }
+                                : { type: "budgetEntry", id: entry.id },
+                            title: entry.description,
+                            defaultKind: entry.eventRegistrationId
+                              ? "RECEIPT"
+                              : entry.duesPaymentId
+                                ? "PAYMENT_PROOF"
+                                : defaultVoucherKindForEntry(entry.type),
+                          })
+                        }
+                      >
+                        <Paperclip className="h-3.5 w-3.5" />
+                        {(entry.voucherCount ?? 0) > 0
+                          ? entry.voucherCount
+                          : canManage
+                            ? "+"
+                            : "0"}
+                      </Button>
                     </td>
                     {canManage && (
                       <td className="px-4 py-3 text-right">
@@ -846,6 +970,20 @@ export function TreasuryPanel({
           />
         </div>
       </div>
+
+      {voucherModal && (
+        <TreasuryVoucherModal
+          entity={voucherModal.entity}
+          title={voucherModal.title}
+          canManage={canManage}
+          defaultKind={voucherModal.defaultKind}
+          onClose={() => {
+            setVoucherModal(null);
+            router.refresh();
+          }}
+        />
+      )}
+
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
     </>
   );

@@ -1,3 +1,5 @@
+import { getDocumentViewKind } from "@/lib/document-types";
+
 /** Client-safe URLs for viewing/downloading club documents (never expose data: blobs). */
 
 export function isStoredDataUrl(fileUrl: string | null | undefined): boolean {
@@ -18,13 +20,20 @@ function pdfPathWithParams(fileUrl: string, download: boolean): string {
   return qs ? `${path}?${qs}` : path;
 }
 
-/** URL for inline preview (iframe, new tab read). */
+/** URL for inline preview (iframe, img, office HTML). */
 export function documentViewUrl(
   documentId: string,
-  fileUrl: string | null | undefined
+  fileUrl: string | null | undefined,
+  mimeType?: string | null
 ): string | null {
   if (!fileUrl) return null;
-  if (isStoredDataUrl(fileUrl)) return `/api/documents/${documentId}`;
+  if (isStoredDataUrl(fileUrl)) {
+    const kind = getDocumentViewKind(mimeType, fileUrl);
+    if (kind === "office" || kind === "text") {
+      return `/api/documents/${documentId}?preview=1`;
+    }
+    return `/api/documents/${documentId}`;
+  }
   if (fileUrl.includes("/api/pdf/")) return pdfPathWithParams(fileUrl, false);
   return fileUrl;
 }

@@ -273,7 +273,7 @@ export async function getMyAccountData() {
       id: d.id,
       title: d.title,
       category: d.category,
-      fileUrl: documentViewUrl(d.id, d.fileUrl),
+      fileUrl: documentViewUrl(d.id, d.fileUrl, d.mimeType),
       downloadUrl: documentDownloadUrl(d.id, d.fileUrl),
       fileName: d.fileName,
       createdAt: d.createdAt.toISOString(),

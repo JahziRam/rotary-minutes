@@ -26,6 +26,7 @@ import {
   sendMemberDuesHistoryEmail,
   updateDuesStatus,
 } from "@/actions/dues";
+import { TreasuryVoucherPanel } from "@/components/treasury/treasury-voucher-panel";
 import type { DuesPaymentPlan, DuesStatus, PaymentMethod } from "@/generated/prisma/client";
 
 const PAYMENT_METHODS: PaymentMethod[] = [
@@ -48,6 +49,7 @@ type PeriodRow = {
   status: DuesStatus;
   invoiceNumber: string | null;
   receiptNumber: string | null;
+  paymentId: string | null;
 };
 
 type DuesRow = {
@@ -367,7 +369,8 @@ export function DuesPanel({
                       </tr>
                       {isExpanded &&
                         periods.map((period) => (
-                          <tr key={period.id} className="bg-gray-50/80 text-xs">
+                          <Fragment key={period.id}>
+                          <tr className="bg-gray-50/80 text-xs">
                             <td className="px-4 py-2 pl-8 text-gray-500">
                               {period.periodLabel ?? `#${period.periodIndex}`}
                             </td>
@@ -482,6 +485,19 @@ export function DuesPanel({
                               )}
                             </td>
                           </tr>
+                          {period.status === "PAID" && period.paymentId && canManage && (
+                            <tr className="bg-gray-50/60">
+                              <td colSpan={6} className="px-4 py-3 pl-8">
+                                <TreasuryVoucherPanel
+                                  entity={{ type: "duesPayment", id: period.paymentId }}
+                                  canManage={canManage}
+                                  compact
+                                  defaultKind="PAYMENT_PROOF"
+                                />
+                              </td>
+                            </tr>
+                          )}
+                          </Fragment>
                         ))}
                     </Fragment>
                   );

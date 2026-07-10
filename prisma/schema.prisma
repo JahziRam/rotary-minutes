@@ -162,6 +162,15 @@ enum TreasuryCollectionStatus {
   RECEIVABLE
 }
 
+enum TreasuryVoucherKind {
+  INVOICE
+  RECEIPT
+  PAYMENT_PROOF
+  BANK_STATEMENT
+  CONTRACT
+  OTHER
+}
+
 enum BackupScope {
   FULL
   DATABASE_ONLY
@@ -362,6 +371,7 @@ model User {
   budgetEntriesRecorded BudgetEntry[]
   clubActionsCreated ClubAction[] @relation("ActionCreator")
   clubDocumentsUploaded ClubDocument[]
+  treasuryVouchersUploaded TreasuryVoucher[] @relation("TreasuryVoucherUploader")
   clubBackupsCreated ClubBackup[] @relation("ClubBackupCreator")
   platformBackupsCreated PlatformBackup[] @relation("PlatformBackupCreator")
   governanceRecordsCreated GovernanceRecord[]
@@ -448,6 +458,7 @@ model Club {
   governanceRecords GovernanceRecord[]
   calendarNotes   ClubCalendarNote[]
   treasurySubAccounts TreasurySubAccount[]
+  treasuryVouchers TreasuryVoucher[]
   emailSettings   ClubEmailSettings?
   duesPaymentSettings ClubDuesPaymentSettings?
   assistanceAnalyticsEvents AssistanceAnalyticsEvent[]
@@ -569,6 +580,7 @@ model DuesPayment {
   dues       MemberDues? @relation(fields: [duesId], references: [id], onDelete: SetNull)
   recordedBy User?       @relation(fields: [recordedById], references: [id], onDelete: SetNull)
   budgetEntries BudgetEntry[]
+  vouchers      TreasuryVoucher[]
 
   @@index([clubId, memberId])
   @@index([duesId])
@@ -1452,6 +1464,7 @@ model BudgetEntry {
   eventRegistration     EventRegistration? @relation(fields: [eventRegistrationId], references: [id], onDelete: SetNull)
   recordedBy            User?            @relation(fields: [recordedById], references: [id], onDelete: SetNull)
   bankStatementMatches  BankStatementLine[]
+  vouchers              TreasuryVoucher[]
 
   @@index([clubId, date])
   @@index([clubId, type])
@@ -1678,10 +1691,36 @@ model EventRegistration {
   priceTier     EventPriceTier?         @relation(fields: [priceTierId], references: [id], onDelete: SetNull)
   ticketSlot    EventTicketSlot?
   treasuryEntry BudgetEntry?
+  vouchers      TreasuryVoucher[]
 
   @@index([eventId])
   @@index([memberId])
   @@index([orderGroupId])
+}
+
+model TreasuryVoucher {
+  id                  String              @id @default(cuid())
+  clubId              String
+  kind                TreasuryVoucherKind @default(OTHER)
+  label               String?
+  fileUrl             String              @db.Text
+  fileName            String
+  mimeType            String
+  budgetEntryId       String?
+  duesPaymentId       String?
+  eventRegistrationId String?
+  uploadedById        String?
+  createdAt           DateTime            @default(now())
+
+  club              Club               @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  budgetEntry       BudgetEntry?       @relation(fields: [budgetEntryId], references: [id], onDelete: Cascade)
+  duesPayment       DuesPayment?       @relation(fields: [duesPaymentId], references: [id], onDelete: Cascade)
+  eventRegistration EventRegistration? @relation(fields: [eventRegistrationId], references: [id], onDelete: Cascade)
+  uploadedBy        User?              @relation("TreasuryVoucherUploader", fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  @@index([clubId, budgetEntryId])
+  @@index([clubId, duesPaymentId])
+  @@index([clubId, eventRegistrationId])
 }
 
 model DocumentFolder {

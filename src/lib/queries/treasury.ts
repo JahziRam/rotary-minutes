@@ -50,6 +50,7 @@ export async function getTreasuryEntries(clubId: string, filters?: TreasuryFilte
       action: { select: { id: true, title: true } },
       subAccount: { select: { id: true, name: true, code: true } },
       recordedBy: { select: { firstName: true, lastName: true } },
+      _count: { select: { vouchers: true } },
     },
   });
 }

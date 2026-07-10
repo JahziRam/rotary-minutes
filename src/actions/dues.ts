@@ -81,6 +81,13 @@ export async function listMemberDues(fiscalYear?: number) {
     prisma.memberDues.findMany({
       where: { clubId: ctx.clubId, fiscalYear: year },
       orderBy: [{ memberId: "asc" }, { periodIndex: "asc" }],
+      include: {
+        payments: {
+          orderBy: { paidAt: "desc" },
+          take: 1,
+          select: { id: true },
+        },
+      },
     }),
     prisma.member.findFirst({
       where: { clubId: ctx.clubId, userId: ctx.userId, isActive: true },

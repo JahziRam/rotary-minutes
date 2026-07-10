@@ -8,13 +8,13 @@ import { fr, enUS } from "date-fns/locale";
 import {
   Search,
   Upload,
-  Archive,
   FileText,
   FolderOpen,
   FolderPlus,
   Eye,
   Share2,
   Link2,
+  Settings2,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -23,19 +23,19 @@ import { Input } from "@/components/ui/input";
 import { Toast } from "@/components/ui/toast";
 import { ListPagination } from "@/components/ui/list-controls";
 import { DocumentViewerModal } from "@/components/documents/document-viewer-modal";
+import { DocumentManageDialog } from "@/components/documents/document-manage-dialog";
 import {
   MAX_UPLOAD_FILES_PER_BATCH,
   validateUploadFiles,
 } from "@/lib/upload-limits";
 import {
   searchDocuments,
-  uploadDocumentFiles,
-  archiveDocument,
+  fetchDocumentRows,
   createDocumentFolder,
   enableDocumentShare,
   disableDocumentShare,
-  moveDocumentToFolder,
 } from "@/actions/documents";
+import type { DocumentViewKind } from "@/lib/document-types";
 import type { DocumentCategory } from "@/generated/prisma/client";
 
 type DocumentRow = {
@@ -45,6 +45,7 @@ type DocumentRow = {
   description: string | null;
   fileUrl: string | null;
   downloadUrl?: string | null;
+  viewKind?: DocumentViewKind;
   fileName: string | null;
   mimeType: string | null;
   minuteId: string | null;
@@ -101,6 +102,7 @@ export function DocumentsLibrary({
   const [showUpload, setShowUpload] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [viewer, setViewer] = useState<DocumentRow | null>(null);
+  const [managing, setManaging] = useState<DocumentRow | null>(null);
   const dateLocale = locale === "fr" ? fr : enUS;
 
   const childFolders = useMemo(
@@ -139,50 +141,95 @@ export function DocumentsLibrary({
     }
 
     const fd = new FormData(form);
+    if (fileManagerEnabled && currentFolderId) {
+      fd.set("folderId", currentFolderId);
+    }
+
     startTransition(async () => {
-      const result = await uploadDocumentFiles(fd);
-      if ("success" in result && result.success) {
-        if (currentFolderId) {
-          for (const documentId of result.documentIds) {
-            await moveDocumentToFolder(documentId, currentFolderId);
+      try {
+        const response = await fetch("/api/documents/upload", {
+          method: "POST",
+          body: fd,
+        });
+        const result = (await response.json()) as {
+          success?: boolean;
+          uploaded?: number;
+          failed?: string[];
+          error?: string;
+        };
+
+        if (response.ok && result.success) {
+          const refreshed = await fetchDocumentRows({
+            category: category || undefined,
+            folderId: fileManagerEnabled ? currentFolderId : undefined,
+          });
+          if ("documents" in refreshed) {
+            setDocuments(refreshed.documents as DocumentRow[]);
           }
-        }
-        if (result.failed.length > 0) {
-          setToast(
-            t("uploadedPartial", {
-              count: result.uploaded,
-              failed: result.failed.length,
-            })
-          );
+
+          if (result.failed && result.failed.length > 0) {
+            setToast(
+              t("uploadedPartial", {
+                count: result.uploaded ?? 0,
+                failed: result.failed.length,
+              })
+            );
+          } else {
+            setToast(
+              (result.uploaded ?? 0) > 1
+                ? t("uploadedMultiple", { count: result.uploaded ?? 0 })
+                : t("uploaded")
+            );
+          }
+          setShowUpload(false);
+          form.reset();
+        } else if (result.error === "TOO_LARGE") {
+          setToast(t("fileTooLarge"));
+        } else if (result.error === "TOO_MANY_FILES") {
+          setToast(t("tooManyFiles", { max: MAX_UPLOAD_FILES_PER_BATCH }));
+        } else if (result.error === "INVALID_TYPE") {
+          setToast(t("invalidType"));
         } else {
-          setToast(
-            result.uploaded > 1
-              ? t("uploadedMultiple", { count: result.uploaded })
-              : t("uploaded")
-          );
+          setToast(t("uploadError"));
         }
-        setShowUpload(false);
-        router.refresh();
-      } else if ("error" in result && result.error === "TOO_LARGE") {
-        setToast(t("fileTooLarge"));
-      } else if ("error" in result && result.error === "TOO_MANY_FILES") {
-        setToast(t("tooManyFiles", { max: MAX_UPLOAD_FILES_PER_BATCH }));
-      } else if ("error" in result && result.error === "INVALID_TYPE") {
-        setToast(t("invalidType"));
-      } else {
+      } catch {
         setToast(t("uploadError"));
       }
     });
   }
 
-  function handleArchive(documentId: string) {
-    startTransition(async () => {
-      const result = await archiveDocument(documentId);
-      if ("success" in result && result.success) {
-        setToast(t("archived"));
-        setDocuments((prev) => prev.filter((d) => d.id !== documentId));
+  function handleDocumentUpdated(updated: {
+    id: string;
+    title: string;
+    category: DocumentCategory;
+    description: string | null;
+    folderId: string | null;
+    minuteId: string | null;
+    tags: string[];
+  }) {
+    setDocuments((prev) => {
+      if (fileManagerEnabled && updated.folderId !== currentFolderId) {
+        return prev.filter((d) => d.id !== updated.id);
       }
+      return prev.map((d) =>
+        d.id === updated.id
+          ? {
+              ...d,
+              title: updated.title,
+              category: updated.category,
+              description: updated.description,
+              folderId: updated.folderId,
+              tags: updated.tags,
+            }
+          : d
+      );
     });
+    setToast(t("manage.updated"));
+  }
+
+  function handleDocumentDeleted(documentId: string) {
+    setDocuments((prev) => prev.filter((d) => d.id !== documentId));
+    setToast(t("manage.deleted"));
   }
 
   function handleCreateFolder() {
@@ -461,9 +508,10 @@ export function DocumentsLibrary({
                       variant="ghost"
                       size="sm"
                       disabled={pending}
-                      onClick={() => handleArchive(doc.id)}
+                      onClick={() => setManaging(doc)}
+                      title={t("manage.title")}
                     >
-                      <Archive className="h-4 w-4" />
+                      <Settings2 className="h-4 w-4" />
                     </Button>
                   )}
                 </div>
@@ -482,11 +530,24 @@ export function DocumentsLibrary({
         onPageChange={setDocPage}
       />
 
+      {managing && (
+        <DocumentManageDialog
+          document={managing}
+          folders={folders}
+          fileManagerEnabled={fileManagerEnabled}
+          onClose={() => setManaging(null)}
+          onUpdated={handleDocumentUpdated}
+          onDeleted={handleDocumentDeleted}
+        />
+      )}
+
       {viewer?.fileUrl && (
         <DocumentViewerModal
           title={viewer.title}
           fileUrl={viewer.fileUrl}
+          downloadUrl={viewer.downloadUrl}
           mimeType={viewer.mimeType}
+          viewKind={viewer.viewKind}
           shareUrl={
             viewer.shareToken
               ? `/api/share/document/${viewer.shareToken}`

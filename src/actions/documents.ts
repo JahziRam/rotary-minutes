@@ -6,8 +6,13 @@ import { requireFeature } from "@/lib/require-feature";
 import { requirePermission } from "@/lib/require-permission";
 import { hasRolePermission } from "@/lib/roles";
 import { randomBytes } from "node:crypto";
-import { fileToDocumentDataUrl, validateDocumentDataUrl } from "@/lib/document-storage";
+import {
+  bufferToDocumentDataUrl,
+  fileToDocumentDataUrl,
+  validateDocumentDataUrl,
+} from "@/lib/document-storage";
 import { documentDownloadUrl, documentViewUrl } from "@/lib/document-urls";
+import { getDocumentViewKind } from "@/lib/document-types";
 import { validateUploadFileSize, validateUploadFiles } from "@/lib/upload-limits";
 import { getClubFeatures } from "@/lib/features";
 import type { DocumentCategory } from "@/generated/prisma/client";
@@ -79,8 +84,9 @@ function mapDocumentRow(d: {
   const rawFileUrl = d.fileUrl;
   return {
     ...d,
-    fileUrl: documentViewUrl(d.id, rawFileUrl),
+    fileUrl: documentViewUrl(d.id, rawFileUrl, d.mimeType),
     downloadUrl: documentDownloadUrl(d.id, rawFileUrl),
+    viewKind: getDocumentViewKind(d.mimeType, rawFileUrl),
     createdAt: d.createdAt.toISOString(),
     updatedAt: d.updatedAt.toISOString(),
     shareExpiresAt: d.shareExpiresAt?.toISOString() ?? null,
@@ -361,6 +367,62 @@ export async function getSharedDocument(shareToken: string) {
   };
 }
 
+export async function fetchDocumentRows(filters?: {
+  category?: DocumentCategory;
+  includeArchived?: boolean;
+  folderId?: string | null;
+}) {
+  const auth = await requireDocumentsView();
+  if ("error" in auth && auth.error) return { error: auth.error as string };
+  const { ctx } = auth;
+
+  const documents = await prisma.clubDocument.findMany({
+    where: {
+      clubId: ctx.clubId,
+      ...(filters?.category ? { category: filters.category } : {}),
+      ...(filters?.includeArchived ? {} : { isArchived: false }),
+      ...(filters?.folderId !== undefined ? { folderId: filters.folderId } : {}),
+    },
+    select: documentSelect,
+    orderBy: [{ category: "asc" }, { createdAt: "desc" }],
+  });
+
+  return { documents: documents.map(mapDocumentRow) };
+}
+
+export async function uploadDocumentFromBuffer(data: {
+  title: string;
+  category: DocumentCategory;
+  description?: string;
+  tags?: string[];
+  buffer: Buffer;
+  fileName: string;
+  mimeType?: string;
+}) {
+  const auth = await requireDocumentsManage();
+  if ("error" in auth && auth.error) return { error: auth.error as string };
+
+  try {
+    const { dataUrl, mimeType } = bufferToDocumentDataUrl(
+      data.buffer,
+      data.fileName,
+      data.mimeType
+    );
+    return uploadDocument({
+      title: data.title,
+      category: data.category,
+      description: data.description,
+      tags: data.tags,
+      fileDataUrl: dataUrl,
+      fileName: data.fileName,
+      mimeType,
+    });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "UPLOAD_FAILED";
+    return { error: msg };
+  }
+}
+
 export async function uploadDocument(data: {
   title: string;
   category: DocumentCategory;
@@ -504,6 +566,87 @@ export async function uploadDocumentFiles(formData: FormData) {
   };
 }
 
+export async function updateDocument(
+  documentId: string,
+  data: {
+    title?: string;
+    category?: DocumentCategory;
+    description?: string | null;
+    tags?: string[];
+    folderId?: string | null;
+  }
+) {
+  const auth = await requireDocumentsManage();
+  if ("error" in auth && auth.error) return { error: auth.error as string };
+  const { ctx } = auth;
+
+  const doc = await prisma.clubDocument.findFirst({
+    where: { id: documentId, clubId: ctx.clubId, isArchived: false },
+  });
+  if (!doc) return { error: "NOT_FOUND" as const };
+
+  if (doc.minuteId) {
+    if (data.category !== undefined && data.category !== "MINUTE") {
+      return { error: "LINKED_MINUTE" as const };
+    }
+  }
+
+  const features = await getClubFeatures(ctx.clubId);
+
+  if (data.folderId !== undefined) {
+    if (!features.fileManagerEnabled) return { error: "FEATURE_DISABLED" as const };
+    if (data.folderId) {
+      const folder = await prisma.documentFolder.findFirst({
+        where: { id: data.folderId, clubId: ctx.clubId },
+      });
+      if (!folder) return { error: "NOT_FOUND" as const };
+    }
+  }
+
+  const title = data.title?.trim();
+  if (data.title !== undefined && !title) return { error: "INVALID_TITLE" as const };
+
+  const updateData: {
+    title?: string;
+    category?: DocumentCategory;
+    description?: string | null;
+    tags?: string[];
+    folderId?: string | null;
+  } = {};
+
+  if (title) updateData.title = title;
+  if (data.category !== undefined) updateData.category = data.category;
+  if (data.description !== undefined) {
+    updateData.description = data.description?.trim() || null;
+  }
+  if (data.tags !== undefined) updateData.tags = data.tags;
+  if (data.folderId !== undefined) updateData.folderId = data.folderId;
+
+  if (Object.keys(updateData).length === 0) {
+    return { error: "NO_CHANGES" as const };
+  }
+
+  const updated = await prisma.clubDocument.update({
+    where: { id: documentId },
+    data: updateData,
+    select: documentSelect,
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      clubId: ctx.clubId,
+      userId: ctx.userId,
+      action: "DOCUMENT_UPDATED",
+      entity: "ClubDocument",
+      entityId: documentId,
+      metadata: updateData,
+    },
+  });
+
+  revalidateDocuments();
+  return { success: true as const, document: mapDocumentRow(updated) };
+}
+
 export async function archiveDocument(documentId: string) {
   const auth = await requireDocumentsManage();
   if ("error" in auth && auth.error) return { error: auth.error as string };
@@ -513,6 +656,7 @@ export async function archiveDocument(documentId: string) {
     where: { id: documentId, clubId: ctx.clubId },
   });
   if (!doc) return { error: "NOT_FOUND" as const };
+  if (doc.minuteId) return { error: "LINKED_MINUTE" as const };
 
   await prisma.clubDocument.update({
     where: { id: documentId },

@@ -53,6 +53,7 @@ export default async function MemberDuesPage({
               status: p.status,
               invoiceNumber: p.invoiceNumber,
               receiptNumber: p.receiptNumber,
+              paymentId: p.payments[0]?.id ?? null,
             })),
             nextDue: nextDue
               ? {
@@ -66,6 +67,7 @@ export default async function MemberDuesPage({
                   status: nextDue.status,
                   invoiceNumber: nextDue.invoiceNumber,
                   receiptNumber: nextDue.receiptNumber,
+                  paymentId: nextDue.payments[0]?.id ?? null,
                 }
               : null,
           }))}

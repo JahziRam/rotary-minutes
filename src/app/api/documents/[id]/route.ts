@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getClubFeatures } from "@/lib/features";
-import { isFeatureEnabled } from "@/lib/feature-gate";
-import { hasRolePermission } from "@/lib/roles";
-import type { ClubRoleType } from "@/lib/rotary";
+import { assertDocumentClubAccess } from "@/lib/document-access";
+import { buildDocumentPreviewHtml } from "@/lib/document-preview";
+import { normalizeDocumentMime } from "@/lib/document-types";
 
 function contentDisposition(
   mode: "inline" | "attachment",
@@ -14,12 +12,23 @@ function contentDisposition(
   return `${mode}; filename="${safe}"`;
 }
 
+function decodeDataUrl(fileUrl: string): { mime: string; buffer: Buffer } | null {
+  const match = fileUrl.match(/^data:([^;]+);base64,(.+)$/i);
+  if (!match) return null;
+  return {
+    mime: normalizeDocumentMime(match[1]),
+    buffer: Buffer.from(match[2], "base64"),
+  };
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const download = new URL(request.url).searchParams.get("download") === "1";
+  const url = new URL(request.url);
+  const download = url.searchParams.get("download") === "1";
+  const preview = url.searchParams.get("preview") === "1";
   const disposition = download ? "attachment" : "inline";
 
   const doc = await prisma.clubDocument.findUnique({
@@ -27,6 +36,7 @@ export async function GET(
     select: {
       id: true,
       clubId: true,
+      title: true,
       fileUrl: true,
       fileName: true,
       mimeType: true,
@@ -38,44 +48,40 @@ export async function GET(
     return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
   }
 
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
-  }
-
-  const isSuperAdmin = session.user.isSuperAdmin;
-  const membership = session.user.memberships.find((m) => m.clubId === doc.clubId);
-
-  if (!isSuperAdmin && !membership) {
-    return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
-  }
-
-  if (!isSuperAdmin && membership) {
-    const features = await getClubFeatures(doc.clubId);
-    if (!isFeatureEnabled(features, "documentsEnabled", false)) {
-      return NextResponse.json({ error: "FEATURE_DISABLED" }, { status: 403 });
-    }
-    const allowed = await hasRolePermission(
-      membership.role as ClubRoleType,
-      "documents.view",
-      false
-    );
-    if (!allowed) {
-      return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
-    }
+  const access = await assertDocumentClubAccess(doc.clubId);
+  if (!access.ok) {
+    return NextResponse.json({ error: access.code }, { status: access.status });
   }
 
   const fileName = doc.fileName ?? "document";
+  const mimeType = normalizeDocumentMime(doc.mimeType ?? "");
 
   if (doc.fileUrl.startsWith("data:")) {
-    const match = doc.fileUrl.match(/^data:([^;]+);base64,(.+)$/i);
-    if (!match) {
+    const decoded = decodeDataUrl(doc.fileUrl);
+    if (!decoded) {
       return NextResponse.json({ error: "INVALID_FILE" }, { status: 500 });
     }
-    const buffer = Buffer.from(match[2], "base64");
-    return new NextResponse(buffer, {
+
+    if (preview) {
+      const html = await buildDocumentPreviewHtml(
+        decoded.buffer,
+        decoded.mime,
+        doc.title
+      );
+      if (!html) {
+        return NextResponse.json({ error: "PREVIEW_UNAVAILABLE" }, { status: 415 });
+      }
+      return new NextResponse(html, {
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": "private, max-age=300",
+        },
+      });
+    }
+
+    return new NextResponse(decoded.buffer, {
       headers: {
-        "Content-Type": match[1],
+        "Content-Type": decoded.mime,
         "Content-Disposition": contentDisposition(disposition, fileName),
         "Cache-Control": "private, max-age=3600",
       },
@@ -89,5 +95,5 @@ export async function GET(
     return NextResponse.redirect(target);
   }
 
-  return NextResponse.redirect(doc.fileUrl);
+  return NextResponse.redirect(new URL(doc.fileUrl, request.url));
 }

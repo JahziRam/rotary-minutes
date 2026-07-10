@@ -112,6 +112,7 @@ export async function listBudget(filters?: {
       reference: e.reference,
       collectionStatus: e.collectionStatus,
       eventRegistrationId: e.eventRegistrationId,
+      voucherCount: e._count.vouchers,
       recordedBy: e.recordedBy
         ? `${e.recordedBy.firstName} ${e.recordedBy.lastName}`
         : null,

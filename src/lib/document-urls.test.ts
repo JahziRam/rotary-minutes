@@ -12,9 +12,9 @@ describe("document-urls", () => {
   });
 
   it("maps data urls to document api routes", () => {
-    expect(documentViewUrl("doc1", "data:application/pdf;base64,x")).toBe(
-      "/api/documents/doc1"
-    );
+    expect(
+      documentViewUrl("doc1", "data:application/pdf;base64,x", "application/pdf")
+    ).toBe("/api/documents/doc1");
     expect(documentDownloadUrl("doc1", "data:application/pdf;base64,x")).toBe(
       "/api/documents/doc1?download=1"
     );
