@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Download, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAppBranding } from "@/components/brand/app-branding-provider";
+import { isCapacitorNative } from "@/lib/capacitor-platform";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -20,7 +21,7 @@ export function PwaInstallPrompt() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || isCapacitorNative()) return;
     if (localStorage.getItem(DISMISS_KEY)) return;
     if (window.matchMedia("(display-mode: standalone)").matches) return;
 

@@ -7,6 +7,7 @@ import { ViewAsClubBanner } from "./view-as-club-banner";
 import type { ViewAsClubOption } from "./club-view-as-switcher";
 import { OfflineIndicator } from "./offline-indicator";
 import { NotificationSound } from "@/components/notifications/notification-sound";
+import { WebOnly } from "@/components/native/web-only";
 import { PwaInstallPrompt } from "@/components/pwa/pwa-install-prompt";
 import { UsageGuideProvider } from "@/components/assistant/usage-guide-context";
 import { UsageAssistant } from "@/components/assistant/usage-assistant";
@@ -104,14 +105,18 @@ export function AppShell({
           {trialEndsAt && (
             <TrialBanner trialEndsAt={trialEndsAt} locale={shellLocale} />
           )}
-          <main className="p-4 lg:p-6 pb-[calc(var(--bottom-nav-h)+1rem)] lg:pb-6 max-w-7xl mx-auto">
+          <main className="p-4 lg:p-6 mobile-main max-w-7xl mx-auto">
             {children}
           </main>
         </AppMobileShell>
       </div>
       <MobileNav hiddenNavKeys={hiddenNavKeys} notificationCount={notificationCount} />
       <OfflineIndicator />
-      {pwaEnhanced && <PwaInstallPrompt />}
+      {pwaEnhanced && (
+        <WebOnly>
+          <PwaInstallPrompt />
+        </WebOnly>
+      )}
       {usageGuide && <UsageAssistant />}
     </div>
   );

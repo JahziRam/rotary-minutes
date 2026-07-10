@@ -40,9 +40,10 @@ export function AdminMobileHeader({
 
   return (
     <>
-      <header className="lg:hidden sticky top-0 z-50 bg-[var(--admin-sidebar)] text-white border-b border-white/10 safe-top">
+      <header className="lg:hidden sticky top-0 z-50 bg-[var(--admin-sidebar)] text-white border-b border-white/10 shadow-lg">
         <div className="h-0.5 bg-gold" />
-        <div className="flex items-center gap-2 h-14 px-3">
+        <div className="safe-top shrink-0" aria-hidden />
+        <div className="flex items-center gap-2 h-[var(--header-h)] px-3">
           <button
             type="button"
             onClick={() => setOpen(true)}

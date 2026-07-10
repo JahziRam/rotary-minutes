@@ -13,6 +13,7 @@ import { useAppBranding } from "@/components/brand/app-branding-provider";
 import { CLUB_NAV_ITEMS } from "@/lib/nav-config";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useNativeApp } from "@/hooks/use-native-app";
 
 export function AppMobileShell({
   title,
@@ -45,6 +46,7 @@ export function AppMobileShell({
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const { appName } = useAppBranding();
+  const { isNative } = useNativeApp();
 
   const drawerItems = [
     ...(isSuperAdmin
@@ -61,29 +63,55 @@ export function AppMobileShell({
   const notifHref = `/${locale}/notifications`;
   const onNotifications = pathname.startsWith(notifHref);
 
+  const headerClass = isNative ? "mobile-app-header" : "mobile-web-header lg:hidden";
+
   return (
     <>
-      <div className="lg:hidden sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 safe-top">
-        <div className="flex items-center gap-1 h-14 px-2">
+      <header className={cn(headerClass, "lg:hidden")}>
+        {!isNative && <div className="safe-top" aria-hidden />}
+        <div className={isNative ? "mobile-app-header__bar" : "flex items-center gap-1 h-14 px-2"}>
           <button
             type="button"
             onClick={() => setMenuOpen(true)}
-            className="p-2 rounded-xl hover:bg-gray-100 shrink-0"
+            className={cn(
+              isNative
+                ? "mobile-app-header__btn"
+                : "p-2 rounded-xl hover:bg-gray-100 shrink-0"
+            )}
             aria-label={t("openMenu")}
           >
-            <Menu className="h-5 w-5 text-navy" />
+            <Menu className="h-5 w-5" />
           </button>
           <div className="flex-1 min-w-0 px-1">
-            <p className="text-sm font-semibold text-gray-900 truncate leading-tight">{title}</p>
+            <p
+              className={cn(
+                "text-sm font-semibold truncate leading-tight",
+                isNative ? "text-white" : "text-gray-900"
+              )}
+            >
+              {title}
+            </p>
             {clubName && (
-              <p className="text-[10px] text-gray-500 truncate">{clubName}</p>
+              <p
+                className={cn(
+                  "text-[10px] truncate",
+                  isNative ? "text-white/60" : "text-gray-500"
+                )}
+              >
+                {clubName}
+              </p>
             )}
           </div>
           <Link
             href={notifHref}
             className={cn(
-              "relative p-2 rounded-xl shrink-0 transition-colors",
-              onNotifications ? "bg-navy/10 text-navy" : "hover:bg-gray-100 text-gray-600"
+              "relative shrink-0 transition-colors",
+              isNative
+                ? cn("mobile-app-header__btn", onNotifications && "mobile-app-header__btn--active")
+                : cn(
+                    "p-2 rounded-xl",
+                    onNotifications ? "bg-navy/10 text-navy" : "hover:bg-gray-100 text-gray-600"
+                  )
             )}
             aria-label={t("notifications")}
           >
@@ -99,7 +127,7 @@ export function AppMobileShell({
           </Link>
           {showUsageGuide && <UsageGuideLauncher variant="header" />}
         </div>
-      </div>
+      </header>
       <div className="hidden lg:block">
         <Header
           title={title}

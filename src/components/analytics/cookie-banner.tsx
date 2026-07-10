@@ -4,13 +4,15 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { Cookie } from "lucide-react";
 import { useCookieConsent } from "./cookie-consent-provider";
+import { useNativeApp } from "@/hooks/use-native-app";
 
 export function CookieBanner() {
   const t = useTranslations("cookies");
   const locale = useLocale();
   const { bannerOpen, acceptAll, rejectOptional } = useCookieConsent();
+  const { isNative } = useNativeApp();
 
-  if (!bannerOpen) return null;
+  if (isNative || !bannerOpen) return null;
 
   return (
     <div

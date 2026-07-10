@@ -18,7 +18,7 @@ export function AdminShell({
       <AdminSidebar userEmail={userEmail} logoutLabel={logoutLabel} />
       <div className="lg:pl-[var(--admin-sidebar-w)]">
         <AdminMobileHeader title={title} userEmail={userEmail} logoutLabel={logoutLabel} />
-        <main className="p-4 lg:p-6 pb-8 max-w-[1400px] mx-auto">{children}</main>
+        <main className="p-4 lg:p-6 pb-[calc(2rem+var(--safe-bottom))] max-w-[1400px] mx-auto">{children}</main>
       </div>
       <OfflineIndicator />
     </div>

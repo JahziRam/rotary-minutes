@@ -32,7 +32,7 @@ export const CLUB_NAV_ITEMS: ClubNavItem[] = [
   { key: "dashboard", href: "/dashboard", icon: Home, mobileTab: true },
   { key: "meetings", href: "/meetings", icon: Calendar, mobileTab: true },
   { key: "minutes", href: "/minutes", icon: FileText, mobileTab: true },
-  { key: "notifications", href: "/notifications", icon: Bell, mobileTab: true },
+  { key: "notifications", href: "/notifications", icon: Bell },
   { key: "members", href: "/members", icon: Users, mobileTab: true },
   { key: "emails", href: "/emails", icon: Mail },
   { key: "treasury", href: "/treasury", icon: Wallet },

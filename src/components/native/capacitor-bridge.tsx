@@ -1,7 +1,21 @@
 "use client";
 
 import { useEffect } from "react";
-import { isCapacitorNative } from "@/lib/capacitor-platform";
+import { getAppPlatform, isCapacitorNative } from "@/lib/capacitor-platform";
+
+function applySafeAreaInsets() {
+  const root = document.documentElement;
+  const probe = document.createElement("div");
+  probe.style.cssText =
+    "position:fixed;top:0;left:0;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);visibility:hidden;pointer-events:none;";
+  document.body.appendChild(probe);
+  const cs = getComputedStyle(probe);
+  root.style.setProperty("--safe-top", cs.paddingTop || "0px");
+  root.style.setProperty("--safe-right", cs.paddingRight || "0px");
+  root.style.setProperty("--safe-bottom", cs.paddingBottom || "0px");
+  root.style.setProperty("--safe-left", cs.paddingLeft || "0px");
+  document.body.removeChild(probe);
+}
 
 /**
  * Initialise le shell natif Capacitor (barre de statut, bouton retour Android).
@@ -22,12 +36,19 @@ export function CapacitorBridge() {
 
       if (cancelled) return;
 
-      document.documentElement.classList.add("capacitor-native");
-      document.body.classList.add("safe-top", "native-scroll");
+      const platform = getAppPlatform();
+      document.documentElement.classList.add("capacitor-native", `capacitor-${platform}`);
+      document.body.classList.add("native-scroll");
+      applySafeAreaInsets();
 
       try {
         await StatusBar.setStyle({ style: Style.Dark });
-        await StatusBar.setBackgroundColor({ color: "#0d2d52" });
+        if (platform === "android") {
+          await StatusBar.setOverlaysWebView({ overlay: true });
+          await StatusBar.setBackgroundColor({ color: "#00000000" });
+        } else {
+          await StatusBar.setBackgroundColor({ color: "#0d2d52" });
+        }
       } catch {
         // Status bar plugin may be unavailable on some WebView builds.
       }
@@ -37,6 +58,17 @@ export function CapacitorBridge() {
       } catch {
         // Splash already hidden.
       }
+
+      const onResize = () => applySafeAreaInsets();
+      window.addEventListener("resize", onResize);
+      cleanups.push(() => window.removeEventListener("resize", onResize));
+
+      const onViewportResize = () => {
+        const inset = Math.max(0, window.innerHeight - (window.visualViewport?.height ?? window.innerHeight));
+        document.documentElement.style.setProperty("--keyboard-inset", `${inset}px`);
+      };
+      window.visualViewport?.addEventListener("resize", onViewportResize);
+      cleanups.push(() => window.visualViewport?.removeEventListener("resize", onViewportResize));
 
       const backHandler = await App.addListener("backButton", ({ canGoBack }) => {
         if (canGoBack) {
@@ -48,11 +80,7 @@ export function CapacitorBridge() {
       cleanups.push(() => void backHandler.remove());
 
       const resumeHandler = await App.addListener("appStateChange", ({ isActive }) => {
-        if (isActive) {
-          document.documentElement.classList.remove("app-background");
-        } else {
-          document.documentElement.classList.add("app-background");
-        }
+        document.documentElement.classList.toggle("app-background", !isActive);
       });
       cleanups.push(() => void resumeHandler.remove());
     })();
@@ -60,8 +88,14 @@ export function CapacitorBridge() {
     return () => {
       cancelled = true;
       cleanups.forEach((fn) => fn());
-      document.documentElement.classList.remove("capacitor-native", "app-background");
-      document.body.classList.remove("safe-top", "native-scroll");
+      document.documentElement.classList.remove(
+        "capacitor-native",
+        "capacitor-android",
+        "capacitor-ios",
+        "app-background"
+      );
+      document.documentElement.style.removeProperty("--keyboard-inset");
+      document.body.classList.remove("native-scroll");
     };
   }, []);
 

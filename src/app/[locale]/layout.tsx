@@ -3,8 +3,9 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { locales, type Locale } from "@/i18n/config";
-import { RegisterSW } from "@/components/pwa/register-sw";
 import { CapacitorBridge } from "@/components/native/capacitor-bridge";
+import { WebOnly } from "@/components/native/web-only";
+import { RegisterSW } from "@/components/pwa/register-sw";
 import { GoogleAnalyticsConsentDefault } from "@/components/analytics/google-analytics-consent-default";
 import { AnalyticsConfigProvider } from "@/components/analytics/analytics-config-provider";
 import { CookieConsentProvider } from "@/components/analytics/cookie-consent-provider";
@@ -80,8 +81,10 @@ export default async function LocaleLayout({
               <AnalyticsConfigHydrator />
               <CookieConsentProvider>
                 <GoogleAnalytics />
-                <CookieBanner />
-                <RegisterSW />
+                <WebOnly>
+                  <CookieBanner />
+                  <RegisterSW />
+                </WebOnly>
                 <CapacitorBridge />
                 {children}
               </CookieConsentProvider>

@@ -23,7 +23,7 @@ export function OfflineIndicator() {
   if (online) return null;
 
   return (
-    <div className="fixed bottom-[calc(var(--bottom-nav-h)+0.75rem)] left-1/2 -translate-x-1/2 z-50 lg:bottom-4">
+    <div className="fixed bottom-[calc(var(--bottom-nav-total)+0.75rem)] left-1/2 -translate-x-1/2 z-50 lg:bottom-4">
       <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-navy text-white text-sm shadow-lg border border-gold/30">
         <WifiOff className="h-4 w-4 text-gold" />
         <span>{t("offline")}</span>
