@@ -12,9 +12,12 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 
 ### Added
 - **Membres — rôles applicatifs**
-  - Assignation du rôle (`ClubMembership`) depuis la fiche membre par le super admin ou l’admin du club (`users.manage`)
-  - Badge de rôle dans l’annuaire pour les membres liés à un compte applicatif
+  - Assignation du rôle (`ClubMembership`) depuis la fiche membre, l’annuaire (`/members`) et le formulaire d’ajout
+  - Modification du rôle par le **super admin**, le **président** ou l’**administrateur club** (`users.manage`)
+  - Choix du rôle lors de l’**approbation d’une demande d’adhésion** (tableau de bord)
+  - Badge de rôle dans l’annuaire ; sélecteur inline pour les utilisateurs autorisés
   - Support des rôles personnalisés pour le super admin
+  - Helper partagé `canManageMemberRoles()` pour centraliser les permissions
 - **Cotisations — paiements partiels**
   - Enregistrement d’un montant libre (différent du montant par défaut de la période)
   - Paiements échelonnés sur une même échéance jusqu’au solde complet

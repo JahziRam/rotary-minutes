@@ -165,7 +165,8 @@
       "title": "{count, plural, one {# join request} other {# join requests}}",
       "approve": "Approve",
       "reject": "Reject",
-      "error": "Could not process the request"
+      "error": "Could not process the request",
+      "forbidden": "You do not have permission to assign this role"
     }
   },
   "dashboard": {
@@ -398,6 +399,8 @@
     "noAppAccount": "This member does not have an app account yet. Add an email matching an existing user or invite them from Settings → Users.",
     "roleUpdated": "Role updated",
     "cannotChangeOwnRole": "You cannot change your own role",
+    "appRoleOnCreateHint": "The role is applied when a user account already exists with this email.",
+    "roleNotAssignedYet": "Member added. The role will be assigned when an app account exists.",
     "import": {
       "title": "Import members",
       "hint": "Paste CSV data or upload a file. Download the template for the expected format.",

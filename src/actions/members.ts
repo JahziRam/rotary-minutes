@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/require-permission";
 import { getClubContext } from "@/lib/club-context";
+import { canManageMemberRoles } from "@/lib/member-roles";
+import type { ClubRole } from "@/generated/prisma/client";
 
 function revalidateMembers() {
   for (const loc of ["fr", "en"]) {
@@ -26,6 +28,8 @@ export async function createMember(data: {
   commissionId?: string;
   bio?: string;
   photoUrl?: string;
+  appRole?: ClubRole;
+  customRoleId?: string | null;
 }) {
   const auth = await requirePermission("members.manage");
   if (auth.error) return { error: auth.error };
@@ -72,8 +76,19 @@ export async function createMember(data: {
     email: member.email,
   });
 
+  let roleAssigned = false;
+  if (data.appRole && data.email && (await canManageMemberRoles(ctx))) {
+    const { updateMemberRole } = await import("@/actions/club-users");
+    const roleResult = await updateMemberRole(
+      member.id,
+      data.appRole,
+      data.customRoleId
+    );
+    roleAssigned = "success" in roleResult && Boolean(roleResult.success);
+  }
+
   revalidateMembers();
-  return { success: true, member };
+  return { success: true, member, roleAssigned };
 }
 
 export async function updateMember(

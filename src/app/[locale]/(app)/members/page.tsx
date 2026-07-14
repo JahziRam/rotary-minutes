@@ -10,6 +10,7 @@ import { getMembersDuesOverview } from "@/lib/queries/dues-overview";
 import { searchMembersPaginated } from "@/lib/queries/members-list";
 import { ROLE_LABELS } from "@/lib/role-definitions";
 import { CLUB_ROLES } from "@/lib/rotary";
+import { canManageMemberRoles } from "@/lib/member-roles";
 import { getOfficerMandates } from "@/actions/mandates";
 import { getClubOnboarding } from "@/actions/onboarding";
 import { parseListParams, listParamsToRecord } from "@/lib/server-list";
@@ -49,7 +50,7 @@ export default async function MembersPage({
     showDues &&
     (await hasRolePermission(ctx.role, "dues.view", ctx.isSuperAdmin));
 
-  const [membersPage, activeCount, totalCount, birthdays, mandates, onboarding, canManage, duesOverview] =
+  const [membersPage, activeCount, totalCount, birthdays, mandates, onboarding, canManage, canManageRoles, customRoles, duesOverview] =
     await Promise.all([
       searchMembersPaginated(ctx.clubId, listParams),
       prisma.member.count({ where: { clubId: ctx.clubId, isActive: true } }),
@@ -58,6 +59,13 @@ export default async function MembersPage({
       getOfficerMandates(),
       getClubOnboarding(),
       hasRolePermission(ctx.role, "members.manage", ctx.isSuperAdmin),
+      canManageMemberRoles(ctx),
+      ctx.isSuperAdmin
+        ? prisma.customRole.findMany({
+            where: { isActive: true },
+            orderBy: { key: "asc" },
+          })
+        : Promise.resolve([]),
       canViewDues ? getMembersDuesOverview(ctx.clubId) : Promise.resolve(null),
     ]);
 
@@ -66,6 +74,10 @@ export default async function MembersPage({
   const roleLabels = Object.fromEntries(
     CLUB_ROLES.map((r) => [r, ROLE_LABELS[r][roleLocale]])
   );
+  const roleOptions = CLUB_ROLES.map((r) => ({
+    value: r,
+    label: ROLE_LABELS[r][roleLocale],
+  }));
 
   return (
     <AppShellServer title={t("members.title")}>
@@ -107,7 +119,16 @@ export default async function MembersPage({
                 {t("dues.title")}
               </Link>
             )}
-            {canManage && <AddMemberForm />}
+            {canManage && (
+              <AddMemberForm
+                canManageRoles={canManageRoles}
+                roleOptions={roleOptions}
+                customRoles={customRoles.map((r) => ({
+                  id: r.id,
+                  label: locale === "fr" ? r.labelFr : r.labelEn,
+                }))}
+              />
+            )}
           </div>
         </div>
 
@@ -132,6 +153,13 @@ export default async function MembersPage({
             initialStatus={sp.status ?? "all"}
             listParams={listParamsToRecord(listParams)}
             roleLabels={roleLabels}
+            canManageRoles={canManageRoles}
+            currentUserId={ctx.userId}
+            roleOptions={roleOptions}
+            customRoles={customRoles.map((r) => ({
+              id: r.id,
+              label: locale === "fr" ? r.labelFr : r.labelEn,
+            }))}
           />
         )}
       </div>

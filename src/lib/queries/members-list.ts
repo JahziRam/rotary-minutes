@@ -15,7 +15,10 @@ export type MemberListRow = {
   isActive: boolean;
   commissionName: string | null;
   email: string | null;
+  userId: string | null;
+  hasAppAccount: boolean;
   appRole: string | null;
+  customRoleId: string | null;
 };
 
 function buildMemberWhere(
@@ -54,9 +57,10 @@ export async function searchMembersPaginated(
         commission: { select: { name: true } },
         user: {
           select: {
+            id: true,
             memberships: {
               where: { clubId },
-              select: { role: true, isActive: true },
+              select: { role: true, isActive: true, customRoleId: true },
               take: 1,
             },
           },
@@ -70,6 +74,7 @@ export async function searchMembersPaginated(
 
   const items = rows.map((m) => {
     const membership = m.user?.memberships[0];
+    const linkedUserId = m.userId ?? m.user?.id ?? null;
     return {
       id: m.id,
       firstName: m.firstName,
@@ -79,7 +84,10 @@ export async function searchMembersPaginated(
       isActive: m.isActive,
       commissionName: m.commission?.name ?? null,
       email: m.email,
+      userId: linkedUserId,
+      hasAppAccount: Boolean(linkedUserId || m.email),
       appRole: membership?.isActive ? membership.role : null,
+      customRoleId: membership?.customRoleId ?? null,
     };
   });
 

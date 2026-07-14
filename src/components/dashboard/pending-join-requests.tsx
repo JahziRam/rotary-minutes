@@ -10,6 +10,7 @@ import {
   approveJoinRequest,
   rejectJoinRequest,
 } from "@/actions/registration";
+import type { ClubRole } from "@/generated/prisma/client";
 
 export type PendingJoinRequest = {
   membershipId: string;
@@ -22,14 +23,23 @@ export type PendingJoinRequest = {
 
 export function PendingJoinRequests({
   requests,
+  canManageRoles = false,
+  roleOptions = [],
+  customRoles = [],
 }: {
   requests: PendingJoinRequest[];
+  canManageRoles?: boolean;
+  roleOptions?: Array<{ value: string; label: string }>;
+  customRoles?: Array<{ id: string; label: string }>;
 }) {
   const t = useTranslations("auth.pendingRequests");
+  const tMembers = useTranslations("members");
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [roles, setRoles] = useState<Record<string, ClubRole>>({});
+  const [customRoleIds, setCustomRoleIds] = useState<Record<string, string>>({});
 
   if (requests.length === 0) return null;
 
@@ -42,11 +52,23 @@ export function PendingJoinRequests({
     startTransition(async () => {
       const result =
         action === "approve"
-          ? await approveJoinRequest(membershipId)
+          ? await approveJoinRequest(
+              membershipId,
+              canManageRoles
+                ? {
+                    role: roles[membershipId] ?? "READER",
+                    customRoleId: customRoleIds[membershipId] || null,
+                  }
+                : undefined
+            )
           : await rejectJoinRequest(membershipId);
 
       if (result.error) {
-        setError(t("error"));
+        setError(
+          result.error === "FORBIDDEN"
+            ? t("forbidden")
+            : t("error")
+        );
         setActiveId(null);
         return;
       }
@@ -73,11 +95,53 @@ export function PendingJoinRequests({
               key={req.membershipId}
               className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-lg bg-white border border-amber-100"
             >
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="font-medium text-gray-900">
                   {req.firstName} {req.lastName}
                 </p>
                 <p className="text-sm text-gray-500 truncate">{req.email}</p>
+                {canManageRoles && (
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <label className="text-xs text-gray-500">{tMembers("appRole")}</label>
+                    <select
+                      value={roles[req.membershipId] ?? "READER"}
+                      disabled={pending && activeId === req.membershipId}
+                      onChange={(e) =>
+                        setRoles((prev) => ({
+                          ...prev,
+                          [req.membershipId]: e.target.value as ClubRole,
+                        }))
+                      }
+                      className="h-8 rounded-lg border border-gray-200 bg-white px-2 text-xs"
+                    >
+                      {roleOptions.map((r) => (
+                        <option key={r.value} value={r.value}>
+                          {r.label}
+                        </option>
+                      ))}
+                    </select>
+                    {customRoles.length > 0 && (
+                      <select
+                        value={customRoleIds[req.membershipId] ?? ""}
+                        disabled={pending && activeId === req.membershipId}
+                        onChange={(e) =>
+                          setCustomRoleIds((prev) => ({
+                            ...prev,
+                            [req.membershipId]: e.target.value,
+                          }))
+                        }
+                        className="h-8 rounded-lg border border-gray-200 bg-white px-2 text-xs"
+                      >
+                        <option value="">{tMembers("noCustomRole")}</option>
+                        {customRoles.map((r) => (
+                          <option key={r.id} value={r.id}>
+                            {r.label}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="flex gap-2 shrink-0">
                 <Button

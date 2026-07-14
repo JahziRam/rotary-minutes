@@ -6,12 +6,24 @@ import { Plus, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { createMember } from "@/actions/members";
+import { AppRolePicker } from "@/components/members/app-role-picker";
+import { Toast } from "@/components/ui/toast";
+import type { ClubRole } from "@/generated/prisma/client";
 
-export function AddMemberForm() {
+export function AddMemberForm({
+  canManageRoles = false,
+  roleOptions = [],
+  customRoles = [],
+}: {
+  canManageRoles?: boolean;
+  roleOptions?: Array<{ value: string; label: string }>;
+  customRoles?: Array<{ id: string; label: string }>;
+}) {
   const t = useTranslations("members");
   const tCommon = useTranslations("common");
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
+  const [toast, setToast] = useState<string | null>(null);
 
   if (!open) {
     return (
@@ -31,17 +43,33 @@ export function AddMemberForm() {
       <form
         action={(formData) => {
           startTransition(async () => {
-            await createMember({
+            const email = (formData.get("email") as string) || undefined;
+            const appRole = canManageRoles
+              ? (formData.get("appRole") as ClubRole) || undefined
+              : undefined;
+            const customRoleId = canManageRoles
+              ? (formData.get("customRoleId") as string) || null
+              : null;
+
+            const result = await createMember({
               firstName: formData.get("firstName") as string,
               lastName: formData.get("lastName") as string,
-              email: (formData.get("email") as string) || undefined,
+              email,
               phone: (formData.get("phone") as string) || undefined,
               registrationNumber: (formData.get("registrationNumber") as string) || undefined,
               position: (formData.get("position") as string) || undefined,
               birthday: (formData.get("birthday") as string) || undefined,
               joinDate: (formData.get("joinDate") as string) || undefined,
+              appRole,
+              customRoleId,
             });
-            setOpen(false);
+
+            if (result.success) {
+              if (canManageRoles && appRole && email && !result.roleAssigned) {
+                setToast(t("roleNotAssignedYet"));
+              }
+              setOpen(false);
+            }
           });
         }}
         className="space-y-3"
@@ -62,6 +90,15 @@ export function AddMemberForm() {
         <Input name="position" label={t("position")} />
         <Input name="birthday" type="date" label={t("birthday")} />
         <Input name="joinDate" type="date" label={t("joinDate")} />
+        {canManageRoles && (
+          <div className="space-y-1.5">
+            <AppRolePicker
+              roleOptions={roleOptions}
+              customRoles={customRoles}
+            />
+            <p className="text-xs text-gray-500">{t("appRoleOnCreateHint")}</p>
+          </div>
+        )}
         <div className="flex gap-2 justify-end">
           <Button type="button" variant="outline" onClick={() => setOpen(false)}>
             {tCommon("cancel")}
@@ -71,6 +108,7 @@ export function AddMemberForm() {
           </Button>
         </div>
       </form>
+      {toast && <Toast message={toast} onClose={() => setToast(null)} />}
     </CardForm>
   );
 }

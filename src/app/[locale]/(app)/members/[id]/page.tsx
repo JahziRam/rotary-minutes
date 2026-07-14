@@ -6,6 +6,7 @@ import { getMemberAppRoleInfo } from "@/actions/club-users";
 import { getClubContext } from "@/lib/club-context";
 import { isFeatureEnabled } from "@/lib/feature-gate";
 import { hasRolePermission } from "@/lib/roles";
+import { canManageMemberRoles } from "@/lib/member-roles";
 import { ROLE_LABELS } from "@/lib/role-definitions";
 import { CLUB_ROLES } from "@/lib/rotary";
 import { prisma } from "@/lib/prisma";
@@ -30,10 +31,7 @@ export default async function MemberDetailPage({
   const canManage = ctx
     ? await hasRolePermission(ctx.role, "members.manage", ctx.isSuperAdmin)
     : false;
-  const canManageRoles = ctx
-    ? ctx.isSuperAdmin ||
-      (await hasRolePermission(ctx.role, "users.manage", false, ctx.customRoleId))
-    : false;
+  const canManageRoles = ctx ? await canManageMemberRoles(ctx) : false;
   const [commissions, appRoleInfo, customRoles] = ctx
     ? await Promise.all([
         prisma.commission.findMany({
@@ -74,7 +72,7 @@ export default async function MemberDetailPage({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {(canManageRoles || appRoleInfo?.role) && appRoleInfo && (
+            {canManageRoles && appRoleInfo && (
               <MemberRoleField
                 memberId={id}
                 role={appRoleInfo.role}

@@ -11,6 +11,9 @@ import { getTreasuryDashboardSummary } from "@/lib/queries/treasury";
 import { getMembersDuesOverview } from "@/lib/queries/dues-overview";
 import { formatBudgetMoney } from "@/lib/budget-utils";
 import { hasRolePermission } from "@/lib/roles";
+import { canManageMemberRoles } from "@/lib/member-roles";
+import { ROLE_LABELS } from "@/lib/role-definitions";
+import { CLUB_ROLES } from "@/lib/rotary";
 import { getMinuteStatusLabel, getMinuteStatusVariant } from "@/lib/minute-status";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -97,8 +100,30 @@ export default async function DashboardPage({
       ? await hasRolePermission(ctx.role, "members.manage", false)
       : ctx?.isSuperAdmin ?? false;
   let pendingRequests: PendingJoinRequest[] = [];
+  let canManageRoles = false;
+  let pendingRoleOptions: Array<{ value: string; label: string }> = [];
+  let pendingCustomRoles: Array<{ id: string; label: string }> = [];
   if (ctx && canManageMembers) {
-    const pendingJoinResult = await getPendingJoinRequests();
+    const [pendingJoinResult, roleManage, customRoles] = await Promise.all([
+      getPendingJoinRequests(),
+      canManageMemberRoles(ctx),
+      ctx.isSuperAdmin
+        ? prisma.customRole.findMany({
+            where: { isActive: true },
+            orderBy: { key: "asc" },
+          })
+        : Promise.resolve([]),
+    ]);
+    canManageRoles = roleManage;
+    const roleLocale = locale === "fr" ? "fr" : "en";
+    pendingRoleOptions = CLUB_ROLES.map((r) => ({
+      value: r,
+      label: ROLE_LABELS[r][roleLocale],
+    }));
+    pendingCustomRoles = customRoles.map((r) => ({
+      id: r.id,
+      label: locale === "fr" ? r.labelFr : r.labelEn,
+    }));
     if (pendingJoinResult && "requests" in pendingJoinResult) {
       pendingRequests = pendingJoinResult.requests ?? [];
     }
@@ -135,7 +160,12 @@ export default async function DashboardPage({
     <AppShellServer title={t("nav.dashboard")}>
       <div className="space-y-8">
         {pendingRequests.length > 0 && (
-          <PendingJoinRequests requests={pendingRequests} />
+          <PendingJoinRequests
+            requests={pendingRequests}
+            canManageRoles={canManageRoles}
+            roleOptions={pendingRoleOptions}
+            customRoles={pendingCustomRoles}
+          />
         )}
 
         {onboardingGuide && onboardingGuide.currentStep !== "COMPLETE" && (

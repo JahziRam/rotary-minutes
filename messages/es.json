@@ -627,7 +627,8 @@
       "title": "{count, plural, one {# solicitud de adhesión} other {# solicitudes de adhesión}}",
       "approve": "Aprobar",
       "reject": "Rechazar",
-      "error": "No se pudo procesar la solicitud"
+      "error": "No se pudo procesar la solicitud",
+      "forbidden": "No tiene permiso para asignar este rol"
     }
   },
   "dashboard": {
@@ -860,6 +861,8 @@
     "noAppAccount": "Este miembro aún no tiene cuenta en la aplicación. Añada un email de un usuario existente o invítelo desde Ajustes → Usuarios.",
     "roleUpdated": "Rol actualizado",
     "cannotChangeOwnRole": "No puede modificar su propio rol",
+    "appRoleOnCreateHint": "El rol se aplica si ya existe una cuenta de usuario con este email.",
+    "roleNotAssignedYet": "Miembro añadido. El rol se asignará cuando exista una cuenta en la aplicación.",
     "import": {
       "title": "Importar miembros",
       "hint": "Pegue datos CSV o suba un archivo. Descargue la plantilla para el formato esperado.",

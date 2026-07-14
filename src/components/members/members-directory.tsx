@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -7,8 +8,10 @@ import { useTranslations } from "next-intl";
 import { User } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Toast } from "@/components/ui/toast";
 import { ServerListPagination } from "@/components/ui/list-controls";
 import { MemberDuesBadge } from "@/components/treasury/member-dues-badge";
+import { MemberRoleSelect } from "@/components/members/member-role-select";
 import { resolveMemberPhotoUrl } from "@/lib/media-url";
 import type { PaginatedResult } from "@/lib/server-list";
 
@@ -21,7 +24,10 @@ export type MemberCard = {
   isActive: boolean;
   commissionName: string | null;
   email?: string | null;
+  userId?: string | null;
+  hasAppAccount?: boolean;
   appRole?: string | null;
+  customRoleId?: string | null;
 };
 
 type DuesBadge = {
@@ -38,6 +44,10 @@ export function MembersDirectory({
   initialStatus = "all",
   listParams,
   roleLabels = {},
+  canManageRoles = false,
+  currentUserId,
+  roleOptions = [],
+  customRoles = [],
 }: {
   members: PaginatedResult<MemberCard>;
   locale: string;
@@ -46,9 +56,14 @@ export function MembersDirectory({
   initialStatus?: string;
   listParams: Record<string, string | undefined>;
   roleLabels?: Record<string, string>;
+  canManageRoles?: boolean;
+  currentUserId?: string;
+  roleOptions?: Array<{ value: string; label: string }>;
+  customRoles?: Array<{ id: string; label: string }>;
 }) {
   const t = useTranslations();
   const router = useRouter();
+  const [toast, setToast] = useState<string | null>(null);
   const basePath = `/${locale}/members`;
 
   function applyFilters(fd: FormData) {
@@ -110,13 +125,17 @@ export function MembersDirectory({
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {members.items.map((member) => (
-            <Link key={member.id} href={`/${locale}/members/${member.id}`}>
-              <Card
-                className={`hover:shadow-md transition-shadow cursor-pointer h-full ${
-                  !member.isActive ? "opacity-60" : ""
-                }`}
-              >
-                <CardContent className="p-4 flex items-center gap-3">
+            <Card
+              key={member.id}
+              className={`hover:shadow-md transition-shadow h-full ${
+                !member.isActive ? "opacity-60" : ""
+              }`}
+            >
+              <CardContent className="p-4 flex items-center gap-3">
+                <Link
+                  href={`/${locale}/members/${member.id}`}
+                  className="flex items-center gap-3 flex-1 min-w-0"
+                >
                   {member.photoUrl ? (
                     <Image
                       src={
@@ -141,26 +160,42 @@ export function MembersDirectory({
                       {member.position || member.commissionName || "—"}
                     </p>
                   </div>
-                  <div className="flex flex-col items-end gap-1 shrink-0">
-                    {duesByMemberId && member.isActive && (
-                      <MemberDuesBadge dues={duesByMemberId[member.id] as never} />
-                    )}
-                    {member.appRole && roleLabels[member.appRole] && (
+                </Link>
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  {duesByMemberId && member.isActive && (
+                    <MemberDuesBadge dues={duesByMemberId[member.id] as never} />
+                  )}
+                  {canManageRoles ? (
+                    <MemberRoleSelect
+                      memberId={member.id}
+                      role={member.appRole ?? null}
+                      customRoleId={member.customRoleId ?? null}
+                      hasAppAccount={member.hasAppAccount ?? false}
+                      isCurrentUser={member.userId === currentUserId}
+                      roleOptions={roleOptions}
+                      customRoles={customRoles}
+                      compact
+                      onError={setToast}
+                    />
+                  ) : (
+                    member.appRole &&
+                    roleLabels[member.appRole] && (
                       <Badge variant="default" className="text-[10px]">
                         {roleLabels[member.appRole]}
                       </Badge>
-                    )}
-                    <Badge variant={member.isActive ? "success" : "muted"}>
-                      {member.isActive ? t("members.active") : t("members.inactive")}
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
+                    )
+                  )}
+                  <Badge variant={member.isActive ? "success" : "muted"}>
+                    {member.isActive ? t("members.active") : t("members.inactive")}
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       )}
 
+      {toast && <Toast message={toast} onClose={() => setToast(null)} />}
       <ServerListPagination
         basePath={basePath}
         page={members.page}

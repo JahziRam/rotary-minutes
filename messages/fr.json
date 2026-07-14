@@ -165,7 +165,8 @@
       "title": "{count, plural, one {# demande d'adhésion} other {# demandes d'adhésion}}",
       "approve": "Approuver",
       "reject": "Refuser",
-      "error": "Impossible de traiter la demande"
+      "error": "Impossible de traiter la demande",
+      "forbidden": "Vous n'avez pas la permission d'assigner ce rôle"
     }
   },
   "dashboard": {
@@ -398,6 +399,8 @@
     "noAppAccount": "Ce membre n'a pas encore de compte applicatif. Ajoutez un email correspondant à un utilisateur existant ou invitez-le depuis Paramètres → Utilisateurs.",
     "roleUpdated": "Rôle mis à jour",
     "cannotChangeOwnRole": "Vous ne pouvez pas modifier votre propre rôle",
+    "appRoleOnCreateHint": "Le rôle est appliqué si un compte utilisateur existe déjà avec cet email.",
+    "roleNotAssignedYet": "Membre ajouté. Le rôle sera assigné lorsque le compte applicatif existera.",
     "import": {
       "title": "Importer des membres",
       "hint": "Collez des données CSV ou importez un fichier. Téléchargez le modèle pour le format attendu.",

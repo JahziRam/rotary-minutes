@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/require-permission";
-import type { ClubType } from "@/generated/prisma/client";
+import { canManageMemberRoles } from "@/lib/member-roles";
+import type { ClubRole, ClubType } from "@/generated/prisma/client";
 
 function revalidateRegistrationPaths() {
   for (const loc of ["fr", "en"]) {
@@ -84,10 +85,32 @@ export async function getPendingJoinRequests() {
   };
 }
 
-export async function approveJoinRequest(membershipId: string) {
+export async function approveJoinRequest(
+  membershipId: string,
+  opts?: { role?: ClubRole; customRoleId?: string | null }
+) {
   const auth = await requirePermission("members.manage");
   if (auth.error) return { error: auth.error };
   const { ctx } = auth;
+
+  let role: ClubRole = "READER";
+  let customRoleId: string | null = null;
+
+  const wantsCustomRole =
+    (opts?.role && opts.role !== "READER") || Boolean(opts?.customRoleId);
+
+  if (wantsCustomRole) {
+    if (!(await canManageMemberRoles(ctx))) return { error: "FORBIDDEN" as const };
+    role = opts?.role ?? "READER";
+    if (opts?.customRoleId) {
+      if (!ctx.isSuperAdmin) return { error: "FORBIDDEN" as const };
+      const customRole = await prisma.customRole.findFirst({
+        where: { id: opts.customRoleId, isActive: true },
+      });
+      if (!customRole) return { error: "CUSTOM_ROLE_NOT_FOUND" as const };
+      customRoleId = opts.customRoleId;
+    }
+  }
 
   const membership = await prisma.clubMembership.findFirst({
     where: {
@@ -106,7 +129,8 @@ export async function approveJoinRequest(membershipId: string) {
       data: {
         approvalStatus: "APPROVED",
         isActive: true,
-        role: "READER",
+        role,
+        customRoleId: ctx.isSuperAdmin ? customRoleId : null,
       },
     });
 
@@ -163,6 +187,8 @@ export async function approveJoinRequest(membershipId: string) {
         metadata: {
           approvedUserId: membership.userId,
           email: membership.user.email,
+          role,
+          customRoleId,
         },
       },
     });
