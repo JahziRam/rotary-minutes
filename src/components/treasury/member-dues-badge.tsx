@@ -1,4 +1,6 @@
-import { getTranslations } from "next-intl/server";
+"use client";
+
+import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import type { DuesStatus } from "@/generated/prisma/client";
 import type { MemberDuesStatusInfo } from "@/lib/queries/dues-overview";
@@ -10,9 +12,10 @@ const VARIANT: Record<DuesStatus, "default" | "success" | "warning" | "danger" |
   WAIVED: "muted",
 };
 
-export async function MemberDuesBadge({ dues }: { dues: MemberDuesStatusInfo | undefined }) {
+export function MemberDuesBadge({ dues }: { dues: MemberDuesStatusInfo | undefined }) {
+  const t = useTranslations("dues.statuses");
+
   if (!dues) return null;
-  const t = await getTranslations("dues.statuses");
 
   return (
     <Badge variant={VARIANT[dues.status]} className="text-[10px] shrink-0">

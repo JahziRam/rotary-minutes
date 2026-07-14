@@ -10,6 +10,9 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 ### À venir
 - Améliorations continues produit et stabilité
 
+### Fixed
+- **Membres — changement de rôle** : correction de l’erreur React #482 lors de la modification du rôle dans l’annuaire (`MemberDuesBadge` converti en composant client ; sélecteurs de rôle contrôlés)
+
 ### Added
 - **Membres — rôles applicatifs**
   - Assignation du rôle (`ClubMembership`) depuis la fiche membre, l’annuaire (`/members`) et le formulaire d’ajout

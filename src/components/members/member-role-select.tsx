@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { updateMemberRole } from "@/actions/club-users";
@@ -30,6 +30,16 @@ export function MemberRoleSelect({
   const t = useTranslations("members");
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [selectedRole, setSelectedRole] = useState(role ?? "READER");
+  const [selectedCustomRoleId, setSelectedCustomRoleId] = useState(customRoleId ?? "");
+
+  useEffect(() => {
+    setSelectedRole(role ?? "READER");
+  }, [role]);
+
+  useEffect(() => {
+    setSelectedCustomRoleId(customRoleId ?? "");
+  }, [customRoleId]);
 
   function applyRole(nextRole: ClubRole, nextCustomRoleId: string | null) {
     startTransition(async () => {
@@ -37,6 +47,8 @@ export function MemberRoleSelect({
       if ("error" in result && result.error) {
         if (result.error === "NO_USER_ACCOUNT") onError?.(t("noAppAccount"));
         else if (result.error === "SELF_ROLE_CHANGE") onError?.(t("cannotChangeOwnRole"));
+        setSelectedRole(role ?? "READER");
+        setSelectedCustomRoleId(customRoleId ?? "");
         return;
       }
       if ("success" in result && result.success) {
@@ -68,9 +80,13 @@ export function MemberRoleSelect({
     >
       <select
         disabled={pending || isCurrentUser}
-        defaultValue={role ?? "READER"}
+        value={selectedRole}
         title={isCurrentUser ? t("cannotChangeOwnRole") : t("appRole")}
-        onChange={(e) => applyRole(e.target.value as ClubRole, customRoleId)}
+        onChange={(e) => {
+          const nextRole = e.target.value as ClubRole;
+          setSelectedRole(nextRole);
+          applyRole(nextRole, selectedCustomRoleId || null);
+        }}
         className={selectClass}
       >
         {roleOptions.map((r) => (
@@ -82,11 +98,13 @@ export function MemberRoleSelect({
       {customRoles.length > 0 && (
         <select
           disabled={pending || isCurrentUser}
-          defaultValue={customRoleId ?? ""}
+          value={selectedCustomRoleId}
           title={t("customRole")}
-          onChange={(e) =>
-            applyRole((role ?? "READER") as ClubRole, e.target.value || null)
-          }
+          onChange={(e) => {
+            const nextCustomRoleId = e.target.value || null;
+            setSelectedCustomRoleId(e.target.value);
+            applyRole(selectedRole as ClubRole, nextCustomRoleId);
+          }}
           className={selectClass}
         >
           <option value="">{t("noCustomRole")}</option>

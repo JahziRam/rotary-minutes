@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Shield } from "lucide-react";
@@ -31,6 +31,16 @@ export function MemberRoleField({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [toast, setToast] = useState<string | null>(null);
+  const [selectedRole, setSelectedRole] = useState(role ?? "READER");
+  const [selectedCustomRoleId, setSelectedCustomRoleId] = useState(customRoleId ?? "");
+
+  useEffect(() => {
+    setSelectedRole(role ?? "READER");
+  }, [role]);
+
+  useEffect(() => {
+    setSelectedCustomRoleId(customRoleId ?? "");
+  }, [customRoleId]);
 
   if (!canManage) {
     if (!role) return null;
@@ -51,13 +61,16 @@ export function MemberRoleField({
   function applyRole(nextRole: ClubRole, nextCustomRoleId: string | null) {
     startTransition(async () => {
       const result = await updateMemberRole(memberId, nextRole, nextCustomRoleId);
-      if (result.success) {
+      if ("error" in result && result.error) {
+        if (result.error === "NO_USER_ACCOUNT") setToast(t("noAppAccount"));
+        else if (result.error === "SELF_ROLE_CHANGE") setToast(t("cannotChangeOwnRole"));
+        setSelectedRole(role ?? "READER");
+        setSelectedCustomRoleId(customRoleId ?? "");
+        return;
+      }
+      if ("success" in result && result.success) {
         setToast(t("roleUpdated"));
         router.refresh();
-      } else if (result.error === "NO_USER_ACCOUNT") {
-        setToast(t("noAppAccount"));
-      } else if (result.error === "SELF_ROLE_CHANGE") {
-        setToast(t("cannotChangeOwnRole"));
       }
     });
   }
@@ -81,10 +94,12 @@ export function MemberRoleField({
               <label className="text-sm font-medium text-gray-700">{t("appRole")}</label>
               <select
                 disabled={pending || isCurrentUser}
-                defaultValue={role ?? "READER"}
-                onChange={(e) =>
-                  applyRole(e.target.value as ClubRole, customRoleId)
-                }
+                value={selectedRole}
+                onChange={(e) => {
+                  const nextRole = e.target.value as ClubRole;
+                  setSelectedRole(nextRole);
+                  applyRole(nextRole, selectedCustomRoleId || null);
+                }}
                 className="flex h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm"
               >
                 {roleOptions.map((r) => (
@@ -101,13 +116,12 @@ export function MemberRoleField({
                 </label>
                 <select
                   disabled={pending || isCurrentUser}
-                  defaultValue={customRoleId ?? ""}
-                  onChange={(e) =>
-                    applyRole(
-                      (role ?? "READER") as ClubRole,
-                      e.target.value || null
-                    )
-                  }
+                  value={selectedCustomRoleId}
+                  onChange={(e) => {
+                    const nextCustomRoleId = e.target.value || null;
+                    setSelectedCustomRoleId(e.target.value);
+                    applyRole(selectedRole as ClubRole, nextCustomRoleId);
+                  }}
                   className="flex h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm"
                 >
                   <option value="">{t("noCustomRole")}</option>
