@@ -12,6 +12,7 @@ import { Toast } from "@/components/ui/toast";
 import { ServerListPagination } from "@/components/ui/list-controls";
 import { MemberDuesBadge } from "@/components/treasury/member-dues-badge";
 import { MemberRoleSelect } from "@/components/members/member-role-select";
+import { SendMemberLoginButton } from "@/components/members/send-member-login-button";
 import { resolveMemberPhotoUrl } from "@/lib/media-url";
 import type { PaginatedResult } from "@/lib/server-list";
 
@@ -164,6 +165,16 @@ export function MembersDirectory({
                 <div className="flex flex-col items-end gap-1 shrink-0">
                   {duesByMemberId && member.isActive && (
                     <MemberDuesBadge dues={duesByMemberId[member.id] as never} />
+                  )}
+                  {canManageRoles && (
+                    <SendMemberLoginButton
+                      memberId={member.id}
+                      memberEmail={member.email}
+                      isCurrentUser={member.userId === currentUserId}
+                      compact
+                      onSuccess={setToast}
+                      onError={setToast}
+                    />
                   )}
                   {canManageRoles ? (
                     <MemberRoleSelect

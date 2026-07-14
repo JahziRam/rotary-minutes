@@ -12,6 +12,7 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 
 ### Fixed
 - **Membres — changement de rôle** : correction de l’erreur React #482 lors de la modification du rôle dans l’annuaire (`MemberDuesBadge` converti en composant client ; sélecteurs de rôle contrôlés)
+- **Build** : séparation `member-roles-constants.ts` / `member-roles.ts` (`server-only`) pour éviter l’import Prisma/pg dans les composants client
 
 ### Added
 - **Membres — rôles applicatifs**
@@ -21,6 +22,14 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
   - Badge de rôle dans l’annuaire ; sélecteur inline pour les utilisateurs autorisés
   - Support des rôles personnalisés pour le super admin
   - Helper partagé `canManageMemberRoles()` pour centraliser les permissions
+  - Rôle par défaut **« Membre / Lecteur »** (`READER`) ; les autres rôles ne sont assignables que par président, admin ou super admin
+  - Bandeau d’aide sur la page Membres (`MembersRoleHint`)
+- **Membres — envoi des identifiants de connexion**
+  - Bouton **« Envoyer les identifiants »** sur la fiche membre et icône enveloppe dans l’annuaire
+  - Création automatique du compte applicatif si nécessaire (rôle Membre / Lecteur, adhésion approuvée)
+  - Réinitialisation du mot de passe temporaire pour les comptes existants
+  - Email brandé club avec URL de connexion, email et mot de passe temporaire (`memberLoginEmail`)
+  - Journal d’audit `MEMBER_LOGIN_SENT`
 - **Cotisations — paiements partiels**
   - Enregistrement d’un montant libre (différent du montant par défaut de la période)
   - Paiements échelonnés sur une même échéance jusqu’au solde complet

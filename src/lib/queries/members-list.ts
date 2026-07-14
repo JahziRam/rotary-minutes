@@ -72,9 +72,40 @@ export async function searchMembersPaginated(
     }),
   ]);
 
+  const orphanEmails = [
+    ...new Set(
+      rows
+        .filter((m) => !m.userId && !m.user && m.email)
+        .map((m) => m.email!.trim().toLowerCase())
+    ),
+  ];
+
+  const usersByEmail =
+    orphanEmails.length > 0
+      ? await prisma.user.findMany({
+          where: { email: { in: orphanEmails } },
+          select: {
+            id: true,
+            email: true,
+            memberships: {
+              where: { clubId },
+              select: { role: true, isActive: true, customRoleId: true },
+              take: 1,
+            },
+          },
+        })
+      : [];
+
+  const membershipByEmail = new Map(
+    usersByEmail.map((u) => [u.email.toLowerCase(), { userId: u.id, membership: u.memberships[0] }])
+  );
+
   const items = rows.map((m) => {
-    const membership = m.user?.memberships[0];
-    const linkedUserId = m.userId ?? m.user?.id ?? null;
+    const emailKey = m.email?.trim().toLowerCase();
+    const emailMatch = emailKey ? membershipByEmail.get(emailKey) : undefined;
+    const membership = m.user?.memberships[0] ?? emailMatch?.membership;
+    const linkedUserId = m.userId ?? m.user?.id ?? emailMatch?.userId ?? null;
+
     return {
       id: m.id,
       firstName: m.firstName,
@@ -85,7 +116,7 @@ export async function searchMembersPaginated(
       commissionName: m.commission?.name ?? null,
       email: m.email,
       userId: linkedUserId,
-      hasAppAccount: Boolean(linkedUserId || m.email),
+      hasAppAccount: Boolean(linkedUserId),
       appRole: membership?.isActive ? membership.role : null,
       customRoleId: membership?.customRoleId ?? null,
     };

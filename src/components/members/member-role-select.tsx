@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { updateMemberRole } from "@/actions/club-users";
+import { DEFAULT_MEMBER_APP_ROLE } from "@/lib/member-roles-constants";
 import type { ClubRole } from "@/generated/prisma/client";
 
 export function MemberRoleSelect({
@@ -30,11 +31,11 @@ export function MemberRoleSelect({
   const t = useTranslations("members");
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [selectedRole, setSelectedRole] = useState(role ?? "READER");
+  const [selectedRole, setSelectedRole] = useState(role ?? DEFAULT_MEMBER_APP_ROLE);
   const [selectedCustomRoleId, setSelectedCustomRoleId] = useState(customRoleId ?? "");
 
   useEffect(() => {
-    setSelectedRole(role ?? "READER");
+    setSelectedRole(role ?? DEFAULT_MEMBER_APP_ROLE);
   }, [role]);
 
   useEffect(() => {
@@ -47,7 +48,7 @@ export function MemberRoleSelect({
       if ("error" in result && result.error) {
         if (result.error === "NO_USER_ACCOUNT") onError?.(t("noAppAccount"));
         else if (result.error === "SELF_ROLE_CHANGE") onError?.(t("cannotChangeOwnRole"));
-        setSelectedRole(role ?? "READER");
+        setSelectedRole(role ?? DEFAULT_MEMBER_APP_ROLE);
         setSelectedCustomRoleId(customRoleId ?? "");
         return;
       }
@@ -58,12 +59,15 @@ export function MemberRoleSelect({
   }
 
   if (!hasAppAccount) {
+    const defaultLabel =
+      roleOptions.find((r) => r.value === DEFAULT_MEMBER_APP_ROLE)?.label ??
+      t("defaultMemberRole");
     return (
       <span
-        className={`text-gray-400 ${compact ? "text-[10px]" : "text-xs"}`}
+        className={`text-gray-500 ${compact ? "text-[10px]" : "text-xs"}`}
         title={t("noAppAccount")}
       >
-        —
+        {defaultLabel}
       </span>
     );
   }

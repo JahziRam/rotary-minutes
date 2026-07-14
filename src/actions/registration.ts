@@ -3,7 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/require-permission";
-import { canManageMemberRoles } from "@/lib/member-roles";
+import {
+  canManageMemberRoles,
+  DEFAULT_MEMBER_APP_ROLE,
+  isNonDefaultAppRole,
+} from "@/lib/member-roles";
 import type { ClubRole, ClubType } from "@/generated/prisma/client";
 
 function revalidateRegistrationPaths() {
@@ -93,15 +97,15 @@ export async function approveJoinRequest(
   if (auth.error) return { error: auth.error };
   const { ctx } = auth;
 
-  let role: ClubRole = "READER";
+  let role: ClubRole = DEFAULT_MEMBER_APP_ROLE;
   let customRoleId: string | null = null;
 
-  const wantsCustomRole =
-    (opts?.role && opts.role !== "READER") || Boolean(opts?.customRoleId);
+  const requestedRole = opts?.role ?? DEFAULT_MEMBER_APP_ROLE;
+  const wantsElevatedRole = isNonDefaultAppRole(requestedRole, opts?.customRoleId);
 
-  if (wantsCustomRole) {
+  if (wantsElevatedRole) {
     if (!(await canManageMemberRoles(ctx))) return { error: "FORBIDDEN" as const };
-    role = opts?.role ?? "READER";
+    role = requestedRole;
     if (opts?.customRoleId) {
       if (!ctx.isSuperAdmin) return { error: "FORBIDDEN" as const };
       const customRole = await prisma.customRole.findFirst({

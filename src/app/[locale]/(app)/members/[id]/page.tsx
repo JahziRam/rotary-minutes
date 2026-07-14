@@ -75,6 +75,7 @@ export default async function MemberDetailPage({
             {canManageRoles && appRoleInfo && (
               <MemberRoleField
                 memberId={id}
+                memberEmail={member.email}
                 role={appRoleInfo.role}
                 customRoleId={appRoleInfo.customRoleId}
                 hasAccount={appRoleInfo.hasAccount}

@@ -11,5 +11,5 @@ export const ROLE_LABELS: Record<ClubRoleType, { fr: string; en: string; desc: s
   MEMBERSHIP_CHAIR: { fr: "Président Adhésion", en: "Membership Chair", desc: "Gestion des membres" },
   PUBLIC_IMAGE_CHAIR: { fr: "Président Image", en: "Public Image Chair", desc: "Emails et communication" },
   ADMIN: { fr: "Administrateur club", en: "Club Admin", desc: "Administration du club" },
-  READER: { fr: "Lecteur", en: "Reader", desc: "Consultation seule" },
+  READER: { fr: "Membre / Lecteur", en: "Member / Reader", desc: "Accès membre par défaut — consultation" },
 };

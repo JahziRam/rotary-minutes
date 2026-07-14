@@ -4,7 +4,10 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/require-permission";
 import { getClubContext } from "@/lib/club-context";
-import { canManageMemberRoles } from "@/lib/member-roles";
+import {
+  canManageMemberRoles,
+  DEFAULT_MEMBER_APP_ROLE,
+} from "@/lib/member-roles";
 import type { ClubRole } from "@/generated/prisma/client";
 
 function revalidateMembers() {
@@ -77,11 +80,11 @@ export async function createMember(data: {
   });
 
   let roleAssigned = false;
-  if (data.appRole && data.email && (await canManageMemberRoles(ctx))) {
+  if (data.email && (await canManageMemberRoles(ctx))) {
     const { updateMemberRole } = await import("@/actions/club-users");
     const roleResult = await updateMemberRole(
       member.id,
-      data.appRole,
+      data.appRole ?? DEFAULT_MEMBER_APP_ROLE,
       data.customRoleId
     );
     roleAssigned = "success" in roleResult && Boolean(roleResult.success);

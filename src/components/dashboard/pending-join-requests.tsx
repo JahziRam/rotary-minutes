@@ -10,6 +10,7 @@ import {
   approveJoinRequest,
   rejectJoinRequest,
 } from "@/actions/registration";
+import { DEFAULT_MEMBER_APP_ROLE } from "@/lib/member-roles-constants";
 import type { ClubRole } from "@/generated/prisma/client";
 
 export type PendingJoinRequest = {
@@ -56,7 +57,7 @@ export function PendingJoinRequests({
               membershipId,
               canManageRoles
                 ? {
-                    role: roles[membershipId] ?? "READER",
+                    role: roles[membershipId] ?? DEFAULT_MEMBER_APP_ROLE,
                     customRoleId: customRoleIds[membershipId] || null,
                   }
                 : undefined
@@ -104,7 +105,7 @@ export function PendingJoinRequests({
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <label className="text-xs text-gray-500">{tMembers("appRole")}</label>
                     <select
-                      value={roles[req.membershipId] ?? "READER"}
+                      value={roles[req.membershipId] ?? DEFAULT_MEMBER_APP_ROLE}
                       disabled={pending && activeId === req.membershipId}
                       onChange={(e) =>
                         setRoles((prev) => ({

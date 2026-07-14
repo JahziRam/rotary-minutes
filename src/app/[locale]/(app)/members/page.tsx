@@ -22,6 +22,7 @@ import { BirthdayBanner } from "@/components/members/birthday-banner";
 import { MandatesPanel } from "@/components/members/mandates-panel";
 import { OnboardingChecklist } from "@/components/members/onboarding-checklist";
 import { MembersDirectory } from "@/components/members/members-directory";
+import { MembersRoleHint } from "@/components/members/members-role-hint";
 import { GuidedEmptyState } from "@/components/assistance/guided-empty-state";
 
 export default async function MembersPage({
@@ -96,6 +97,7 @@ export default async function MembersPage({
             currency={ctx.club.currency}
           />
         )}
+        {canManageRoles && <MembersRoleHint />}
         <MandatesPanel mandates={mandates} canManage={canManage} />
         <MemberImportPanel canManage={canManage} />
 

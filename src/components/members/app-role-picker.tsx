@@ -1,11 +1,12 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { DEFAULT_MEMBER_APP_ROLE } from "@/lib/member-roles-constants";
 
 export function AppRolePicker({
   roleOptions,
   customRoles = [],
-  defaultRole = "READER",
+  defaultRole = DEFAULT_MEMBER_APP_ROLE,
   roleName = "appRole",
   customRoleName = "customRoleId",
   disabled = false,

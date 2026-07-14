@@ -231,6 +231,58 @@ export async function minuteFinalizedEmail(opts: {
 }
 
 /** Email asking the president (or approvers) to review draft minutes. */
+export async function memberLoginEmail(opts: {
+  clubName: string;
+  clubId?: string;
+  memberName: string;
+  email: string;
+  tempPassword: string;
+  loginUrl: string;
+  locale: string;
+  logoUrl?: string;
+  isNewAccount?: boolean;
+}) {
+  const appName = await getAppName();
+  const isFr = opts.locale === "fr";
+  const isEs = opts.locale === "es";
+  const intro = opts.isNewAccount
+    ? isFr
+      ? `<p>Bonjour <strong>${opts.memberName}</strong>,</p><p>Un compte a été créé pour vous sur ${appName} au sein du club <strong>${opts.clubName}</strong>.</p>`
+      : isEs
+        ? `<p>Hola <strong>${opts.memberName}</strong>,</p><p>Se ha creado una cuenta para usted en ${appName} en el club <strong>${opts.clubName}</strong>.</p>`
+        : `<p>Hello <strong>${opts.memberName}</strong>,</p><p>An account has been created for you on ${appName} at <strong>${opts.clubName}</strong>.</p>`
+    : isFr
+      ? `<p>Bonjour <strong>${opts.memberName}</strong>,</p><p>Voici vos identifiants de connexion pour ${appName} — <strong>${opts.clubName}</strong>.</p>`
+      : isEs
+        ? `<p>Hola <strong>${opts.memberName}</strong>,</p><p>Aquí están sus credenciales de acceso a ${appName} — <strong>${opts.clubName}</strong>.</p>`
+        : `<p>Hello <strong>${opts.memberName}</strong>,</p><p>Here are your login credentials for ${appName} — <strong>${opts.clubName}</strong>.</p>`;
+  const credentials = isFr
+    ? `<p><strong>Email :</strong> ${opts.email}<br/><strong>Mot de passe temporaire :</strong> ${opts.tempPassword}</p><p style="font-size:14px;color:#64748b">Changez ce mot de passe après votre première connexion.</p>`
+    : isEs
+      ? `<p><strong>Email:</strong> ${opts.email}<br/><strong>Contraseña temporal:</strong> ${opts.tempPassword}</p><p style="font-size:14px;color:#64748b">Cambie esta contraseña después de su primer inicio de sesión.</p>`
+      : `<p><strong>Email:</strong> ${opts.email}<br/><strong>Temporary password:</strong> ${opts.tempPassword}</p><p style="font-size:14px;color:#64748b">Please change this password after your first login.</p>`;
+  const cta = isFr
+    ? `<p><a class="cta-button" href="${opts.loginUrl}">Se connecter</a></p>`
+    : isEs
+      ? `<p><a class="cta-button" href="${opts.loginUrl}">Iniciar sesión</a></p>`
+      : `<p><a class="cta-button" href="${opts.loginUrl}">Sign in</a></p>`;
+  const body = `${intro}${credentials}${cta}`;
+  const branded = await prepareBrandedEmail(body, {
+    clubName: opts.clubName,
+    clubId: opts.clubId,
+    logoUrl: opts.logoUrl,
+  });
+  return {
+    subject: isFr
+      ? `Vos identifiants ${appName} — ${opts.clubName}`
+      : isEs
+        ? `Sus credenciales ${appName} — ${opts.clubName}`
+        : `Your ${appName} login — ${opts.clubName}`,
+    html: branded.html,
+    attachments: branded.attachments,
+  };
+}
+
 export async function minuteReviewRequestEmail(opts: {
   clubName: string;
   clubId?: string;

@@ -5,11 +5,14 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Shield } from "lucide-react";
 import { updateMemberRole } from "@/actions/club-users";
+import { DEFAULT_MEMBER_APP_ROLE } from "@/lib/member-roles-constants";
+import { SendMemberLoginButton } from "@/components/members/send-member-login-button";
 import { Toast } from "@/components/ui/toast";
 import type { ClubRole } from "@/generated/prisma/client";
 
 export function MemberRoleField({
   memberId,
+  memberEmail,
   role,
   customRoleId,
   hasAccount,
@@ -19,6 +22,7 @@ export function MemberRoleField({
   customRoles = [],
 }: {
   memberId: string;
+  memberEmail?: string | null;
   role: string | null;
   customRoleId: string | null;
   hasAccount: boolean;
@@ -31,11 +35,11 @@ export function MemberRoleField({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [toast, setToast] = useState<string | null>(null);
-  const [selectedRole, setSelectedRole] = useState(role ?? "READER");
+  const [selectedRole, setSelectedRole] = useState(role ?? DEFAULT_MEMBER_APP_ROLE);
   const [selectedCustomRoleId, setSelectedCustomRoleId] = useState(customRoleId ?? "");
 
   useEffect(() => {
-    setSelectedRole(role ?? "READER");
+    setSelectedRole(role ?? DEFAULT_MEMBER_APP_ROLE);
   }, [role]);
 
   useEffect(() => {
@@ -64,7 +68,7 @@ export function MemberRoleField({
       if ("error" in result && result.error) {
         if (result.error === "NO_USER_ACCOUNT") setToast(t("noAppAccount"));
         else if (result.error === "SELF_ROLE_CHANGE") setToast(t("cannotChangeOwnRole"));
-        setSelectedRole(role ?? "READER");
+        setSelectedRole(role ?? DEFAULT_MEMBER_APP_ROLE);
         setSelectedCustomRoleId(customRoleId ?? "");
         return;
       }
@@ -83,6 +87,14 @@ export function MemberRoleField({
           <p className="text-sm font-semibold text-gray-900">{t("appRole")}</p>
         </div>
         <p className="text-xs text-gray-500">{t("appRoleHint")}</p>
+
+        <SendMemberLoginButton
+          memberId={memberId}
+          memberEmail={memberEmail}
+          isCurrentUser={isCurrentUser}
+          onSuccess={setToast}
+          onError={setToast}
+        />
 
         {!hasAccount ? (
           <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
