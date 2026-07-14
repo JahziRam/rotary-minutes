@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getClubContext } from "@/lib/club-context";
 import { isFeatureEnabled } from "@/lib/feature-gate";
 import { listMemberDues } from "@/actions/dues";
+import { duesRemaining, sumPaymentAmounts } from "@/lib/dues";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { DuesPanel } from "@/components/members/dues-panel";
 import { PageAssistance } from "@/components/assistance/page-assistance";
@@ -26,6 +27,36 @@ export default async function MemberDuesPage({
   const data = await listMemberDues();
   if ("error" in data) return null;
 
+  type DuesPeriod = (typeof data.rows)[number]["periods"][number];
+
+  function mapPeriod(p: DuesPeriod) {
+    const amount = Number(p.amount);
+    const amountPaid =
+      p.status === "PAID" || p.status === "WAIVED"
+        ? amount
+        : sumPaymentAmounts(p.payments);
+    const remaining =
+      p.status === "PAID" || p.status === "WAIVED"
+        ? 0
+        : duesRemaining(amount, amountPaid);
+
+    return {
+      id: p.id,
+      periodIndex: p.periodIndex,
+      periodLabel: p.periodLabel,
+      amount,
+      amountPaid,
+      remaining,
+      currency: p.currency,
+      dueDate: p.dueDate.toISOString(),
+      paidAt: p.paidAt?.toISOString() ?? null,
+      status: p.status,
+      invoiceNumber: p.invoiceNumber,
+      receiptNumber: p.receiptNumber,
+      paymentId: p.payments[0]?.id ?? null,
+    };
+  }
+
   return (
     <AppShellServer title={t("title")}>
       <div className="space-y-4">
@@ -42,34 +73,8 @@ export default async function MemberDuesPage({
               email: member.email,
               duesPaymentPlan: member.duesPaymentPlan,
             },
-            periods: periods.map((p) => ({
-              id: p.id,
-              periodIndex: p.periodIndex,
-              periodLabel: p.periodLabel,
-              amount: Number(p.amount),
-              currency: p.currency,
-              dueDate: p.dueDate.toISOString(),
-              paidAt: p.paidAt?.toISOString() ?? null,
-              status: p.status,
-              invoiceNumber: p.invoiceNumber,
-              receiptNumber: p.receiptNumber,
-              paymentId: p.payments[0]?.id ?? null,
-            })),
-            nextDue: nextDue
-              ? {
-                  id: nextDue.id,
-                  periodIndex: nextDue.periodIndex,
-                  periodLabel: nextDue.periodLabel,
-                  amount: Number(nextDue.amount),
-                  currency: nextDue.currency,
-                  dueDate: nextDue.dueDate.toISOString(),
-                  paidAt: nextDue.paidAt?.toISOString() ?? null,
-                  status: nextDue.status,
-                  invoiceNumber: nextDue.invoiceNumber,
-                  receiptNumber: nextDue.receiptNumber,
-                  paymentId: nextDue.payments[0]?.id ?? null,
-                }
-              : null,
+            periods: periods.map(mapPeriod),
+            nextDue: nextDue ? mapPeriod(nextDue) : null,
           }))}
           fiscalYear={data.fiscalYear}
           currency={data.currency}

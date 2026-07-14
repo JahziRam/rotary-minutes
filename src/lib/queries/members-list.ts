@@ -15,6 +15,7 @@ export type MemberListRow = {
   isActive: boolean;
   commissionName: string | null;
   email: string | null;
+  appRole: string | null;
 };
 
 function buildMemberWhere(
@@ -49,23 +50,38 @@ export async function searchMembersPaginated(
     prisma.member.count({ where }),
     prisma.member.findMany({
       where,
-      include: { commission: { select: { name: true } } },
+      include: {
+        commission: { select: { name: true } },
+        user: {
+          select: {
+            memberships: {
+              where: { clubId },
+              select: { role: true, isActive: true },
+              take: 1,
+            },
+          },
+        },
+      },
       orderBy: [{ isActive: "desc" }, { lastName: "asc" }, { firstName: "asc" }],
       skip: params.skip,
       take: params.take,
     }),
   ]);
 
-  const items = rows.map((m) => ({
-    id: m.id,
-    firstName: m.firstName,
-    lastName: m.lastName,
-    photoUrl: m.photoUrl,
-    position: m.position,
-    isActive: m.isActive,
-    commissionName: m.commission?.name ?? null,
-    email: m.email,
-  }));
+  const items = rows.map((m) => {
+    const membership = m.user?.memberships[0];
+    return {
+      id: m.id,
+      firstName: m.firstName,
+      lastName: m.lastName,
+      photoUrl: m.photoUrl,
+      position: m.position,
+      isActive: m.isActive,
+      commissionName: m.commission?.name ?? null,
+      email: m.email,
+      appRole: membership?.isActive ? membership.role : null,
+    };
+  });
 
   return buildPaginatedResult(items, total, params.page, params.pageSize);
 }

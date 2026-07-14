@@ -16,9 +16,12 @@ import {
 import {
   buildPeriodSchedule,
   currentFiscalYear,
+  duesRemaining,
   fiscalYearLabel,
   nextInvoiceNumber,
   nextReceiptNumber,
+  roundMoney,
+  sumPaymentAmounts,
 } from "@/lib/dues";
 import type { DuesPaymentPlan, DuesStatus, PaymentMethod } from "@/generated/prisma/client";
 
@@ -84,8 +87,7 @@ export async function listMemberDues(fiscalYear?: number) {
       include: {
         payments: {
           orderBy: { paidAt: "desc" },
-          take: 1,
-          select: { id: true },
+          select: { id: true, amount: true, paidAt: true },
         },
       },
     }),
@@ -319,6 +321,7 @@ const PAYMENT_METHODS: PaymentMethod[] = [
 export async function markDuesPaid(
   duesId: string,
   opts?: {
+    amount?: number;
     notes?: string;
     method?: string;
     paymentMethod?: PaymentMethod;
@@ -332,41 +335,65 @@ export async function markDuesPaid(
 
   const existing = await prisma.memberDues.findFirst({
     where: { id: duesId, clubId: ctx.clubId },
-    include: { member: true },
+    include: {
+      member: true,
+      payments: { select: { amount: true } },
+    },
   });
   if (!existing) return { error: "NOT_FOUND" as const };
-  if (existing.status === "PAID") return { error: "ALREADY_PAID" as const };
+  if (existing.status === "PAID" || existing.status === "WAIVED") {
+    return { error: "ALREADY_PAID" as const };
+  }
 
-  const receiptNumber =
-    existing.receiptNumber ?? (await nextReceiptNumber(ctx.clubId, existing.fiscalYear));
+  const periodAmount = Number(existing.amount);
+  const alreadyPaid = sumPaymentAmounts(existing.payments);
+  const remaining = duesRemaining(periodAmount, alreadyPaid);
+  if (remaining <= 0) return { error: "ALREADY_PAID" as const };
+
+  let paymentAmount = opts?.amount != null ? roundMoney(opts.amount) : remaining;
+  if (paymentAmount <= 0) return { error: "INVALID_AMOUNT" as const };
+  if (paymentAmount > remaining) return { error: "AMOUNT_EXCEEDS_REMAINING" as const };
+
   const paidAt = new Date();
   const paymentMethod =
     opts?.paymentMethod ??
     (opts?.method && PAYMENT_METHODS.includes(opts.method as PaymentMethod)
       ? (opts.method as PaymentMethod)
       : undefined);
+  const isFullyPaid = paymentAmount >= remaining;
+  const paymentReceiptNumber = await nextReceiptNumber(ctx.clubId, existing.fiscalYear);
+  const periodReceiptNumber =
+    isFullyPaid ? (existing.receiptNumber ?? paymentReceiptNumber) : null;
 
   const payment = await prisma.$transaction(async (tx) => {
-    await tx.memberDues.update({
-      where: { id: duesId },
-      data: {
-        status: "PAID" as DuesStatus,
-        paidAt,
-        receiptNumber,
-        ...(opts?.notes !== undefined && { notes: opts.notes || null }),
-      },
-    });
+    if (isFullyPaid) {
+      await tx.memberDues.update({
+        where: { id: duesId },
+        data: {
+          status: "PAID" as DuesStatus,
+          paidAt,
+          receiptNumber: periodReceiptNumber,
+          ...(opts?.notes !== undefined && { notes: opts.notes || null }),
+        },
+      });
+    } else if (opts?.notes !== undefined) {
+      await tx.memberDues.update({
+        where: { id: duesId },
+        data: { notes: opts.notes || null },
+      });
+    }
+
     return tx.duesPayment.create({
       data: {
         clubId: ctx.clubId,
         memberId: existing.memberId,
         duesId,
-        amount: existing.amount,
+        amount: paymentAmount,
         currency: existing.currency,
         paidAt,
         method: paymentMethod ?? opts?.method ?? null,
         paymentMethod: paymentMethod ?? null,
-        receiptNumber,
+        receiptNumber: paymentReceiptNumber,
         notes: opts?.notes || null,
         recordedById: ctx.userId,
       },
@@ -380,7 +407,7 @@ export async function markDuesPaid(
 
   const shouldSend =
     opts?.sendReceipt ?? club?.duesAutoReceiptEmail ?? true;
-  if (shouldSend && existing.member.email) {
+  if (isFullyPaid && shouldSend && existing.member.email) {
     await sendDuesReceiptEmail(duesId, locale, false);
   }
 
@@ -388,29 +415,43 @@ export async function markDuesPaid(
     data: {
       clubId: ctx.clubId,
       userId: ctx.userId,
-      action: "DUES_MARKED_PAID",
+      action: isFullyPaid ? "DUES_MARKED_PAID" : "DUES_PARTIAL_PAYMENT",
       entity: "MemberDues",
       entityId: duesId,
-      metadata: { receiptNumber, method: paymentMethod ?? opts?.method },
+      metadata: {
+        paymentAmount,
+        remaining: duesRemaining(periodAmount, alreadyPaid + paymentAmount),
+        receiptNumber: paymentReceiptNumber,
+        method: paymentMethod ?? opts?.method,
+      },
     },
   });
 
-  const { dispatchDuesPaidWebhook } = await import("@/lib/club-webhooks");
-  dispatchDuesPaidWebhook(ctx.clubId, {
-    duesId,
-    memberId: existing.memberId,
-    amount: Number(existing.amount),
-    currency: existing.currency,
-    paymentMethod: paymentMethod ?? opts?.method ?? null,
-    receiptNumber,
-    paidAt: paidAt.toISOString(),
-  });
+  if (isFullyPaid) {
+    const { dispatchDuesPaidWebhook } = await import("@/lib/club-webhooks");
+    dispatchDuesPaidWebhook(ctx.clubId, {
+      duesId,
+      memberId: existing.memberId,
+      amount: periodAmount,
+      currency: existing.currency,
+      paymentMethod: paymentMethod ?? opts?.method ?? null,
+      receiptNumber: periodReceiptNumber ?? paymentReceiptNumber,
+      paidAt: paidAt.toISOString(),
+    });
+  }
 
   const { syncDuesPayment } = await import("@/actions/treasury");
   void syncDuesPayment(payment.id, ctx.clubId, ctx.userId);
 
   revalidateDues();
-  return { success: true, receiptNumber, paymentId: payment.id };
+  return {
+    success: true,
+    partial: !isFullyPaid,
+    receiptNumber: paymentReceiptNumber,
+    paymentId: payment.id,
+    amountPaid: paymentAmount,
+    remaining: duesRemaining(periodAmount, alreadyPaid + paymentAmount),
+  };
 }
 
 export async function updateDuesStatus(

@@ -9,7 +9,6 @@ import {
   FileText,
   Mail,
   History,
-  CheckCircle,
   Download,
   ChevronDown,
   ChevronUp,
@@ -19,13 +18,13 @@ import { Badge } from "@/components/ui/badge";
 import { Toast } from "@/components/ui/toast";
 import {
   bulkCreateDuesForYear,
-  markDuesPaid,
   updateMemberDuesPlan,
   sendDuesInvoiceEmail,
   sendDuesReceiptEmail,
   sendMemberDuesHistoryEmail,
   updateDuesStatus,
 } from "@/actions/dues";
+import { RecordDuesPayment } from "@/components/members/record-dues-payment";
 import { TreasuryVoucherPanel } from "@/components/treasury/treasury-voucher-panel";
 import type { DuesPaymentPlan, DuesStatus, PaymentMethod } from "@/generated/prisma/client";
 
@@ -43,6 +42,8 @@ type PeriodRow = {
   periodIndex: number;
   periodLabel: string | null;
   amount: number;
+  amountPaid: number;
+  remaining: number;
   currency: string;
   dueDate: string;
   paidAt: string | null;
@@ -238,9 +239,33 @@ export function DuesPanel({
                           )}
                         </td>
                         <td className="px-4 py-3 text-gray-700">
-                          {displayPeriod
-                            ? formatMoney(displayPeriod.amount, displayPeriod.currency, locale)
-                            : "—"}
+                          {displayPeriod ? (
+                            <>
+                              <span>
+                                {formatMoney(displayPeriod.amount, displayPeriod.currency, locale)}
+                              </span>
+                              {displayPeriod.amountPaid > 0 &&
+                                displayPeriod.status !== "PAID" &&
+                                displayPeriod.status !== "WAIVED" && (
+                                  <p className="text-xs text-emerald-700 mt-0.5">
+                                    {t("paidProgress", {
+                                      paid: formatMoney(
+                                        displayPeriod.amountPaid,
+                                        displayPeriod.currency,
+                                        locale
+                                      ),
+                                      total: formatMoney(
+                                        displayPeriod.amount,
+                                        displayPeriod.currency,
+                                        locale
+                                      ),
+                                    })}
+                                  </p>
+                                )}
+                            </>
+                          ) : (
+                            "—"
+                          )}
                           {periods.length > 1 && (
                             <span className="text-xs text-gray-400 ml-1">
                               ({periods.filter((p) => p.status === "PAID").length}/{periods.length})
@@ -279,29 +304,20 @@ export function DuesPanel({
                                 )}
                               </Button>
                             )}
-                            {canManage && displayPeriod && displayPeriod.status !== "PAID" && (
+                            {canManage &&
+                              displayPeriod &&
+                              displayPeriod.status !== "PAID" &&
+                              displayPeriod.status !== "WAIVED" &&
+                              displayPeriod.remaining > 0 && (
                               <>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-7 text-xs"
-                                  disabled={pending}
-                                  data-assist="dues-record-payment"
-                                  onClick={() =>
-                                    run(
-                                      () =>
-                                        markDuesPaid(
-                                          displayPeriod.id,
-                                          { paymentMethod },
-                                          locale
-                                        ),
-                                      t("markedPaid")
-                                    )
-                                  }
-                                >
-                                  <CheckCircle className="h-3 w-3 mr-1" />
-                                  {t("markPaid")}
-                                </Button>
+                                <RecordDuesPayment
+                                  duesId={displayPeriod.id}
+                                  remaining={displayPeriod.remaining}
+                                  currency={displayPeriod.currency}
+                                  paymentMethod={paymentMethod}
+                                  locale={locale}
+                                  onToast={setToast}
+                                />
                                 {member.email && (
                                   <Button
                                     size="sm"
@@ -376,7 +392,27 @@ export function DuesPanel({
                             </td>
                             <td />
                             <td className="px-4 py-2">
-                              {formatMoney(period.amount, period.currency, locale)}
+                              <span>
+                                {formatMoney(period.amount, period.currency, locale)}
+                              </span>
+                              {period.amountPaid > 0 &&
+                                period.status !== "PAID" &&
+                                period.status !== "WAIVED" && (
+                                  <p className="text-[10px] text-emerald-700">
+                                    {t("paidProgress", {
+                                      paid: formatMoney(
+                                        period.amountPaid,
+                                        period.currency,
+                                        locale
+                                      ),
+                                      total: formatMoney(
+                                        period.amount,
+                                        period.currency,
+                                        locale
+                                      ),
+                                    })}
+                                  </p>
+                                )}
                             </td>
                             <td className="px-4 py-2">
                               {format(new Date(period.dueDate), "PP", { locale: dateLocale })}
@@ -389,27 +425,19 @@ export function DuesPanel({
                             <td className="px-4 py-2 text-right">
                               {canManage && (
                                 <div className="flex justify-end gap-1">
-                                  {period.status !== "PAID" && period.status !== "WAIVED" && (
+                                  {period.status !== "PAID" &&
+                                    period.status !== "WAIVED" &&
+                                    period.remaining > 0 && (
                                     <>
-                                      <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        className="h-6 text-[10px] px-2"
-                                        disabled={pending}
-                                        onClick={() =>
-                                          run(
-                                            () =>
-                                              markDuesPaid(
-                                                period.id,
-                                                { paymentMethod },
-                                                locale
-                                              ),
-                                            t("markedPaid")
-                                          )
-                                        }
-                                      >
-                                        {t("markPaid")}
-                                      </Button>
+                                      <RecordDuesPayment
+                                        duesId={period.id}
+                                        remaining={period.remaining}
+                                        currency={period.currency}
+                                        paymentMethod={paymentMethod}
+                                        locale={locale}
+                                        compact
+                                        onToast={setToast}
+                                      />
                                       <a
                                         href={`/api/dues/invoice/${period.id}?locale=${locale}`}
                                         target="_blank"
@@ -485,7 +513,7 @@ export function DuesPanel({
                               )}
                             </td>
                           </tr>
-                          {period.status === "PAID" && period.paymentId && canManage && (
+                          {period.paymentId && canManage && (
                             <tr className="bg-gray-50/60">
                               <td colSpan={6} className="px-4 py-3 pl-8">
                                 <TreasuryVoucherPanel

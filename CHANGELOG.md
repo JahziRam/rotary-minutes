@@ -10,6 +10,17 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 ### À venir
 - Améliorations continues produit et stabilité
 
+### Added
+- **Membres — rôles applicatifs**
+  - Assignation du rôle (`ClubMembership`) depuis la fiche membre par le super admin ou l’admin du club (`users.manage`)
+  - Badge de rôle dans l’annuaire pour les membres liés à un compte applicatif
+  - Support des rôles personnalisés pour le super admin
+- **Cotisations — paiements partiels**
+  - Enregistrement d’un montant libre (différent du montant par défaut de la période)
+  - Paiements échelonnés sur une même échéance jusqu’au solde complet
+  - Affichage de la progression « payé / total » sur la page Cotisations
+  - Accessible aux rôles `dues.manage` (admin, trésorier, secrétaire, président) et super admin
+
 ---
 
 ## [0.3.0] — 2026-07-10

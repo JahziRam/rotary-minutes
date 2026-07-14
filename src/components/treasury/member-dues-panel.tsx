@@ -6,7 +6,7 @@ import { Wallet } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getMemberDuesHistory } from "@/lib/queries/dues-overview";
-import { fiscalYearLabel, formatDuesMoney } from "@/lib/dues";
+import { fiscalYearLabel, formatDuesMoney, sumPaymentAmounts } from "@/lib/dues";
 import type { DuesStatus } from "@/generated/prisma/client";
 
 const VARIANT: Record<DuesStatus, "default" | "success" | "warning" | "danger" | "muted"> = {
@@ -35,9 +35,10 @@ export async function MemberDuesPanel({
   if (data.currentPeriods.length === 0 && data.payments.length === 0) return null;
 
   const amountDue = data.currentPeriods.reduce((s, p) => s + Number(p.amount), 0);
-  const amountPaid = data.currentPeriods
-    .filter((p) => p.status === "PAID" || p.status === "WAIVED")
-    .reduce((s, p) => s + Number(p.amount), 0);
+  const amountPaid = data.currentPeriods.reduce((s, p) => {
+    if (p.status === "PAID" || p.status === "WAIVED") return s + Number(p.amount);
+    return s + sumPaymentAmounts(p.payments);
+  }, 0);
 
   return (
     <Card>

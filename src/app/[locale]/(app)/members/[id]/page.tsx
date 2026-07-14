@@ -2,12 +2,16 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getMemberDetail } from "@/actions/members";
+import { getMemberAppRoleInfo } from "@/actions/club-users";
 import { getClubContext } from "@/lib/club-context";
 import { isFeatureEnabled } from "@/lib/feature-gate";
 import { hasRolePermission } from "@/lib/roles";
+import { ROLE_LABELS } from "@/lib/role-definitions";
+import { CLUB_ROLES } from "@/lib/rotary";
 import { prisma } from "@/lib/prisma";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { MemberEditForm } from "@/components/members/member-edit-form";
+import { MemberRoleField } from "@/components/members/member-role-field";
 import { MemberDuesPanel } from "@/components/treasury/member-dues-panel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -26,12 +30,31 @@ export default async function MemberDetailPage({
   const canManage = ctx
     ? await hasRolePermission(ctx.role, "members.manage", ctx.isSuperAdmin)
     : false;
-  const commissions = ctx
-    ? await prisma.commission.findMany({
-        where: { clubId: ctx.clubId, isActive: true },
-        orderBy: { name: "asc" },
-      })
-    : [];
+  const canManageRoles = ctx
+    ? ctx.isSuperAdmin ||
+      (await hasRolePermission(ctx.role, "users.manage", false, ctx.customRoleId))
+    : false;
+  const [commissions, appRoleInfo, customRoles] = ctx
+    ? await Promise.all([
+        prisma.commission.findMany({
+          where: { clubId: ctx.clubId, isActive: true },
+          orderBy: { name: "asc" },
+        }),
+        getMemberAppRoleInfo(id),
+        ctx.isSuperAdmin
+          ? prisma.customRole.findMany({
+              where: { isActive: true },
+              orderBy: { key: "asc" },
+            })
+          : Promise.resolve([]),
+      ])
+    : [[], null, []];
+
+  const roleLocale = locale === "fr" ? "fr" : "en";
+  const roleOptions = CLUB_ROLES.map((r) => ({
+    value: r,
+    label: ROLE_LABELS[r][roleLocale],
+  }));
 
   const showDues =
     ctx &&
@@ -50,7 +73,22 @@ export default async function MemberDetailPage({
               {member.firstName} {member.lastName}
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-6">
+            {(canManageRoles || appRoleInfo?.role) && appRoleInfo && (
+              <MemberRoleField
+                memberId={id}
+                role={appRoleInfo.role}
+                customRoleId={appRoleInfo.customRoleId}
+                hasAccount={appRoleInfo.hasAccount}
+                canManage={canManageRoles}
+                isCurrentUser={appRoleInfo.userId === ctx?.userId}
+                roleOptions={roleOptions}
+                customRoles={customRoles.map((r) => ({
+                  id: r.id,
+                  label: locale === "fr" ? r.labelFr : r.labelEn,
+                }))}
+              />
+            )}
             <MemberEditForm
               member={member}
               commissions={commissions}

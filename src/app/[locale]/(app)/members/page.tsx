@@ -8,6 +8,8 @@ import { prisma } from "@/lib/prisma";
 import { getUpcomingBirthdays } from "@/lib/queries/members";
 import { getMembersDuesOverview } from "@/lib/queries/dues-overview";
 import { searchMembersPaginated } from "@/lib/queries/members-list";
+import { ROLE_LABELS } from "@/lib/role-definitions";
+import { CLUB_ROLES } from "@/lib/rotary";
 import { getOfficerMandates } from "@/actions/mandates";
 import { getClubOnboarding } from "@/actions/onboarding";
 import { parseListParams, listParamsToRecord } from "@/lib/server-list";
@@ -60,6 +62,10 @@ export default async function MembersPage({
     ]);
 
   const inactiveCount = totalCount - activeCount;
+  const roleLocale = locale === "fr" ? "fr" : "en";
+  const roleLabels = Object.fromEntries(
+    CLUB_ROLES.map((r) => [r, ROLE_LABELS[r][roleLocale]])
+  );
 
   return (
     <AppShellServer title={t("members.title")}>
@@ -125,6 +131,7 @@ export default async function MembersPage({
             initialQuery={sp.q ?? ""}
             initialStatus={sp.status ?? "all"}
             listParams={listParamsToRecord(listParams)}
+            roleLabels={roleLabels}
           />
         )}
       </div>

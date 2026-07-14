@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { currentFiscalYear } from "@/lib/dues";
+import { currentFiscalYear, sumPaymentAmounts } from "@/lib/dues";
 import type { DuesStatus } from "@/generated/prisma/client";
 
 export type MemberDuesStatusInfo = {
@@ -26,7 +26,13 @@ export async function getMembersDuesOverview(clubId: string, fiscalYear?: number
     }),
     prisma.memberDues.findMany({
       where: { clubId, fiscalYear: year },
-      select: { memberId: true, status: true, amount: true, paidAt: true },
+      select: {
+        memberId: true,
+        status: true,
+        amount: true,
+        paidAt: true,
+        payments: { select: { amount: true } },
+      },
     }),
   ]);
 
@@ -48,9 +54,11 @@ export async function getMembersDuesOverview(clubId: string, fiscalYear?: number
   for (const member of members) {
     const periods = byMember.get(member.id) ?? [];
     const amountDue = periods.reduce((s, p) => s + Number(p.amount), 0);
-    const amountPaid = periods
-      .filter((p) => p.status === "PAID" || p.status === "WAIVED")
-      .reduce((s, p) => s + Number(p.amount), 0);
+    const amountPaid = periods.reduce((s, p) => {
+      if (p.status === "WAIVED") return s + Number(p.amount);
+      if (p.status === "PAID") return s + Number(p.amount);
+      return s + sumPaymentAmounts(p.payments);
+    }, 0);
     const status = aggregateStatus(periods);
 
     expected += amountDue;
@@ -84,6 +92,7 @@ export async function getMemberDuesHistory(clubId: string, memberId: string) {
     prisma.memberDues.findMany({
       where: { clubId, memberId },
       orderBy: [{ fiscalYear: "desc" }, { periodIndex: "asc" }],
+      include: { payments: { select: { amount: true } } },
     }),
     prisma.duesPayment.findMany({
       where: { clubId, memberId },

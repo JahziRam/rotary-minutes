@@ -21,6 +21,7 @@ export type MemberCard = {
   isActive: boolean;
   commissionName: string | null;
   email?: string | null;
+  appRole?: string | null;
 };
 
 type DuesBadge = {
@@ -36,6 +37,7 @@ export function MembersDirectory({
   initialQuery = "",
   initialStatus = "all",
   listParams,
+  roleLabels = {},
 }: {
   members: PaginatedResult<MemberCard>;
   locale: string;
@@ -43,6 +45,7 @@ export function MembersDirectory({
   initialQuery?: string;
   initialStatus?: string;
   listParams: Record<string, string | undefined>;
+  roleLabels?: Record<string, string>;
 }) {
   const t = useTranslations();
   const router = useRouter();
@@ -141,6 +144,11 @@ export function MembersDirectory({
                   <div className="flex flex-col items-end gap-1 shrink-0">
                     {duesByMemberId && member.isActive && (
                       <MemberDuesBadge dues={duesByMemberId[member.id] as never} />
+                    )}
+                    {member.appRole && roleLabels[member.appRole] && (
+                      <Badge variant="default" className="text-[10px]">
+                        {roleLabels[member.appRole]}
+                      </Badge>
                     )}
                     <Badge variant={member.isActive ? "success" : "muted"}>
                       {member.isActive ? t("members.active") : t("members.inactive")}

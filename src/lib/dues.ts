@@ -78,3 +78,19 @@ export function formatDuesMoney(amount: number, currency: string, locale: string
     currency,
   }).format(amount);
 }
+
+export function roundMoney(amount: number): number {
+  return Math.round(amount * 100) / 100;
+}
+
+export function sumPaymentAmounts(
+  payments: Array<{ amount: unknown }>
+): number {
+  return roundMoney(
+    payments.reduce((sum, p) => sum + Number(p.amount), 0)
+  );
+}
+
+export function duesRemaining(periodAmount: number, paidSoFar: number): number {
+  return roundMoney(Math.max(0, periodAmount - paidSoFar));
+}
