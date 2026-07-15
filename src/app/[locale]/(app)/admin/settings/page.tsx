@@ -10,7 +10,7 @@ import { IntegrationsConfigPanel } from "@/components/admin/integrations-config-
 import { PlatformBackupPanel } from "@/components/admin/platform-backup-panel";
 import { VapidConfigPanel } from "@/components/admin/vapid-config-panel";
 import { getVapidAdminView } from "@/lib/vapid-config";
-import { getMinuteAiPlatformConfig, isMinuteAiApiConfigured } from "@/lib/minute-ai-config";
+import { getMinuteAiAdminView } from "@/lib/minute-ai-config";
 import { MinuteAiConfigPanel } from "@/components/admin/minute-ai-config-panel";
 import { DEFAULT_APP_NAME } from "@/lib/app-branding-shared";
 
@@ -56,10 +56,14 @@ export default async function AdminSettingsPage({
       publicKeyPreview: "",
       envFallback: false,
     }),
-    adminQuery("minuteAi", () => getMinuteAiPlatformConfig(), {
+    adminQuery("minuteAi", () => getMinuteAiAdminView(), {
       globallyEnabled: true,
       monthlyQuotaPerClub: 50,
       model: "grok-3-mini",
+      apiConfigured: false,
+      apiKeySet: false,
+      apiKeyPreview: "",
+      envFallback: false,
     }),
   ]);
 
@@ -84,10 +88,7 @@ export default async function AdminSettingsPage({
           }}
         />
         <IntegrationsConfigPanel integration={integration} />
-        <MinuteAiConfigPanel
-          config={minuteAiConfig}
-          apiConfigured={isMinuteAiApiConfigured()}
-        />
+        <MinuteAiConfigPanel config={minuteAiConfig} />
         <VapidConfigPanel vapid={vapid} />
         <PlatformBackupPanel />
         </CardContent>

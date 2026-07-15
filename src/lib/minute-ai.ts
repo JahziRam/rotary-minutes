@@ -77,10 +77,11 @@ export function parsePolishedResponse(text: string): PolishedAgendaItem | null {
 
 export async function polishAgendaItemNotes(
   input: PolishAgendaItemInput,
-  model: string
+  model: string,
+  apiKey: string
 ): Promise<PolishedAgendaItem> {
-  const apiKey = process.env.XAI_API_KEY?.trim();
-  if (!apiKey) {
+  const key = apiKey.trim();
+  if (!key) {
     throw new Error("API_KEY_MISSING");
   }
 
@@ -92,7 +93,7 @@ export async function polishAgendaItemNotes(
   const response = await fetch("https://api.x.ai/v1/chat/completions", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${apiKey}`,
+      Authorization: `Bearer ${key}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({

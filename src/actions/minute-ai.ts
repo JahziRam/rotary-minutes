@@ -9,7 +9,10 @@ import {
 } from "@/lib/commission-scope";
 import { polishAgendaItemNotes } from "@/lib/minute-ai";
 import { resolveMinuteAiAccess } from "@/lib/minute-ai-access";
-import { getMinuteAiPlatformConfig } from "@/lib/minute-ai-config";
+import {
+  getMinuteAiPlatformConfig,
+  resolveMinuteAiApiKey,
+} from "@/lib/minute-ai-config";
 
 function revalidateMinuteAiPaths(minuteId: string) {
   for (const loc of ["fr", "en", "es"]) {
@@ -69,7 +72,10 @@ export async function polishMinuteAgendaItem(
   const locale =
     club?.language === "EN" ? "en" : club?.language === "ES" ? "es" : "fr";
 
-  const platform = await getMinuteAiPlatformConfig();
+  const [platform, apiKey] = await Promise.all([
+    getMinuteAiPlatformConfig(),
+    resolveMinuteAiApiKey(),
+  ]);
 
   try {
     const polished = await polishAgendaItemNotes(
@@ -85,7 +91,8 @@ export async function polishMinuteAgendaItem(
           ? item.dueDate.toISOString().split("T")[0]
           : "",
       },
-      platform.model
+      platform.model,
+      apiKey
     );
 
     await prisma.auditLog.create({
@@ -122,6 +129,7 @@ export async function updateMinuteAiPlatformSettings(data: {
   globallyEnabled: boolean;
   monthlyQuotaPerClub: number;
   model?: string;
+  apiKey?: string;
 }) {
   const auth = await requireSuperAdmin();
   if (auth.error) return auth;
@@ -132,6 +140,21 @@ export async function updateMinuteAiPlatformSettings(data: {
     globallyEnabled: data.globallyEnabled,
     monthlyQuotaPerClub: quota,
     ...(data.model?.trim() ? { model: data.model.trim() } : {}),
+    ...(data.apiKey?.trim() ? { apiKey: data.apiKey.trim() } : {}),
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      userId: auth.ctx.userId,
+      action: "MINUTE_AI_SETTINGS_UPDATED",
+      entity: "AppSettings",
+      entityId: "global",
+      metadata: {
+        globallyEnabled: data.globallyEnabled,
+        monthlyQuotaPerClub: quota,
+        apiKeyUpdated: Boolean(data.apiKey?.trim()),
+      },
+    },
   });
 
   for (const loc of ["fr", "en", "es"]) {

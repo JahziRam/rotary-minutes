@@ -32,7 +32,8 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
   - Ajout manuel : refus avec message d'erreur si doublon détecté
   - Module partagé `member-dedup.ts` et tests unitaires
 - **PV — assistant IA (MVP)**
-  - Reformulation des notes brutes en phrases de PV via xAI (`XAI_API_KEY`, modèle par défaut `grok-3-mini`)
+  - Reformulation des notes brutes en phrases de PV via xAI (clé API admin ou `XAI_API_KEY`, modèle par défaut `grok-3-mini`)
+  - Clé API xAI configurable dans **Admin → Paramètres** (repli sur variable d'environnement)
   - Bouton « Reformuler avec l'IA » par point d'ODJ dans l'éditeur de PV (description, décisions, actions, responsable, échéance)
   - Module complémentaire `MINUTE_AI` (12 €/mois) activable dans **Paramètres → Abonnement → Modules complémentaires**
   - Toggle super admin par club (**Admin → Clubs → Fonctionnalités** → « Assistant IA rédaction PV »)

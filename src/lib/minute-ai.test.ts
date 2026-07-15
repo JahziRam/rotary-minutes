@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parsePolishedResponse } from "@/lib/minute-ai";
+import { maskMinuteAiApiKey } from "@/lib/minute-ai-config";
 
 describe("minute-ai", () => {
   it("parses JSON polish response", () => {
@@ -34,5 +35,10 @@ describe("minute-ai", () => {
     );
 
     expect(parsed?.dueDate).toBeNull();
+  });
+
+  it("masks api keys for admin preview", () => {
+    expect(maskMinuteAiApiKey("xai-abcdefghijklmnop")).toBe("xai-ab••••mnop");
+    expect(maskMinuteAiApiKey("")).toBe("");
   });
 });

@@ -35,7 +35,7 @@ export async function resolveMinuteAiAccess(
   const quota = Math.max(1, platform.monthlyQuotaPerClub);
   const remaining = Math.max(0, quota - usage);
 
-  if (!isMinuteAiApiConfigured()) {
+  if (!(await isMinuteAiApiConfigured())) {
     return { ok: false, error: "API_KEY_MISSING", remaining, quota };
   }
 
