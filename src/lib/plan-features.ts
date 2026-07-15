@@ -47,6 +47,7 @@ export function getPlanFeaturePreset(plan: SubscriptionPlan): ClubFeatureSet {
     documentSharingEnabled: false,
     treasuryImportEnabled: false,
     clubBackupEnabled: false,
+    minuteAiAssistEnabled: false,
     memberLimit: null,
   };
 
@@ -120,6 +121,7 @@ const ADDON_FLAGS: Record<
   EMAILS: { emailsEnabled: true, emailsMenuVisible: true },
   DISTRICT: { districtDashboard: true, districtMenuVisible: true },
   ADVANCED_STATS: { statisticsEnabled: true, statisticsMenuVisible: true },
+  MINUTE_AI: { minuteAiAssistEnabled: true },
 };
 
 export function mergePlanFeaturesWithAddons(

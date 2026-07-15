@@ -372,6 +372,25 @@
       "errorNotFinalized": "Le PV doit être finalisé avant l'envoi",
       "errorGeneric": "Action impossible — réessayez"
     },
+    "aiAssist": {
+      "notesLabel": "Notes / brouillon",
+      "notesPlaceholder": "Notes brutes pendant la réunion (ex. vote budget ok, Marie contacte district avant mars)",
+      "polish": "Reformuler avec l'IA",
+      "polishing": "Reformulation…",
+      "quotaHint": "Assistant IA actif — {remaining} reformulation(s) restante(s) ce mois.",
+      "upgradeHint": "L'assistant IA transforme vos notes en phrases de PV. Activez le module complémentaire",
+      "upgradeLink": "dans Abonnement",
+      "error": {
+        "emptyNotes": "Saisissez des notes avant de reformuler",
+        "FEATURE_DISABLED": "Module IA non activé pour ce club",
+        "GLOBALLY_DISABLED": "Assistant IA désactivé par la plateforme",
+        "API_KEY_MISSING": "Service IA non configuré",
+        "QUOTA_EXCEEDED": "Quota mensuel atteint",
+        "AI_UNAVAILABLE": "Service IA indisponible — réessayez plus tard",
+        "AI_ERROR": "Erreur de reformulation",
+        "generic": "Reformulation impossible"
+      }
+    },
     "attachments": {
       "title": "Pièces jointes",
       "hint": "Ordre du jour signé, présentations, rapports… Les fichiers sont joints aux emails de diffusion du PV (max 10 × 5 Mo).",

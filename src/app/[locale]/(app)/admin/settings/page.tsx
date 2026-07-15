@@ -10,6 +10,8 @@ import { IntegrationsConfigPanel } from "@/components/admin/integrations-config-
 import { PlatformBackupPanel } from "@/components/admin/platform-backup-panel";
 import { VapidConfigPanel } from "@/components/admin/vapid-config-panel";
 import { getVapidAdminView } from "@/lib/vapid-config";
+import { getMinuteAiPlatformConfig, isMinuteAiApiConfigured } from "@/lib/minute-ai-config";
+import { MinuteAiConfigPanel } from "@/components/admin/minute-ai-config-panel";
 import { DEFAULT_APP_NAME } from "@/lib/app-branding-shared";
 
 export default async function AdminSettingsPage({
@@ -22,7 +24,7 @@ export default async function AdminSettingsPage({
   const tNav = await getTranslations("adminNav");
   const tPages = await getTranslations("adminPages");
 
-  const [settings, integration, analytics, vapid] = await Promise.all([
+  const [settings, integration, analytics, vapid, minuteAiConfig] = await Promise.all([
     adminQuery(
       "appSettings",
       () => prisma.appSettings.findUnique({ where: { id: "global" } }),
@@ -54,6 +56,11 @@ export default async function AdminSettingsPage({
       publicKeyPreview: "",
       envFallback: false,
     }),
+    adminQuery("minuteAi", () => getMinuteAiPlatformConfig(), {
+      globallyEnabled: true,
+      monthlyQuotaPerClub: 50,
+      model: "grok-3-mini",
+    }),
   ]);
 
   return (
@@ -77,6 +84,10 @@ export default async function AdminSettingsPage({
           }}
         />
         <IntegrationsConfigPanel integration={integration} />
+        <MinuteAiConfigPanel
+          config={minuteAiConfig}
+          apiConfigured={isMinuteAiApiConfigured()}
+        />
         <VapidConfigPanel vapid={vapid} />
         <PlatformBackupPanel />
         </CardContent>

@@ -828,6 +828,25 @@
       "errorNotFinalized": "El acta debe estar finalizada antes del envío",
       "errorGeneric": "Acción imposible — inténtelo de nuevo"
     },
+    "aiAssist": {
+      "notesLabel": "Notas / borrador",
+      "notesPlaceholder": "Notas rápidas en la reunión (ej. presupuesto aprobado, María contacta distrito antes de marzo)",
+      "polish": "Reformular con IA",
+      "polishing": "Reformulando…",
+      "quotaHint": "Asistente IA activo — {remaining} reformulación(es) restante(s) este mes.",
+      "upgradeHint": "El asistente IA convierte sus notas en frases de acta. Active el módulo",
+      "upgradeLink": "en Suscripción",
+      "error": {
+        "emptyNotes": "Escriba notas antes de reformular",
+        "FEATURE_DISABLED": "Módulo IA no activado para este club",
+        "GLOBALLY_DISABLED": "Asistente IA desactivado en la plataforma",
+        "API_KEY_MISSING": "Servicio IA no configurado",
+        "QUOTA_EXCEEDED": "Cuota mensual alcanzada",
+        "AI_UNAVAILABLE": "Servicio IA no disponible — inténtelo más tarde",
+        "AI_ERROR": "Error al reformular",
+        "generic": "No se pudo reformular"
+      }
+    },
     "attachments": {
       "title": "Anexos",
       "hint": "Orden del día firmado, presentaciones, informes… Se incluyen al enviar el acta por email (máx. 10 × 5 MB).",

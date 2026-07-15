@@ -25,6 +25,7 @@ export type GatedFeature = keyof Pick<
   | "documentSharingEnabled"
   | "treasuryImportEnabled"
   | "clubBackupEnabled"
+  | "minuteAiAssistEnabled"
 >;
 
 export const GATED_FEATURE_KEYS: GatedFeature[] = [
@@ -51,6 +52,7 @@ export const GATED_FEATURE_KEYS: GatedFeature[] = [
   "documentSharingEnabled",
   "treasuryImportEnabled",
   "clubBackupEnabled",
+  "minuteAiAssistEnabled",
 ];
 
 export function isFeatureEnabled(

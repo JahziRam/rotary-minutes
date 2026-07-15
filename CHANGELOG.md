@@ -31,6 +31,10 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
   - Inscriptions en ligne : blocage si le membre existe déjà dans le club (actif, inactif ou en attente)
   - Ajout manuel : refus avec message d'erreur si doublon détecté
   - Module partagé `member-dedup.ts` et tests unitaires
+- **PV — assistant IA (MVP)**
+  - Reformulation des notes brutes en phrases de PV (xAI / `XAI_API_KEY`)
+  - Module complémentaire `MINUTE_AI` activable par club ; toggle super admin par club
+  - Quota mensuel configurable (Admin → Paramètres) ; audit `MINUTE_AI_POLISH`
 - **PV — pièces jointes**
   - Ajout de fichiers annexes (ordre du jour, présentations, rapports…) depuis l'éditeur et l'aperçu du PV
   - Upload multiple (max 10 × 5 Mo) ; consultation via `minutes.view` sans module Documents

@@ -19,6 +19,7 @@ import {
 import { MinuteWorkflowActions } from "./minute-workflow-actions";
 import { MinuteAssistPanel } from "./minute-assist-panel";
 import { MinuteAttachmentsPanel } from "./minute-attachments-panel";
+import { MinuteAiPolishButton } from "./minute-ai-polish-button";
 import { ContextualHintBanner } from "@/components/assistance/contextual-hint-banner";
 import { GlossaryTerm } from "@/components/assistance/glossary-term";
 import { format } from "date-fns";
@@ -61,6 +62,8 @@ export function MinuteEditor({
   presidentApprovalRequired = true,
   memberEmailCount = 0,
   highlightPostMeeting = false,
+  minuteAiEnabled = false,
+  minuteAiRemaining = 0,
 }: {
   minute: MinuteData;
   clubId: string;
@@ -72,8 +75,11 @@ export function MinuteEditor({
   presidentApprovalRequired?: boolean;
   memberEmailCount?: number;
   highlightPostMeeting?: boolean;
+  minuteAiEnabled?: boolean;
+  minuteAiRemaining?: number;
 }) {
   const t = useTranslations("minutes");
+  const tAi = useTranslations("minutes.aiAssist");
   const tMeetings = useTranslations("meetings");
   const tCommon = useTranslations("common");
   const locale = useLocale();
@@ -236,6 +242,19 @@ export function MinuteEditor({
         locale={locale}
       />
 
+      {minuteAiEnabled ? (
+        <p className="text-xs text-violet-700 bg-violet-50 border border-violet-100 rounded-lg px-3 py-2">
+          {tAi("quotaHint", { remaining: minuteAiRemaining })}
+        </p>
+      ) : (
+        <p className="text-xs text-gray-500 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2">
+          {tAi("upgradeHint")}{" "}
+          <Link href={`/${locale}/settings/subscription`} className="text-navy underline">
+            {tAi("upgradeLink")}
+          </Link>
+        </p>
+      )}
+
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <Badge variant={status === "FINALIZED" ? "success" : status === "REVIEW" ? "default" : "warning"}>
@@ -336,14 +355,40 @@ export function MinuteEditor({
                 disabled={readOnly}
               />
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Description</label>
+                <label className="text-sm font-medium text-gray-700">
+                  {tAi("notesLabel")}
+                </label>
                 <textarea
                   value={item.description}
                   onChange={(e) => updateItem(item.id, "description", e.target.value)}
-                  rows={2}
+                  rows={3}
                   disabled={readOnly}
+                  placeholder={tAi("notesPlaceholder")}
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-navy focus:outline-none focus:ring-2 focus:ring-navy/20 disabled:opacity-60"
                 />
+                {minuteAiEnabled && !readOnly && (
+                  <MinuteAiPolishButton
+                    minuteId={minute.id}
+                    agendaItemId={item.id}
+                    rawNotes={item.description}
+                    onPolished={(polished) => {
+                      setItems((prev) =>
+                        prev.map((row) =>
+                          row.id === item.id
+                            ? {
+                                ...row,
+                                description: polished.description,
+                                decisions: polished.decisions || row.decisions,
+                                actions: polished.actions || row.actions,
+                                responsible: polished.responsible || row.responsible,
+                                dueDate: polished.dueDate || row.dueDate,
+                              }
+                            : row
+                        )
+                      );
+                    }}
+                  />
+                )}
               </div>
               <div className="grid sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">

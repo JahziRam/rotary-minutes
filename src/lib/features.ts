@@ -62,6 +62,7 @@ function mapClubFeatures(
     documentSharingEnabled: features.documentSharingEnabled ?? d.documentSharingEnabled,
     treasuryImportEnabled: features.treasuryImportEnabled ?? d.treasuryImportEnabled,
     clubBackupEnabled: features.clubBackupEnabled ?? d.clubBackupEnabled,
+    minuteAiAssistEnabled: features.minuteAiAssistEnabled ?? d.minuteAiAssistEnabled,
     memberLimit: features.memberLimit,
   };
 }

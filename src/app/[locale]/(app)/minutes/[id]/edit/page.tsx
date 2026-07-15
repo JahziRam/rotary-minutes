@@ -11,6 +11,7 @@ import { MinuteTaskAssignPanel } from "@/components/minutes/minute-task-assign-p
 import { MinuteAutoGenerateButton } from "@/components/minutes/minute-auto-generate-button";
 import { MinuteComments } from "@/components/minutes/minute-comments";
 import { listMinuteComments } from "@/actions/minute-comments";
+import { getMinuteAiStatus } from "@/actions/minute-ai";
 
 export default async function MinuteEditPage({
   params,
@@ -47,7 +48,10 @@ export default async function MinuteEditPage({
   });
 
   const isLocked = ["FINALIZED", "ARCHIVED"].includes(minute.status);
-  const commentsResult = await listMinuteComments(id);
+  const [commentsResult, minuteAiStatus] = await Promise.all([
+    listMinuteComments(id),
+    getMinuteAiStatus(),
+  ]);
 
   return (
     <AppShellServer title={t("minutes.title")}>
@@ -67,6 +71,12 @@ export default async function MinuteEditPage({
         presidentApprovalRequired={club?.presidentApprovalRequired ?? true}
         memberEmailCount={memberEmailCount}
         highlightPostMeeting={ended === "1"}
+        minuteAiEnabled={
+          "enabled" in minuteAiStatus ? !!minuteAiStatus.enabled : false
+        }
+        minuteAiRemaining={
+          "remaining" in minuteAiStatus ? minuteAiStatus.remaining ?? 0 : 0
+        }
         minute={{
           id: minute.id,
           title: minute.title,

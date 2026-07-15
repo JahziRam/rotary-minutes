@@ -43,6 +43,7 @@ export interface ClubFeatureSet {
   documentSharingEnabled: boolean;
   treasuryImportEnabled: boolean;
   clubBackupEnabled: boolean;
+  minuteAiAssistEnabled: boolean;
   memberLimit: number | null;
 }
 
@@ -89,6 +90,7 @@ export const CLUB_FEATURE_KEYS = Object.keys({
   documentSharingEnabled: true,
   treasuryImportEnabled: true,
   clubBackupEnabled: true,
+  minuteAiAssistEnabled: true,
   memberLimit: true,
 }) as (keyof ClubFeatureSet)[];
 
@@ -135,6 +137,10 @@ export const CLUB_FEATURE_LABELS: Record<keyof ClubFeatureSet, { fr: string; en:
   documentSharingEnabled: { fr: "Partage documents", en: "Document sharing" },
   treasuryImportEnabled: { fr: "Import trésorerie CSV", en: "Treasury CSV import" },
   clubBackupEnabled: { fr: "Sauvegarde club", en: "Club backup" },
+  minuteAiAssistEnabled: {
+    fr: "Assistant IA rédaction PV",
+    en: "AI minutes writing assistant",
+  },
   memberLimit: { fr: "Limite utilisateurs", en: "Member limit" },
 };
 
@@ -181,5 +187,6 @@ export const DEFAULT_FEATURES: ClubFeatureSet = {
   documentSharingEnabled: false,
   treasuryImportEnabled: false,
   clubBackupEnabled: false,
+  minuteAiAssistEnabled: false,
   memberLimit: null,
 };

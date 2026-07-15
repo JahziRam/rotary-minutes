@@ -372,6 +372,25 @@
       "errorNotFinalized": "Minutes must be finalized before sending",
       "errorGeneric": "Action failed — please try again"
     },
+    "aiAssist": {
+      "notesLabel": "Notes / draft",
+      "notesPlaceholder": "Rough notes during the meeting (e.g. budget vote passed, Marie contacts district before March)",
+      "polish": "Polish with AI",
+      "polishing": "Polishing…",
+      "quotaHint": "AI assistant active — {remaining} polish(es) left this month.",
+      "upgradeHint": "The AI assistant turns rough notes into formal minutes. Enable the add-on",
+      "upgradeLink": "in Subscription",
+      "error": {
+        "emptyNotes": "Enter notes before polishing",
+        "FEATURE_DISABLED": "AI module not enabled for this club",
+        "GLOBALLY_DISABLED": "AI assistant disabled platform-wide",
+        "API_KEY_MISSING": "AI service not configured",
+        "QUOTA_EXCEEDED": "Monthly quota reached",
+        "AI_UNAVAILABLE": "AI service unavailable — try again later",
+        "AI_ERROR": "Polish failed",
+        "generic": "Could not polish notes"
+      }
+    },
     "attachments": {
       "title": "Attachments",
       "hint": "Signed agenda, slides, reports… Files are included when the minutes are emailed (max 10 × 5 MB).",

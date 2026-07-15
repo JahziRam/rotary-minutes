@@ -37,6 +37,12 @@ const FEATURE_MODULES: Array<{
   { enabled: "documentSharingEnabled", menuVisible: "documentSharingEnabled", label: "Partage documents en ligne", inNav: false },
   { enabled: "treasuryImportEnabled", menuVisible: "treasuryImportEnabled", label: "Import trésorerie CSV", inNav: false },
   { enabled: "clubBackupEnabled", menuVisible: "clubBackupEnabled", label: "Sauvegarde club", inNav: false },
+  {
+    enabled: "minuteAiAssistEnabled",
+    menuVisible: "minuteAiAssistEnabled",
+    label: "Assistant IA rédaction PV",
+    inNav: false,
+  },
 ];
 
 const API_ACCESS_KEY = "apiAccessEnabled" as const;

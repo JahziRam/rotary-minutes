@@ -132,6 +132,8 @@ export default async function AdminClubsPage({
           documentSharingEnabled: c.features.documentSharingEnabled ?? DEFAULT_FEATURES.documentSharingEnabled,
           treasuryImportEnabled: c.features.treasuryImportEnabled ?? DEFAULT_FEATURES.treasuryImportEnabled,
           clubBackupEnabled: c.features.clubBackupEnabled ?? DEFAULT_FEATURES.clubBackupEnabled,
+          minuteAiAssistEnabled:
+            c.features.minuteAiAssistEnabled ?? DEFAULT_FEATURES.minuteAiAssistEnabled,
           memberLimit: c.features.memberLimit,
         }
       : DEFAULT_FEATURES,

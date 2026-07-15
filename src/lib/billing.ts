@@ -49,6 +49,12 @@ const DEFAULT_ADDONS: {
     nameEn: "Advanced statistics",
     priceMonthly: 7,
   },
+  {
+    key: "MINUTE_AI",
+    nameFr: "Assistant IA — rédaction PV",
+    nameEn: "AI assistant — minutes writing",
+    priceMonthly: 12,
+  },
 ];
 
 export async function validatePromoCode(code: string): Promise<PromoValidationResult> {
