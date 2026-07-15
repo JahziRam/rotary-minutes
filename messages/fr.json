@@ -372,6 +372,24 @@
       "errorNotFinalized": "Le PV doit être finalisé avant l'envoi",
       "errorGeneric": "Action impossible — réessayez"
     },
+    "attachments": {
+      "title": "Pièces jointes",
+      "hint": "Ordre du jour signé, présentations, rapports… Les fichiers sont joints aux emails de diffusion du PV (max 10 × 5 Mo).",
+      "empty": "Aucune pièce jointe",
+      "upload": "Ajouter des fichiers",
+      "view": "Ouvrir",
+      "download": "Télécharger",
+      "delete": "Supprimer",
+      "deleteConfirm": "Supprimer cette pièce jointe ?",
+      "uploadedBy": "Ajouté par {name}",
+      "error": {
+        "TOO_LARGE": "Fichier trop volumineux (max 5 Mo)",
+        "TOO_MANY_FILES": "Trop de fichiers (max 10)",
+        "NO_FILE": "Aucun fichier sélectionné",
+        "UPLOAD_FAILED": "Échec du téléversement",
+        "generic": "Action impossible"
+      }
+    },
     "memberComments": {
       "title": "Commentaires des membres",
       "empty": "Aucun commentaire pour le moment. Soyez le premier à réagir.",

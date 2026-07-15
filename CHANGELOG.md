@@ -31,6 +31,11 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
   - Inscriptions en ligne : blocage si le membre existe déjà dans le club (actif, inactif ou en attente)
   - Ajout manuel : refus avec message d'erreur si doublon détecté
   - Module partagé `member-dedup.ts` et tests unitaires
+- **PV — pièces jointes**
+  - Ajout de fichiers annexes (ordre du jour, présentations, rapports…) depuis l'éditeur et l'aperçu du PV
+  - Upload multiple (max 10 × 5 Mo) ; consultation via `minutes.view` sans module Documents
+  - Pièces jointes incluses automatiquement dans les emails de diffusion du PV
+  - API `POST /api/minutes/[id]/attachments` ; audit `MINUTE_ATTACHMENT_*`
 - **Auth — première connexion**
   - Flag `User.mustChangePassword` après envoi d’un mot de passe temporaire (invitation, identifiants membre)
   - Page `/change-password-required` et garde dans le layout applicatif

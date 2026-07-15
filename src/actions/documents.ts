@@ -585,7 +585,8 @@ export async function updateDocument(
   });
   if (!doc) return { error: "NOT_FOUND" as const };
 
-  if (doc.minuteId) {
+  const { isMinuteArchivePdfLink } = await import("@/lib/minute-attachments");
+  if (isMinuteArchivePdfLink(doc)) {
     if (data.category !== undefined && data.category !== "MINUTE") {
       return { error: "LINKED_MINUTE" as const };
     }
@@ -656,7 +657,8 @@ export async function archiveDocument(documentId: string) {
     where: { id: documentId, clubId: ctx.clubId },
   });
   if (!doc) return { error: "NOT_FOUND" as const };
-  if (doc.minuteId) return { error: "LINKED_MINUTE" as const };
+  const { isMinuteArchivePdfLink } = await import("@/lib/minute-attachments");
+  if (isMinuteArchivePdfLink(doc)) return { error: "LINKED_MINUTE" as const };
 
   await prisma.clubDocument.update({
     where: { id: documentId },

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, Circle } from "lucide-react";
 import { MinutePreviewActions } from "./minute-preview-actions";
+import { MinuteAttachmentsPanel } from "./minute-attachments-panel";
 import { ClubLogo } from "@/components/ui/club-logo";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
@@ -390,6 +391,8 @@ export function MinutePreview({
               memberEmailCount={memberEmailCount}
             />
           </div>
+
+          <MinuteAttachmentsPanel minuteId={data.id} />
 
           {/* Version history */}
           <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-5">

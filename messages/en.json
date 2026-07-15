@@ -372,6 +372,24 @@
       "errorNotFinalized": "Minutes must be finalized before sending",
       "errorGeneric": "Action failed — please try again"
     },
+    "attachments": {
+      "title": "Attachments",
+      "hint": "Signed agenda, slides, reports… Files are included when the minutes are emailed (max 10 × 5 MB).",
+      "empty": "No attachments",
+      "upload": "Add files",
+      "view": "Open",
+      "download": "Download",
+      "delete": "Remove",
+      "deleteConfirm": "Remove this attachment?",
+      "uploadedBy": "Added by {name}",
+      "error": {
+        "TOO_LARGE": "File too large (max 5 MB)",
+        "TOO_MANY_FILES": "Too many files (max 10)",
+        "NO_FILE": "No file selected",
+        "UPLOAD_FAILED": "Upload failed",
+        "generic": "Action failed"
+      }
+    },
     "memberComments": {
       "title": "Member comments",
       "empty": "No comments yet. Be the first to respond.",

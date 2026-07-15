@@ -828,6 +828,24 @@
       "errorNotFinalized": "El acta debe estar finalizada antes del envío",
       "errorGeneric": "Acción imposible — inténtelo de nuevo"
     },
+    "attachments": {
+      "title": "Anexos",
+      "hint": "Orden del día firmado, presentaciones, informes… Se incluyen al enviar el acta por email (máx. 10 × 5 MB).",
+      "empty": "Sin anexos",
+      "upload": "Añadir archivos",
+      "view": "Abrir",
+      "download": "Descargar",
+      "delete": "Eliminar",
+      "deleteConfirm": "¿Eliminar este anexo?",
+      "uploadedBy": "Añadido por {name}",
+      "error": {
+        "TOO_LARGE": "Archivo demasiado grande (máx. 5 MB)",
+        "TOO_MANY_FILES": "Demasiados archivos (máx. 10)",
+        "NO_FILE": "Ningún archivo seleccionado",
+        "UPLOAD_FAILED": "Error al subir",
+        "generic": "Acción imposible"
+      }
+    },
     "memberComments": {
       "title": "Comentarios de los miembros",
       "empty": "Aún no hay comentarios. Sea el primero en responder.",

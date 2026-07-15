@@ -71,3 +71,33 @@ export async function assertDocumentManageAccess(clubId: string): Promise<Docume
 
   return { ok: true, isSuperAdmin: false };
 }
+
+/** Pièces jointes PV : accès via permission minutes.view, sans module Documents. */
+export async function assertMinuteAttachmentClubAccess(
+  clubId: string
+): Promise<DocumentAccessResult> {
+  const session = await auth();
+  if (!session?.user) {
+    return { ok: false, status: 401, code: "UNAUTHORIZED" };
+  }
+
+  if (session.user.isSuperAdmin) {
+    return { ok: true, isSuperAdmin: true };
+  }
+
+  const membership = session.user.memberships.find((m) => m.clubId === clubId);
+  if (!membership) {
+    return { ok: false, status: 403, code: "FORBIDDEN" };
+  }
+
+  const allowed = await hasRolePermission(
+    membership.role as ClubRoleType,
+    "minutes.view",
+    false
+  );
+  if (!allowed) {
+    return { ok: false, status: 403, code: "FORBIDDEN" };
+  }
+
+  return { ok: true, isSuperAdmin: false };
+}

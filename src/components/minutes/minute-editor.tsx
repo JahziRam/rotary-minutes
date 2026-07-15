@@ -18,6 +18,7 @@ import {
 } from "@/lib/offline";
 import { MinuteWorkflowActions } from "./minute-workflow-actions";
 import { MinuteAssistPanel } from "./minute-assist-panel";
+import { MinuteAttachmentsPanel } from "./minute-attachments-panel";
 import { ContextualHintBanner } from "@/components/assistance/contextual-hint-banner";
 import { GlossaryTerm } from "@/components/assistance/glossary-term";
 import { format } from "date-fns";
@@ -275,6 +276,8 @@ export function MinuteEditor({
           ) : null}
         </div>
       </div>
+
+      <MinuteAttachmentsPanel minuteId={minute.id} />
 
       <Card>
         <CardHeader><CardTitle>{minute.title}</CardTitle></CardHeader>

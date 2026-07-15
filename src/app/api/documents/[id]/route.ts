@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { assertDocumentClubAccess } from "@/lib/document-access";
+import {
+  assertDocumentClubAccess,
+  assertMinuteAttachmentClubAccess,
+} from "@/lib/document-access";
+import { isMinuteUserAttachment } from "@/lib/minute-attachments";
 import { buildDocumentPreviewHtml } from "@/lib/document-preview";
 import { normalizeDocumentMime } from "@/lib/document-types";
 
@@ -41,6 +45,8 @@ export async function GET(
       fileName: true,
       mimeType: true,
       isArchived: true,
+      minuteId: true,
+      tags: true,
     },
   });
 
@@ -48,7 +54,9 @@ export async function GET(
     return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
   }
 
-  const access = await assertDocumentClubAccess(doc.clubId);
+  const access = isMinuteUserAttachment(doc)
+    ? await assertMinuteAttachmentClubAccess(doc.clubId)
+    : await assertDocumentClubAccess(doc.clubId);
   if (!access.ok) {
     return NextResponse.json({ error: access.code }, { status: access.status });
   }

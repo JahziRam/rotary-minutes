@@ -225,6 +225,8 @@ async function doFinalizeMinute(
       logoUrl: minute.club.logoUrl ?? undefined,
     });
     const { buffer, filename } = await buildMinutePdfBuffer(minute, locale);
+    const { loadMinuteAttachmentBuffers } = await import("@/actions/minute-attachments");
+    const extraAttachments = await loadMinuteAttachmentBuffers(minuteId, minute.club.id);
     const sent = await sendClubEmail(minute.club.id, {
       to: clubEmail,
       subject: mail.subject,
@@ -232,6 +234,7 @@ async function doFinalizeMinute(
       attachments: [
         ...(mail.attachments ?? []),
         { filename, content: buffer },
+        ...extraAttachments,
       ],
     });
     const { recordEmailCampaign, emailStatusFromSendResult } = await import(
@@ -763,6 +766,9 @@ async function dispatchMinuteEmail(
   pdf: { buffer: Buffer; filename: string },
   verifyUrl: string
 ) {
+  const { loadMinuteAttachmentBuffers } = await import("@/actions/minute-attachments");
+  const extraAttachments = await loadMinuteAttachmentBuffers(minute.id, minute.club.id);
+
   const mail = await minuteFinalizedEmail({
     clubName: minute.club.name,
     clubId: minute.club.id,
@@ -778,6 +784,7 @@ async function dispatchMinuteEmail(
     attachments: [
       ...(mail.attachments ?? []),
       { filename: pdf.filename, content: pdf.buffer },
+      ...extraAttachments,
     ],
   });
   return { result, subject: mail.subject, html: mail.html };
