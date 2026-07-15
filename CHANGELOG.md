@@ -7,6 +7,10 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+### Fixed
+- **PV — périmètre commission**
+  - Correction du filtre `minuteWhereForContext` : les rôles autres que président de commission voient à nouveau tous les PV du club (liste et détail) au lieu d'une liste vide et d'une erreur 404
+
 ### Added
 - **Charte Rotary — PV, PDF et emails**
   - Couleurs officielles Brand Center (`#17458B`, `#F7A81B`) sur aperçu PV, PDF procès-verbal, rapport assiduité et emails club

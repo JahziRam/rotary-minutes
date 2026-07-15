@@ -55,20 +55,20 @@ export async function meetingWhereForContext(
 export async function minuteWhereForContext(
   ctx: ClubContext
 ): Promise<{ clubId: string; meeting?: { type: "COMMISSION"; commissionId: string } }> {
-  const meetingFilter = await meetingWhereForContext(ctx);
-  if (!meetingFilter?.commissionId || meetingFilter.commissionId === "__none__") {
+  if (!isCommissionChairRole(ctx)) {
+    return { clubId: ctx.clubId };
+  }
+  const commissionId = await getCommissionChairCommissionId(ctx);
+  if (!commissionId) {
     return {
       clubId: ctx.clubId,
       meeting: { type: "COMMISSION", commissionId: "__none__" },
     };
   }
-  if (meetingFilter.commissionId && meetingFilter.type === "COMMISSION") {
-    return {
-      clubId: ctx.clubId,
-      meeting: { type: "COMMISSION", commissionId: meetingFilter.commissionId },
-    };
-  }
-  return { clubId: ctx.clubId };
+  return {
+    clubId: ctx.clubId,
+    meeting: { type: "COMMISSION", commissionId },
+  };
 }
 
 export async function applyMeetingScopeToWhere(
