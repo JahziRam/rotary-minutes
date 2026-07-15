@@ -32,9 +32,13 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
   - Ajout manuel : refus avec message d'erreur si doublon détecté
   - Module partagé `member-dedup.ts` et tests unitaires
 - **PV — assistant IA (MVP)**
-  - Reformulation des notes brutes en phrases de PV (xAI / `XAI_API_KEY`)
-  - Module complémentaire `MINUTE_AI` activable par club ; toggle super admin par club
-  - Quota mensuel configurable (Admin → Paramètres) ; audit `MINUTE_AI_POLISH`
+  - Reformulation des notes brutes en phrases de PV via xAI (`XAI_API_KEY`, modèle par défaut `grok-3-mini`)
+  - Bouton « Reformuler avec l'IA » par point d'ODJ dans l'éditeur de PV (description, décisions, actions, responsable, échéance)
+  - Module complémentaire `MINUTE_AI` (12 €/mois) activable dans **Paramètres → Abonnement → Modules complémentaires**
+  - Toggle super admin par club (**Admin → Clubs → Fonctionnalités** → « Assistant IA rédaction PV »)
+  - Panneau plateforme **Admin → Paramètres** : activation globale, quota mensuel par club (défaut 50), choix du modèle
+  - Contrôle d'accès : clé API + activation plateforme + fonctionnalité club + quota mensuel (illimité pour super admin)
+  - Audit `MINUTE_AI_POLISH` ; tests unitaires `minute-ai.test.ts`
 - **PV — pièces jointes**
   - Ajout de fichiers annexes (ordre du jour, présentations, rapports…) depuis l'éditeur et l'aperçu du PV
   - Upload multiple (max 10 × 5 Mo) ; consultation via `minutes.view` sans module Documents
@@ -99,6 +103,7 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 - Migration `20260715150000_club_role_vice_president_commission_chair` — `VICE_PRESIDENT`, `COMMISSION_CHAIR`
 - Migration `20260715160000_meeting_commission_id` — `Meeting.commissionId`
 - Migration `20260715161000_role_config_label_es` — libellés rôles en espagnol
+- Migration `20260715170000_minute_ai_assist` — enum `AddonKey.MINUTE_AI`, `ClubFeatures.minuteAiAssistEnabled`
 
 ### Fixed
 - **Membres — changement de rôle** : correction de l’erreur React #482 lors de la modification du rôle dans l’annuaire (`MemberDuesBadge` converti en composant client ; sélecteurs de rôle contrôlés)
