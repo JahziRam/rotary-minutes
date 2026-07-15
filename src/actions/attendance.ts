@@ -35,7 +35,7 @@ export async function saveMeetingAttendance(
   });
   if (!meeting) return { error: "NOT_FOUND" };
 
-  const { getHonoraryMemberIds } = await import("@/lib/member-attendance-eligibility");
+  const { getHonoraryMemberIds } = await import("@/lib/member-attendance-eligibility.server");
   const honoraryMemberIds = await getHonoraryMemberIds(ctx.clubId);
 
   await prisma.meetingAttendance.deleteMany({ where: { meetingId } });

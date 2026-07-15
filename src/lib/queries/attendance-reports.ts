@@ -6,9 +6,9 @@ import {
 } from "@/lib/rotary";
 import {
   attendanceEligibleMemberWhere,
-  getHonoraryMemberIds,
   shouldCountAttendanceForMemberId,
 } from "@/lib/member-attendance-eligibility";
+import { getHonoraryMemberIds } from "@/lib/member-attendance-eligibility.server";
 import type { MeetingType } from "@/generated/prisma/client";
 
 function isPresent(category: string): boolean {

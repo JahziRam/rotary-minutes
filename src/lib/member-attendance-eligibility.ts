@@ -1,5 +1,4 @@
 import type { Prisma } from "@/generated/prisma/client";
-import { prisma } from "@/lib/prisma";
 
 /** Active members counted for attendance lists and rate calculations. */
 export function attendanceEligibleMemberWhere(
@@ -17,14 +16,6 @@ export function isAttendanceEligibleMember(member: {
   isHonoraryMember?: boolean;
 }): boolean {
   return (member.isActive ?? true) && !member.isHonoraryMember;
-}
-
-export async function getHonoraryMemberIds(clubId: string): Promise<Set<string>> {
-  const rows = await prisma.member.findMany({
-    where: { clubId, isHonoraryMember: true },
-    select: { id: true },
-  });
-  return new Set(rows.map((row) => row.id));
 }
 
 export function excludeHonoraryMemberAttendances<

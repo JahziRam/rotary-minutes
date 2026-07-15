@@ -1,9 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getRotaryMandateYear, calculateAttendanceRate, isAttendancePresent } from "@/lib/rotary";
-import {
-  getHonoraryMemberIds,
-  shouldCountAttendanceForMemberId,
-} from "@/lib/member-attendance-eligibility";
+import { shouldCountAttendanceForMemberId } from "@/lib/member-attendance-eligibility";
+import { getHonoraryMemberIds } from "@/lib/member-attendance-eligibility.server";
 
 export async function getClubAnnualAttendance(clubId: string) {
   const mandate = getRotaryMandateYear();

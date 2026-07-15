@@ -94,6 +94,8 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
   - Repli sur variables d'environnement `VAPID_*`
 
 ### Fixed
+- **Build — bundle client**
+  - `getHonoraryMemberIds` déplacé dans `member-attendance-eligibility.server.ts` (`server-only`) pour éviter l'import de `pg`/`prisma` dans les composants marketing (`demo-app` → `minute-preview`)
 - **Build / lint**
   - Ignore `.open-next`, `dist` et `landing-worker` dans ESLint
   - Corrections TypeScript (`auth`, annonces club, `server-messages`, webhooks Stripe)
