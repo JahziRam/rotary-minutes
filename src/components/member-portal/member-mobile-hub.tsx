@@ -9,10 +9,12 @@ export async function MemberMobileHub({
   locale,
   summary,
   vapidPublicKey,
+  webPushEnabled = true,
 }: {
   locale: string;
   summary: MemberHubSummary;
   vapidPublicKey: string | null;
+  webPushEnabled?: boolean;
 }) {
   const t = await getTranslations("memberHub");
 
@@ -127,7 +129,10 @@ export async function MemberMobileHub({
 
       <Card>
         <CardContent className="p-4">
-          <WebPushEnable vapidPublicKey={vapidPublicKey} />
+          <WebPushEnable
+            vapidPublicKey={vapidPublicKey}
+            preferenceEnabled={webPushEnabled}
+          />
         </CardContent>
       </Card>
     </section>

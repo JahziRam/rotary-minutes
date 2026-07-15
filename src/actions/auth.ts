@@ -2,10 +2,17 @@
 
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { signIn, signOut } from "@/lib/auth";
+import { auth, signIn, signOut } from "@/lib/auth";
 import { AuthError } from "next-auth";
-import { welcomeClubEmail } from "@/lib/email";
+import { passwordResetEmail, welcomeClubEmail } from "@/lib/email";
+import { sendEmail } from "@/lib/email";
 import { sendClubEmail } from "@/lib/club-smtp";
+import { getAppBaseUrl } from "@/lib/app-url";
+import {
+  generateResetToken,
+  isPasswordStrong,
+  PASSWORD_MIN_LENGTH,
+} from "@/lib/password-utils";
 import { linkClubReferral } from "@/actions/billing";
 import {
   findDuplicateClub,
@@ -14,6 +21,24 @@ import {
   generateUniqueClubSlug,
 } from "@/lib/registration";
 import type { ClubType } from "@/generated/prisma/client";
+import {
+  createAuthCaptchaChallenge,
+  validateAuthFormGuard,
+  type AuthFormGuardPayload,
+} from "@/lib/auth-form-guard";
+
+export async function getAuthCaptchaChallenge() {
+  return createAuthCaptchaChallenge();
+}
+
+function validateAuthCaptcha(
+  guard?: AuthFormGuardPayload
+): { ok: true } | { error: "CAPTCHA_FAILED" } {
+  if (!guard) return { error: "CAPTCHA_FAILED" };
+  const result = validateAuthFormGuard(guard);
+  if (!result.ok) return { error: "CAPTCHA_FAILED" };
+  return { ok: true };
+}
 
 export async function registerClub(data: {
   firstName: string;
@@ -26,7 +51,11 @@ export async function registerClub(data: {
   city: string;
   language: "FR" | "EN" | "ES";
   referredByCode?: string;
+  captcha?: AuthFormGuardPayload;
 }) {
+  const captchaCheck = validateAuthCaptcha(data.captcha);
+  if ("error" in captchaCheck) return captchaCheck;
+
   const existingUser = await prisma.user.findUnique({
     where: { email: data.email.trim().toLowerCase() },
   });
@@ -172,7 +201,11 @@ export async function registerMember(data: {
   password: string;
   clubId: string;
   language: "FR" | "EN" | "ES";
+  captcha?: AuthFormGuardPayload;
 }) {
+  const captchaCheck = validateAuthCaptcha(data.captcha);
+  if ("error" in captchaCheck) return captchaCheck;
+
   const normalizedEmail = data.email.trim().toLowerCase();
 
   const club = await prisma.club.findFirst({
@@ -262,7 +295,9 @@ export async function registerMember(data: {
         clubId: club.id,
         isActive: true,
         approvalStatus: "APPROVED",
-        role: { in: ["ADMIN", "PRESIDENT", "MEMBERSHIP_CHAIR", "SECRETARY"] },
+        role: {
+          in: ["ADMIN", "PRESIDENT", "VICE_PRESIDENT", "MEMBERSHIP_CHAIR", "SECRETARY"],
+        },
       },
       select: { userId: true },
     });
@@ -306,12 +341,152 @@ export async function registerMember(data: {
   }
 }
 
+const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
+
+export async function requestPasswordReset(email: string, locale = "fr") {
+  const normalized = email.trim().toLowerCase();
+  if (!normalized) return { error: "INVALID_EMAIL" as const };
+
+  const user = await prisma.user.findUnique({
+    where: { email: normalized },
+    select: { id: true, firstName: true, lastName: true, passwordHash: true },
+  });
+
+  if (user?.passwordHash) {
+    const token = generateResetToken();
+    const expires = new Date(Date.now() + RESET_TOKEN_TTL_MS);
+    await prisma.verificationToken.deleteMany({ where: { identifier: normalized } });
+    await prisma.verificationToken.create({
+      data: { identifier: normalized, token, expires },
+    });
+
+    const safeLocale = locale === "fr" || locale === "en" || locale === "es" ? locale : "fr";
+    const resetUrl = `${getAppBaseUrl()}/${safeLocale}/reset-password?token=${token}`;
+    const mail = await passwordResetEmail({
+      userName: `${user.firstName} ${user.lastName}`.trim() || normalized,
+      resetUrl,
+      locale: safeLocale,
+    });
+    await sendEmail({ to: normalized, subject: mail.subject, html: mail.html });
+  }
+
+  return { success: true as const };
+}
+
+export async function resetPasswordWithToken(
+  token: string,
+  password: string,
+  locale = "fr"
+) {
+  if (!isPasswordStrong(password)) {
+    return { error: "PASSWORD_TOO_SHORT" as const, minLength: PASSWORD_MIN_LENGTH };
+  }
+
+  const record = await prisma.verificationToken.findUnique({ where: { token } });
+  if (!record || record.expires < new Date()) {
+    return { error: "INVALID_TOKEN" as const };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email: record.identifier },
+    select: { id: true },
+  });
+  if (!user) return { error: "INVALID_TOKEN" as const };
+
+  const passwordHash = await bcrypt.hash(password, 12);
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash, mustChangePassword: false },
+    }),
+    prisma.verificationToken.delete({ where: { token } }),
+  ]);
+
+  void locale;
+  return { success: true as const };
+}
+
+export async function changePassword(currentPassword: string, newPassword: string) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "UNAUTHORIZED" as const };
+
+  if (!isPasswordStrong(newPassword)) {
+    return { error: "PASSWORD_TOO_SHORT" as const, minLength: PASSWORD_MIN_LENGTH };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { id: true, passwordHash: true },
+  });
+  if (!user?.passwordHash) return { error: "NO_PASSWORD" as const };
+
+  const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+  if (!valid) return { error: "INVALID_CURRENT_PASSWORD" as const };
+
+  const passwordHash = await bcrypt.hash(newPassword, 12);
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { passwordHash, mustChangePassword: false },
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      userId: user.id,
+      action: "USER_PASSWORD_CHANGED",
+      entity: "User",
+      entityId: user.id,
+    },
+  });
+
+  return { success: true as const };
+}
+
+export async function completeRequiredPasswordChange(newPassword: string) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "UNAUTHORIZED" as const };
+
+  if (!isPasswordStrong(newPassword)) {
+    return { error: "PASSWORD_TOO_SHORT" as const, minLength: PASSWORD_MIN_LENGTH };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { id: true, mustChangePassword: true },
+  });
+  if (!user?.mustChangePassword) return { error: "NOT_REQUIRED" as const };
+
+  const passwordHash = await bcrypt.hash(newPassword, 12);
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { passwordHash, mustChangePassword: false },
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      userId: user.id,
+      action: "USER_PASSWORD_CHANGED",
+      entity: "User",
+      entityId: user.id,
+      metadata: { required: true },
+    },
+  });
+
+  return { success: true as const };
+}
+
 export async function logoutUser(formData: FormData) {
   const locale = (formData.get("locale") as string) || "fr";
   await signOut({ redirectTo: `/${locale}/login` });
 }
 
-export async function loginUser(email: string, password: string) {
+export async function loginUser(
+  email: string,
+  password: string,
+  captcha?: AuthFormGuardPayload
+) {
+  const captchaCheck = validateAuthCaptcha(captcha);
+  if ("error" in captchaCheck) return captchaCheck;
+
   try {
     const result = await signIn("credentials", {
       email,
@@ -327,6 +502,7 @@ export async function loginUser(email: string, password: string) {
       where: { email: email.trim().toLowerCase() },
       select: {
         isSuperAdmin: true,
+        mustChangePassword: true,
         memberships: {
           where: { isActive: true, approvalStatus: "APPROVED" },
           select: { id: true },
@@ -352,6 +528,7 @@ export async function loginUser(email: string, password: string) {
       isSuperAdmin: user.isSuperAdmin,
       hasPending,
       hasApproved,
+      mustChangePassword: user.mustChangePassword,
     };
   } catch (error) {
     if (error instanceof AuthError) {

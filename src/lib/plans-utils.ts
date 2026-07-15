@@ -1,14 +1,18 @@
 import type { BillingInterval, SubscriptionPlan } from "@/generated/prisma/client";
+import type { ComparisonRowKey } from "@/lib/plan-comparison";
 
 export interface PlanConfigData {
   plan: SubscriptionPlan;
   nameFr: string;
   nameEn: string;
+  nameEs: string;
   descriptionFr: string | null;
   descriptionEn: string | null;
+  descriptionEs: string | null;
   priceMonthly: number;
   featuresFr: string[];
   featuresEn: string[];
+  featuresEs: string[];
   stripePriceIdMonthly: string | null;
   stripePriceIdAnnual: string | null;
   memberLimit: number | null;
@@ -21,6 +25,31 @@ export interface BillingSettings {
   annualDiscountPercent: number;
   currency: string;
   stripeEnabled: boolean;
+  /** Tableau comparatif des offres sur la page d'accueil (désactivé par défaut). */
+  showPricingComparison: boolean;
+  comparisonOverrides: ComparisonOverrides;
+}
+
+export type ComparisonOverrideValue = boolean | string;
+export type ComparisonOverrides = Partial<
+  Record<ComparisonRowKey, Partial<Record<SubscriptionPlan, ComparisonOverrideValue>>>
+>;
+
+type AppSettingsConfig = {
+  pricing?: {
+    showComparisonTable?: boolean;
+    comparisonOverrides?: ComparisonOverrides;
+  };
+};
+
+export function readShowPricingComparison(config: unknown): boolean {
+  const parsed = config as AppSettingsConfig | null | undefined;
+  return parsed?.pricing?.showComparisonTable === true;
+}
+
+export function readComparisonOverrides(config: unknown): ComparisonOverrides {
+  const parsed = config as AppSettingsConfig | null | undefined;
+  return parsed?.pricing?.comparisonOverrides ?? {};
 }
 
 export interface PublicPlan {
@@ -56,7 +85,11 @@ export function buildPlanLabelMap(
     TRIAL: isFr ? TRIAL_PLAN_LABELS.fr : isEs ? TRIAL_PLAN_LABELS.es : TRIAL_PLAN_LABELS.en,
   };
   for (const config of configs) {
-    map[config.plan] = isFr ? config.nameFr : config.nameEn;
+    map[config.plan] = isFr
+      ? config.nameFr
+      : isEs
+        ? config.nameEs || config.nameEn
+        : config.nameEn;
   }
   return map;
 }
@@ -97,19 +130,24 @@ export function toPublicPlan(
   discountPercent: number
 ): PublicPlan {
   const isFr = locale === "fr";
+  const isEs = locale === "es";
   const priceAnnual = computeAnnualPrice(plan.priceMonthly, discountPercent);
   const priceAnnualPerMonth = computeAnnualPerMonth(plan.priceMonthly, discountPercent);
   const annualSavings = plan.priceMonthly * 12 - priceAnnual;
 
   return {
     plan: plan.plan,
-    name: isFr ? plan.nameFr : plan.nameEn,
-    description: isFr ? plan.descriptionFr : plan.descriptionEn,
+    name: isFr ? plan.nameFr : isEs ? plan.nameEs || plan.nameEn : plan.nameEn,
+    description: isFr
+      ? plan.descriptionFr
+      : isEs
+        ? plan.descriptionEs ?? plan.descriptionEn
+        : plan.descriptionEn,
     priceMonthly: plan.priceMonthly,
     priceAnnual,
     priceAnnualPerMonth,
     annualSavings,
-    features: isFr ? plan.featuresFr : plan.featuresEn,
+    features: isFr ? plan.featuresFr : isEs ? plan.featuresEs : plan.featuresEn,
     isPopular: plan.isPopular,
     memberLimit: plan.memberLimit,
     stripePriceIdMonthly: plan.stripePriceIdMonthly,

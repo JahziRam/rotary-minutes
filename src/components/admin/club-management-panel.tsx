@@ -18,7 +18,7 @@ import {
   removeClubMembership,
 } from "@/actions/admin-clubs";
 import { CLUB_ROLES } from "@/lib/rotary";
-import { ROLE_LABELS } from "@/lib/role-definitions";
+import { getRoleLabel } from "@/lib/role-labels";
 import type { ClubRole, ClubType, Language } from "@/generated/prisma/client";
 
 export interface AdminClubMemberRow {
@@ -80,7 +80,7 @@ export function ClubManagementPanel({
 
   const roleOptions = CLUB_ROLES.map((r) => ({
     value: r,
-    label: ROLE_LABELS[r][locale === "fr" ? "fr" : "en"],
+    label: getRoleLabel(r, locale),
   }));
 
   const activeMembers = club.members.filter((m) => m.isActive);

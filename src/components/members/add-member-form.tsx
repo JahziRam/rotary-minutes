@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Plus, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ export function AddMemberForm({
 }) {
   const t = useTranslations("members");
   const tCommon = useTranslations("common");
+  const locale = useLocale();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const [toast, setToast] = useState<string | null>(null);
@@ -51,6 +52,8 @@ export function AddMemberForm({
               ? (formData.get("customRoleId") as string) || null
               : null;
 
+            const sendLogin = canManageRoles && formData.get("sendLogin") === "on";
+
             const result = await createMember({
               firstName: formData.get("firstName") as string,
               lastName: formData.get("lastName") as string,
@@ -62,10 +65,14 @@ export function AddMemberForm({
               joinDate: (formData.get("joinDate") as string) || undefined,
               appRole,
               customRoleId,
+              sendLogin: sendLogin && !!email,
+              locale,
             });
 
             if (result.success) {
-              if (canManageRoles && appRole && email && !result.roleAssigned) {
+              if (result.loginSent) {
+                setToast(t("loginSent"));
+              } else if (canManageRoles && appRole && email && !result.roleAssigned) {
                 setToast(t("roleNotAssignedYet"));
               }
               setOpen(false);
@@ -91,12 +98,21 @@ export function AddMemberForm({
         <Input name="birthday" type="date" label={t("birthday")} />
         <Input name="joinDate" type="date" label={t("joinDate")} />
         {canManageRoles && (
-          <div className="space-y-1.5">
-            <AppRolePicker
-              roleOptions={roleOptions}
-              customRoles={customRoles}
-            />
-            <p className="text-xs text-gray-500">{t("appRoleOnCreateHint")}</p>
+          <div className="space-y-2">
+            <div className="space-y-1.5">
+              <AppRolePicker
+                roleOptions={roleOptions}
+                customRoles={customRoles}
+              />
+              <p className="text-xs text-gray-500">{t("appRoleOnCreateHint")}</p>
+            </div>
+            <label className="flex items-start gap-2 text-sm text-gray-700">
+              <input type="checkbox" name="sendLogin" className="mt-0.5" />
+              <span>
+                <span className="font-medium">{t("sendLoginOnCreate")}</span>
+                <span className="block text-xs text-gray-500">{t("sendLoginHint")}</span>
+              </span>
+            </label>
           </div>
         )}
         <div className="flex gap-2 justify-end">

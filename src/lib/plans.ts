@@ -11,6 +11,8 @@ import {
   getStripePriceId,
   buildPlanLabelMap,
   localizedPlanName,
+  readShowPricingComparison,
+  readComparisonOverrides,
 } from "@/lib/plans-utils";
 
 export type { PlanConfigData, BillingSettings, PublicPlan, PlanOption };
@@ -26,8 +28,10 @@ const DEFAULT_PLANS: Omit<PlanConfigData, "plan">[] = [
   {
     nameFr: "Starter",
     nameEn: "Starter",
+    nameEs: "Starter",
     descriptionFr: "Idéal pour les petits clubs",
     descriptionEn: "Ideal for small clubs",
+    descriptionEs: "Ideal para clubes pequeños",
     priceMonthly: 19,
     featuresFr: [
       "Jusqu'à 30 membres",
@@ -39,6 +43,11 @@ const DEFAULT_PLANS: Omit<PlanConfigData, "plan">[] = [
       "Minutes, meetings & dues",
       "Actions, calendar & member portal",
     ],
+    featuresEs: [
+      "Hasta 30 miembros",
+      "Actas, reuniones y cuotas",
+      "Acciones, calendario y portal de miembros",
+    ],
     stripePriceIdMonthly: process.env.STRIPE_STARTER_PRICE_ID ?? null,
     stripePriceIdAnnual: process.env.STRIPE_STARTER_ANNUAL_PRICE_ID ?? null,
     memberLimit: 30,
@@ -49,8 +58,10 @@ const DEFAULT_PLANS: Omit<PlanConfigData, "plan">[] = [
   {
     nameFr: "Active",
     nameEn: "Active",
+    nameEs: "Active",
     descriptionFr: "Pour les clubs actifs",
     descriptionEn: "For active clubs",
+    descriptionEs: "Para clubes activos",
     priceMonthly: 39,
     featuresFr: [
       "Membres illimités",
@@ -62,6 +73,11 @@ const DEFAULT_PLANS: Omit<PlanConfigData, "plan">[] = [
       "Treasury, events & attendance",
       "Emails, stats & notifications",
     ],
+    featuresEs: [
+      "Miembros ilimitados",
+      "Tesorería, eventos y asistencia",
+      "Emails, estadísticas y notificaciones",
+    ],
     stripePriceIdMonthly: process.env.STRIPE_PRO_PRICE_ID ?? null,
     stripePriceIdAnnual: process.env.STRIPE_PRO_ANNUAL_PRICE_ID ?? null,
     memberLimit: null,
@@ -72,8 +88,10 @@ const DEFAULT_PLANS: Omit<PlanConfigData, "plan">[] = [
   {
     nameFr: "High level",
     nameEn: "High level",
+    nameEs: "High level",
     descriptionFr: "Fonctionnalités avancées, district et support prioritaire",
     descriptionEn: "Advanced features, district view and priority support",
+    descriptionEs: "Funciones avanzadas, distrito y soporte prioritario",
     priceMonthly: 79,
     featuresFr: [
       "Gouvernance & archives complètes",
@@ -84,6 +102,11 @@ const DEFAULT_PLANS: Omit<PlanConfigData, "plan">[] = [
       "Governance & full archives",
       "District, API & integrations",
       "Offline PWA & priority support",
+    ],
+    featuresEs: [
+      "Gobernanza y archivos completos",
+      "Distrito, API e integraciones",
+      "PWA sin conexión y soporte prioritario",
     ],
     stripePriceIdMonthly: process.env.STRIPE_ENTERPRISE_PRICE_ID ?? null,
     stripePriceIdAnnual: process.env.STRIPE_ENTERPRISE_ANNUAL_PRICE_ID ?? null,
@@ -145,6 +168,8 @@ export async function getBillingSettings(): Promise<BillingSettings> {
     annualDiscountPercent: settings?.annualDiscountPercent ?? 20,
     currency: settings?.currency ?? "EUR",
     stripeEnabled: settings?.stripeEnabled ?? false,
+    showPricingComparison: readShowPricingComparison(settings?.config),
+    comparisonOverrides: readComparisonOverrides(settings?.config),
   };
 }
 
@@ -158,6 +183,8 @@ const FALLBACK_BILLING: BillingSettings = {
   annualDiscountPercent: 20,
   currency: "EUR",
   stripeEnabled: false,
+  showPricingComparison: false,
+  comparisonOverrides: {},
 };
 
 function defaultPlanRows(): PlanConfigData[] {
@@ -203,11 +230,14 @@ function mapPlanRow(row: {
   plan: SubscriptionPlan;
   nameFr: string;
   nameEn: string;
+  nameEs: string;
   descriptionFr: string | null;
   descriptionEn: string | null;
+  descriptionEs: string | null;
   priceMonthly: number;
   featuresFr: string[];
   featuresEn: string[];
+  featuresEs: string[];
   stripePriceIdMonthly: string | null;
   stripePriceIdAnnual: string | null;
   memberLimit: number | null;
@@ -219,11 +249,14 @@ function mapPlanRow(row: {
     plan: row.plan,
     nameFr: row.nameFr,
     nameEn: row.nameEn,
+    nameEs: row.nameEs,
     descriptionFr: row.descriptionFr,
     descriptionEn: row.descriptionEn,
+    descriptionEs: row.descriptionEs,
     priceMonthly: row.priceMonthly,
     featuresFr: row.featuresFr,
     featuresEn: row.featuresEn,
+    featuresEs: row.featuresEs,
     stripePriceIdMonthly: row.stripePriceIdMonthly,
     stripePriceIdAnnual: row.stripePriceIdAnnual,
     memberLimit: row.memberLimit,

@@ -118,7 +118,12 @@ export function PricingSectionClient({
         })}
       </div>
 
-      <PricingComparisonTable plans={plans} />
+      {billing.showPricingComparison && (
+        <PricingComparisonTable
+          plans={plans}
+          comparisonOverrides={billing.comparisonOverrides}
+        />
+      )}
     </div>
   );
 }

@@ -29,7 +29,7 @@ import {
 const MEETING_REMINDER_DAYS = [7, 3, 1] as const;
 const PV_REMINDER_DAYS_AGO = [1, 2, 3] as const;
 const PV_48H_EMAIL_DAYS = 2;
-const OFFICER_ROLES = ["ADMIN", "PRESIDENT", "SECRETARY"] as const;
+const OFFICER_ROLES = ["ADMIN", "PRESIDENT", "VICE_PRESIDENT", "SECRETARY"] as const;
 
 export interface ReminderRunResult {
   notifications: number;
@@ -301,7 +301,7 @@ export async function processPvReminders(): Promise<ReminderRunResult> {
         : await prisma.clubMembership.findMany({
             where: {
               clubId: minute.clubId,
-              role: { in: ["ADMIN", "PRESIDENT"] },
+              role: { in: ["ADMIN", "PRESIDENT", "VICE_PRESIDENT"] },
               isActive: true,
             },
             include: { user: true },

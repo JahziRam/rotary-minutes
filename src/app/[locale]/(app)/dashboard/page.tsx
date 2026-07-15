@@ -12,7 +12,7 @@ import { getMembersDuesOverview } from "@/lib/queries/dues-overview";
 import { formatBudgetMoney } from "@/lib/budget-utils";
 import { hasRolePermission } from "@/lib/roles";
 import { canManageMemberRoles } from "@/lib/member-roles";
-import { ROLE_LABELS } from "@/lib/role-definitions";
+import { getRoleLabel } from "@/lib/role-labels";
 import { CLUB_ROLES } from "@/lib/rotary";
 import { getMinuteStatusLabel, getMinuteStatusVariant } from "@/lib/minute-status";
 import { AppShellServer } from "@/components/layout/app-shell-server";
@@ -37,7 +37,8 @@ import { getAppName } from "@/lib/app-settings";
 import { getViewAsClubId } from "@/lib/view-as-club";
 import { ViewAsClubPicker } from "@/components/layout/view-as-club-picker";
 import { getMemberHubSummary } from "@/lib/queries/member-hub";
-import { getVapidPublicKey } from "@/lib/web-push";
+import { getVapidPublicKey } from "@/lib/vapid-config";
+import { isWebPushEnabledForUser } from "@/lib/push-preference";
 import { MemberMobileHub } from "@/components/member-portal/member-mobile-hub";
 
 export default async function DashboardPage({
@@ -115,10 +116,9 @@ export default async function DashboardPage({
         : Promise.resolve([]),
     ]);
     canManageRoles = roleManage;
-    const roleLocale = locale === "fr" ? "fr" : "en";
     pendingRoleOptions = CLUB_ROLES.map((r) => ({
       value: r,
-      label: ROLE_LABELS[r][roleLocale],
+      label: getRoleLabel(r, locale),
     }));
     pendingCustomRoles = customRoles.map((r) => ({
       id: r.id,
@@ -154,7 +154,12 @@ export default async function DashboardPage({
     ctx && memberPortalOn && isReaderMember && session?.user?.id
       ? await getMemberHubSummary(ctx.clubId, session.user.id)
       : null;
-  const vapidPublicKey = memberHubSummary ? getVapidPublicKey() : null;
+  const [vapidPublicKey, webPushEnabled] = memberHubSummary
+    ? await Promise.all([
+        getVapidPublicKey(),
+        isWebPushEnabledForUser(session!.user!.id, ctx!.clubId),
+      ])
+    : [null, true];
 
   return (
     <AppShellServer title={t("nav.dashboard")}>
@@ -198,6 +203,7 @@ export default async function DashboardPage({
                 locale={locale}
                 summary={memberHubSummary}
                 vapidPublicKey={vapidPublicKey}
+                webPushEnabled={webPushEnabled}
               />
             )}
 

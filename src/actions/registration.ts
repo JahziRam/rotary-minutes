@@ -91,7 +91,12 @@ export async function getPendingJoinRequests() {
 
 export async function approveJoinRequest(
   membershipId: string,
-  opts?: { role?: ClubRole; customRoleId?: string | null }
+  opts?: {
+    role?: ClubRole;
+    customRoleId?: string | null;
+    sendLogin?: boolean;
+    locale?: string;
+  }
 ) {
   const auth = await requirePermission("members.manage");
   if (auth.error) return { error: auth.error };
@@ -214,7 +219,7 @@ export async function approveJoinRequest(
       clubId: ctx.clubId,
       isActive: true,
       approvalStatus: "APPROVED",
-      role: { in: ["ADMIN", "PRESIDENT", "MEMBERSHIP_CHAIR"] },
+      role: { in: ["ADMIN", "PRESIDENT", "VICE_PRESIDENT", "MEMBERSHIP_CHAIR"] },
       userId: { not: ctx.userId },
     },
     select: { userId: true },
@@ -231,6 +236,15 @@ export async function approveJoinRequest(
         link: "/members",
       })),
     });
+  }
+
+  if (opts?.sendLogin) {
+    const { sendMemberWelcomeAfterApproval } = await import("@/actions/club-users");
+    await sendMemberWelcomeAfterApproval(
+      ctx.clubId,
+      membership.userId,
+      opts.locale ?? "fr"
+    );
   }
 
   revalidateRegistrationPaths();

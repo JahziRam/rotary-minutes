@@ -300,7 +300,11 @@ export async function submitMinuteForReview(minuteId: string, locale: string) {
   });
 
   const presidents = await prisma.clubMembership.findMany({
-    where: { clubId: ctx.clubId, role: "PRESIDENT", isActive: true },
+    where: {
+      clubId: ctx.clubId,
+      role: { in: ["PRESIDENT", "VICE_PRESIDENT"] },
+      isActive: true,
+    },
     select: {
       userId: true,
       user: { select: { email: true, firstName: true, lastName: true } },

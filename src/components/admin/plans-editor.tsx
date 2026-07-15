@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { AlertTriangle } from "lucide-react";
@@ -8,7 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Toast } from "@/components/ui/toast";
 import { updateBillingSettings, updatePlanConfig } from "@/actions/admin-platform";
-import { computeAnnualPrice, type PlanConfigData } from "@/lib/plans-utils";
+import { ComparisonOverridesEditor } from "@/components/admin/comparison-overrides-editor";
+import {
+  computeAnnualPrice,
+  type ComparisonOverrides,
+  type PlanConfigData,
+} from "@/lib/plans-utils";
 import type { SubscriptionPlan } from "@/generated/prisma/client";
 
 function parseLines(value: string): string[] {
@@ -23,11 +28,15 @@ export function PlansEditor({
   annualDiscountPercent,
   currency,
   stripeEnabled,
+  showPricingComparison = false,
+  comparisonOverrides = {},
 }: {
   plans: PlanConfigData[];
   annualDiscountPercent: number;
   currency: string;
   stripeEnabled: boolean;
+  showPricingComparison?: boolean;
+  comparisonOverrides?: ComparisonOverrides;
 }) {
   const locale = useLocale();
   const t = useTranslations("admin.plans");
@@ -36,11 +45,20 @@ export function PlansEditor({
   const [toast, setToast] = useState<string | null>(null);
   const [discount, setDiscount] = useState(annualDiscountPercent);
   const [currencyVal, setCurrencyVal] = useState(currency);
+  const [showComparison, setShowComparison] = useState(showPricingComparison);
+
+  useEffect(() => {
+    setShowComparison(showPricingComparison);
+  }, [showPricingComparison]);
 
   function saveBilling() {
     startTransition(async () => {
       const result = await updateBillingSettings(
-        { annualDiscountPercent: discount, currency: currencyVal },
+        {
+          annualDiscountPercent: discount,
+          currency: currencyVal,
+          showPricingComparison: showComparison,
+        },
         locale
       );
       if (result.success) {
@@ -57,11 +75,14 @@ export function PlansEditor({
         {
           nameFr: fd.get("nameFr") as string,
           nameEn: fd.get("nameEn") as string,
+          nameEs: (fd.get("nameEs") as string) || undefined,
           descriptionFr: (fd.get("descriptionFr") as string) || undefined,
           descriptionEn: (fd.get("descriptionEn") as string) || undefined,
+          descriptionEs: (fd.get("descriptionEs") as string) || undefined,
           priceMonthly: parseInt(fd.get("priceMonthly") as string, 10) || 0,
           featuresFr: parseLines(fd.get("featuresFr") as string),
           featuresEn: parseLines(fd.get("featuresEn") as string),
+          featuresEs: parseLines(fd.get("featuresEs") as string),
           stripePriceIdMonthly: (fd.get("stripePriceIdMonthly") as string) || undefined,
           stripePriceIdAnnual: (fd.get("stripePriceIdAnnual") as string) || undefined,
           memberLimit: fd.get("memberLimit")
@@ -129,7 +150,26 @@ export function PlansEditor({
             discount,
           })}
         </p>
+        <label className="flex items-start gap-2 text-sm text-gray-700 pt-2 border-t border-gray-100">
+          <input
+            type="checkbox"
+            checked={showComparison}
+            disabled={pending}
+            onChange={(e) => setShowComparison(e.target.checked)}
+            className="mt-0.5"
+          />
+          <span>
+            <span className="font-medium">{t("showComparisonTable")}</span>
+            <span className="block text-xs text-gray-500 mt-0.5">
+              {t("showComparisonTableHint")}
+            </span>
+          </span>
+        </label>
       </div>
+
+      {showComparison && (
+        <ComparisonOverridesEditor plans={plans} overrides={comparisonOverrides} />
+      )}
 
       {plans.map((plan) => (
         <form
@@ -154,9 +194,10 @@ export function PlansEditor({
             </div>
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-3">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             <Input name="nameFr" label={t("nameFr")} defaultValue={plan.nameFr} required />
             <Input name="nameEn" label={t("nameEn")} defaultValue={plan.nameEn} required />
+            <Input name="nameEs" label={t("nameEs")} defaultValue={plan.nameEs ?? ""} />
             <Input
               name="descriptionFr"
               label={t("descriptionFr")}
@@ -166,6 +207,11 @@ export function PlansEditor({
               name="descriptionEn"
               label={t("descriptionEn")}
               defaultValue={plan.descriptionEn ?? ""}
+            />
+            <Input
+              name="descriptionEs"
+              label={t("descriptionEs")}
+              defaultValue={plan.descriptionEs ?? ""}
             />
             <Input
               name="priceMonthly"
@@ -199,7 +245,7 @@ export function PlansEditor({
             />
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-3">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-gray-700">{t("featuresFr")}</label>
               <textarea
@@ -215,6 +261,15 @@ export function PlansEditor({
                 name="featuresEn"
                 rows={4}
                 defaultValue={plan.featuresEn.join("\n")}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-gray-700">{t("featuresEs")}</label>
+              <textarea
+                name="featuresEs"
+                rows={4}
+                defaultValue={plan.featuresEs.join("\n")}
                 className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
               />
             </div>

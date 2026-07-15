@@ -5,7 +5,8 @@ import { AppShellServer } from "@/components/layout/app-shell-server";
 import { NotificationsView } from "@/components/notifications/notifications-view";
 import { ClubAnnouncementsPanel } from "@/components/notifications/club-announcements-panel";
 import { WebPushEnable } from "@/components/notifications/web-push-enable";
-import { getVapidPublicKey } from "@/lib/web-push";
+import { getVapidPublicKey } from "@/lib/vapid-config";
+import { isWebPushEnabledForUser } from "@/lib/push-preference";
 import { hasRolePermission } from "@/lib/roles";
 import {
   getAllUserNotifications,
@@ -42,7 +43,7 @@ export default async function NotificationsPage({
     !!ctx &&
     (session.user.isSuperAdmin ||
       (await hasRolePermission(ctx.role, "settings.manage", false)) ||
-      ["PRESIDENT", "SECRETARY", "ADMIN"].includes(ctx.role));
+      ["PRESIDENT", "VICE_PRESIDENT", "SECRETARY", "ADMIN"].includes(ctx.role));
 
   const [notifications, announcements, notifSummary] = await Promise.all([
     getAllUserNotifications(session.user.id, { excludeAnnouncement: true }),
@@ -55,11 +56,17 @@ export default async function NotificationsPage({
     getUserNotifications(session.user.id),
   ]);
 
-  const vapidPublicKey = getVapidPublicKey();
+  const vapidPublicKey = await getVapidPublicKey();
+  const webPushEnabled = ctx
+    ? await isWebPushEnabledForUser(session.user.id, ctx.clubId)
+    : false;
 
   return (
     <AppShellServer title={t("title")}>
-      <WebPushEnable vapidPublicKey={vapidPublicKey} />
+      <WebPushEnable
+        vapidPublicKey={vapidPublicKey}
+        preferenceEnabled={webPushEnabled}
+      />
       {canSendAnnouncements && tab === "announcements" && (
         <div className="mb-6">
           <ClubAnnouncementsPanel locale={locale} />

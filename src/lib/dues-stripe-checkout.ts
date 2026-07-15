@@ -158,7 +158,11 @@ export async function fulfillMemberDuesCheckout(session: {
     existing.member.userId ??
     (
       await prisma.clubMembership.findFirst({
-        where: { clubId, isActive: true, role: { in: ["TREASURER", "ADMIN", "PRESIDENT"] } },
+        where: {
+          clubId,
+          isActive: true,
+          role: { in: ["TREASURER", "ADMIN", "PRESIDENT", "VICE_PRESIDENT"] },
+        },
         select: { userId: true },
       })
     )?.userId;

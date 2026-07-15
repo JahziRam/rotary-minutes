@@ -79,8 +79,16 @@
     "unauthorized": "Debe iniciar sesión para ver sus notificaciones.",
     "push": {
       "title": "Notificaciones push",
-      "hint": "Reciba un recordatorio 1 hora antes de cada reunión y confirme su asistencia.",
-      "enable": "Activar",
+      "hint": "Activadas por defecto para los miembros del club. Recordatorio 1 h antes de cada reunión — puede desactivarlas aquí.",
+      "enable": "Reactivar",
+      "disable": "Desactivar",
+      "browserPermission": "Autorice las notificaciones en su navegador para recibir recordatorios.",
+      "browserDenied": "Las notificaciones están bloqueadas por el navegador. Autorícelas en la configuración del sitio."
+    },
+    "pushOnboarding": {
+      "title": "¿Activar notificaciones push?",
+      "hint": "Reciba un recordatorio 1 h antes de cada reunión. Puede cambiar esta opción en Mi cuenta.",
+      "keep": "Mantener",
       "disable": "Desactivar"
     }
   },
@@ -503,6 +511,8 @@
         "SECRETARY": { "title": "Secretario", "desc": "Actas y reuniones" },
         "TREASURER": { "title": "Tesorero", "desc": "Cuotas y tesorería" },
         "PRESIDENT": { "title": "Presidente", "desc": "Validación y visión global" },
+        "VICE_PRESIDENT": { "title": "Vicepresidente", "desc": "Suplencia y dirección del club" },
+        "COMMISSION_CHAIR": { "title": "Presidente de comisión", "desc": "Reuniones y proyectos de comisión" },
         "READER": { "title": "Miembro / lector", "desc": "Consulta de actas" }
       }
     },
@@ -567,6 +577,8 @@
     "roles": {
       "SECRETARY": "Secretario",
       "PRESIDENT": "Presidente",
+      "VICE_PRESIDENT": "Vicepresidente",
+      "COMMISSION_CHAIR": "Presidente de comisión",
       "READER": "Lector",
       "ADMIN": "Administrador"
     }
@@ -589,6 +601,15 @@
     "invalidCredentials": "Correo o contraseña incorrectos",
     "loginError": "Error al iniciar sesión. Inténtelo de nuevo o contacte con soporte.",
     "loggingIn": "Iniciando sesión…",
+    "newPassword": "Nueva contraseña",
+    "resetEmailSent": "Si existe una cuenta con este email, se ha enviado un enlace de restablecimiento.",
+    "resetSuccess": "Contraseña actualizada. Ya puede iniciar sesión.",
+    "resetInvalidLink": "Enlace inválido o expirado. Solicite uno nuevo.",
+    "resetFailed": "No se pudo restablecer la contraseña.",
+    "resetting": "Restableciendo…",
+    "sending": "Enviando…",
+    "passwordMismatch": "Las contraseñas no coinciden",
+    "passwordTooShort": "La contraseña debe tener al menos 8 caracteres",
     "registration": {
       "modeClub": "Registrar un club",
       "modeMember": "Unirse como miembro",
@@ -628,7 +649,24 @@
       "approve": "Aprobar",
       "reject": "Rechazar",
       "error": "No se pudo procesar la solicitud",
-      "forbidden": "No tiene permiso para asignar este rol"
+      "forbidden": "No tiene permiso para asignar este rol",
+      "sendLoginOnApprove": "Enviar email de bienvenida al miembro"
+    },
+    "captcha": {
+      "label": "¿Cuánto es {a} + {b}?",
+      "refresh": "Nuevo cálculo",
+      "failed": "Verificación anti-robot fallida. Inténtelo de nuevo."
+    },
+    "requiredPassword": {
+      "title": "Cambio de contraseña obligatorio",
+      "description": "Por su seguridad, elija una contraseña personal nueva antes de acceder a la aplicación.",
+      "new": "Nueva contraseña",
+      "confirm": "Confirmar contraseña",
+      "mismatch": "Las contraseñas no coinciden",
+      "tooShort": "La contraseña debe tener al menos 8 caracteres",
+      "failed": "No se pudo actualizar la contraseña",
+      "save": "Guardar y continuar",
+      "saving": "Guardando…"
     }
   },
   "dashboard": {
@@ -860,6 +898,7 @@
     "noCustomRole": "Sin rol personalizado",
     "noAppAccount": "Este miembro aún no tiene cuenta en la aplicación. Use « Enviar credenciales » para crear la cuenta y enviar el acceso por email.",
     "sendLogin": "Enviar credenciales",
+    "sendLoginOnCreate": "Crear cuenta y enviar credenciales por email",
     "sendLoginHint": "Crea una cuenta si es necesario y envía el email de acceso con una contraseña temporal.",
     "sendingLogin": "Enviando…",
     "loginSent": "Credenciales enviadas por email",
@@ -871,7 +910,7 @@
     "cannotChangeOwnRole": "No puede modificar su propio rol",
     "defaultMemberRole": "Miembro / Lector",
     "roleManagementTitle": "Roles de la aplicación",
-    "roleManagementHint": "Por defecto, cada acceso es « Miembro / Lector ». Los demás roles se modifican aquí (directorio o ficha) por el presidente, el administrador o el super admin.",
+    "roleManagementHint": "Por defecto, cada acceso es « Miembro / Lector ». Los demás roles se modifican aquí (directorio o ficha) por el presidente o el administrador del club.",
     "appRoleOnCreateHint": "Por defecto: Miembro / Lector. Otro rol solo se aplica si ya existe una cuenta con este email.",
     "roleNotAssignedYet": "Miembro añadido. El rol Miembro / Lector se asignará cuando exista la cuenta.",
     "import": {
@@ -1564,6 +1603,8 @@
       "discountLabel": "Descuento anual (%)",
       "currencyLabel": "Moneda",
       "saveBilling": "Guardar ajustes de descuento",
+      "showComparisonTable": "Mostrar tabla comparativa de planes",
+      "showComparisonTableHint": "Visible en la página de inicio (sección de precios). Desactivado por defecto.",
       "billingExample": "Ejemplo: 39 €/mes → {annual} €/año (−{discount}%)",
       "stripeWarning": "Stripe está activado: si cambia un precio, cree un nuevo Price en Stripe y actualice los Price ID siguientes. De lo contrario, el importe facturado no coincidirá con lo mostrado.",
       "stripePriceChanged": "Precio actualizado — verifique que los Price ID de Stripe coincidan con el nuevo importe.",
@@ -1582,7 +1623,20 @@
       "stripeAnnual": "Stripe Price ID (anual)",
       "featuresFr": "Funcionalidades (FR, una por línea)",
       "featuresEn": "Funcionalidades (EN, una por línea)",
-      "savePlan": "Guardar {plan}"
+      "nameEs": "Nombre (ES)",
+      "descriptionEs": "Descripción (ES)",
+      "featuresEs": "Funcionalidades (ES, una por línea)",
+      "savePlan": "Guardar {plan}",
+      "comparison": {
+        "title": "Tabla comparativa (contenido)",
+        "hint": "Personalice cada celda. Deje vacío o « predeterminado » para usar los valores técnicos.",
+        "default": "predeterminado",
+        "membersHint": "Número o « unlimited » para ilimitado",
+        "save": "Guardar tabla",
+        "saved": "Tabla comparativa guardada",
+        "resetDefaults": "Restablecer valores predeterminados",
+        "reset": "Tabla restablecida"
+      }
     },
     "appSettings": {
       "saved": "Configuración guardada",
@@ -1752,6 +1806,7 @@
     "description": "Elija con qué frecuencia recibe recordatorios por correo y en la aplicación.",
     "emailEnabled": "Recibir correos de recordatorio",
     "inAppEnabled": "Notificaciones en la aplicación",
+    "webPushEnabled": "Notificaciones push (navegador)",
     "save": "Guardar",
     "saved": "Preferencias guardadas",
     "categories": {
@@ -1948,6 +2003,20 @@
     "attendanceGoal": "Objetivo de asistencia",
     "attendanceGoalDetail": "{present}/{total} reuniones · objetivo {goal}%",
     "mandateLabel": "Mandato {label}",
+    "password": {
+      "title": "Contraseña",
+      "current": "Contraseña actual",
+      "new": "Nueva contraseña",
+      "confirm": "Confirmar nueva contraseña",
+      "save": "Actualizar contraseña",
+      "saving": "Actualizando…",
+      "success": "Contraseña actualizada",
+      "mismatch": "Las contraseñas no coinciden",
+      "invalidCurrent": "Contraseña actual incorrecta",
+      "tooShort": "La contraseña debe tener al menos 8 caracteres",
+      "noPassword": "No hay contraseña definida en esta cuenta",
+      "failed": "No se pudo actualizar la contraseña"
+    },
     "minutesDetail": "Actas finalizadas",
     "noMinutes": "No hay actas finalizadas",
     "viewMinute": "Ver",
@@ -1971,21 +2040,51 @@
     "defaultTitle": "Reunión",
     "poweredBy": "Con tecnología de Rotary Minutes"
   },
+  "clubActivity": {
+    "title": "Registro de actividad",
+    "description": "Historial de acciones sensibles sobre miembros y accesos del club.",
+    "empty": "Ninguna actividad registrada por el momento.",
+    "by": "Por {name}",
+    "actions": {
+      "MEMBER_CREATED": "Miembro añadido",
+      "MEMBER_LOGIN_SENT": "Credenciales enviadas",
+      "MEMBERSHIP_APPROVED": "Adhesión aprobada",
+      "MEMBERSHIP_REJECTED": "Adhesión rechazada",
+      "MEMBER_ROLE_UPDATED": "Rol de miembro actualizado",
+      "CLUB_USER_INVITED": "Usuario invitado",
+      "CLUB_USER_ROLE_UPDATED": "Rol de usuario actualizado",
+      "CLUB_USER_REMOVED": "Usuario eliminado"
+    }
+  },
   "clubAnnouncements": {
     "title": "Anuncio del club",
-    "description": "Envíe una notificación en la aplicación a los roles de miembros seleccionados.",
+    "description": "Envíe una notificación en la aplicación a los miembros seleccionados.",
     "announcementTitle": "Título",
     "message": "Mensaje",
+    "targetType": "Segmentación",
     "targetRoles": "Destinatarios (roles)",
+    "targetCommission": "Comisión",
+    "selectCommission": "Elegir una comisión…",
+    "noAppAccountHint": "Este segmento apunta a miembros sin cuenta activa en la app. Solo quienes ya tengan cuenta recibirán una notificación in-app.",
     "send": "Enviar anuncio",
     "success": "Anuncio enviado a {count} miembro(s)",
     "error": "No se pudo enviar el anuncio",
+    "targetTypes": {
+      "ALL_MEMBERS": "Todos los miembros activos",
+      "ROLES": "Por roles",
+      "COMMISSION": "Por comisión",
+      "DUES_OVERDUE": "Cuotas vencidas",
+      "DUES_PENDING": "Cuotas pendientes",
+      "NO_APP_ACCOUNT": "Sin cuenta app activa"
+    },
     "roles": {
       "PRESIDENT": "Presidente",
+      "VICE_PRESIDENT": "Vicepresidente",
       "SECRETARY": "Secretario",
       "TREASURER": "Tesorero",
       "ADMIN": "Administrador",
       "MEMBERSHIP_CHAIR": "Responsable de membresía",
+      "COMMISSION_CHAIR": "Presidente de comisión",
       "READER": "Lector",
       "PROTOCOL": "Protocolo"
     }

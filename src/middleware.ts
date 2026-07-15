@@ -17,6 +17,7 @@ const publicPaths = [
   "/register",
   "/pending-approval",
   "/forgot-password",
+  "/reset-password",
   "/verify",
   "/privacy",
   "/terms",

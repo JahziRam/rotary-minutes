@@ -1,0 +1,3 @@
+-- Vice-président et président de commission
+ALTER TYPE "ClubRole" ADD VALUE IF NOT EXISTS 'VICE_PRESIDENT';
+ALTER TYPE "ClubRole" ADD VALUE IF NOT EXISTS 'COMMISSION_CHAIR';

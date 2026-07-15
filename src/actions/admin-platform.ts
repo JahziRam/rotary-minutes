@@ -210,6 +210,7 @@ export async function updateBillingSettings(
   data: {
     annualDiscountPercent: number;
     currency: string;
+    showPricingComparison?: boolean;
   },
   locale: string
 ) {
@@ -218,15 +219,30 @@ export async function updateBillingSettings(
 
   const discount = Math.min(90, Math.max(0, Math.round(data.annualDiscountPercent)));
   const currency = data.currency.trim().toUpperCase().slice(0, 3) || "EUR";
+  const existing = await prisma.appSettings.findUnique({ where: { id: "global" } });
+  const currentConfig = (existing?.config as Record<string, unknown> | null) ?? {};
+  const currentPricing = (currentConfig.pricing as Record<string, unknown> | null) ?? {};
+  const nextConfig = {
+    ...currentConfig,
+    pricing: {
+      ...currentPricing,
+      showComparisonTable: data.showPricingComparison === true,
+    },
+  };
 
   await prisma.appSettings.upsert({
     where: { id: "global" },
-    update: { annualDiscountPercent: discount, currency },
+    update: {
+      annualDiscountPercent: discount,
+      currency,
+      config: nextConfig,
+    },
     create: {
       id: "global",
       appName: DEFAULT_APP_NAME,
       annualDiscountPercent: discount,
       currency,
+      config: nextConfig,
     },
   });
 
@@ -236,7 +252,11 @@ export async function updateBillingSettings(
       action: "BILLING_SETTINGS_UPDATED",
       entity: "AppSettings",
       entityId: "global",
-      metadata: data as object,
+      metadata: {
+        annualDiscountPercent: discount,
+        currency,
+        showPricingComparison: data.showPricingComparison === true,
+      },
     },
   });
 
@@ -250,11 +270,14 @@ export async function updatePlanConfig(
   data: {
     nameFr: string;
     nameEn: string;
+    nameEs?: string;
     descriptionFr?: string;
     descriptionEn?: string;
+    descriptionEs?: string;
     priceMonthly: number;
     featuresFr: string[];
     featuresEn: string[];
+    featuresEs?: string[];
     stripePriceIdMonthly?: string;
     stripePriceIdAnnual?: string;
     memberLimit?: number | null;
@@ -277,11 +300,14 @@ export async function updatePlanConfig(
     update: {
       nameFr: data.nameFr,
       nameEn: data.nameEn,
+      nameEs: data.nameEs ?? "",
       descriptionFr: data.descriptionFr || null,
       descriptionEn: data.descriptionEn || null,
+      descriptionEs: data.descriptionEs || null,
       priceMonthly: data.priceMonthly,
       featuresFr: data.featuresFr,
       featuresEn: data.featuresEn,
+      featuresEs: data.featuresEs ?? [],
       stripePriceIdMonthly: data.stripePriceIdMonthly || null,
       stripePriceIdAnnual: data.stripePriceIdAnnual || null,
       memberLimit: data.memberLimit ?? null,
@@ -293,11 +319,14 @@ export async function updatePlanConfig(
       plan,
       nameFr: data.nameFr,
       nameEn: data.nameEn,
+      nameEs: data.nameEs ?? "",
       descriptionFr: data.descriptionFr || null,
       descriptionEn: data.descriptionEn || null,
+      descriptionEs: data.descriptionEs || null,
       priceMonthly: data.priceMonthly,
       featuresFr: data.featuresFr,
       featuresEn: data.featuresEn,
+      featuresEs: data.featuresEs ?? [],
       stripePriceIdMonthly: data.stripePriceIdMonthly || null,
       stripePriceIdAnnual: data.stripePriceIdAnnual || null,
       memberLimit: data.memberLimit ?? null,
@@ -331,6 +360,91 @@ export async function updatePlanConfig(
     : false;
 
   return { success: true, stripePriceWarning };
+}
+
+export async function updateComparisonOverrides(
+  overrides: import("@/lib/plans-utils").ComparisonOverrides,
+  locale: string
+) {
+  const user = await admin();
+  if (!user) return { error: "UNAUTHORIZED" };
+
+  const existing = await prisma.appSettings.findUnique({ where: { id: "global" } });
+  const currentConfig = (existing?.config as Record<string, unknown> | null) ?? {};
+  const currentPricing = (currentConfig.pricing as Record<string, unknown> | null) ?? {};
+  const nextConfig = {
+    ...currentConfig,
+    pricing: {
+      ...currentPricing,
+      comparisonOverrides: overrides,
+    },
+  };
+
+  await prisma.appSettings.upsert({
+    where: { id: "global" },
+    update: { config: nextConfig },
+    create: { id: "global", appName: DEFAULT_APP_NAME, config: nextConfig },
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      userId: user.id,
+      action: "COMPARISON_OVERRIDES_UPDATED",
+      entity: "AppSettings",
+      entityId: "global",
+    },
+  });
+
+  revalidateAdmin(locale);
+  revalidatePublicPricing();
+  return { success: true };
+}
+
+export async function updateVapidSettings(
+  data: {
+    publicKey?: string;
+    privateKey?: string;
+    subject?: string;
+  },
+  locale: string
+) {
+  const user = await admin();
+  if (!user) return { error: "UNAUTHORIZED" as const };
+
+  const { mergeAndSaveVapid } = await import("@/lib/vapid-config");
+  await mergeAndSaveVapid(data);
+
+  await prisma.auditLog.create({
+    data: {
+      userId: user.id,
+      action: "VAPID_SETTINGS_UPDATED",
+      entity: "AppSettings",
+      entityId: "global",
+    },
+  });
+
+  revalidateAdmin(locale);
+  return { success: true as const };
+}
+
+export async function generateVapidKeys(subject?: string, locale = "fr") {
+  const user = await admin();
+  if (!user) return { error: "UNAUTHORIZED" as const };
+
+  const { generateAndSaveVapidKeys } = await import("@/lib/vapid-config");
+  const keys = await generateAndSaveVapidKeys(subject);
+
+  await prisma.auditLog.create({
+    data: {
+      userId: user.id,
+      action: "VAPID_KEYS_GENERATED",
+      entity: "AppSettings",
+      entityId: "global",
+    },
+  });
+
+  revalidateAdmin(locale);
+  return { success: true as const, publicKey: keys.publicKey };
 }
 
 function normalizeOptionalEmail(value: string | undefined): string | undefined {

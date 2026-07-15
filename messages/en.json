@@ -81,8 +81,16 @@
     "unauthorized": "You must be signed in to view your notifications.",
     "push": {
       "title": "Push notifications",
-      "hint": "Get a reminder 1 hour before each meeting and confirm your attendance.",
-      "enable": "Enable",
+      "hint": "Enabled by default for club members. Reminder 1 hour before each meeting — you can turn them off here.",
+      "enable": "Turn back on",
+      "disable": "Disable",
+      "browserPermission": "Allow notifications in your browser to receive reminders.",
+      "browserDenied": "Notifications are blocked by your browser. Allow them in the site settings."
+    },
+    "pushOnboarding": {
+      "title": "Enable push notifications?",
+      "hint": "Get a reminder 1 hour before each meeting. You can change this later in My account.",
+      "keep": "Keep",
       "disable": "Disable"
     }
   },
@@ -127,6 +135,15 @@
     "invalidCredentials": "Incorrect email or password",
     "loginError": "Sign-in failed. Please try again or contact support.",
     "loggingIn": "Signing in…",
+    "newPassword": "New password",
+    "resetEmailSent": "If an account exists for this email, a reset link has been sent.",
+    "resetSuccess": "Password updated. You can sign in now.",
+    "resetInvalidLink": "Invalid or expired link. Request a new one.",
+    "resetFailed": "Could not reset password.",
+    "resetting": "Resetting…",
+    "sending": "Sending…",
+    "passwordMismatch": "Passwords do not match",
+    "passwordTooShort": "Password must be at least 8 characters",
     "registration": {
       "modeClub": "Register a club",
       "modeMember": "Join as a member",
@@ -166,7 +183,24 @@
       "approve": "Approve",
       "reject": "Reject",
       "error": "Could not process the request",
-      "forbidden": "You do not have permission to assign this role"
+      "forbidden": "You do not have permission to assign this role",
+      "sendLoginOnApprove": "Send welcome email to the member"
+    },
+    "captcha": {
+      "label": "What is {a} + {b}?",
+      "refresh": "New challenge",
+      "failed": "Anti-bot verification failed. Please try again."
+    },
+    "requiredPassword": {
+      "title": "Password change required",
+      "description": "For your security, choose a new personal password before accessing the app.",
+      "new": "New password",
+      "confirm": "Confirm password",
+      "mismatch": "Passwords do not match",
+      "tooShort": "Password must be at least 8 characters",
+      "failed": "Could not update password",
+      "save": "Save and continue",
+      "saving": "Saving…"
     }
   },
   "dashboard": {
@@ -398,6 +432,7 @@
     "noCustomRole": "No custom role",
     "noAppAccount": "This member does not have an app account yet. Use « Send login credentials » to create the account and email access details.",
     "sendLogin": "Send login credentials",
+    "sendLoginOnCreate": "Create account and email login credentials",
     "sendLoginHint": "Creates an account if needed and emails login details with a temporary password.",
     "sendingLogin": "Sending…",
     "loginSent": "Login credentials sent by email",
@@ -409,7 +444,7 @@
     "cannotChangeOwnRole": "You cannot change your own role",
     "defaultMemberRole": "Member / Reader",
     "roleManagementTitle": "App roles",
-    "roleManagementHint": "By default, every access is « Member / Reader ». Other roles can be changed here (directory or member profile) by the president, club admin, or super admin.",
+    "roleManagementHint": "By default, every access is « Member / Reader ». Other roles can be changed here (directory or member profile) by the president or club administrator.",
     "appRoleOnCreateHint": "Default: Member / Reader. Another role is only applied when a user account already exists with this email.",
     "roleNotAssignedYet": "Member added. The Member / Reader role will be assigned when an app account exists.",
     "import": {
@@ -906,6 +941,8 @@
       "discountLabel": "Annual discount (%)",
       "currencyLabel": "Currency",
       "saveBilling": "Save discount settings",
+      "showComparisonTable": "Show plan comparison table",
+      "showComparisonTableHint": "Displayed on the landing page pricing section. Off by default.",
       "billingExample": "Example: €39/month → €{annual}/year (−{discount}%)",
       "stripeWarning": "Stripe is enabled: if you change a price, create a new Price in Stripe and update the Price IDs below. Otherwise the billed amount won't match what's displayed.",
       "stripePriceChanged": "Price updated — verify Stripe Price IDs match the new amount.",
@@ -924,7 +961,20 @@
       "stripeAnnual": "Stripe Price ID (annual)",
       "featuresFr": "Features (FR, one per line)",
       "featuresEn": "Features (EN, one per line)",
-      "savePlan": "Save {plan}"
+      "nameEs": "Name (ES)",
+      "descriptionEs": "Description (ES)",
+      "featuresEs": "Features (ES, one per line)",
+      "savePlan": "Save {plan}",
+      "comparison": {
+        "title": "Comparison table (content)",
+        "hint": "Customize each cell. Leave empty or « default » to use technical presets.",
+        "default": "default",
+        "membersHint": "Number or « unlimited » for unlimited",
+        "save": "Save comparison table",
+        "saved": "Comparison table saved",
+        "resetDefaults": "Reset to defaults",
+        "reset": "Comparison table reset"
+      }
     },
     "appSettings": {
       "saved": "Settings saved",
@@ -1390,6 +1440,8 @@
         "SECRETARY": { "title": "Secretary", "desc": "Minutes, meetings, live mode" },
         "TREASURER": { "title": "Treasurer", "desc": "Dues, treasury, reports" },
         "PRESIDENT": { "title": "President", "desc": "Approval, oversight, big picture" },
+        "VICE_PRESIDENT": { "title": "Vice President", "desc": "Deputy leadership and club oversight" },
+        "COMMISSION_CHAIR": { "title": "Commission Chair", "desc": "Commission meetings and projects" },
         "READER": { "title": "Member / reader", "desc": "View minutes and club info" }
       }
     },
@@ -1454,6 +1506,8 @@
     "roles": {
       "SECRETARY": "Secretary",
       "PRESIDENT": "President",
+      "VICE_PRESIDENT": "Vice President",
+      "COMMISSION_CHAIR": "Commission Chair",
       "READER": "Reader",
       "ADMIN": "Administrator"
     }
@@ -1565,6 +1619,7 @@
     "description": "Choose how often you receive email and in-app reminders.",
     "emailEnabled": "Receive reminder emails",
     "inAppEnabled": "In-app notifications",
+    "webPushEnabled": "Push notifications (browser)",
     "save": "Save",
     "saved": "Preferences saved",
     "categories": {
@@ -2142,6 +2197,20 @@
     "attendanceGoal": "Attendance goal",
     "attendanceGoalDetail": "{present}/{total} meetings · {goal}% target",
     "mandateLabel": "Mandate {label}",
+    "password": {
+      "title": "Password",
+      "current": "Current password",
+      "new": "New password",
+      "confirm": "Confirm new password",
+      "save": "Update password",
+      "saving": "Updating…",
+      "success": "Password updated",
+      "mismatch": "Passwords do not match",
+      "invalidCurrent": "Current password is incorrect",
+      "tooShort": "Password must be at least 8 characters",
+      "noPassword": "No password set on this account",
+      "failed": "Could not update password"
+    },
     "minutesDetail": "Finalized minutes",
     "noMinutes": "No finalized minutes",
     "viewMinute": "View",
@@ -2165,21 +2234,51 @@
     "defaultTitle": "Meeting",
     "poweredBy": "Powered by Rotary Minutes"
   },
+  "clubActivity": {
+    "title": "Activity log",
+    "description": "History of sensitive actions on members and club access.",
+    "empty": "No activity recorded yet.",
+    "by": "By {name}",
+    "actions": {
+      "MEMBER_CREATED": "Member added",
+      "MEMBER_LOGIN_SENT": "Login credentials sent",
+      "MEMBERSHIP_APPROVED": "Membership approved",
+      "MEMBERSHIP_REJECTED": "Membership rejected",
+      "MEMBER_ROLE_UPDATED": "Member role updated",
+      "CLUB_USER_INVITED": "User invited",
+      "CLUB_USER_ROLE_UPDATED": "User role updated",
+      "CLUB_USER_REMOVED": "User removed"
+    }
+  },
   "clubAnnouncements": {
     "title": "Club announcement",
-    "description": "Send an in-app notification to selected member roles.",
+    "description": "Send an in-app notification to selected members.",
     "announcementTitle": "Title",
     "message": "Message",
+    "targetType": "Targeting",
     "targetRoles": "Recipients (roles)",
+    "targetCommission": "Commission",
+    "selectCommission": "Select a commission…",
+    "noAppAccountHint": "This targets members without an active app account. Only those who already have an account will receive an in-app notification.",
     "send": "Send announcement",
     "success": "Announcement sent to {count} member(s)",
     "error": "Could not send announcement",
+    "targetTypes": {
+      "ALL_MEMBERS": "All active members",
+      "ROLES": "By roles",
+      "COMMISSION": "By commission",
+      "DUES_OVERDUE": "Overdue dues",
+      "DUES_PENDING": "Pending dues",
+      "NO_APP_ACCOUNT": "No active app account"
+    },
     "roles": {
       "PRESIDENT": "President",
+      "VICE_PRESIDENT": "Vice President",
       "SECRETARY": "Secretary",
       "TREASURER": "Treasurer",
       "ADMIN": "Admin",
       "MEMBERSHIP_CHAIR": "Membership chair",
+      "COMMISSION_CHAIR": "Commission Chair",
       "READER": "Reader",
       "PROTOCOL": "Protocol"
     }

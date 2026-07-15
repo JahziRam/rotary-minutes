@@ -46,6 +46,8 @@ export default async function AdminSubscriptionsPage({
         annualDiscountPercent: 20,
         currency: "EUR",
         stripeEnabled: false,
+        showPricingComparison: false,
+        comparisonOverrides: {},
       }),
       adminQuery(
         "promoCodes",
@@ -87,6 +89,8 @@ export default async function AdminSubscriptionsPage({
             annualDiscountPercent={billing.annualDiscountPercent}
             currency={billing.currency}
             stripeEnabled={billing.stripeEnabled}
+            showPricingComparison={billing.showPricingComparison}
+            comparisonOverrides={billing.comparisonOverrides}
           />
         </CardContent>
       </Card>

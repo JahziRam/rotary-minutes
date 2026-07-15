@@ -7,8 +7,43 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
-### À venir
-- Améliorations continues produit et stabilité
+### Added
+- **Auth — première connexion**
+  - Flag `User.mustChangePassword` après envoi d’un mot de passe temporaire (invitation, identifiants membre)
+  - Page `/change-password-required` et garde dans le layout applicatif
+  - Action `completeRequiredPasswordChange` ; redirection login si MDP temporaire
+- **Auth — captcha maison**
+  - Vérification HMAC + délai + honeypot sur login et inscription (`auth-form-guard.ts`)
+  - Composant `AuthCaptchaField` branché sur login et register
+- **Notifications push — onboarding explicite**
+  - Bannière « Garder / Désactiver » (`PushOnboardingBanner`) à la place de l’abonnement silencieux
+  - Préférence enregistrée via `NotificationPreference` ; `completePushOnboarding`
+- **Journal d’activité club**
+  - Panneau dans **Paramètres** (président, vice-président, admin club)
+  - Actions : création membre, envoi identifiants, adhésions, rôles, utilisateurs club
+- **Annonces club enrichies**
+  - Ciblage : tous les membres, rôles, commission, cotisations en retard/en attente, sans compte app
+  - Enum `ClubAnnouncementTarget` + `resolveClubAnnouncementRecipients`
+- **Rôles — espagnol et nouveaux postes**
+  - Libellés ES via `getRoleLabel()` / `role-definitions.ts`
+  - **Vice-président** (`VICE_PRESIDENT`) et **Président de commission** (`COMMISSION_CHAIR`)
+  - Permissions, mandats, annonces et notifications alignés
+- **Auth — mots de passe**
+  - Réinitialisation par email (`/forgot-password`, `/reset-password`) via token `VerificationToken`
+  - Changement de mot de passe dans **Mon compte**
+- **Onboarding membres**
+  - Case « envoyer identifiants » à l'ajout membre et à l'approbation d'adhésion
+  - `inviteClubUser` crée le compte et envoie l'email de connexion
+- **Offres — espagnol**
+  - Champs `nameEs`, `descriptionEs`, `featuresEs` dans l'éditeur super admin
+- **Annonces plateforme**
+  - Ciblage par rôle (`ROLE`) dans **Admin → Annonces**
+- **Offres — tableau comparatif**
+  - Masqué par défaut sur la page d'accueil ; activation dans **Admin → Abonnements**
+  - Éditeur de contenu cellule par cellule (surcharges admin, repli sur `plan-features`)
+- **Notifications push — VAPID**
+  - Panneau **Admin → Paramètres** : génération/enregistrement des clés, guide intégré
+  - Repli sur variables d'environnement `VAPID_*`
 
 ### Fixed
 - **Offres / abonnements — synchronisation super admin**
@@ -17,6 +52,15 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
   - Nombre d’offres actives, ordre (`sortOrder`), noms, descriptions et listes de fonctionnalités reflètent la configuration admin (landing, abonnement club)
   - Limite membres du tableau comparatif alignée sur `memberLimit` configuré par offre
   - Revalidation élargie (fr/en/es + API marketing) et cache marketing réduit à 60 s après modification des tarifs
+
+### Changed
+- **Notifications push** : opt-out par défaut côté préférence ; choix explicite requis avant abonnement navigateur
+- **Libellés rôles** : espagnol pris en charge sur annuaire, tableau de bord, paramètres et annonces
+
+### Database
+- Migration `20260715140000_user_password_club_features` — `mustChangePassword`, `ClubAnnouncementTarget`
+- Migration `20260715130000_notification_push_default` — préférences push
+- Migration `20260715150000_club_role_vice_president_commission_chair` — `VICE_PRESIDENT`, `COMMISSION_CHAIR`
 
 ### Fixed
 - **Membres — changement de rôle** : correction de l’erreur React #482 lors de la modification du rôle dans l’annuaire (`MemberDuesBadge` converti en composant client ; sélecteurs de rôle contrôlés)

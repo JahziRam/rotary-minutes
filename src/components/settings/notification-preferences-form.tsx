@@ -25,6 +25,7 @@ const CATEGORIES = [
 type PrefsState = {
   emailEnabled: boolean;
   inAppEnabled: boolean;
+  webPushEnabled: boolean;
   meetingReminders: NotificationFrequency;
   duesReminders: NotificationFrequency;
   actionReminders: NotificationFrequency;
@@ -72,6 +73,15 @@ export function NotificationPreferencesForm({
             onChange={(e) => setState((s) => ({ ...s, inAppEnabled: e.target.checked }))}
           />
           {t("inAppEnabled")}
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={state.webPushEnabled}
+            disabled={pending}
+            onChange={(e) => setState((s) => ({ ...s, webPushEnabled: e.target.checked }))}
+          />
+          {t("webPushEnabled")}
         </label>
       </div>
 

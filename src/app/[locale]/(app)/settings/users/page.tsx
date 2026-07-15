@@ -3,7 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { getClubContext } from "@/lib/club-context";
 import { hasRolePermission } from "@/lib/roles";
-import { ROLE_LABELS } from "@/lib/role-definitions";
+import { getRoleLabel } from "@/lib/role-labels";
 import { CLUB_ROLES } from "@/lib/rotary";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -93,7 +93,7 @@ export default async function ClubUsersPage({
               currentUserId={ctx.userId}
               roleOptions={CLUB_ROLES.map((r) => ({
                 value: r,
-                label: ROLE_LABELS[r][locale === "fr" ? "fr" : "en"],
+                label: getRoleLabel(r, locale),
               }))}
             />
           </CardContent>

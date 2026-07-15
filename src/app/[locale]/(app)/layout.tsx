@@ -3,6 +3,7 @@ import { getClubContext } from "@/lib/club-context";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { getTranslations } from "next-intl/server";
+import { prisma } from "@/lib/prisma";
 import { InactiveClubNotice } from "@/components/layout/inactive-club-notice";
 import { ExpiredSubscriptionNotice } from "@/components/subscription/expired-subscription-notice";
 
@@ -17,6 +18,19 @@ export default async function AppLayout({
   const session = await getSession();
   if (!session?.user) {
     redirect(`/${locale}/login`);
+  }
+
+  const headersList = await headers();
+  const pathname = headersList.get("x-pathname") ?? "";
+
+  if (!session.user.isSuperAdmin) {
+    const userRecord = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { mustChangePassword: true },
+    });
+    if (userRecord?.mustChangePassword && pathname !== "/change-password-required") {
+      redirect(`/${locale}/change-password-required`);
+    }
   }
 
   if (
@@ -47,8 +61,6 @@ export default async function AppLayout({
     }
 
     if (club?.subscription?.status === "EXPIRED") {
-      const headersList = await headers();
-      const pathname = headersList.get("x-pathname") ?? "";
       const isSubscriptionPage =
         pathname === "/settings/subscription" ||
         pathname.startsWith("/settings/subscription/");

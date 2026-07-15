@@ -143,7 +143,7 @@ export const MISSION_DEFINITIONS: MissionDef[] = [
 
 export function inferFocusRole(clubRole: string): AssistanceFocusRole {
   if (clubRole === "TREASURER") return "TREASURER";
-  if (clubRole === "PRESIDENT") return "PRESIDENT";
+  if (clubRole === "PRESIDENT" || clubRole === "VICE_PRESIDENT") return "PRESIDENT";
   if (clubRole === "READER") return "READER";
   return "SECRETARY";
 }

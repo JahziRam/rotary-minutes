@@ -20,7 +20,10 @@ export async function GET(request: Request) {
       club: {
         include: {
           memberships: {
-            where: { role: { in: ["ADMIN", "PRESIDENT"] }, isActive: true },
+            where: {
+              role: { in: ["ADMIN", "PRESIDENT", "VICE_PRESIDENT"] },
+              isActive: true,
+            },
             include: { user: true },
             take: 3,
           },

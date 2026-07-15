@@ -315,6 +315,8 @@ export function OnboardingWizard({
                 >
                   <option value="SECRETARY">{t("roles.SECRETARY")}</option>
                   <option value="PRESIDENT">{t("roles.PRESIDENT")}</option>
+                  <option value="VICE_PRESIDENT">{t("roles.VICE_PRESIDENT")}</option>
+                  <option value="COMMISSION_CHAIR">{t("roles.COMMISSION_CHAIR")}</option>
                   <option value="READER">{t("roles.READER")}</option>
                   <option value="ADMIN">{t("roles.ADMIN")}</option>
                 </select>

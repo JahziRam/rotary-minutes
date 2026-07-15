@@ -22,11 +22,13 @@ enum ClubType {
 
 enum ClubRole {
   PRESIDENT
+  VICE_PRESIDENT
   SECRETARY
   PROTOCOL
   TREASURER
   FOUNDATION_CHAIR
   MEMBERSHIP_CHAIR
+  COMMISSION_CHAIR
   PUBLIC_IMAGE_CHAIR
   ADMIN
   READER
@@ -349,9 +351,10 @@ model User {
   lastName      String
   image         String?
   isSuperAdmin  Boolean   @default(false)
-  language      Language  @default(FR)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  language             Language  @default(FR)
+  mustChangePassword   Boolean   @default(false)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   accounts      Account[]
   sessions      Session[]
@@ -995,11 +998,14 @@ model PlanConfig {
   plan                 SubscriptionPlan @id
   nameFr               String
   nameEn               String
+  nameEs               String           @default("")
   descriptionFr        String?
   descriptionEn        String?
+  descriptionEs        String?
   priceMonthly         Int
   featuresFr           String[]
   featuresEn           String[]
+  featuresEs           String[]         @default([])
   stripePriceIdMonthly String?
   stripePriceIdAnnual  String?
   memberLimit          Int?
@@ -1523,14 +1529,25 @@ model PushSubscription {
   @@index([clubId])
 }
 
+enum ClubAnnouncementTarget {
+  ALL_MEMBERS
+  ROLES
+  COMMISSION
+  DUES_OVERDUE
+  DUES_PENDING
+  NO_APP_ACCOUNT
+}
+
 model ClubAnnouncement {
-  id          String   @id @default(cuid())
-  clubId      String
-  authorId    String
-  title       String
-  message     String   @db.Text
-  targetRoles String[]
-  createdAt   DateTime @default(now())
+  id                 String                  @id @default(cuid())
+  clubId             String
+  authorId           String
+  title              String
+  message            String                  @db.Text
+  targetType         ClubAnnouncementTarget  @default(ROLES)
+  targetRoles        String[]
+  targetCommissionId String?
+  createdAt          DateTime                @default(now())
 
   club   Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
   author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
@@ -1835,6 +1852,7 @@ model NotificationPreference {
   clubId            String?
   emailEnabled      Boolean               @default(true)
   inAppEnabled      Boolean               @default(true)
+  webPushEnabled    Boolean               @default(true)
   meetingReminders  NotificationFrequency @default(IMMEDIATE)
   duesReminders     NotificationFrequency @default(IMMEDIATE)
   actionReminders   NotificationFrequency @default(IMMEDIATE)

@@ -7,7 +7,7 @@ import { getClubContext } from "@/lib/club-context";
 import { isFeatureEnabled } from "@/lib/feature-gate";
 import { hasRolePermission } from "@/lib/roles";
 import { canManageMemberRoles } from "@/lib/member-roles";
-import { ROLE_LABELS } from "@/lib/role-definitions";
+import { getRoleLabel } from "@/lib/role-labels";
 import { CLUB_ROLES } from "@/lib/rotary";
 import { prisma } from "@/lib/prisma";
 import { AppShellServer } from "@/components/layout/app-shell-server";
@@ -48,10 +48,9 @@ export default async function MemberDetailPage({
       ])
     : [[], null, []];
 
-  const roleLocale = locale === "fr" ? "fr" : "en";
   const roleOptions = CLUB_ROLES.map((r) => ({
     value: r,
-    label: ROLE_LABELS[r][roleLocale],
+    label: getRoleLabel(r, locale),
   }));
 
   const showDues =

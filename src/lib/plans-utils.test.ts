@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildPlanLabelMap,
+  readShowPricingComparison,
   computeAnnualPerMonth,
   computeAnnualPrice,
   formatPrice,
@@ -14,11 +15,14 @@ const basePlan: PlanConfigData = {
   plan: "PROFESSIONAL",
   nameFr: "Active",
   nameEn: "Active",
+  nameEs: "Active",
   descriptionFr: "Desc FR",
   descriptionEn: "Desc EN",
+  descriptionEs: "Desc ES",
   priceMonthly: 39,
   featuresFr: ["PV", "Trésorerie"],
   featuresEn: ["Minutes", "Treasury"],
+  featuresEs: ["Actas", "Tesorería"],
   stripePriceIdMonthly: "price_monthly",
   stripePriceIdAnnual: "price_annual",
   memberLimit: 50,
@@ -60,6 +64,15 @@ describe("toPublicPlan", () => {
 describe("formatPrice", () => {
   it("formats EUR for French locale", () => {
     expect(formatPrice(39, "EUR", "fr")).toMatch(/39/);
+  });
+});
+
+describe("readShowPricingComparison", () => {
+  it("is false by default and true only when explicitly enabled", () => {
+    expect(readShowPricingComparison(null)).toBe(false);
+    expect(readShowPricingComparison({})).toBe(false);
+    expect(readShowPricingComparison({ pricing: {} })).toBe(false);
+    expect(readShowPricingComparison({ pricing: { showComparisonTable: true } })).toBe(true);
   });
 });
 

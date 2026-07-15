@@ -77,7 +77,9 @@ async function notifyClubSmtpFailure(clubId: string, error: string) {
     prisma.clubMembership.findMany({
       where: {
         clubId,
-        role: { in: ["ADMIN", "PRESIDENT", "PUBLIC_IMAGE_CHAIR", "SECRETARY"] },
+        role: {
+          in: ["ADMIN", "PRESIDENT", "VICE_PRESIDENT", "PUBLIC_IMAGE_CHAIR", "SECRETARY"],
+        },
       },
       select: { userId: true },
     }),

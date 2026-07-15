@@ -8,7 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { getUpcomingBirthdays } from "@/lib/queries/members";
 import { getMembersDuesOverview } from "@/lib/queries/dues-overview";
 import { searchMembersPaginated } from "@/lib/queries/members-list";
-import { ROLE_LABELS } from "@/lib/role-definitions";
+import { getRoleLabel } from "@/lib/role-labels";
 import { CLUB_ROLES } from "@/lib/rotary";
 import { canManageMemberRoles } from "@/lib/member-roles";
 import { getOfficerMandates } from "@/actions/mandates";
@@ -71,13 +71,12 @@ export default async function MembersPage({
     ]);
 
   const inactiveCount = totalCount - activeCount;
-  const roleLocale = locale === "fr" ? "fr" : "en";
   const roleLabels = Object.fromEntries(
-    CLUB_ROLES.map((r) => [r, ROLE_LABELS[r][roleLocale]])
+    CLUB_ROLES.map((r) => [r, getRoleLabel(r, locale)])
   );
   const roleOptions = CLUB_ROLES.map((r) => ({
     value: r,
-    label: ROLE_LABELS[r][roleLocale],
+    label: getRoleLabel(r, locale),
   }));
 
   return (

@@ -7,6 +7,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { registerClub, registerMember } from "@/actions/auth";
+import { AuthCaptchaField, readAuthCaptchaFromForm } from "@/components/auth/auth-captcha-field";
 import { listPublicClubs } from "@/actions/registration";
 import { ANALYTICS_EVENTS } from "@/lib/analytics-events";
 import { trackEvent } from "@/lib/analytics";
@@ -107,6 +108,7 @@ export function RegisterForm({ referredByCode }: { referredByCode?: string }) {
       const result = await registerMember({
         ...base,
         clubId: selectedClubId,
+        captcha: readAuthCaptchaFromForm(form),
       });
 
       if (result.error) {
@@ -128,6 +130,7 @@ export function RegisterForm({ referredByCode }: { referredByCode?: string }) {
       country: form.get("country") as string,
       city: form.get("city") as string,
       referredByCode,
+      captcha: readAuthCaptchaFromForm(form),
     });
 
     if (result.error) {
@@ -312,6 +315,7 @@ export function RegisterForm({ referredByCode }: { referredByCode?: string }) {
                 label={t("confirmPassword")}
                 required
               />
+              <AuthCaptchaField />
 
               {error && (
                 <p className="text-sm text-red-600 bg-red-50 rounded-lg p-3">

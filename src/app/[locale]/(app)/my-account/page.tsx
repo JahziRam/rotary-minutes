@@ -8,8 +8,9 @@ import { FeatureUnavailable } from "@/components/layout/feature-unavailable";
 import { MyAccountPanel } from "@/components/member-portal/my-account-panel";
 import { PageAssistance } from "@/components/assistance/page-assistance";
 import { WebPushEnable } from "@/components/notifications/web-push-enable";
-import { getVapidPublicKey } from "@/lib/web-push";
-import { Card, CardContent } from "@/components/ui/card";
+import { ChangePasswordForm } from "@/components/auth/change-password-form";
+import { getVapidPublicKey } from "@/lib/vapid-config";
+import { isWebPushEnabledForUser } from "@/lib/push-preference";
 
 export default async function MyAccountPage({
   params,
@@ -81,17 +82,20 @@ export default async function MyAccountPage({
           emailLogs: data.emailLogs,
         };
 
-  const vapidPublicKey = getVapidPublicKey();
+  const [vapidPublicKey, webPushEnabled] = await Promise.all([
+    getVapidPublicKey(),
+    isWebPushEnabledForUser(ctx.userId, ctx.clubId),
+  ]);
 
   return (
     <AppShellServer title={t("title")}>
       <PageAssistance hints={["profile_intro", "profile_save_action"]} />
       <div className="space-y-6">
-        <Card className="lg:hidden">
-          <CardContent className="p-4">
-            <WebPushEnable vapidPublicKey={vapidPublicKey} />
-          </CardContent>
-        </Card>
+        <ChangePasswordForm />
+        <WebPushEnable
+          vapidPublicKey={vapidPublicKey}
+          preferenceEnabled={webPushEnabled}
+        />
         <MyAccountPanel data={panelData} locale={locale} />
       </div>
     </AppShellServer>

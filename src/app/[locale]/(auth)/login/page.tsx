@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { CompanyLegalFooter } from "@/components/legal/company-legal-footer";
 import { loginUser } from "@/actions/auth";
+import { AuthCaptchaField, readAuthCaptchaFromForm } from "@/components/auth/auth-captcha-field";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { AppBrandName } from "@/components/brand/app-brand-name";
 
@@ -27,20 +28,25 @@ export default function LoginPage() {
       const form = new FormData(e.currentTarget);
       const result = await loginUser(
         form.get("email") as string,
-        form.get("password") as string
+        form.get("password") as string,
+        readAuthCaptchaFromForm(form)
       );
 
       if (result.error) {
         setError(
           result.error === "INVALID_CREDENTIALS"
             ? t("invalidCredentials")
-            : t("loginError")
+            : result.error === "CAPTCHA_FAILED"
+              ? t("captcha.failed")
+              : t("loginError")
         );
         return;
       }
 
       let dest = `/${locale}/dashboard`;
-      if (result.isSuperAdmin) {
+      if (result.mustChangePassword) {
+        dest = `/${locale}/change-password-required`;
+      } else if (result.isSuperAdmin) {
         dest = `/${locale}/admin`;
       } else if (result.hasPending && !result.hasApproved) {
         dest = `/${locale}/pending-approval`;
@@ -89,6 +95,7 @@ export default function LoginPage() {
                 required
                 autoComplete="current-password"
               />
+              <AuthCaptchaField />
               {error && (
                 <p className="text-sm text-red-600 bg-red-50 rounded-lg p-3">
                   {error}

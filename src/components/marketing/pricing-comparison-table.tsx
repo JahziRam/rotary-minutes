@@ -8,7 +8,7 @@ import {
   type ComparisonValue,
 } from "@/lib/plan-comparison";
 import type { SubscriptionPlan } from "@/generated/prisma/client";
-import type { PublicPlan } from "@/lib/plans-utils";
+import type { ComparisonOverrides, PublicPlan } from "@/lib/plans-utils";
 import { cn } from "@/lib/utils";
 
 const ROWS: ComparisonRowKey[] = [
@@ -42,13 +42,19 @@ function CellValue({ value, membersLabel }: { value: ComparisonValue; membersLab
   );
 }
 
-export function PricingComparisonTable({ plans }: { plans: PublicPlan[] }) {
+export function PricingComparisonTable({
+  plans,
+  comparisonOverrides = {},
+}: {
+  plans: PublicPlan[];
+  comparisonOverrides?: ComparisonOverrides;
+}) {
   const t = useTranslations("landing.pricing.compare");
   const orderedPlans = plans;
   const memberLimits = Object.fromEntries(
     orderedPlans.map((plan) => [plan.plan, plan.memberLimit])
   ) as Partial<Record<SubscriptionPlan, number | null>>;
-  const matrix = getPlanComparisonMatrix(memberLimits);
+  const matrix = getPlanComparisonMatrix(memberLimits, comparisonOverrides);
 
   if (orderedPlans.length === 0) return null;
 

@@ -14,6 +14,8 @@ import { DEFAULT_FEATURES } from "@/lib/features";
 import { resolvePlanLabel } from "@/lib/plans";
 import { hasRolePermission } from "@/lib/roles";
 import type { ClubRoleType } from "@/lib/rotary";
+import { getVapidPublicKey } from "@/lib/vapid-config";
+import { hasPushOnboardingDecision, isWebPushEnabledForUser } from "@/lib/push-preference";
 
 export async function AppShellServer({
   children,
@@ -77,6 +79,17 @@ export async function AppShellServer({
   const usageGuide = !isSuperAdmin ? await getUsageGuideContext() : null;
   const assistance = !isSuperAdmin ? await getAssistanceState() : null;
 
+  const memberClubId = ctx?.clubId ?? null;
+  const memberUserId = session?.user?.id;
+  const [vapidPublicKey, webPushPreferenceEnabled, pushOnboardingPending] =
+    memberClubId && memberUserId && (!isSuperAdmin || isViewingAsClub)
+      ? await Promise.all([
+          getVapidPublicKey(),
+          isWebPushEnabledForUser(memberUserId, memberClubId),
+          hasPushOnboardingDecision(memberUserId, memberClubId).then((d) => !d),
+        ])
+      : [null, false, false];
+
   return (
     <AppShell
       title={title}
@@ -114,6 +127,9 @@ export async function AppShellServer({
           : null
       }
       assistance={assistance}
+      vapidPublicKey={vapidPublicKey}
+      webPushPreferenceEnabled={webPushPreferenceEnabled}
+      pushOnboardingPending={!!vapidPublicKey && pushOnboardingPending}
     >
       {children}
     </AppShell>

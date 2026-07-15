@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { isVapidConfigured, resolveVapid } from "@/lib/vapid-config";
 
 export interface PushPayload {
   title: string;
@@ -30,25 +31,14 @@ async function loadWebPush(): Promise<WebPushModule | null> {
   }
 }
 
-export function isWebPushConfigured(): boolean {
-  return !!(
-    process.env.VAPID_PUBLIC_KEY &&
-    process.env.VAPID_PRIVATE_KEY &&
-    (process.env.VAPID_SUBJECT || process.env.NEXT_PUBLIC_APP_URL)
-  );
+export async function isWebPushConfigured(): Promise<boolean> {
+  return isVapidConfigured();
 }
 
-export function getVapidPublicKey(): string | null {
-  return process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? process.env.VAPID_PUBLIC_KEY ?? null;
-}
+export { getVapidPublicKey } from "@/lib/vapid-config";
 
 async function ensureVapid(webpush: WebPushModule) {
-  const publicKey = process.env.VAPID_PUBLIC_KEY;
-  const privateKey = process.env.VAPID_PRIVATE_KEY;
-  const subject =
-    process.env.VAPID_SUBJECT ??
-    process.env.NEXT_PUBLIC_APP_URL ??
-    "mailto:support@rotaryminutes.app";
+  const { publicKey, privateKey, subject } = await resolveVapid();
   if (!publicKey || !privateKey) return false;
   webpush.setVapidDetails(subject, publicKey, privateKey);
   return true;
@@ -59,7 +49,7 @@ export async function sendPushToSubscription(
   payload: PushPayload
 ): Promise<"sent" | "stub" | "failed"> {
   const webpush = await loadWebPush();
-  if (!webpush || !isWebPushConfigured()) {
+  if (!webpush || !(await isWebPushConfigured())) {
     console.info("[web-push] stub:", payload.title, payload.body);
     return "stub";
   }
@@ -87,6 +77,12 @@ export async function sendPushToUser(opts: {
   clubId?: string;
   payload: PushPayload;
 }): Promise<{ sent: number; failed: number; stub: number }> {
+  const { isWebPushEnabledForUser } = await import("@/lib/push-preference");
+  const pushAllowed = await isWebPushEnabledForUser(opts.userId, opts.clubId ?? null);
+  if (!pushAllowed) {
+    return { sent: 0, failed: 0, stub: 0 };
+  }
+
   const subs = await prisma.pushSubscription.findMany({
     where: {
       userId: opts.userId,

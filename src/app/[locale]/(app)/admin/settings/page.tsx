@@ -8,6 +8,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { AppSettingsForm } from "@/components/admin/app-settings-form";
 import { IntegrationsConfigPanel } from "@/components/admin/integrations-config-panel";
 import { PlatformBackupPanel } from "@/components/admin/platform-backup-panel";
+import { VapidConfigPanel } from "@/components/admin/vapid-config-panel";
+import { getVapidAdminView } from "@/lib/vapid-config";
 import { DEFAULT_APP_NAME } from "@/lib/app-branding-shared";
 
 export default async function AdminSettingsPage({
@@ -20,7 +22,7 @@ export default async function AdminSettingsPage({
   const tNav = await getTranslations("adminNav");
   const tPages = await getTranslations("adminPages");
 
-  const [settings, integration, analytics] = await Promise.all([
+  const [settings, integration, analytics, vapid] = await Promise.all([
     adminQuery(
       "appSettings",
       () => prisma.appSettings.findUnique({ where: { id: "global" } }),
@@ -43,6 +45,14 @@ export default async function AdminSettingsPage({
       gaMeasurementId: "",
       configured: false,
       productionUrl: "https://clubminutes.api.mg",
+    }),
+    adminQuery("vapid", () => getVapidAdminView(), {
+      configured: false,
+      publicKeySet: false,
+      privateKeySet: false,
+      subject: "",
+      publicKeyPreview: "",
+      envFallback: false,
     }),
   ]);
 
@@ -67,6 +77,7 @@ export default async function AdminSettingsPage({
           }}
         />
         <IntegrationsConfigPanel integration={integration} />
+        <VapidConfigPanel vapid={vapid} />
         <PlatformBackupPanel />
         </CardContent>
       </Card>

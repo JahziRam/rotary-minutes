@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { UserPlus, Check, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,12 +35,14 @@ export function PendingJoinRequests({
 }) {
   const t = useTranslations("auth.pendingRequests");
   const tMembers = useTranslations("members");
+  const locale = useLocale();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [roles, setRoles] = useState<Record<string, ClubRole>>({});
   const [customRoleIds, setCustomRoleIds] = useState<Record<string, string>>({});
+  const [sendLoginById, setSendLoginById] = useState<Record<string, boolean>>({});
 
   if (requests.length === 0) return null;
 
@@ -59,8 +61,10 @@ export function PendingJoinRequests({
                 ? {
                     role: roles[membershipId] ?? DEFAULT_MEMBER_APP_ROLE,
                     customRoleId: customRoleIds[membershipId] || null,
+                    sendLogin: sendLoginById[membershipId] ?? true,
+                    locale,
                   }
-                : undefined
+                : { sendLogin: true, locale }
             )
           : await rejectJoinRequest(membershipId);
 
@@ -101,6 +105,22 @@ export function PendingJoinRequests({
                   {req.firstName} {req.lastName}
                 </p>
                 <p className="text-sm text-gray-500 truncate">{req.email}</p>
+                {canManageRoles && (
+                  <label className="mt-2 flex items-center gap-2 text-xs text-gray-600">
+                    <input
+                      type="checkbox"
+                      checked={sendLoginById[req.membershipId] ?? true}
+                      disabled={pending && activeId === req.membershipId}
+                      onChange={(e) =>
+                        setSendLoginById((prev) => ({
+                          ...prev,
+                          [req.membershipId]: e.target.checked,
+                        }))
+                      }
+                    />
+                    {t("sendLoginOnApprove")}
+                  </label>
+                )}
                 {canManageRoles && (
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <label className="text-xs text-gray-500">{tMembers("appRole")}</label>

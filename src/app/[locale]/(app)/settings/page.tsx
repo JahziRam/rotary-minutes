@@ -18,6 +18,9 @@ import { ClubBackupPanel } from "@/components/settings/club-backup-panel";
 import { ClubWorkflowSettings } from "@/components/settings/club-workflow-settings";
 import { listClubBackups } from "@/actions/backup";
 import { ClubAnnouncementsPanel } from "@/components/notifications/club-announcements-panel";
+import { ClubActivityPanel } from "@/components/settings/club-activity-panel";
+import { getClubActivityLog } from "@/actions/club-activity";
+import { canViewClubActivity } from "@/lib/club-activity-log";
 import { ClubDuesPaymentPanel } from "@/components/settings/club-dues-payment-panel";
 import { getClubDuesPaymentSettings } from "@/actions/club-dues-payment-settings";
 import { PageAssistance } from "@/components/assistance/page-assistance";
@@ -58,6 +61,13 @@ export default async function SettingsPage({
   const currentPlanLabel = await resolvePlanLabel(club?.subscription?.plan, locale);
   const duesPaymentSettingsResult =
     duesEnabled && canManageSettings ? await getClubDuesPaymentSettings() : null;
+  const showClubActivity =
+    ctx && canViewClubActivity(ctx.role, ctx.isSuperAdmin);
+  const clubActivityResult = showClubActivity ? await getClubActivityLog() : null;
+  const clubActivityLogs =
+    clubActivityResult && "logs" in clubActivityResult
+      ? (clubActivityResult.logs ?? [])
+      : [];
   return (
     <AppShellServer title={t("settings.title")}>
       <div className="max-w-2xl space-y-6">
@@ -157,6 +167,10 @@ export default async function SettingsPage({
 
             {canManageSettings && (
               <ClubAnnouncementsPanel locale={locale} />
+            )}
+
+            {showClubActivity && (
+              <ClubActivityPanel logs={clubActivityLogs} />
             )}
 
             {canManageSettings && duesEnabled && (

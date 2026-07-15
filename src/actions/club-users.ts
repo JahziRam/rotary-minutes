@@ -1,20 +1,16 @@
 "use server";
 
-import { randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getClubContext } from "@/lib/club-context";
 import { requirePermission } from "@/lib/require-permission";
 import { DEFAULT_MEMBER_APP_ROLE } from "@/lib/member-roles";
-import { memberLoginEmail } from "@/lib/email";
+import { memberLoginEmail, memberWelcomeEmail } from "@/lib/email";
 import { sendClubEmail } from "@/lib/club-smtp";
 import { getAppBaseUrl } from "@/lib/app-url";
+import { generateTempPassword } from "@/lib/password-utils";
 import type { ClubRole } from "@/generated/prisma/client";
-
-function generateTempPassword(): string {
-  return randomBytes(12).toString("base64url").slice(0, 16);
-}
 
 function revalidateClubUsers() {
   for (const loc of ["fr", "en", "es"]) {
@@ -95,6 +91,7 @@ export async function inviteClubUser(data: {
   }
 
   let user = await prisma.user.findUnique({ where: { email } });
+  const isNewAccount = !user;
 
   if (user) {
     const existing = await prisma.clubMembership.findUnique({
@@ -120,11 +117,58 @@ export async function inviteClubUser(data: {
         firstName: data.firstName.trim(),
         lastName: data.lastName.trim(),
         passwordHash,
+        mustChangePassword: true,
         memberships: {
           create: { clubId: ctx.clubId, role: data.role },
         },
       },
     });
+  }
+
+  await prisma.member.updateMany({
+    where: { clubId: ctx.clubId, email: { equals: email, mode: "insensitive" } },
+    data: { userId: user.id },
+  });
+
+  const club = await prisma.club.findUnique({
+    where: { id: ctx.clubId },
+    select: { name: true, language: true, logoUrl: true },
+  });
+
+  let emailedPassword = data.password;
+  if (!emailedPassword || emailedPassword.length < 8) {
+    emailedPassword = generateTempPassword();
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash: await bcrypt.hash(emailedPassword, 12),
+        mustChangePassword: true,
+      },
+    });
+  }
+
+  let emailed = false;
+  if (club) {
+    const memberLocale =
+      club.language === "EN" ? "en" : club.language === "ES" ? "es" : "fr";
+    const mail = await memberLoginEmail({
+      clubName: club.name,
+      clubId: ctx.clubId,
+      memberName: `${data.firstName.trim()} ${data.lastName.trim()}`,
+      email,
+      tempPassword: emailedPassword!,
+      loginUrl: `${getAppBaseUrl()}/${memberLocale}/login`,
+      locale: memberLocale,
+      logoUrl: club.logoUrl ?? undefined,
+      isNewAccount,
+    });
+    const result = await sendClubEmail(ctx.clubId, {
+      to: email,
+      subject: mail.subject,
+      html: mail.html,
+      attachments: mail.attachments,
+    });
+    emailed = result.ok;
   }
 
   await prisma.auditLog.create({
@@ -134,12 +178,12 @@ export async function inviteClubUser(data: {
       action: "CLUB_USER_INVITED",
       entity: "ClubMembership",
       entityId: user.id,
-      metadata: { email, role: data.role },
+      metadata: { email, role: data.role, emailed },
     },
   });
 
   revalidateClubUsers();
-  return { success: true };
+  return { success: true, emailed };
 }
 
 export async function updateClubUserRole(membershipId: string, role: ClubRole) {
@@ -277,6 +321,56 @@ export async function updateMemberRole(
   return { success: true };
 }
 
+export async function sendMemberWelcomeAfterApproval(
+  clubId: string,
+  userId: string,
+  locale = "fr"
+) {
+  const [member, club, user] = await Promise.all([
+    prisma.member.findFirst({
+      where: { clubId, userId },
+      select: { firstName: true, lastName: true, email: true },
+    }),
+    prisma.club.findUnique({
+      where: { id: clubId },
+      select: { name: true, language: true, logoUrl: true },
+    }),
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true },
+    }),
+  ]);
+  if (!member?.email || !club || !user?.email) return { error: "NOT_FOUND" as const };
+
+  const memberLocale =
+    locale === "fr" || locale === "en" || locale === "es"
+      ? locale
+      : club.language === "EN"
+        ? "en"
+        : club.language === "ES"
+          ? "es"
+          : "fr";
+
+  const mail = await memberWelcomeEmail({
+    clubName: club.name,
+    clubId,
+    memberName: `${member.firstName} ${member.lastName}`,
+    email: user.email,
+    loginUrl: `${getAppBaseUrl()}/${memberLocale}/login`,
+    locale: memberLocale,
+    logoUrl: club.logoUrl ?? undefined,
+  });
+
+  const result = await sendClubEmail(clubId, {
+    to: user.email,
+    subject: mail.subject,
+    html: mail.html,
+    attachments: mail.attachments,
+  });
+
+  return result.ok ? { success: true as const } : { error: "EMAIL_FAILED" as const };
+}
+
 export async function sendMemberLoginCredentials(memberId: string, locale = "fr") {
   const auth = await requirePermission("users.manage");
   if (auth.error) return { error: auth.error };
@@ -324,13 +418,14 @@ export async function sendMemberLoginCredentials(memberId: string, locale = "fr"
         lastName: member.lastName,
         passwordHash,
         language: club.language,
+        mustChangePassword: true,
       },
     });
   } else {
     if (user.id === ctx.userId) return { error: "SELF_LOGIN_SEND" };
     await prisma.user.update({
       where: { id: user.id },
-      data: { passwordHash },
+      data: { passwordHash, mustChangePassword: true },
     });
   }
 

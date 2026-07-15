@@ -33,6 +33,8 @@ export async function createMember(data: {
   photoUrl?: string;
   appRole?: ClubRole;
   customRoleId?: string | null;
+  sendLogin?: boolean;
+  locale?: string;
 }) {
   const auth = await requirePermission("members.manage");
   if (auth.error) return { error: auth.error };
@@ -90,8 +92,24 @@ export async function createMember(data: {
     roleAssigned = "success" in roleResult && Boolean(roleResult.success);
   }
 
+  let loginSent = false;
+  if (data.sendLogin && data.email) {
+    const { hasRolePermission } = await import("@/lib/roles");
+    const canSend =
+      ctx.isSuperAdmin ||
+      (await hasRolePermission(ctx.role, "users.manage", false, ctx.customRoleId));
+    if (canSend) {
+      const { sendMemberLoginCredentials } = await import("@/actions/club-users");
+      const loginResult = await sendMemberLoginCredentials(
+        member.id,
+        data.locale ?? "fr"
+      );
+      loginSent = "success" in loginResult && Boolean(loginResult.success);
+    }
+  }
+
   revalidateMembers();
-  return { success: true, member, roleAssigned };
+  return { success: true, member, roleAssigned, loginSent };
 }
 
 export async function updateMember(

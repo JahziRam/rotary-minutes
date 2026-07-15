@@ -283,6 +283,65 @@ export async function memberLoginEmail(opts: {
   };
 }
 
+export async function passwordResetEmail(opts: {
+  appName?: string;
+  userName: string;
+  resetUrl: string;
+  locale: string;
+}) {
+  const appName = opts.appName ?? (await getAppName());
+  const isFr = opts.locale === "fr";
+  const isEs = opts.locale === "es";
+  const body = isFr
+    ? `<p>Bonjour <strong>${opts.userName}</strong>,</p><p>Vous avez demandé la réinitialisation de votre mot de passe ${appName}.</p><p><a class="cta-button" href="${opts.resetUrl}">Réinitialiser mon mot de passe</a></p><p style="font-size:14px;color:#64748b">Ce lien expire dans 1 heure. Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.</p>`
+    : isEs
+      ? `<p>Hola <strong>${opts.userName}</strong>,</p><p>Ha solicitado restablecer su contraseña de ${appName}.</p><p><a class="cta-button" href="${opts.resetUrl}">Restablecer contraseña</a></p><p style="font-size:14px;color:#64748b">Este enlace expira en 1 hora. Si no fue usted, ignore este correo.</p>`
+      : `<p>Hello <strong>${opts.userName}</strong>,</p><p>You requested a password reset for ${appName}.</p><p><a class="cta-button" href="${opts.resetUrl}">Reset my password</a></p><p style="font-size:14px;color:#64748b">This link expires in 1 hour. If you did not request this, ignore this email.</p>`;
+  const branded = await prepareBrandedEmail(body, { clubName: appName });
+  return {
+    subject: isFr
+      ? `Réinitialisation du mot de passe — ${appName}`
+      : isEs
+        ? `Restablecer contraseña — ${appName}`
+        : `Password reset — ${appName}`,
+    html: branded.html,
+    attachments: branded.attachments,
+  };
+}
+
+export async function memberWelcomeEmail(opts: {
+  clubName: string;
+  clubId?: string;
+  memberName: string;
+  email: string;
+  loginUrl: string;
+  locale: string;
+  logoUrl?: string;
+}) {
+  const appName = await getAppName();
+  const isFr = opts.locale === "fr";
+  const isEs = opts.locale === "es";
+  const body = isFr
+    ? `<p>Bonjour <strong>${opts.memberName}</strong>,</p><p>Votre adhésion au club <strong>${opts.clubName}</strong> a été approuvée sur ${appName}.</p><p>Connectez-vous avec l'email <strong>${opts.email}</strong> et le mot de passe que vous avez choisi lors de l'inscription.</p><p><a class="cta-button" href="${opts.loginUrl}">Accéder à l'application</a></p>`
+    : isEs
+      ? `<p>Hola <strong>${opts.memberName}</strong>,</p><p>Su adhesión al club <strong>${opts.clubName}</strong> ha sido aprobada en ${appName}.</p><p>Inicie sesión con el email <strong>${opts.email}</strong> y la contraseña elegida al registrarse.</p><p><a class="cta-button" href="${opts.loginUrl}">Acceder a la aplicación</a></p>`
+      : `<p>Hello <strong>${opts.memberName}</strong>,</p><p>Your membership at <strong>${opts.clubName}</strong> has been approved on ${appName}.</p><p>Sign in with <strong>${opts.email}</strong> and the password you chose when registering.</p><p><a class="cta-button" href="${opts.loginUrl}">Go to the app</a></p>`;
+  const branded = await prepareBrandedEmail(body, {
+    clubName: opts.clubName,
+    clubId: opts.clubId,
+    logoUrl: opts.logoUrl,
+  });
+  return {
+    subject: isFr
+      ? `Adhésion approuvée — ${opts.clubName}`
+      : isEs
+        ? `Adhesión aprobada — ${opts.clubName}`
+        : `Membership approved — ${opts.clubName}`,
+    html: branded.html,
+    attachments: branded.attachments,
+  };
+}
+
 export async function minuteReviewRequestEmail(opts: {
   clubName: string;
   clubId?: string;

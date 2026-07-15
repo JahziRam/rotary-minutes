@@ -98,11 +98,13 @@ export const MEETING_TYPE_FIELDS: Record<string, string[]> = {
 
 export const CLUB_ROLES = [
   "PRESIDENT",
+  "VICE_PRESIDENT",
   "SECRETARY",
   "PROTOCOL",
   "TREASURER",
   "FOUNDATION_CHAIR",
   "MEMBERSHIP_CHAIR",
+  "COMMISSION_CHAIR",
   "PUBLIC_IMAGE_CHAIR",
   "ADMIN",
   "READER",

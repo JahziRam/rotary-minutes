@@ -1,5 +1,6 @@
 import type { SubscriptionPlan } from "@/generated/prisma/client";
 import { getPlanFeaturePreset } from "@/lib/plan-features";
+import type { ComparisonOverrides } from "@/lib/plans-utils";
 
 export type ComparisonRowKey =
   | "members"
@@ -19,8 +20,29 @@ export type ComparisonRowKey =
 
 export type ComparisonValue = boolean | string;
 
+function applyOverrides(
+  matrix: Record<ComparisonRowKey, Record<SubscriptionPlan, ComparisonValue>>,
+  overrides: ComparisonOverrides = {}
+): Record<ComparisonRowKey, Record<SubscriptionPlan, ComparisonValue>> {
+  const result = { ...matrix } as Record<
+    ComparisonRowKey,
+    Record<SubscriptionPlan, ComparisonValue>
+  >;
+  for (const row of Object.keys(overrides) as ComparisonRowKey[]) {
+    const rowOverrides = overrides[row];
+    if (!rowOverrides) continue;
+    result[row] = { ...result[row] };
+    for (const plan of Object.keys(rowOverrides) as SubscriptionPlan[]) {
+      const value = rowOverrides[plan];
+      if (value !== undefined) result[row][plan] = value;
+    }
+  }
+  return result;
+}
+
 export function getPlanComparisonMatrix(
-  memberLimits: Partial<Record<SubscriptionPlan, number | null>> = {}
+  memberLimits: Partial<Record<SubscriptionPlan, number | null>> = {},
+  overrides: ComparisonOverrides = {}
 ): Record<ComparisonRowKey, Record<SubscriptionPlan, ComparisonValue>> {
   const starter = getPlanFeaturePreset("STARTER");
   const pro = getPlanFeaturePreset("PROFESSIONAL");
@@ -32,7 +54,7 @@ export function getPlanComparisonMatrix(
     return limit == null ? "unlimited" : String(limit);
   };
 
-  return {
+  const matrix = {
     members: {
       STARTER: members("STARTER", starter.memberLimit),
       PROFESSIONAL: members("PROFESSIONAL", pro.memberLimit),
@@ -118,4 +140,6 @@ export function getPlanComparisonMatrix(
       TRIAL: bool(pro.integrationsEnabled),
     },
   };
+
+  return applyOverrides(matrix, overrides);
 }

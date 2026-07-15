@@ -7,6 +7,7 @@ import { ViewAsClubBanner } from "./view-as-club-banner";
 import type { ViewAsClubOption } from "./club-view-as-switcher";
 import { OfflineIndicator } from "./offline-indicator";
 import { NotificationSound } from "@/components/notifications/notification-sound";
+import { PushOnboardingBanner } from "@/components/notifications/push-onboarding-banner";
 import { WebOnly } from "@/components/native/web-only";
 import { PwaInstallPrompt } from "@/components/pwa/pwa-install-prompt";
 import { UsageGuideProvider } from "@/components/assistant/usage-guide-context";
@@ -45,6 +46,9 @@ export function AppShell({
   showDistrictNav = false,
   usageGuide = null,
   assistance = null,
+  vapidPublicKey = null,
+  webPushPreferenceEnabled = false,
+  pushOnboardingPending = false,
 }: {
   children: React.ReactNode;
   title: string;
@@ -66,10 +70,16 @@ export function AppShell({
   showDistrictNav?: boolean;
   usageGuide?: UsageGuideShellProps | null;
   assistance?: AssistanceState | null;
+  vapidPublicKey?: string | null;
+  webPushPreferenceEnabled?: boolean;
+  pushOnboardingPending?: boolean;
 }) {
   const shell = (
     <div className="min-h-screen bg-gray-50">
       <NotificationSound notificationCount={notificationCount} />
+      {vapidPublicKey && pushOnboardingPending && (
+        <PushOnboardingBanner vapidPublicKey={vapidPublicKey} />
+      )}
       <Sidebar
         clubName={clubName}
         isSuperAdmin={isSuperAdmin}

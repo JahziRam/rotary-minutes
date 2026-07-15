@@ -10,9 +10,11 @@ import type { ClubRole } from "@/generated/prisma/client";
 
 const OFFICER_ROLES: ClubRole[] = [
   "PRESIDENT",
+  "VICE_PRESIDENT",
   "SECRETARY",
   "TREASURER",
   "MEMBERSHIP_CHAIR",
+  "COMMISSION_CHAIR",
   "PUBLIC_IMAGE_CHAIR",
 ];
 

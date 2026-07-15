@@ -81,8 +81,16 @@
     "unauthorized": "Vous devez être connecté pour voir vos notifications.",
     "push": {
       "title": "Notifications push",
-      "hint": "Recevez un rappel 1 h avant chaque réunion et confirmez votre présence.",
-      "enable": "Activer",
+      "hint": "Activées par défaut pour les membres du club. Rappel 1 h avant chaque réunion — vous pouvez les désactiver ici.",
+      "enable": "Réactiver",
+      "disable": "Désactiver",
+      "browserPermission": "Autorisez les notifications dans votre navigateur pour recevoir les rappels.",
+      "browserDenied": "Les notifications sont bloquées par le navigateur. Autorisez-les dans les paramètres du site."
+    },
+    "pushOnboarding": {
+      "title": "Activer les notifications push ?",
+      "hint": "Recevez un rappel 1 h avant chaque réunion. Vous pourrez modifier ce choix dans Mon compte.",
+      "keep": "Garder",
       "disable": "Désactiver"
     }
   },
@@ -127,6 +135,15 @@
     "invalidCredentials": "Email ou mot de passe incorrect",
     "loginError": "Erreur de connexion. Réessayez ou contactez le support.",
     "loggingIn": "Connexion en cours…",
+    "newPassword": "Nouveau mot de passe",
+    "resetEmailSent": "Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.",
+    "resetSuccess": "Mot de passe mis à jour. Vous pouvez vous connecter.",
+    "resetInvalidLink": "Lien invalide ou expiré. Demandez un nouveau lien.",
+    "resetFailed": "Impossible de réinitialiser le mot de passe.",
+    "resetting": "Réinitialisation…",
+    "sending": "Envoi…",
+    "passwordMismatch": "Les mots de passe ne correspondent pas",
+    "passwordTooShort": "Le mot de passe doit contenir au moins 8 caractères",
     "registration": {
       "modeClub": "Inscrire un club",
       "modeMember": "Rejoindre en tant que membre",
@@ -166,7 +183,24 @@
       "approve": "Approuver",
       "reject": "Refuser",
       "error": "Impossible de traiter la demande",
-      "forbidden": "Vous n'avez pas la permission d'assigner ce rôle"
+      "forbidden": "Vous n'avez pas la permission d'assigner ce rôle",
+      "sendLoginOnApprove": "Envoyer l'email de bienvenue à l'adhérent"
+    },
+    "captcha": {
+      "label": "Combien font {a} + {b} ?",
+      "refresh": "Nouveau calcul",
+      "failed": "Vérification anti-robot échouée. Réessayez."
+    },
+    "requiredPassword": {
+      "title": "Changement de mot de passe requis",
+      "description": "Pour votre sécurité, choisissez un nouveau mot de passe personnel avant d'accéder à l'application.",
+      "new": "Nouveau mot de passe",
+      "confirm": "Confirmer le mot de passe",
+      "mismatch": "Les mots de passe ne correspondent pas",
+      "tooShort": "Le mot de passe doit contenir au moins 8 caractères",
+      "failed": "Impossible de mettre à jour le mot de passe",
+      "save": "Enregistrer et continuer",
+      "saving": "Enregistrement…"
     }
   },
   "dashboard": {
@@ -398,6 +432,7 @@
     "noCustomRole": "Aucun rôle personnalisé",
     "noAppAccount": "Ce membre n'a pas encore de compte applicatif. Utilisez « Envoyer les identifiants » pour créer le compte et envoyer l'accès par email.",
     "sendLogin": "Envoyer les identifiants",
+    "sendLoginOnCreate": "Créer le compte et envoyer les identifiants par email",
     "sendLoginHint": "Crée un compte si nécessaire et envoie l'email de connexion avec un mot de passe temporaire.",
     "sendingLogin": "Envoi en cours…",
     "loginSent": "Identifiants envoyés par email",
@@ -409,7 +444,7 @@
     "cannotChangeOwnRole": "Vous ne pouvez pas modifier votre propre rôle",
     "defaultMemberRole": "Membre / Lecteur",
     "roleManagementTitle": "Rôles applicatifs",
-    "roleManagementHint": "Par défaut, chaque accès est « Membre / Lecteur ». Les autres rôles se modifient ici (annuaire ou fiche membre) par le président, l'administrateur ou le super admin.",
+    "roleManagementHint": "Par défaut, chaque accès est « Membre / Lecteur ». Les autres rôles se modifient ici (annuaire ou fiche membre) par le président ou l'administrateur du club.",
     "appRoleOnCreateHint": "Par défaut : Membre / Lecteur. Un autre rôle n'est appliqué que si un compte utilisateur existe déjà avec cet email.",
     "roleNotAssignedYet": "Membre ajouté. Le rôle Membre / Lecteur sera assigné lorsque le compte applicatif existera.",
     "import": {
@@ -906,6 +941,8 @@
       "discountLabel": "Réduction annuelle (%)",
       "currencyLabel": "Devise",
       "saveBilling": "Enregistrer la réduction",
+      "showComparisonTable": "Afficher le tableau comparatif des offres",
+      "showComparisonTableHint": "Visible sur la page d'accueil (section tarifs). Désactivé par défaut.",
       "billingExample": "Exemple : 39€/mois → {annual}€/an (−{discount}%)",
       "stripeWarning": "Stripe est activé : si vous modifiez un prix, créez un nouveau Price dans Stripe et mettez à jour les Price ID ci-dessous. Sinon le montant facturé ne correspondra pas à l'affichage.",
       "stripePriceChanged": "Prix modifié — vérifiez que les Price ID Stripe correspondent au nouveau montant.",
@@ -924,7 +961,20 @@
       "stripeAnnual": "Stripe Price ID (annuel)",
       "featuresFr": "Fonctionnalités (FR, une par ligne)",
       "featuresEn": "Fonctionnalités (EN, une par ligne)",
-      "savePlan": "Enregistrer {plan}"
+      "nameEs": "Nom (ES)",
+      "descriptionEs": "Description (ES)",
+      "featuresEs": "Fonctionnalités (ES, une par ligne)",
+      "savePlan": "Enregistrer {plan}",
+      "comparison": {
+        "title": "Tableau comparatif (contenu)",
+        "hint": "Personnalisez chaque cellule du tableau. Laissez vide ou « défaut » pour utiliser les valeurs techniques.",
+        "default": "défaut",
+        "membersHint": "Nombre ou « unlimited » pour illimité",
+        "save": "Enregistrer le tableau",
+        "saved": "Tableau comparatif enregistré",
+        "resetDefaults": "Réinitialiser aux valeurs par défaut",
+        "reset": "Tableau réinitialisé"
+      }
     },
     "appSettings": {
       "saved": "Paramètres enregistrés",
@@ -1522,6 +1572,8 @@
         "SECRETARY": { "title": "Secrétaire", "desc": "PV, réunions, mode live" },
         "TREASURER": { "title": "Trésorier", "desc": "Cotisations, trésorerie, rapports" },
         "PRESIDENT": { "title": "Président", "desc": "Validation, pilotage, vision globale" },
+        "VICE_PRESIDENT": { "title": "Vice-président", "desc": "Suppléance et pilotage du club" },
+        "COMMISSION_CHAIR": { "title": "Président de commission", "desc": "Réunions et actions de commission" },
         "READER": { "title": "Membre / lecteur", "desc": "Consultation PV et informations club" }
       }
     },
@@ -1586,6 +1638,8 @@
     "roles": {
       "SECRETARY": "Secrétaire",
       "PRESIDENT": "Président",
+      "VICE_PRESIDENT": "Vice-président",
+      "COMMISSION_CHAIR": "Président de commission",
       "READER": "Lecteur",
       "ADMIN": "Administrateur"
     }
@@ -1697,6 +1751,7 @@
     "description": "Choisissez la fréquence des rappels par email et dans l'application.",
     "emailEnabled": "Recevoir les emails de rappel",
     "inAppEnabled": "Notifications dans l'application",
+    "webPushEnabled": "Notifications push (navigateur)",
     "save": "Enregistrer",
     "saved": "Préférences enregistrées",
     "categories": {
@@ -2274,6 +2329,20 @@
     "attendanceGoal": "Objectif assiduité",
     "attendanceGoalDetail": "{present}/{total} réunions · objectif {goal}%",
     "mandateLabel": "Mandat {label}",
+    "password": {
+      "title": "Mot de passe",
+      "current": "Mot de passe actuel",
+      "new": "Nouveau mot de passe",
+      "confirm": "Confirmer le nouveau mot de passe",
+      "save": "Mettre à jour le mot de passe",
+      "saving": "Mise à jour…",
+      "success": "Mot de passe mis à jour",
+      "mismatch": "Les mots de passe ne correspondent pas",
+      "invalidCurrent": "Mot de passe actuel incorrect",
+      "tooShort": "Le mot de passe doit contenir au moins 8 caractères",
+      "noPassword": "Aucun mot de passe défini sur ce compte",
+      "failed": "Impossible de mettre à jour le mot de passe"
+    },
     "minutesDetail": "Procès-verbaux finalisés",
     "noMinutes": "Aucun PV finalisé",
     "viewMinute": "Consulter",
@@ -2297,21 +2366,51 @@
     "defaultTitle": "Réunion",
     "poweredBy": "Propulsé par Rotary Minutes"
   },
+  "clubActivity": {
+    "title": "Journal d'activité",
+    "description": "Historique des actions sensibles sur les membres et les accès du club.",
+    "empty": "Aucune activité enregistrée pour le moment.",
+    "by": "Par {name}",
+    "actions": {
+      "MEMBER_CREATED": "Membre ajouté",
+      "MEMBER_LOGIN_SENT": "Identifiants envoyés",
+      "MEMBERSHIP_APPROVED": "Adhésion approuvée",
+      "MEMBERSHIP_REJECTED": "Adhésion refusée",
+      "MEMBER_ROLE_UPDATED": "Rôle membre modifié",
+      "CLUB_USER_INVITED": "Utilisateur invité",
+      "CLUB_USER_ROLE_UPDATED": "Rôle utilisateur modifié",
+      "CLUB_USER_REMOVED": "Utilisateur retiré"
+    }
+  },
   "clubAnnouncements": {
     "title": "Annonce au club",
     "description": "Envoyez une notification in-app aux membres sélectionnés.",
     "announcementTitle": "Titre",
     "message": "Message",
+    "targetType": "Ciblage",
     "targetRoles": "Destinataires (rôles)",
+    "targetCommission": "Commission",
+    "selectCommission": "Choisir une commission…",
+    "noAppAccountHint": "Ce ciblage concerne les membres sans compte actif dans l'app. Seuls ceux ayant déjà un compte recevront une notification in-app.",
     "send": "Envoyer l'annonce",
     "success": "Annonce envoyée à {count} membre(s)",
     "error": "Impossible d'envoyer l'annonce",
+    "targetTypes": {
+      "ALL_MEMBERS": "Tous les membres actifs",
+      "ROLES": "Par rôles",
+      "COMMISSION": "Par commission",
+      "DUES_OVERDUE": "Cotisations en retard",
+      "DUES_PENDING": "Cotisations en attente",
+      "NO_APP_ACCOUNT": "Sans compte app actif"
+    },
     "roles": {
       "PRESIDENT": "Président",
+      "VICE_PRESIDENT": "Vice-président",
       "SECRETARY": "Secrétaire",
       "TREASURER": "Trésorier",
       "ADMIN": "Admin",
       "MEMBERSHIP_CHAIR": "Responsable adhésions",
+      "COMMISSION_CHAIR": "Président de commission",
       "READER": "Lecteur",
       "PROTOCOL": "Protocole"
     }

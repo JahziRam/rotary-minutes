@@ -9,6 +9,7 @@ import type { NotificationFrequency } from "@/generated/prisma/client";
 export type NotificationPrefsInput = {
   emailEnabled?: boolean;
   inAppEnabled?: boolean;
+  webPushEnabled?: boolean;
   meetingReminders?: NotificationFrequency;
   duesReminders?: NotificationFrequency;
   actionReminders?: NotificationFrequency;
@@ -19,6 +20,7 @@ export type NotificationPrefsInput = {
 const DEFAULT_PREFS = {
   emailEnabled: true,
   inAppEnabled: true,
+  webPushEnabled: true,
   meetingReminders: "IMMEDIATE" as NotificationFrequency,
   duesReminders: "IMMEDIATE" as NotificationFrequency,
   actionReminders: "IMMEDIATE" as NotificationFrequency,
@@ -42,6 +44,7 @@ export async function getPreferences() {
       ? {
           emailEnabled: prefs.emailEnabled,
           inAppEnabled: prefs.inAppEnabled,
+          webPushEnabled: prefs.webPushEnabled,
           meetingReminders: prefs.meetingReminders,
           duesReminders: prefs.duesReminders,
           actionReminders: prefs.actionReminders,
@@ -69,6 +72,12 @@ export async function updatePreferences(data: NotificationPrefsInput, locale = "
     },
     update: data,
   });
+
+  if (data.webPushEnabled === false) {
+    await prisma.pushSubscription.deleteMany({
+      where: { userId: ctx.userId, clubId: ctx.clubId },
+    });
+  }
 
   for (const loc of ["fr", "en"]) {
     revalidatePath(`/${loc}/settings`);
