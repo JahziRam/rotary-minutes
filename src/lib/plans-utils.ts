@@ -33,8 +33,53 @@ export interface PublicPlan {
   annualSavings: number;
   features: string[];
   isPopular: boolean;
+  memberLimit: number | null;
   stripePriceIdMonthly: string | null;
   stripePriceIdAnnual: string | null;
+}
+
+export const TRIAL_PLAN_LABELS = {
+  fr: "Essai gratuit",
+  en: "Free trial",
+  es: "Prueba gratuita",
+} as const;
+
+export type PlanOption = { key: string; label: string };
+
+export function buildPlanLabelMap(
+  configs: PlanConfigData[],
+  locale: string
+): Record<string, string> {
+  const isFr = locale === "fr";
+  const isEs = locale === "es";
+  const map: Record<string, string> = {
+    TRIAL: isFr ? TRIAL_PLAN_LABELS.fr : isEs ? TRIAL_PLAN_LABELS.es : TRIAL_PLAN_LABELS.en,
+  };
+  for (const config of configs) {
+    map[config.plan] = isFr ? config.nameFr : config.nameEn;
+  }
+  return map;
+}
+
+export function localizedPlanName(
+  plan: string | undefined,
+  locale: string,
+  labels: Record<string, string>
+): string {
+  const key = plan ?? "TRIAL";
+  if (labels[key]) return labels[key];
+  const isFr = locale === "fr";
+  const isEs = locale === "es";
+  if (key === "TRIAL") {
+    return isFr ? TRIAL_PLAN_LABELS.fr : isEs ? TRIAL_PLAN_LABELS.es : TRIAL_PLAN_LABELS.en;
+  }
+  return key;
+}
+
+export function planGridClass(count: number, prefix = "grid"): string {
+  if (count <= 1) return `${prefix} grid-cols-1 gap-6`;
+  if (count === 2) return `${prefix} sm:grid-cols-2 gap-6`;
+  return `${prefix} sm:grid-cols-2 lg:grid-cols-3 gap-6`;
 }
 
 export function computeAnnualPrice(monthly: number, discountPercent: number): number {
@@ -66,6 +111,7 @@ export function toPublicPlan(
     annualSavings,
     features: isFr ? plan.featuresFr : plan.featuresEn,
     isPopular: plan.isPopular,
+    memberLimit: plan.memberLimit,
     stripePriceIdMonthly: plan.stripePriceIdMonthly,
     stripePriceIdAnnual: plan.stripePriceIdAnnual,
   };

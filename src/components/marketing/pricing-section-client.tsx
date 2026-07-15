@@ -3,7 +3,12 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Check } from "lucide-react";
-import { formatPrice, type BillingSettings, type PublicPlan } from "@/lib/plans-utils";
+import {
+  formatPrice,
+  planGridClass,
+  type BillingSettings,
+  type PublicPlan,
+} from "@/lib/plans-utils";
 import type { BillingInterval } from "@/generated/prisma/client";
 import { cn } from "@/lib/utils";
 import { PricingComparisonTable } from "./pricing-comparison-table";
@@ -63,7 +68,7 @@ export function PricingSectionClient({
         </div>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className={planGridClass(plans.length)}>
         {plans.map((plan) => {
           const displayPrice = isAnnual
             ? plan.priceAnnualPerMonth

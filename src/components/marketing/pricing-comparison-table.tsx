@@ -3,11 +3,11 @@
 import { useTranslations } from "next-intl";
 import { Check, Minus } from "lucide-react";
 import {
-  COMPARISON_PLANS,
   getPlanComparisonMatrix,
   type ComparisonRowKey,
   type ComparisonValue,
 } from "@/lib/plan-comparison";
+import type { SubscriptionPlan } from "@/generated/prisma/client";
 import type { PublicPlan } from "@/lib/plans-utils";
 import { cn } from "@/lib/utils";
 
@@ -44,10 +44,11 @@ function CellValue({ value, membersLabel }: { value: ComparisonValue; membersLab
 
 export function PricingComparisonTable({ plans }: { plans: PublicPlan[] }) {
   const t = useTranslations("landing.pricing.compare");
-  const matrix = getPlanComparisonMatrix();
-  const orderedPlans = COMPARISON_PLANS.map(
-    (key) => plans.find((p) => p.plan === key)!
-  ).filter(Boolean);
+  const orderedPlans = plans;
+  const memberLimits = Object.fromEntries(
+    orderedPlans.map((plan) => [plan.plan, plan.memberLimit])
+  ) as Partial<Record<SubscriptionPlan, number | null>>;
+  const matrix = getPlanComparisonMatrix(memberLimits);
 
   if (orderedPlans.length === 0) return null;
 

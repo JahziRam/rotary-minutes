@@ -2,7 +2,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getSubscriptionBreakdown } from "@/lib/queries/admin";
 import { prisma } from "@/lib/prisma";
 import { adminQuery } from "@/lib/admin-safe";
-import { getAllPlanConfigs, getBillingSettings } from "@/lib/plans";
+import { getAllPlanConfigs, getBillingSettings, getPlanLabelMap } from "@/lib/plans";
+import { localizedPlanName } from "@/lib/plans-utils";
 import { ensureAddonConfigs } from "@/lib/billing";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +12,7 @@ import { PlansEditor } from "@/components/admin/plans-editor";
 import { PromoCodesEditor } from "@/components/admin/promo-codes-editor";
 import { AddonsEditor } from "@/components/admin/addons-editor";
 import { CreditCard, Tag, Puzzle } from "lucide-react";
-import { getPlanLabel } from "@/lib/feature-gate";
+
 
 export default async function AdminSubscriptionsPage({
   params,
@@ -25,7 +26,7 @@ export default async function AdminSubscriptionsPage({
 
   await adminQuery("ensureAddonConfigs", () => ensureAddonConfigs(), undefined);
 
-  const [breakdown, subscriptions, plans, billing, promos, addons, clubAddons] =
+  const [breakdown, subscriptions, plans, billing, promos, addons, clubAddons, planLabels] =
     await Promise.all([
       adminQuery("subscriptionBreakdown", () => getSubscriptionBreakdown(), {
         byPlan: [],
@@ -65,12 +66,13 @@ export default async function AdminSubscriptionsPage({
           }),
         []
       ),
+      adminQuery("planLabels", () => getPlanLabelMap(locale), {}),
     ]);
 
   return (
     <div className="space-y-6">
       <AdminPageHeader title={tNav("subscriptions")} description={tPages("subscriptions")} />
-      <SubscriptionBreakdown data={breakdown} locale={locale} />
+      <SubscriptionBreakdown data={breakdown} locale={locale} planLabels={planLabels} />
 
       <Card>
         <CardHeader>
@@ -137,7 +139,9 @@ export default async function AdminSubscriptionsPage({
                   subscriptions.map((s) => (
                     <tr key={s.id}>
                       <td className="px-4 py-2">{s.club?.name ?? "—"} · {s.club?.city ?? ""}</td>
-                      <td className="px-4 py-2">{getPlanLabel(s.plan, locale)}</td>
+                      <td className="px-4 py-2">
+                        {localizedPlanName(s.plan, locale, planLabels)}
+                      </td>
                       <td className="px-4 py-2">
                         {s.billingInterval === "ANNUAL" ? "Annuel" : "Mensuel"}
                       </td>

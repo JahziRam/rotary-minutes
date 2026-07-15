@@ -13,7 +13,7 @@ import { getGdprRequests } from "@/actions/gdpr";
 import { clubHasApiAccess } from "@/lib/api-auth";
 import { getPreferences } from "@/actions/notification-preferences";
 import { NotificationPreferencesForm } from "@/components/settings/notification-preferences-form";
-import { getPlanLabel } from "@/lib/feature-gate";
+import { resolvePlanLabel } from "@/lib/plans";
 import { ClubBackupPanel } from "@/components/settings/club-backup-panel";
 import { ClubWorkflowSettings } from "@/components/settings/club-workflow-settings";
 import { listClubBackups } from "@/actions/backup";
@@ -55,6 +55,7 @@ export default async function SettingsPage({
     club && isFeatureEnabled(ctx!.features, "clubBackupEnabled", ctx!.isSuperAdmin);
   const backupsResult =
     clubBackupEnabled && canManageSettings ? await listClubBackups() : null;
+  const currentPlanLabel = await resolvePlanLabel(club?.subscription?.plan, locale);
   const duesPaymentSettingsResult =
     duesEnabled && canManageSettings ? await getClubDuesPaymentSettings() : null;
   return (
@@ -95,7 +96,7 @@ export default async function SettingsPage({
                 <div className="flex items-center justify-between p-4 rounded-lg bg-gold/10 border border-gold/20">
                   <div>
                     <p className="font-semibold text-gray-900">
-                      {getPlanLabel(club.subscription?.plan, locale)}
+                      {currentPlanLabel}
                     </p>
                     <p className="text-sm text-gray-500">
                       Statut : {club.subscription?.status ?? "TRIALING"}

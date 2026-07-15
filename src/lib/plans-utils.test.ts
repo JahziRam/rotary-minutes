@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildPlanLabelMap,
   computeAnnualPerMonth,
   computeAnnualPrice,
   formatPrice,
   getStripePriceId,
+  localizedPlanName,
   toPublicPlan,
   type PlanConfigData,
 } from "./plans-utils";
@@ -43,6 +45,7 @@ describe("toPublicPlan", () => {
     const plan = toPublicPlan(basePlan, "fr", 20);
     expect(plan.name).toBe("Active");
     expect(plan.features).toEqual(["PV", "Trésorerie"]);
+    expect(plan.memberLimit).toBe(50);
     expect(plan.priceAnnual).toBe(374);
     expect(plan.annualSavings).toBe(94);
   });
@@ -57,6 +60,21 @@ describe("toPublicPlan", () => {
 describe("formatPrice", () => {
   it("formats EUR for French locale", () => {
     expect(formatPrice(39, "EUR", "fr")).toMatch(/39/);
+  });
+});
+
+describe("buildPlanLabelMap", () => {
+  it("uses admin-configured names from PlanConfig", () => {
+    const labels = buildPlanLabelMap(
+      [
+        { ...basePlan, plan: "STARTER", nameFr: "Offre Club", nameEn: "Club plan" },
+        { ...basePlan, plan: "ENTERPRISE", nameFr: "Premium", nameEn: "Premium" },
+      ],
+      "fr"
+    );
+    expect(labels.STARTER).toBe("Offre Club");
+    expect(labels.ENTERPRISE).toBe("Premium");
+    expect(localizedPlanName("STARTER", "fr", labels)).toBe("Offre Club");
   });
 });
 

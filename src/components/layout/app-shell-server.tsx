@@ -11,7 +11,7 @@ import { prisma } from "@/lib/prisma";
 import { getUsageGuideContext } from "@/actions/usage-guide";
 import { getAssistanceState } from "@/actions/assistance";
 import { DEFAULT_FEATURES } from "@/lib/features";
-import { getPlanLabel } from "@/lib/feature-gate";
+import { resolvePlanLabel } from "@/lib/plans";
 import { hasRolePermission } from "@/lib/roles";
 import type { ClubRoleType } from "@/lib/rotary";
 
@@ -61,9 +61,10 @@ export async function AppShellServer({
   const routeLocale = resolveUiLocale(headersList.get("x-locale"));
   const clubLocale = clubLanguageToLocale(ctx?.club.language);
   const planLocale = routeLocale || clubLocale;
-  const subscriptionPlan = ctx?.club.subscription?.plan
-    ? getPlanLabel(ctx.club.subscription.plan, planLocale)
-    : getPlanLabel("TRIAL", planLocale);
+  const subscriptionPlan = await resolvePlanLabel(
+    ctx?.club.subscription?.plan ?? "TRIAL",
+    planLocale
+  );
 
   const subscription = ctx?.club.subscription;
   const showTrialBanner =

@@ -94,7 +94,9 @@ export function isFeatureVisibleInUi(
   return menuKey ? !!features[menuKey] : false;
 }
 
-/** Libellés publics des offres (clés enum inchangées en base : STARTER, PROFESSIONAL, ENTERPRISE). */
+import { localizedPlanName } from "@/lib/plans-utils";
+
+/** Fallback si les libellés DB ne sont pas disponibles (composants client). */
 export const PLAN_DISPLAY_LABELS: Record<string, { fr: string; en: string }> = {
   TRIAL: { fr: "Essai gratuit", en: "Free trial" },
   STARTER: { fr: "Starter", en: "Starter" },
@@ -102,7 +104,13 @@ export const PLAN_DISPLAY_LABELS: Record<string, { fr: string; en: string }> = {
   ENTERPRISE: { fr: "High level", en: "High level" },
 };
 
-export function getPlanLabel(plan: string | undefined, locale: string): string {
+export function getPlanLabel(
+  plan: string | undefined,
+  locale: string,
+  labels?: Record<string, string>
+): string {
+  if (labels) return localizedPlanName(plan, locale, labels);
   const key = plan ?? "TRIAL";
-  return PLAN_DISPLAY_LABELS[key]?.[locale === "fr" ? "fr" : "en"] ?? key;
+  const localeKey = locale === "fr" ? "fr" : "en";
+  return PLAN_DISPLAY_LABELS[key]?.[localeKey] ?? key;
 }

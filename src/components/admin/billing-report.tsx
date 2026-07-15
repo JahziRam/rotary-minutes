@@ -37,11 +37,13 @@ export function BillingReport({
   payments,
   initialQuery,
   listParams,
+  planLabels,
 }: {
   summary: AdminBillingSummary;
   payments: PaginatedResult<PaymentRow>;
   initialQuery: string;
   listParams: Record<string, string | undefined>;
+  planLabels: Record<string, string>;
 }) {
   const locale = useLocale();
   const router = useRouter();
@@ -112,7 +114,7 @@ export function BillingReport({
             <ul className="text-sm space-y-1">
               {summary.byPlan.map((row) => (
                 <li key={row.plan} className="flex justify-between gap-2">
-                  <span>{getPlanLabel(row.plan as never, locale)}</span>
+                  <span>{getPlanLabel(row.plan as never, locale, planLabels)}</span>
                   <span className="font-medium tabular-nums">{row.count}</span>
                 </li>
               ))}
@@ -196,7 +198,7 @@ export function BillingReport({
                         {format(new Date(p.paidAt), "d MMM yyyy HH:mm", { locale: dateLocale })}
                       </td>
                       <td className="px-3 py-2">
-                        {p.plan ? getPlanLabel(p.plan as never, locale) : "—"}
+                        {p.plan ? getPlanLabel(p.plan as never, locale, planLabels) : "—"}
                         {p.billingInterval
                           ? ` · ${p.billingInterval === "ANNUAL" ? t("annual") : t("monthly")}`
                           : ""}

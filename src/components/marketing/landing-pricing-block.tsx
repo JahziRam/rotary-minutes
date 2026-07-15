@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { PricingSectionClient } from "./pricing-section-client";
 import { trackPricingView } from "@/lib/landing-analytics";
-import type { BillingSettings, PublicPlan } from "@/lib/plans-utils";
+import { planGridClass, type BillingSettings, type PublicPlan } from "@/lib/plans-utils";
 import type { AddonKey } from "@/generated/prisma/client";
 
 type PublicAddon = {
@@ -73,7 +73,7 @@ export function LandingPricingBlock({ locale }: { locale: string }) {
           {data ? (
             <PricingSectionClient plans={data.plans} billing={data.billing} locale={locale} />
           ) : (
-            <div className="grid md:grid-cols-3 gap-6 animate-pulse">
+            <div className={`${planGridClass(3)} animate-pulse`}>
               {[1, 2, 3].map((i) => (
                 <div key={i} className="h-80 rounded-xl bg-gray-200/70" />
               ))}

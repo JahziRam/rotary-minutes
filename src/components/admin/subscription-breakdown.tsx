@@ -19,9 +19,11 @@ const statusLabels: Record<string, string> = {
 export function SubscriptionBreakdown({
   data,
   locale = "fr",
+  planLabels,
 }: {
   data: Breakdown;
   locale?: string;
+  planLabels: Record<string, string>;
 }) {
   const total = data.byStatus.reduce((s, r) => s + r._count.status, 0);
 
@@ -39,7 +41,7 @@ export function SubscriptionBreakdown({
           <div className="flex flex-wrap gap-2">
             {data.byPlan.map((r) => (
               <Badge key={r.plan} variant="default">
-                {getPlanLabel(r.plan, locale)}: {r._count.plan}
+                {getPlanLabel(r.plan, locale, planLabels)}: {r._count.plan}
               </Badge>
             ))}
           </div>

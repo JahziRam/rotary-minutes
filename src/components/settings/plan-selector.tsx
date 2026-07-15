@@ -5,7 +5,12 @@ import { useTranslations } from "next-intl";
 import { Check } from "lucide-react";
 import { Toast } from "@/components/ui/toast";
 import { choosePlan } from "@/actions/subscription";
-import { formatPrice, type BillingSettings, type PublicPlan } from "@/lib/plans-utils";
+import {
+  formatPrice,
+  planGridClass,
+  type BillingSettings,
+  type PublicPlan,
+} from "@/lib/plans-utils";
 import { computeDiscountedPrice } from "@/lib/billing-utils";
 import type { BillingInterval, SubscriptionPlan } from "@/generated/prisma/client";
 import { cn } from "@/lib/utils";
@@ -140,7 +145,7 @@ export function PlanSelector({
         )}
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className={planGridClass(plans.length)}>
         {plans.map((plan) => {
           const isCurrent = currentPlan === plan.plan && currentInterval === interval;
           const baseDisplayPrice = isAnnual ? plan.priceAnnualPerMonth : plan.priceMonthly;

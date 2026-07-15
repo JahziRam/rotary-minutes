@@ -7,6 +7,7 @@ import {
 import { parseListParams, listParamsToRecord } from "@/lib/server-list";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { BillingReport } from "@/components/admin/billing-report";
+import { getPlanLabelMap } from "@/lib/plans";
 
 export default async function AdminBillingPage({
   params,
@@ -23,7 +24,7 @@ export default async function AdminBillingPage({
 
   const listParams = parseListParams({ q: sp.q, page: sp.page }, 20);
 
-  const [summary, payments] = await Promise.all([
+  const [summary, payments, planLabels] = await Promise.all([
     adminQuery("billingSummary", () => getAdminBillingSummary(), {
       totalRevenueCents: 0,
       monthRevenueCents: 0,
@@ -48,6 +49,7 @@ export default async function AdminBillingPage({
         end: 0,
       }
     ),
+    adminQuery("planLabels", () => getPlanLabelMap(locale), {}),
   ]);
 
   return (
@@ -58,6 +60,7 @@ export default async function AdminBillingPage({
         payments={payments}
         initialQuery={sp.q ?? ""}
         listParams={listParamsToRecord(listParams)}
+        planLabels={planLabels}
       />
     </div>
   );

@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { TrialAlerts } from "@/components/admin/trial-alerts";
 import { SubscriptionBreakdown } from "@/components/admin/subscription-breakdown";
+import { getPlanLabelMap } from "@/lib/plans";
 import { AuditLogList } from "@/components/admin/audit-log-list";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import {
@@ -45,7 +46,7 @@ export default async function SuperAdminPage({
     redirect(`/${locale}/dashboard`);
   }
 
-  const [stats, expiringTrials, subscriptionBreakdown, auditLogs, health, analytics] =
+  const [stats, expiringTrials, subscriptionBreakdown, auditLogs, health, analytics, planLabels] =
     await Promise.all([
       getAdminStats().catch((e) => {
         console.error("[admin] getAdminStats:", e);
@@ -78,6 +79,10 @@ export default async function SuperAdminPage({
       }),
       getHealthChecks(),
       getProductAnalytics(),
+      getPlanLabelMap(locale).catch((e) => {
+        console.error("[admin] getPlanLabelMap:", e);
+        return {};
+      }),
     ]);
 
   return (
@@ -135,7 +140,11 @@ export default async function SuperAdminPage({
 
         <div className="grid lg:grid-cols-2 gap-6">
           <TrialAlerts trials={expiringTrials} locale={locale} />
-          <SubscriptionBreakdown data={subscriptionBreakdown} locale={locale} />
+          <SubscriptionBreakdown
+            data={subscriptionBreakdown}
+            locale={locale}
+            planLabels={planLabels}
+          />
         </div>
 
         <div className="flex flex-wrap gap-3">

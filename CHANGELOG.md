@@ -11,6 +11,14 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 - Améliorations continues produit et stabilité
 
 ### Fixed
+- **Offres / abonnements — synchronisation super admin**
+  - `ensurePlanConfigs()` ne réécrit plus les noms et descriptions à chaque lecture (les réglages super admin sont conservés)
+  - Libellés d’offres lus depuis `PlanConfig` partout (sidebar, paramètres, admin clubs/facturation, tableau comparatif)
+  - Nombre d’offres actives, ordre (`sortOrder`), noms, descriptions et listes de fonctionnalités reflètent la configuration admin (landing, abonnement club)
+  - Limite membres du tableau comparatif alignée sur `memberLimit` configuré par offre
+  - Revalidation élargie (fr/en/es + API marketing) et cache marketing réduit à 60 s après modification des tarifs
+
+### Fixed
 - **Membres — changement de rôle** : correction de l’erreur React #482 lors de la modification du rôle dans l’annuaire (`MemberDuesBadge` converti en composant client ; sélecteurs de rôle contrôlés)
 - **Build** : séparation `member-roles-constants.ts` / `member-roles.ts` (`server-only`) pour éviter l’import Prisma/pg dans les composants client
 

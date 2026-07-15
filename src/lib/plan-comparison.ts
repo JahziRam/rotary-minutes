@@ -19,30 +19,25 @@ export type ComparisonRowKey =
 
 export type ComparisonValue = boolean | string;
 
-export const COMPARISON_PLANS: SubscriptionPlan[] = [
-  "STARTER",
-  "PROFESSIONAL",
-  "ENTERPRISE",
-];
-
-export function getPlanComparisonMatrix(): Record<
-  ComparisonRowKey,
-  Record<SubscriptionPlan, ComparisonValue>
-> {
+export function getPlanComparisonMatrix(
+  memberLimits: Partial<Record<SubscriptionPlan, number | null>> = {}
+): Record<ComparisonRowKey, Record<SubscriptionPlan, ComparisonValue>> {
   const starter = getPlanFeaturePreset("STARTER");
   const pro = getPlanFeaturePreset("PROFESSIONAL");
   const enterprise = getPlanFeaturePreset("ENTERPRISE");
 
   const bool = (v: boolean) => v;
-  const members = (limit: number | null) =>
-    limit == null ? "unlimited" : String(limit);
+  const members = (plan: SubscriptionPlan, fallback: number | null) => {
+    const limit = memberLimits[plan] ?? fallback;
+    return limit == null ? "unlimited" : String(limit);
+  };
 
   return {
     members: {
-      STARTER: members(starter.memberLimit),
-      PROFESSIONAL: members(pro.memberLimit),
-      ENTERPRISE: members(enterprise.memberLimit),
-      TRIAL: members(pro.memberLimit),
+      STARTER: members("STARTER", starter.memberLimit),
+      PROFESSIONAL: members("PROFESSIONAL", pro.memberLimit),
+      ENTERPRISE: members("ENTERPRISE", enterprise.memberLimit),
+      TRIAL: members("PROFESSIONAL", pro.memberLimit),
     },
     minutesPdf: {
       STARTER: bool(starter.pdfExport),

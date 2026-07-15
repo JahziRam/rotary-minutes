@@ -6,6 +6,7 @@ import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { DEFAULT_FEATURES } from "@/lib/features";
 import { ClubsTable, type AdminClubRow } from "@/components/admin/clubs-table";
+import { getPlanLabelMap, getSubscriptionPlanOptions } from "@/lib/plans";
 import type { AdminClubManagementData } from "@/components/admin/club-management-panel";
 
 export default async function AdminClubsPage({
@@ -18,13 +19,15 @@ export default async function AdminClubsPage({
   const tNav = await getTranslations("adminNav");
   const tPages = await getTranslations("adminPages");
 
-  const [clubs, managementData] = await Promise.all([
+  const [clubs, managementData, planLabels, planOptions] = await Promise.all([
     adminQuery("clubs", () => getAdminClubs(), []),
     adminQuery(
       "clubs-management",
       () => getAdminClubsManagementData(),
       { clubs: [], platformUsers: [], customRoles: [] }
     ),
+    adminQuery("planLabels", () => getPlanLabelMap(locale), {}),
+    adminQuery("planOptions", () => getSubscriptionPlanOptions(locale), []),
   ]);
 
   const managementByClubId = Object.fromEntries(
@@ -147,6 +150,8 @@ export default async function AdminClubsPage({
             managementByClubId={managementByClubId}
             platformUsers={managementData.platformUsers}
             customRoles={managementData.customRoles}
+            planOptions={planOptions}
+            planLabels={planLabels}
           />
         </CardContent>
       </Card>

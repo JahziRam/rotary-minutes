@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { ensureAddonConfigs } from "@/lib/billing";
 import type { AddonKey, PrismaClient, SubscriptionPlan } from "@/generated/prisma/client";
@@ -5,11 +6,14 @@ import {
   type PlanConfigData,
   type BillingSettings,
   type PublicPlan,
+  type PlanOption,
   toPublicPlan,
   getStripePriceId,
+  buildPlanLabelMap,
+  localizedPlanName,
 } from "@/lib/plans-utils";
 
-export type { PlanConfigData, BillingSettings, PublicPlan };
+export type { PlanConfigData, BillingSettings, PublicPlan, PlanOption };
 export {
   computeAnnualPrice,
   computeAnnualPerMonth,
@@ -90,7 +94,7 @@ const DEFAULT_PLANS: Omit<PlanConfigData, "plan">[] = [
   },
 ];
 
-const PLAN_KEYS: SubscriptionPlan[] = ["STARTER", "PROFESSIONAL", "ENTERPRISE"];
+export const PLAN_KEYS: SubscriptionPlan[] = ["STARTER", "PROFESSIONAL", "ENTERPRISE"];
 
 export async function ensurePlanConfigs(db: Pick<PrismaClient, "planConfig"> = prisma) {
   for (let i = 0; i < PLAN_KEYS.length; i++) {
@@ -98,15 +102,41 @@ export async function ensurePlanConfigs(db: Pick<PrismaClient, "planConfig"> = p
     const defaults = DEFAULT_PLANS[i];
     await db.planConfig.upsert({
       where: { plan },
-      update: {
-        nameFr: defaults.nameFr,
-        nameEn: defaults.nameEn,
-        descriptionFr: defaults.descriptionFr,
-        descriptionEn: defaults.descriptionEn,
-      },
+      update: {},
       create: { plan, ...defaults },
     });
   }
+}
+
+const getCachedPlanConfigs = cache(async (): Promise<PlanConfigData[]> => {
+  await ensurePlanConfigs();
+  const rows = await prisma.planConfig.findMany({ orderBy: { sortOrder: "asc" } });
+  return rows.map(mapPlanRow);
+});
+
+export async function getPlanLabelMap(locale: string): Promise<Record<string, string>> {
+  const configs = await getCachedPlanConfigs();
+  return buildPlanLabelMap(configs, locale);
+}
+
+export async function resolvePlanLabel(
+  plan: string | undefined,
+  locale: string
+): Promise<string> {
+  const labels = await getPlanLabelMap(locale);
+  return localizedPlanName(plan, locale, labels);
+}
+
+export async function getSubscriptionPlanOptions(locale: string): Promise<PlanOption[]> {
+  const configs = await getCachedPlanConfigs();
+  const labels = buildPlanLabelMap(configs, locale);
+  return [
+    { key: "TRIAL", label: labels.TRIAL },
+    ...configs.map((config) => ({
+      key: config.plan,
+      label: labels[config.plan] ?? config.plan,
+    })),
+  ];
 }
 
 export async function getBillingSettings(): Promise<BillingSettings> {

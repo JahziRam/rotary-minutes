@@ -2,7 +2,8 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Lock, ArrowUpCircle, LayoutDashboard } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { getPlanLabel, type GatedFeature } from "@/lib/feature-gate";
+import { resolvePlanLabel } from "@/lib/plans";
+import type { GatedFeature } from "@/lib/feature-gate";
 
 export async function FeatureUnavailable({
   feature,
@@ -15,7 +16,7 @@ export async function FeatureUnavailable({
 }) {
   const t = await getTranslations("features");
   const featureLabel = t(`labels.${feature}`);
-  const planLabel = getPlanLabel(plan, locale);
+  const planLabel = await resolvePlanLabel(plan, locale);
 
   return (
     <Card className="max-w-xl mx-auto border-amber-200 bg-amber-50/40">

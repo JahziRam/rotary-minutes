@@ -30,10 +30,12 @@ function revalidateAdmin(locale: string) {
 
 /** Invalidate landing pricing and in-app plan selection after tariff changes. */
 function revalidatePublicPricing() {
-  for (const loc of ["fr", "en"]) {
+  for (const loc of ["fr", "en", "es"]) {
     revalidatePath(`/${loc}`);
     revalidatePath(`/${loc}/settings/subscription`);
+    revalidatePath(`/${loc}/settings`);
   }
+  revalidatePath("/api/public/marketing");
 }
 
 // ─── Utilisateurs ────────────────────────────────────────────────────────────

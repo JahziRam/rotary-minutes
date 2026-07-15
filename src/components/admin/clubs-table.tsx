@@ -27,6 +27,7 @@ import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { getPlanLabel } from "@/lib/feature-gate";
+import type { PlanOption } from "@/lib/plans-utils";
 
 export interface AdminClubRow {
   id: string;
@@ -44,8 +45,6 @@ export interface AdminClubRow {
   } | null;
   features: ClubFeatureSet;
 }
-
-const PLANS = ["TRIAL", "STARTER", "PROFESSIONAL", "ENTERPRISE"] as const;
 
 const planVariant: Record<string, "default" | "gold" | "success" | "muted"> = {
   TRIAL: "muted",
@@ -67,11 +66,15 @@ export function ClubsTable({
   managementByClubId,
   platformUsers,
   customRoles,
+  planOptions,
+  planLabels,
 }: {
   clubs: AdminClubRow[];
   managementByClubId: Record<string, AdminClubManagementData>;
   platformUsers: Array<{ id: string; email: string; firstName: string; lastName: string }>;
   customRoles: Array<{ id: string; key: string; labelFr: string; labelEn: string }>;
+  planOptions: PlanOption[];
+  planLabels: Record<string, string>;
 }) {
   const locale = useLocale();
   const tViewAs = useTranslations("viewAsClub");
@@ -263,7 +266,7 @@ export function ClubsTable({
                         <div className="space-y-1.5">
                           <div className="flex gap-1 flex-wrap">
                             <Badge variant={planVariant[club.subscription.plan] ?? "default"}>
-                              {getPlanLabel(club.subscription.plan, locale)}
+                              {getPlanLabel(club.subscription.plan, locale, planLabels)}
                             </Badge>
                             <Badge variant={statusVariant[club.subscription.status] ?? "muted"}>
                               {club.subscription.status}
@@ -285,7 +288,7 @@ export function ClubsTable({
                                 () =>
                                   updateClubSubscription(
                                     club.id,
-                                    { plan: e.target.value as (typeof PLANS)[number] },
+                                    { plan: e.target.value as import("@/generated/prisma/client").SubscriptionPlan },
                                     locale
                                   ),
                                 "Plan mis à jour"
@@ -293,9 +296,9 @@ export function ClubsTable({
                             }
                             className="h-7 w-full max-w-[140px] rounded border border-gray-200 text-xs px-1.5"
                           >
-                            {PLANS.map((p) => (
-                              <option key={p} value={p}>
-                                {getPlanLabel(p, locale)}
+                            {planOptions.map((p) => (
+                              <option key={p.key} value={p.key}>
+                                {p.label}
                               </option>
                             ))}
                           </select>
