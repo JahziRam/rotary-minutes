@@ -10,7 +10,7 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 ### Added
 - **Charte Rotary — PV, PDF et emails**
   - Couleurs officielles Brand Center (`#17458B`, `#F7A81B`) sur aperçu PV, PDF procès-verbal, rapport assiduité et emails club
-  - Logo club avec espace de respiration ; logo généré par défaut si aucun fichier n'est téléversé : wordmark Rotary officiel (`public/brand/rotary-wordmark.png`) + nom du club sous « Rotary », à gauche de la roue (retour à la ligne automatique, colonne gauche limitée)
+  - Logo club avec espace de respiration ; logo généré par défaut si aucun fichier n'est téléversé : wordmark Rotary officiel (`public/brand/rotary-wordmark.png`) + nom du club sur une ligne sous « Rotary », aligné à droite dans la colonne gauche (à gauche de la roue)
   - PDF : rasterisation PNG du logo (sharp), sans césure ni cadre parasite ; pas de doublon du nom du club dans l'en-tête
   - Module `rotary-brand.ts`, générateur `club-default-logo.ts`, raster `club-default-logo-raster.ts`, en-têtes `ClubDocumentHeader` / `ClubBrandFallback` / `ClubDefaultLogoPdf`
   - API `/api/media/club/[id]/logo` sert le logo téléversé ou le SVG généré
@@ -106,6 +106,11 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
   - Revalidation élargie (fr/en/es + API marketing) et cache marketing réduit à 60 s après modification des tarifs
 
 ### Changed
+- **Logo club par défaut — mise en page**
+  - Police du nom : 12 px ; espacement net de 7 px sous « Rotary » (ratio bas du mot calibré sur le PNG officiel)
+  - Nom complet sur une seule ligne ; largeur SVG dynamique et décalage horizontal du wordmark pour les noms longs, sans `clip-path` ni troncature
+  - Positionnement SVG via `dominant-baseline="hanging"` ; PDF aligné (`ClubDefaultLogoPdf`)
+  - Scripts de vérification : `scripts/verify-club-logo.ts`, `scripts/check-wordmark-b64.mjs`
 - **Notifications push** : opt-out par défaut côté préférence ; choix explicite requis avant abonnement navigateur
 - **Libellés rôles** : espagnol pris en charge sur annuaire, tableau de bord, paramètres et annonces
 

@@ -4,6 +4,7 @@ import {
   ROTARY_LOGO_FONTS,
 } from "@/lib/rotary-brand";
 import {
+  ROTARY_TEXT_COLUMN_WIDTH_RATIO,
   ROTARY_WORDMARK_ASPECT,
   ROTARY_WORDMARK_PNG_BASE64,
 } from "@/lib/rotary-wordmark-b64";
@@ -15,11 +16,11 @@ import {
 export const CLUB_DEFAULT_LOGO = {
   maxWidth: ROTARY_LOGO_DISPLAY.maxWidthPx,
   wordmarkHeight: 48,
-  /** Largeur max du nom club (% largeur wordmark), à gauche de la roue. */
-  clubNameMaxWidthRatio: 0.53,
-  /** Baseline 1re ligne du nom club (% hauteur wordmark). */
-  clubNameBaselineRatio: 0.74,
-  clubFontSize: 10,
+  /** Bas du mot « Rotary » dans le PNG (% hauteur wordmark, calibré). */
+  rotaryTextBottomRatio: 0.54,
+  /** Espace net entre le bas de « Rotary » et le haut du nom club (px à hauteur 48). */
+  clubNameVerticalGap: 7,
+  clubFontSize: 12,
   clubGap: 5,
   lineGap: 2,
   paddingX: 0,
@@ -27,6 +28,9 @@ export const CLUB_DEFAULT_LOGO = {
 } as const;
 
 const CHAR_WIDTH_RATIO = 0.52;
+const LOGO_EDGE_MARGIN = 2;
+/** Hauteur des capitales au-dessus de la baseline (espace net sous « Rotary »). */
+const CLUB_NAME_CAP_HEIGHT_RATIO = 0.82;
 
 export const ROTARY_WORDMARK = "Rotary" as const;
 
@@ -61,51 +65,85 @@ export function estimateClubNameTextWidth(text: string, fontSize: number): numbe
   return text.length * fontSize * CHAR_WIDTH_RATIO;
 }
 
-export function getClubNameMaxWidth(wordmarkHeight: number): number {
+export function getRotaryTextColumnWidth(wordmarkHeight: number): number {
   const wordmarkWidth = Math.round(wordmarkHeight * ROTARY_WORDMARK_ASPECT);
-  return Math.round(wordmarkWidth * CLUB_DEFAULT_LOGO.clubNameMaxWidthRatio);
+  return Math.round(wordmarkWidth * ROTARY_TEXT_COLUMN_WIDTH_RATIO);
 }
 
-function fitsClubNameLine(text: string, maxWidth: number, fontSize: number): boolean {
-  return estimateClubNameTextWidth(text, fontSize) <= maxWidth;
+export function getRotaryTextColumnRightX(
+  wordmarkHeight: number,
+  paddingX = CLUB_DEFAULT_LOGO.paddingX
+): number {
+  return paddingX + getRotaryTextColumnWidth(wordmarkHeight);
 }
 
-function wrapClubNameWords(display: string, maxWidth: number, fontSize: number): string[] {
-  const words = display.split(" ");
-  if (words.length <= 1) return [display];
+/** @deprecated Alias — largeur colonne texte Rotary. */
+export function getClubNameMaxWidth(wordmarkHeight: number): number {
+  return getRotaryTextColumnWidth(wordmarkHeight);
+}
 
-  let best: string[] | null = null;
-  for (let split = 1; split < words.length; split++) {
-    const line1 = words.slice(0, split).join(" ");
-    const line2 = words.slice(split).join(" ");
-    if (
-      fitsClubNameLine(line1, maxWidth, fontSize) &&
-      fitsClubNameLine(line2, maxWidth, fontSize)
-    ) {
-      best = [line1, line2];
-    }
-  }
-  if (best) return best;
+function scaledClubNameGap(wordmarkHeight: number): number {
+  return (
+    CLUB_DEFAULT_LOGO.clubNameVerticalGap *
+    (wordmarkHeight / CLUB_DEFAULT_LOGO.wordmarkHeight)
+  );
+}
 
-  const lines: string[] = [];
-  let current = "";
-  for (const word of words) {
-    const candidate = current ? `${current} ${word}` : word;
-    if (fitsClubNameLine(candidate, maxWidth, fontSize)) {
-      current = candidate;
-      continue;
-    }
-    if (current) lines.push(current);
-    current = word;
-  }
-  if (current) lines.push(current);
-  return lines.length ? lines.slice(0, 2) : ["Club"];
+export function scaledClubFontSize(wordmarkHeight: number): number {
+  return (
+    CLUB_DEFAULT_LOGO.clubFontSize *
+    (wordmarkHeight / CLUB_DEFAULT_LOGO.wordmarkHeight)
+  );
+}
+
+/** Décale le wordmark si le nom dépasse la colonne gauche (à gauche de la roue). */
+export function getClubLogoOffsetX(
+  textWidth: number,
+  wordmarkHeight: number,
+  paddingX = CLUB_DEFAULT_LOGO.paddingX
+): number {
+  const columnWidth = getRotaryTextColumnWidth(wordmarkHeight);
+  return Math.max(paddingX, textWidth - columnWidth + LOGO_EDGE_MARGIN);
+}
+
+export function getClubNameTopY(
+  wordmarkHeight: number,
+  fontSize: number,
+  paddingY = CLUB_DEFAULT_LOGO.paddingY
+): number {
+  const rotaryBottom = wordmarkHeight * CLUB_DEFAULT_LOGO.rotaryTextBottomRatio;
+  return paddingY + rotaryBottom + scaledClubNameGap(wordmarkHeight);
+}
+
+export function getClubNameFirstBaselineY(
+  wordmarkHeight: number,
+  fontSize: number,
+  paddingY = CLUB_DEFAULT_LOGO.paddingY
+): number {
+  return (
+    getClubNameTopY(wordmarkHeight, fontSize, paddingY) +
+    fontSize * CLUB_NAME_CAP_HEIGHT_RATIO
+  );
+}
+
+export function getClubNameBlockBottomY(
+  wordmarkHeight: number,
+  lines: string[],
+  fontSize: number,
+  paddingY = CLUB_DEFAULT_LOGO.paddingY
+): number {
+  const { lineGap } = CLUB_DEFAULT_LOGO;
+  const firstY = getClubNameFirstBaselineY(wordmarkHeight, fontSize, paddingY);
+  const lastBaseline = firstY + (lines.length - 1) * (fontSize + lineGap);
+  return lastBaseline + fontSize * 0.25;
 }
 
 type ClubNameLayout = {
-  lines: [string] | [string, string];
+  lines: [string];
   fontSize: number;
-  maxWidth: number;
+  textWidth: number;
+  offsetX: number;
+  nameAnchorX: number;
 };
 
 export function resolveClubNameLayout(
@@ -113,87 +151,64 @@ export function resolveClubNameLayout(
   wordmarkHeight: number
 ): ClubNameLayout {
   const display = parseClubDisplayName(clubName);
-  const maxWidth = getClubNameMaxWidth(wordmarkHeight);
-  const candidates = [10, 9.5, 9, 8.5, 8, 7.5, 7];
+  const fontSize = scaledClubFontSize(wordmarkHeight);
+  const textWidth = estimateClubNameTextWidth(display, fontSize);
+  const offsetX = getClubLogoOffsetX(textWidth, wordmarkHeight);
+  const columnWidth = getRotaryTextColumnWidth(wordmarkHeight);
+  const nameAnchorX = offsetX + columnWidth;
 
-  for (const fontSize of candidates) {
-    const wrapped = wrapClubNameWords(display, maxWidth, fontSize);
-    const isComplete = wrapped.join(" ") === display;
-    if (
-      isComplete &&
-      wrapped.every((line) => estimateClubNameTextWidth(line, fontSize) <= maxWidth)
-    ) {
-      const lines =
-        wrapped.length === 1
-          ? ([wrapped[0]] as [string])
-          : ([wrapped[0], wrapped[1]] as [string, string]);
-      return { lines, fontSize, maxWidth };
-    }
-  }
-
-  const fallback = wrapClubNameWords(display, maxWidth, 8);
-  const lines =
-    fallback.length === 1
-      ? ([fallback[0]] as [string])
-      : ([fallback[0], fallback[1]] as [string, string]);
-  return { lines, fontSize: 8, maxWidth };
+  return {
+    lines: [display],
+    fontSize,
+    textWidth,
+    offsetX,
+    nameAnchorX,
+  };
 }
 
-/** Découpe le nom club pour tenir sous « Rotary », à gauche de la roue. */
-export function layoutClubNameLines(
-  clubName: string,
-  options?: { maxWidth?: number; fontSize?: number }
-): [string] | [string, string] {
-  const wordmarkHeight = CLUB_DEFAULT_LOGO.wordmarkHeight;
-  const layout = resolveClubNameLayout(clubName, wordmarkHeight);
-  if (options?.maxWidth && options.maxWidth !== layout.maxWidth) {
-    const display = parseClubDisplayName(clubName);
-    const fontSize = options.fontSize ?? layout.fontSize;
-    const wrapped = wrapClubNameWords(display, options.maxWidth, fontSize);
-    if (wrapped.length === 1) return [wrapped[0]];
-    return [wrapped[0], wrapped[1]];
-  }
-  return layout.lines;
+function getClubLogoContentWidth(
+  wordmarkHeight: number,
+  offsetX: number,
+  paddingX = CLUB_DEFAULT_LOGO.paddingX
+): number {
+  const wordmarkWidth = Math.round(wordmarkHeight * ROTARY_WORDMARK_ASPECT);
+  return Math.ceil(offsetX + wordmarkWidth + LOGO_EDGE_MARGIN);
+}
+
+/** Nom club sur une seule ligne sous « Rotary ». */
+export function layoutClubNameLines(clubName: string): string[] {
+  return resolveClubNameLayout(clubName, CLUB_DEFAULT_LOGO.wordmarkHeight).lines;
 }
 
 export function getClubDefaultLogoDimensions(clubName: string): ClubDefaultLogoDimensions {
-  const { wordmarkHeight, paddingX, paddingY, maxWidth } = CLUB_DEFAULT_LOGO;
-  const wordmarkWidth = Math.round(wordmarkHeight * ROTARY_WORDMARK_ASPECT);
+  const { wordmarkHeight, paddingY } = CLUB_DEFAULT_LOGO;
+  const { lines, fontSize, offsetX } = resolveClubNameLayout(clubName, wordmarkHeight);
+  const contentBottom = getClubNameBlockBottomY(wordmarkHeight, lines, fontSize, paddingY);
 
-  const width = Math.min(maxWidth, Math.ceil(paddingX * 2 + wordmarkWidth + 2));
-  const height = Math.ceil(paddingY * 2 + wordmarkHeight + 2);
+  const width = getClubLogoContentWidth(wordmarkHeight, offsetX);
+  const height = Math.ceil(
+    Math.max(paddingY + wordmarkHeight, contentBottom + paddingY) + LOGO_EDGE_MARGIN
+  );
 
   return { width, height, aspectRatio: width / height };
 }
 
-/** SVG : image wordmark Rotary + nom du club sous « Rotary », à gauche de la roue. */
+/** SVG : wordmark + nom club aligné à droite sous « Rotary », à gauche de la roue. */
 export function buildClubDefaultLogoSvg(clubName: string): string {
-  const { wordmarkHeight, clubNameBaselineRatio, lineGap, paddingX, paddingY } =
-    CLUB_DEFAULT_LOGO;
+  const { wordmarkHeight, paddingY } = CLUB_DEFAULT_LOGO;
   const { width, height } = getClubDefaultLogoDimensions(clubName);
   const wordmarkWidth = Math.round(wordmarkHeight * ROTARY_WORDMARK_ASPECT);
-  const { lines, fontSize: clubSize, maxWidth: clubMaxWidth } =
+  const { lines, fontSize: clubSize, offsetX, nameAnchorX } =
     resolveClubNameLayout(clubName, wordmarkHeight);
   const wordmarkHref = getRotaryWordmarkDataUrl();
-  const baselineRatio =
-    lines.length > 1 ? clubNameBaselineRatio - 0.06 : clubNameBaselineRatio;
-  const clubStartY = paddingY + wordmarkHeight * baselineRatio + clubSize * 0.1;
-
-  const clubLines = lines
-    .map((line, i) => {
-      const y = clubStartY + i * (clubSize + lineGap);
-      return `<tspan x="${paddingX}" y="${y}" font-size="${clubSize}" font-weight="400" fill="${ROTARY_BRAND.royalBlue}">${escapeSvgText(line)}</tspan>`;
-    })
-    .join("");
+  const clubTopY = getClubNameTopY(wordmarkHeight, clubSize, paddingY);
+  const line = lines[0];
 
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeSvgText(clubName)}">
   <rect width="100%" height="100%" fill="${ROTARY_BRAND.white}"/>
-  <image x="${paddingX}" y="${paddingY}" width="${wordmarkWidth}" height="${wordmarkHeight}" href="${wordmarkHref}" preserveAspectRatio="xMinYMin meet"/>
-  <clipPath id="club-name-column">
-    <rect x="${paddingX}" y="${paddingY}" width="${clubMaxWidth}" height="${wordmarkHeight}"/>
-  </clipPath>
-  <text font-family="${ROTARY_LOGO_FONTS.clubName}" clip-path="url(#club-name-column)">
-    ${clubLines}
+  <image x="${offsetX}" y="${paddingY}" width="${wordmarkWidth}" height="${wordmarkHeight}" href="${wordmarkHref}" preserveAspectRatio="xMinYMin meet"/>
+  <text font-family="${ROTARY_LOGO_FONTS.clubName}" text-anchor="end" dominant-baseline="hanging">
+    <tspan x="${nameAnchorX}" y="${clubTopY}" font-size="${clubSize}" font-weight="400" fill="${ROTARY_BRAND.royalBlue}">${escapeSvgText(line)}</tspan>
   </text>
 </svg>`;
 }
