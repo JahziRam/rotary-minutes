@@ -1,6 +1,7 @@
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { computeRecordedAttendanceRate } from "@/lib/rotary";
+import { excludeHonoraryMemberAttendances } from "@/lib/member-attendance-eligibility";
 import {
   buildPaginatedResult,
   type ParsedListParams,
@@ -61,7 +62,9 @@ export async function searchMeetingsPaginated(
     prisma.meeting.findMany({
       where,
       include: {
-        attendances: true,
+        attendances: {
+          include: { member: { select: { isHonoraryMember: true } } },
+        },
         minute: {
           select: {
             id: true,
@@ -89,7 +92,9 @@ export async function searchMeetingsPaginated(
     startTime: meeting.startTime,
     endTime: meeting.endTime,
     isLive: meeting.isLive,
-    attendanceRate: computeRecordedAttendanceRate(meeting.attendances),
+    attendanceRate: computeRecordedAttendanceRate(
+      excludeHonoraryMemberAttendances(meeting.attendances)
+    ),
     agendaTitles: meeting.minute?.agendaItems.map((item) => item.title) ?? [],
     minuteId: meeting.minute?.id ?? null,
     clubName: meeting.club.name,

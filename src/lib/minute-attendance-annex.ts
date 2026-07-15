@@ -1,3 +1,5 @@
+import { excludeHonoraryMemberAttendances } from "@/lib/member-attendance-eligibility";
+
 /** Build attendance & visitor lists for minute annex (PV). */
 
 export const MEMBER_ATTENDANCE_CATEGORIES = [
@@ -21,7 +23,8 @@ export const GUEST_ATTENDANCE_CATEGORIES = [
 export type MinuteAttendanceRow = {
   category: string;
   guestName?: string | null;
-  member?: { firstName: string; lastName: string } | null;
+  memberId?: string | null;
+  member?: { firstName: string; lastName: string; isHonoraryMember?: boolean } | null;
 };
 
 const CATEGORY_LABELS: Record<string, { fr: string; en: string }> = {
@@ -81,10 +84,11 @@ export function buildMinuteAttendanceAnnex(
   rows: MinuteAttendanceRow[],
   locale: string
 ): MinuteAttendanceAnnex {
-  const memberRows = rows.filter((r) =>
+  const countableRows = excludeHonoraryMemberAttendances(rows);
+  const memberRows = countableRows.filter((r) =>
     (MEMBER_ATTENDANCE_CATEGORIES as readonly string[]).includes(r.category)
   );
-  const guestRows = rows.filter((r) =>
+  const guestRows = countableRows.filter((r) =>
     (GUEST_ATTENDANCE_CATEGORIES as readonly string[]).includes(r.category)
   );
 

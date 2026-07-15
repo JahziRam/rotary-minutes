@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { fr, enUS, es } from "date-fns/locale";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
+import { attendanceEligibleMemberWhere } from "@/lib/member-attendance-eligibility";
 import { getClubContext } from "@/lib/club-context";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { UnifiedAttendanceSheet } from "@/components/meetings/unified-attendance-sheet";
@@ -33,7 +34,7 @@ export default async function MeetingAttendancePage({
   if (!meeting) notFound();
 
   const members = await prisma.member.findMany({
-    where: { clubId: ctx.clubId, isActive: true },
+    where: attendanceEligibleMemberWhere(ctx.clubId),
     orderBy: { lastName: "asc" },
     select: { id: true, firstName: true, lastName: true },
   });

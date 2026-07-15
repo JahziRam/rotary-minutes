@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Image,
 } from "@react-pdf/renderer";
+import { ClubDefaultLogoPdf } from "@/components/brand/club-default-logo-pdf";
 
 const styles = StyleSheet.create({
   page: { padding: 40, fontSize: 9, fontFamily: "Helvetica", color: "#0f172a" },
@@ -90,7 +91,9 @@ export function TreasuryReportPDFDocument({ data }: { data: TreasuryReportPDFDat
           <View>
             {data.club.logoUrl ? (
               <Image src={data.club.logoUrl} style={styles.logo} />
-            ) : null}
+            ) : (
+              <ClubDefaultLogoPdf clubName={data.club.name} />
+            )}
           </View>
           <View style={styles.clubInfo}>
             <Text>{data.club.name}</Text>

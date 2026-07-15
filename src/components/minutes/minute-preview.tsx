@@ -2,7 +2,8 @@ import Link from "next/link";
 import { ArrowLeft, Circle } from "lucide-react";
 import { MinutePreviewActions } from "./minute-preview-actions";
 import { MinuteAttachmentsPanel } from "./minute-attachments-panel";
-import { ClubLogo } from "@/components/ui/club-logo";
+import { ClubDocumentHeader } from "@/components/brand/club-document-header";
+import { ROTARY_BRAND } from "@/lib/rotary-brand";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 import { calculateAttendanceRate } from "@/lib/rotary";
@@ -10,6 +11,7 @@ import {
   buildMinuteAttendanceAnnex,
   MEMBER_ATTENDANCE_CATEGORIES,
 } from "@/lib/minute-attendance-annex";
+import { excludeHonoraryMemberAttendances } from "@/lib/member-attendance-eligibility";
 export interface MinutePreviewData {
   id: string;
   title: string;
@@ -18,6 +20,7 @@ export interface MinutePreviewData {
   verifyUrl?: string | null;
   qrCodeDataUrl?: string | null;
   club: {
+    id?: string;
     name: string;
     address?: string | null;
     district?: string | null;
@@ -35,7 +38,7 @@ export interface MinutePreviewData {
     attendances: Array<{
       category: string;
       guestName?: string | null;
-      member?: { firstName: string; lastName: string } | null;
+      member?: { firstName: string; lastName: string; isHonoraryMember?: boolean } | null;
     }>;
   };
   agendaItems: Array<{
@@ -111,8 +114,10 @@ export function MinutePreview({
   const typeLabel = MEETING_TYPE_LABELS[data.meeting.type] ?? data.meeting.type;
   const statusInfo = STATUS_LABELS[data.status] ?? STATUS_LABELS.DRAFT;
 
-  const memberAttendances = data.meeting.attendances.filter((a) =>
-    (MEMBER_ATTENDANCE_CATEGORIES as readonly string[]).includes(a.category)
+  const memberAttendances = excludeHonoraryMemberAttendances(
+    data.meeting.attendances.filter((a) =>
+      (MEMBER_ATTENDANCE_CATEGORIES as readonly string[]).includes(a.category)
+    )
   );
   const present = countByCategory(memberAttendances, "PRESENT");
   const excused = countByCategory(memberAttendances, "EXCUSED_ABSENT");
@@ -133,7 +138,10 @@ export function MinutePreview({
   const subtitle = `${typeLabel} — ${format(meetingDate, "d MMMM yyyy", { locale: dateLocale })}`;
 
   return (
-    <div className="min-h-full -m-4 lg:-m-6 p-4 lg:p-6 bg-[#f8f5f0]">
+    <div
+      className="min-h-full -m-4 lg:-m-6 p-4 lg:p-6"
+      style={{ backgroundColor: ROTARY_BRAND.offWhite }}
+    >
       {/* Page header */}
       <div className="flex items-start justify-between gap-4 mb-6">
         <div>
@@ -156,37 +164,15 @@ export function MinutePreview({
       <div className="grid lg:grid-cols-[1fr_280px] gap-6 items-start">
         {/* Main preview card */}
         <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
-          {/* Club header */}
-          <div className="p-6 pb-4 border-b border-gray-100">
-            <div className="flex items-center gap-4">
-              {data.club.logoUrl ? (
-                <ClubLogo src={data.club.logoUrl} alt={data.club.name} />
-              ) : (
-                <div className="h-14 w-14 rounded-full bg-navy flex items-center justify-center shrink-0">
-                  <svg viewBox="0 0 40 40" className="h-8 w-8 text-gold" fill="currentColor">
-                    <circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" strokeWidth="2" />
-                    <circle cx="20" cy="20" r="6" />
-                    <line x1="20" y1="2" x2="20" y2="8" stroke="currentColor" strokeWidth="2" />
-                    <line x1="20" y1="32" x2="20" y2="38" stroke="currentColor" strokeWidth="2" />
-                    <line x1="2" y1="20" x2="8" y2="20" stroke="currentColor" strokeWidth="2" />
-                    <line x1="32" y1="20" x2="38" y2="20" stroke="currentColor" strokeWidth="2" />
-                  </svg>
-                </div>
-              )}
-              <div>
-                <h2 className="font-bold text-gray-900 text-lg leading-tight">
-                  {data.club.name}
-                </h2>
-                {data.club.address && (
-                  <p className="text-sm text-gray-500 mt-0.5">{data.club.address}</p>
-                )}
-                <p className="text-sm text-gray-400">
-                  {data.club.district && `District ${data.club.district}`}
-                  {data.club.district && data.club.country && " • "}
-                  {data.club.country}
-                </p>
-              </div>
-            </div>
+          <div className="p-6 pb-2">
+            <ClubDocumentHeader
+              clubId={data.club.id}
+              clubName={data.club.name}
+              logoUrl={data.club.logoUrl}
+              address={data.club.address}
+              district={data.club.district}
+              country={data.club.country}
+            />
           </div>
 
           {/* Meeting title */}
@@ -214,7 +200,8 @@ export function MinutePreview({
             ].map(({ label, value }) => (
               <div
                 key={label}
-                className="rounded-xl bg-[#f8f5f0] px-4 py-3 text-center"
+                className="rounded-xl px-4 py-3 text-center"
+                style={{ backgroundColor: ROTARY_BRAND.offWhite }}
               >
                 <p className="text-[10px] font-semibold tracking-wider text-gray-400 uppercase mb-1">
                   {label}
@@ -256,7 +243,10 @@ export function MinutePreview({
 
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <h5 className="text-sm font-semibold text-navy mb-2">
+                <h5
+                  className="text-sm font-semibold mb-2"
+                  style={{ color: ROTARY_BRAND.royalBlue }}
+                >
                   {attendanceListLabel} ({annex.totalMembers})
                 </h5>
                 {annex.memberGroups.length === 0 ? (
@@ -280,7 +270,10 @@ export function MinutePreview({
               </div>
 
               <div>
-                <h5 className="text-sm font-semibold text-navy mb-2">
+                <h5
+                  className="text-sm font-semibold mb-2"
+                  style={{ color: ROTARY_BRAND.royalBlue }}
+                >
                   {visitorsListLabel} ({annex.totalVisitors})
                 </h5>
                 {annex.visitors.length === 0 ? (

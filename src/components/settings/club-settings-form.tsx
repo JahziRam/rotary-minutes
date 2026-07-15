@@ -8,7 +8,7 @@ import { Toast } from "@/components/ui/toast";
 import { ImageUpload } from "@/components/ui/image-upload";
 import { updateClubSettings } from "@/actions/settings";
 import { uploadClubLogo, removeClubLogo } from "@/actions/uploads";
-import { resolveClubLogoUrl } from "@/lib/media-url";
+import { resolveClubBrandLogoSrc } from "@/lib/club-logo-resolution";
 
 interface ClubData {
   id: string;
@@ -29,7 +29,11 @@ export function ClubSettingsForm({ club }: { club: ClubData }) {
   const tSettings = useTranslations("settings");
   const [pending, startTransition] = useTransition();
   const [toast, setToast] = useState<string | null>(null);
-  const logoPreview = resolveClubLogoUrl(club.id, club.logoUrl) ?? club.logoUrl;
+  const logoPreview = resolveClubBrandLogoSrc({
+    clubId: club.id,
+    clubName: club.name,
+    logoUrl: club.logoUrl,
+  });
 
   return (
     <>

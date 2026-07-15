@@ -924,6 +924,8 @@
     "add": "Añadir miembro",
     "active": "Activos",
     "inactive": "Inactivos",
+    "honoraryMember": "Miembro de honor",
+    "honoraryMemberHint": "Excluido de las listas de asistencia y del cálculo de tasas de asistencia.",
     "position": "Cargo",
     "birthday": "Fecha de nacimiento",
     "firstName": "Nombre",

@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Image,
 } from "@react-pdf/renderer";
+import { ClubDefaultLogoPdf } from "@/components/brand/club-default-logo-pdf";
 
 const styles = StyleSheet.create({
   page: { padding: 40, fontSize: 9, fontFamily: "Helvetica", color: "#0f172a" },
@@ -74,7 +75,11 @@ export function DuesHistoryPDFDocument({ data }: { data: DuesHistoryPDFData }) {
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
           <View>
-            {data.club.logoUrl ? <Image src={data.club.logoUrl} style={styles.logo} /> : null}
+            {data.club.logoUrl ? (
+              <Image src={data.club.logoUrl} style={styles.logo} />
+            ) : (
+              <ClubDefaultLogoPdf clubName={data.club.name} />
+            )}
           </View>
           <View style={{ textAlign: "right", fontSize: 9, color: "#64748b" }}>
             <Text>{data.club.name}</Text>

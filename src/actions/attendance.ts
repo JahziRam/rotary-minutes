@@ -35,8 +35,14 @@ export async function saveMeetingAttendance(
   });
   if (!meeting) return { error: "NOT_FOUND" };
 
+  const { getHonoraryMemberIds } = await import("@/lib/member-attendance-eligibility");
+  const honoraryMemberIds = await getHonoraryMemberIds(ctx.clubId);
+
   await prisma.meetingAttendance.deleteMany({ where: { meetingId } });
-  const valid = attendances.filter((a) => a.memberId || a.guestName?.trim());
+  const valid = attendances.filter(
+    (a) =>
+      (a.memberId && !honoraryMemberIds.has(a.memberId)) || a.guestName?.trim()
+  );
   if (valid.length > 0) {
     await prisma.meetingAttendance.createMany({
       data: valid.map((a) => ({

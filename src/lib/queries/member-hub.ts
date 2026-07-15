@@ -31,7 +31,7 @@ export async function getMemberHubSummary(
 ): Promise<MemberHubSummary | null> {
   const member = await prisma.member.findFirst({
     where: { clubId, userId, isActive: true },
-    select: { id: true },
+    select: { id: true, isHonoraryMember: true },
   });
 
   if (!member) {
@@ -88,14 +88,18 @@ export async function getMemberHubSummary(
 
   let present = 0;
   let total = 0;
-  for (const meeting of mandateMeetings) {
-    const att = meeting.attendances[0];
-    if (!att) continue;
-    total++;
-    if (MANDATE_PRESENT_CATEGORIES.has(att.category)) present++;
+  if (!member.isHonoraryMember) {
+    for (const meeting of mandateMeetings) {
+      const att = meeting.attendances[0];
+      if (!att) continue;
+      total++;
+      if (MANDATE_PRESENT_CATEGORIES.has(att.category)) present++;
+    }
   }
   const attendanceRate =
-    total > 0 ? Math.round(calculateAttendanceRate(present, total).rate) : 0;
+    member.isHonoraryMember || total === 0
+      ? 0
+      : Math.round(calculateAttendanceRate(present, total).rate);
 
   return {
     linked: true,

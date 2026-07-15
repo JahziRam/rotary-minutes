@@ -1,60 +1,87 @@
-import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
+import { ClubDefaultLogoPdf } from "@/components/brand/club-default-logo-pdf";
 import type { MemberAttendanceRate, PeriodAttendanceRate, MeetingTypeRate } from "@/lib/queries/attendance-reports";
+import { ROTARY_BRAND, ROTARY_LOGO_DISPLAY } from "@/lib/rotary-brand";
+
+const C = ROTARY_BRAND;
+const clear = ROTARY_LOGO_DISPLAY.clearSpacePx * 0.75;
 
 const styles = StyleSheet.create({
   page: {
     padding: 40,
     fontSize: 10,
     fontFamily: "Helvetica",
-    color: "#0f172a",
+    color: C.charcoal,
+  },
+  accentBar: {
+    height: 3,
+    backgroundColor: C.royalBlue,
+    marginBottom: 12,
   },
   header: {
-    marginBottom: 24,
-    borderBottom: "2pt solid #0d2d52",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 20,
+    borderBottom: `1.5pt solid ${C.royalBlue}`,
     paddingBottom: 12,
   },
+  logoClearSpace: {
+    padding: clear,
+    maxWidth: ROTARY_LOGO_DISPLAY.pdfMaxWidthPt + clear * 2,
+  },
+  logo: {
+    width: ROTARY_LOGO_DISPLAY.pdfMaxWidthPt,
+    height: ROTARY_LOGO_DISPLAY.pdfMaxHeightPt,
+    objectFit: "contain",
+  },
+
+  headerMeta: { textAlign: "right", flex: 1, marginLeft: 12 },
   title: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#0d2d52",
+    color: C.royalBlue,
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 10,
-    color: "#64748b",
+    color: C.muted,
+    marginBottom: 2,
   },
   section: { marginBottom: 18 },
   sectionTitle: {
     fontSize: 12,
     fontWeight: "bold",
-    color: "#0d2d52",
+    color: C.royalBlue,
     marginBottom: 8,
-    borderBottom: "1pt solid #e2e8f0",
+    borderBottom: `1pt solid ${C.border}`,
     paddingBottom: 4,
   },
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
     paddingVertical: 4,
-    borderBottom: "0.5pt solid #f1f5f9",
+    borderBottom: `0.5pt solid ${C.offWhite}`,
   },
-  rowLabel: { color: "#64748b", flex: 1 },
-  rowValue: { fontWeight: "bold", width: 60, textAlign: "right" },
+  rowLabel: { color: C.muted, flex: 1 },
+  rowValue: { fontWeight: "bold", width: 60, textAlign: "right", color: C.royalBlue },
   statBox: {
     width: "30%",
     padding: 10,
-    backgroundColor: "#f1f5f9",
+    backgroundColor: C.offWhite,
     borderRadius: 4,
     marginBottom: 8,
+    border: `0.5pt solid ${C.border}`,
   },
-  statValue: { fontSize: 16, fontWeight: "bold", color: "#0d2d52" },
-  statLabel: { fontSize: 8, color: "#64748b", marginTop: 2 },
+  statValue: { fontSize: 16, fontWeight: "bold", color: C.royalBlue },
+  statLabel: { fontSize: 8, color: C.muted, marginTop: 2 },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   alert: {
     padding: 10,
-    backgroundColor: "#fef3c7",
+    backgroundColor: "#FEF9E8",
     borderRadius: 4,
     marginBottom: 6,
+    border: `0.5pt solid ${C.gold}`,
   },
   footer: {
     position: "absolute",
@@ -62,8 +89,8 @@ const styles = StyleSheet.create({
     left: 40,
     right: 40,
     fontSize: 8,
-    color: "#94a3b8",
-    borderTop: "1pt solid #e2e8f0",
+    color: C.muted,
+    borderTop: `1pt solid ${C.border}`,
     paddingTop: 8,
     textAlign: "center",
   },
@@ -71,6 +98,8 @@ const styles = StyleSheet.create({
 
 export interface AttendanceReportPDFData {
   clubName: string;
+  clubAddress?: string;
+  logoUrl?: string;
   mandateLabel: string;
   exportedAt: string;
   clubRate: number;
@@ -94,19 +123,38 @@ export interface AttendanceReportPDFData {
   appName: string;
 }
 
+function ReportHeader({ data }: { data: AttendanceReportPDFData }) {
+  return (
+    <View style={styles.header}>
+      {data.logoUrl ? (
+        <View style={styles.logoClearSpace}>
+          <Image src={data.logoUrl} style={styles.logo} />
+        </View>
+      ) : (
+        <ClubDefaultLogoPdf clubName={data.clubName} />
+      )}
+      <View style={styles.headerMeta}>
+        <Text style={styles.title}>{data.labels.title}</Text>
+        <Text style={styles.subtitle}>
+          {data.clubName} — {data.mandateLabel}
+        </Text>
+        {data.clubAddress ? (
+          <Text style={styles.subtitle}>{data.clubAddress}</Text>
+        ) : null}
+        <Text style={styles.subtitle}>
+          {data.labels.generated}: {data.exportedAt}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
 export function AttendanceReportPDFDocument({ data }: { data: AttendanceReportPDFData }) {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <View style={styles.header}>
-          <Text style={styles.title}>{data.labels.title}</Text>
-          <Text style={styles.subtitle}>
-            {data.clubName} — {data.mandateLabel}
-          </Text>
-          <Text style={styles.subtitle}>
-            {data.labels.generated}: {data.exportedAt}
-          </Text>
-        </View>
+        <View style={styles.accentBar} />
+        <ReportHeader data={data} />
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{data.labels.overview}</Text>
@@ -151,10 +199,11 @@ export function AttendanceReportPDFDocument({ data }: { data: AttendanceReportPD
           ))}
         </View>
 
-        <Text style={styles.footer}>{data.appName} — {data.clubName}</Text>
+        <Text style={styles.footer}>{data.clubName}</Text>
       </Page>
 
       <Page size="A4" style={styles.page}>
+        <View style={styles.accentBar} />
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{data.labels.byPeriod}</Text>
           {data.periodRates.map((p) => (
@@ -177,7 +226,7 @@ export function AttendanceReportPDFDocument({ data }: { data: AttendanceReportPD
           ))}
         </View>
 
-        <Text style={styles.footer}>{data.appName} — {data.clubName}</Text>
+        <Text style={styles.footer}>{data.clubName}</Text>
       </Page>
     </Document>
   );

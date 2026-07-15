@@ -30,6 +30,7 @@ export function MemberEditForm({
     bio: string | null;
     photoUrl: string | null;
     isActive: boolean;
+    isHonoraryMember: boolean;
   };
   commissions: Array<{ id: string; name: string }>;
   canManage: boolean;
@@ -72,6 +73,7 @@ export function MemberEditForm({
             birthday: (fd.get("birthday") as string) || undefined,
             joinDate: (fd.get("joinDate") as string) || undefined,
             isActive: fd.get("isActive") === "on",
+            isHonoraryMember: fd.get("isHonoraryMember") === "on",
           });
           router.refresh();
         });
@@ -136,6 +138,18 @@ export function MemberEditForm({
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" name="isActive" defaultChecked={member.isActive} />
         {t("active")}
+      </label>
+      <label className="flex items-start gap-2 text-sm text-gray-700">
+        <input
+          type="checkbox"
+          name="isHonoraryMember"
+          className="mt-0.5"
+          defaultChecked={member.isHonoraryMember}
+        />
+        <span>
+          <span className="font-medium">{t("honoraryMember")}</span>
+          <span className="block text-xs text-gray-500">{t("honoraryMemberHint")}</span>
+        </span>
       </label>
       <div className="flex gap-2">
         <Button type="submit" variant="gold" disabled={pending}>

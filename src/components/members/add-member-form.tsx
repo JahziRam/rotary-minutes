@@ -63,6 +63,7 @@ export function AddMemberForm({
               position: (formData.get("position") as string) || undefined,
               birthday: (formData.get("birthday") as string) || undefined,
               joinDate: (formData.get("joinDate") as string) || undefined,
+              isHonoraryMember: formData.get("isHonoraryMember") === "on",
               appRole,
               customRoleId,
               sendLogin: sendLogin && !!email,
@@ -102,6 +103,13 @@ export function AddMemberForm({
         <Input name="position" label={t("position")} />
         <Input name="birthday" type="date" label={t("birthday")} />
         <Input name="joinDate" type="date" label={t("joinDate")} />
+        <label className="flex items-start gap-2 text-sm text-gray-700">
+          <input type="checkbox" name="isHonoraryMember" className="mt-0.5" />
+          <span>
+            <span className="font-medium">{t("honoraryMember")}</span>
+            <span className="block text-xs text-gray-500">{t("honoraryMemberHint")}</span>
+          </span>
+        </label>
         {canManageRoles && (
           <div className="space-y-2">
             <div className="space-y-1.5">

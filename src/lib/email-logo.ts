@@ -1,3 +1,4 @@
+import { buildClubDefaultLogoDataUrl } from "@/lib/club-default-logo";
 import { isDataUrl, parseDataUrl } from "@/lib/image-storage";
 import { resolveClubLogoUrl } from "@/lib/media-url";
 
@@ -19,12 +20,27 @@ const LOGO_CID = "club-logo";
  * - HTTP / external URLs → inline `url`
  * - Data URLs → inline `url` (base64) plus optional `cid` + `content` for attachment
  */
+function defaultLogoForEmail(clubName: string): EmailLogoResult {
+  const dataUrl = buildClubDefaultLogoDataUrl(clubName);
+  const parsed = parseDataUrl(dataUrl);
+  if (!parsed) return { url: dataUrl };
+  return {
+    url: dataUrl,
+    cid: LOGO_CID,
+    content: parsed.buffer,
+    mime: parsed.mime,
+  };
+}
+
 export function resolveLogoForEmail(
   clubId: string,
   logoUrl?: string | null,
-  baseUrl?: string
+  baseUrl?: string,
+  clubName?: string
 ): EmailLogoResult {
-  if (!logoUrl) return {};
+  if (!logoUrl) {
+    return clubName ? defaultLogoForEmail(clubName) : {};
+  }
 
   if (isDataUrl(logoUrl)) {
     const parsed = parseDataUrl(logoUrl);
@@ -54,6 +70,8 @@ function mimeToExtension(mime?: string): string {
       return "webp";
     case "image/gif":
       return "gif";
+    case "image/svg+xml":
+      return "svg";
     default:
       return "png";
   }

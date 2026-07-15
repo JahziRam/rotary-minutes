@@ -4,6 +4,11 @@ import {
   calculateAttendanceRate,
   isAttendancePresent,
 } from "@/lib/rotary";
+import {
+  attendanceEligibleMemberWhere,
+  getHonoraryMemberIds,
+  shouldCountAttendanceForMemberId,
+} from "@/lib/member-attendance-eligibility";
 import type { MeetingType } from "@/generated/prisma/client";
 
 function isPresent(category: string): boolean {
@@ -49,7 +54,7 @@ export async function perMemberRates(
 
   const [members, meetings] = await Promise.all([
     prisma.member.findMany({
-      where: { clubId, isActive: true },
+      where: attendanceEligibleMemberWhere(clubId),
       select: { id: true, firstName: true, lastName: true },
       orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
     }),
@@ -87,11 +92,14 @@ export async function perMemberRates(
 
 export async function perPeriodRates(clubId: string) {
   const mandate = getRotaryMandateYear();
-  const meetings = await prisma.meeting.findMany({
-    where: { clubId, date: { gte: mandate.start, lte: mandate.end } },
-    include: { attendances: true },
-    orderBy: { date: "asc" },
-  });
+  const [honoraryMemberIds, meetings] = await Promise.all([
+    getHonoraryMemberIds(clubId),
+    prisma.meeting.findMany({
+      where: { clubId, date: { gte: mandate.start, lte: mandate.end } },
+      include: { attendances: true },
+      orderBy: { date: "asc" },
+    }),
+  ]);
 
   const monthLabels = [
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
@@ -110,7 +118,7 @@ export async function perPeriodRates(clubId: string) {
     let total = 0;
     for (const meeting of monthMeetings) {
       for (const att of meeting.attendances) {
-        if (!att.memberId) continue;
+        if (!shouldCountAttendanceForMemberId(att.memberId, honoraryMemberIds)) continue;
         total++;
         if (isPresent(att.category)) present++;
       }
@@ -129,11 +137,14 @@ export async function perPeriodRates(clubId: string) {
 
 export async function perMeetingType(clubId: string) {
   const mandate = getRotaryMandateYear();
-  const meetings = await prisma.meeting.findMany({
-    where: { clubId, date: { gte: mandate.start, lte: mandate.end } },
-    include: { attendances: true },
-    orderBy: { date: "asc" },
-  });
+  const [honoraryMemberIds, meetings] = await Promise.all([
+    getHonoraryMemberIds(clubId),
+    prisma.meeting.findMany({
+      where: { clubId, date: { gte: mandate.start, lte: mandate.end } },
+      include: { attendances: true },
+      orderBy: { date: "asc" },
+    }),
+  ]);
 
   const byType = new Map<MeetingType, { meetingsCount: number; present: number; total: number }>();
 
@@ -141,7 +152,7 @@ export async function perMeetingType(clubId: string) {
     const entry = byType.get(meeting.type) ?? { meetingsCount: 0, present: 0, total: 0 };
     entry.meetingsCount++;
     for (const att of meeting.attendances) {
-      if (!att.memberId) continue;
+      if (!shouldCountAttendanceForMemberId(att.memberId, honoraryMemberIds)) continue;
       entry.total++;
       if (isPresent(att.category)) entry.present++;
     }

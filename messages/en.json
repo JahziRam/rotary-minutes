@@ -458,6 +458,8 @@
     "add": "Add member",
     "active": "Active",
     "inactive": "Inactive",
+    "honoraryMember": "Honorary member",
+    "honoraryMemberHint": "Excluded from attendance lists and attendance rate calculations.",
     "position": "Position",
     "birthday": "Birthday",
     "firstName": "First name",

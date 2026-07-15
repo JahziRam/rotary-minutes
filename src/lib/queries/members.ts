@@ -1,5 +1,6 @@
 import { addDays, isWithinInterval } from "date-fns";
 import { prisma } from "@/lib/prisma";
+import { attendanceEligibleMemberWhere } from "@/lib/member-attendance-eligibility";
 
 export async function getUpcomingBirthdays(clubId: string, withinDays = 14) {
   const members = await prisma.member.findMany({
@@ -37,7 +38,7 @@ export async function getMembersWithLowAttendance(
   minMeetings = 3
 ) {
   const members = await prisma.member.findMany({
-    where: { clubId, isActive: true },
+    where: attendanceEligibleMemberWhere(clubId),
     select: { id: true, firstName: true, lastName: true },
   });
 

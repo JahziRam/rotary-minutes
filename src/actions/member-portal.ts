@@ -197,11 +197,17 @@ export async function getMyAccountData() {
     paid: member.memberDues.filter((d) => d.status === "PAID"),
   };
 
-  const presentCount = member.attendances.filter(
-    (a) => a.category === "PRESENT" || a.category === "TRAVEL_RETURN"
-  ).length;
-  const attendanceRate = computeRecordedAttendanceRate(member.attendances);
-  const mandateAttendance = computeMandateAttendance(mandateMeetings);
+  const presentCount = member.isHonoraryMember
+    ? 0
+    : member.attendances.filter(
+        (a) => a.category === "PRESENT" || a.category === "TRAVEL_RETURN"
+      ).length;
+  const attendanceRate = member.isHonoraryMember
+    ? null
+    : computeRecordedAttendanceRate(member.attendances);
+  const mandateAttendance = member.isHonoraryMember
+    ? { present: 0, total: 0, rate: 0, goal: ROTARY_ATTENDANCE_GOAL }
+    : computeMandateAttendance(mandateMeetings);
   const locale = ctx.club.language === "EN" ? "en" : "fr";
   const stripeEnabled = await isClubDuesStripeEnabled(ctx.clubId);
 

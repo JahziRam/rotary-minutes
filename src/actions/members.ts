@@ -12,10 +12,12 @@ import type { ClubRole } from "@/generated/prisma/client";
 import { findMemberDuplicateInClub } from "@/lib/member-dedup";
 
 function revalidateMembers() {
-  for (const loc of ["fr", "en"]) {
+  for (const loc of ["fr", "en", "es"]) {
     revalidatePath(`/${loc}/members`);
     revalidatePath(`/${loc}/dashboard`);
     revalidatePath(`/${loc}/statistics`);
+    revalidatePath(`/${loc}/attendance-reports`);
+    revalidatePath(`/${loc}/meetings`);
   }
 }
 
@@ -32,6 +34,7 @@ export async function createMember(data: {
   commissionId?: string;
   bio?: string;
   photoUrl?: string;
+  isHonoraryMember?: boolean;
   appRole?: ClubRole;
   customRoleId?: string | null;
   sendLogin?: boolean;
@@ -66,6 +69,7 @@ export async function createMember(data: {
       photoUrl: data.photoUrl || null,
       birthday: data.birthday ? new Date(data.birthday) : null,
       joinDate: data.joinDate ? new Date(data.joinDate) : null,
+      isHonoraryMember: data.isHonoraryMember ?? false,
     },
   });
 
@@ -139,6 +143,7 @@ export async function updateMember(
     bio?: string;
     photoUrl?: string;
     isActive?: boolean;
+    isHonoraryMember?: boolean;
   }
 ) {
   const auth = await requirePermission("members.manage");
@@ -172,6 +177,9 @@ export async function updateMember(
         joinDate: data.joinDate ? new Date(data.joinDate) : null,
       }),
       ...(data.isActive !== undefined && { isActive: data.isActive }),
+      ...(data.isHonoraryMember !== undefined && {
+        isHonoraryMember: data.isHonoraryMember,
+      }),
     },
   });
 

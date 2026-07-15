@@ -508,8 +508,9 @@ model Member {
   phone        String?
   position     String?
   joinDate     DateTime?
-  isActive     Boolean   @default(true)
-  birthday     DateTime?
+  isActive          Boolean   @default(true)
+  isHonoraryMember  Boolean   @default(false)
+  birthday          DateTime?
   photoUrl     String?
   bio          String?   @db.Text
   commissionId String?

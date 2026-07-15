@@ -81,6 +81,14 @@ export async function importMembersFromCsv(csv: string) {
     const registrationNumber = cols[idx("registrationnumber")]?.trim() || null;
     const joinDateRaw = cols[idx("joindate")]?.trim() || cols[idx("joinedat")]?.trim();
     const joinDate = joinDateRaw ? new Date(joinDateRaw) : null;
+    const honoraryRaw =
+      cols[idx("ishonorarymember")]?.trim() ||
+      cols[idx("honorarymember")]?.trim() ||
+      cols[idx("honorary")]?.trim() ||
+      "";
+    const isHonoraryMember = ["1", "true", "yes", "oui", "y"].includes(
+      honoraryRaw.toLowerCase()
+    );
 
     const row = { email, registrationNumber, firstName, lastName };
 
@@ -101,6 +109,7 @@ export async function importMembersFromCsv(csv: string) {
           registrationNumber,
           joinDate: joinDate && !Number.isNaN(joinDate.getTime()) ? joinDate : undefined,
           isActive: true,
+          isHonoraryMember,
         },
       });
       trackMemberInDuplicateIndex(batchIndex, row);

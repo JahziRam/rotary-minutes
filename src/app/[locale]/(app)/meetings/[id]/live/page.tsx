@@ -45,7 +45,9 @@ export default async function LiveMeetingPage({
     ? await getMinuteById(meeting.minute.id)
     : null;
 
-  const members = (ctx.club.members ?? []).map((m) => ({
+  const members = (ctx.club.members ?? [])
+    .filter((m) => !m.isHonoraryMember)
+    .map((m) => ({
     id: m.id,
     firstName: m.firstName,
     lastName: m.lastName,

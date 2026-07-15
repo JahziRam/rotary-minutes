@@ -458,6 +458,8 @@
     "add": "Ajouter un membre",
     "active": "Actifs",
     "inactive": "Inactifs",
+    "honoraryMember": "Membre d'honneur",
+    "honoraryMemberHint": "Exclu des listes de présence et des calculs d'assiduité.",
     "position": "Fonction",
     "birthday": "Anniversaire",
     "firstName": "Prénom",

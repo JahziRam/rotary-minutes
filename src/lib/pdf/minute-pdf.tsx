@@ -7,33 +7,54 @@ import {
   Image,
 } from "@react-pdf/renderer";
 import type { MinuteAttendanceAnnex } from "@/lib/minute-attendance-annex";
+import { ClubDefaultLogoPdf } from "@/components/brand/club-default-logo-pdf";
+import { ROTARY_BRAND, ROTARY_LOGO_DISPLAY } from "@/lib/rotary-brand";
+
+const C = ROTARY_BRAND;
+const clear = ROTARY_LOGO_DISPLAY.clearSpacePx * 0.75;
 
 const styles = StyleSheet.create({
   page: {
     padding: 40,
     fontSize: 10,
     fontFamily: "Helvetica",
-    color: "#0f172a",
+    color: C.charcoal,
+    backgroundColor: C.white,
+  },
+  accentBar: {
+    height: 3,
+    backgroundColor: C.royalBlue,
+    marginBottom: 14,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "flex-start",
     marginBottom: 20,
-    borderBottom: "2pt solid #0d2d52",
-    paddingBottom: 15,
+    borderBottom: `1.5pt solid ${C.royalBlue}`,
+    paddingBottom: 14,
   },
-  logo: { width: 60, height: 60, objectFit: "contain" },
-  clubInfo: { textAlign: "right", fontSize: 9, color: "#64748b" },
+  logoClearSpace: {
+    padding: clear,
+    maxWidth: ROTARY_LOGO_DISPLAY.pdfMaxWidthPt + clear * 2,
+  },
+  logo: {
+    height: ROTARY_LOGO_DISPLAY.pdfMaxHeightPt,
+    objectFit: "contain",
+  },
+
+  clubInfo: { textAlign: "right", fontSize: 9, color: C.muted, flex: 1, marginLeft: 16 },
+  clubNameSide: { fontWeight: "bold", color: C.royalBlue, fontSize: 11, marginBottom: 4 },
   title: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#0d2d52",
+    color: C.royalBlue,
     marginBottom: 5,
     textAlign: "center",
   },
   subtitle: {
     fontSize: 11,
-    color: "#64748b",
+    color: C.muted,
     textAlign: "center",
     marginBottom: 20,
   },
@@ -41,18 +62,18 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 12,
     fontWeight: "bold",
-    color: "#0d2d52",
+    color: C.royalBlue,
     marginBottom: 8,
-    borderBottom: "1pt solid #e2e8f0",
+    borderBottom: `1pt solid ${C.border}`,
     paddingBottom: 4,
   },
   row: { flexDirection: "row", marginBottom: 3 },
-  label: { width: 120, color: "#64748b" },
+  label: { width: 120, color: C.muted },
   value: { flex: 1 },
   agendaItem: {
     marginBottom: 10,
     padding: 8,
-    backgroundColor: "#f8fafc",
+    backgroundColor: C.offWhite,
     borderRadius: 4,
   },
   agendaTitle: { fontWeight: "bold", marginBottom: 4 },
@@ -64,40 +85,41 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-end",
-    borderTop: "1pt solid #e2e8f0",
+    borderTop: `1pt solid ${C.border}`,
     paddingTop: 10,
     fontSize: 8,
-    color: "#94a3b8",
+    color: C.muted,
   },
   qr: { width: 60, height: 60 },
-  hash: { fontSize: 7, color: "#94a3b8", marginTop: 4 },
+  hash: { fontSize: 7, color: C.muted, marginTop: 4 },
   stats: { flexDirection: "row", gap: 20, marginBottom: 15 },
   statBox: {
     flex: 1,
     padding: 8,
-    backgroundColor: "#f1f5f9",
+    backgroundColor: C.offWhite,
     borderRadius: 4,
     textAlign: "center",
+    border: `0.5pt solid ${C.border}`,
   },
-  statValue: { fontSize: 14, fontWeight: "bold", color: "#0d2d52" },
-  statLabel: { fontSize: 8, color: "#64748b" },
+  statValue: { fontSize: 14, fontWeight: "bold", color: C.royalBlue },
+  statLabel: { fontSize: 8, color: C.muted },
   annexTitle: {
     fontSize: 14,
     fontWeight: "bold",
-    color: "#0d2d52",
+    color: C.royalBlue,
     marginBottom: 12,
     textAlign: "center",
   },
   annexSubtitle: {
     fontSize: 11,
     fontWeight: "bold",
-    color: "#0d2d52",
+    color: C.royalBlue,
     marginTop: 10,
     marginBottom: 6,
   },
   annexListItem: { fontSize: 9, marginBottom: 2, paddingLeft: 8 },
-  annexCategory: { fontSize: 9, fontWeight: "bold", color: "#475569", marginBottom: 3 },
-  annexEmpty: { fontSize: 9, color: "#94a3b8", fontStyle: "italic" },
+  annexCategory: { fontSize: 9, fontWeight: "bold", color: C.muted, marginBottom: 3 },
+  annexEmpty: { fontSize: 9, color: C.muted, fontStyle: "italic" },
 });
 
 export interface MinutePDFData {
@@ -105,6 +127,9 @@ export interface MinutePDFData {
     name: string;
     address?: string;
     logoUrl?: string;
+    /** Logo généré (nom déjà inclus dans le visuel). */
+    logoIsGenerated?: boolean;
+    logoAspectRatio?: number;
   };
   meeting: {
     date: string;
@@ -132,6 +157,34 @@ export interface MinutePDFData {
   locale?: string;
 }
 
+function PdfClubHeader({ data }: { data: MinutePDFData }) {
+  return (
+    <View style={styles.header}>
+      {data.club.logoUrl ? (
+        <View style={styles.logoClearSpace}>
+          <Image
+            src={data.club.logoUrl}
+            style={{
+              ...styles.logo,
+              width:
+                ROTARY_LOGO_DISPLAY.pdfMaxHeightPt *
+                (data.club.logoAspectRatio ?? 3.5),
+            }}
+          />
+        </View>
+      ) : (
+        <ClubDefaultLogoPdf clubName={data.club.name} />
+      )}
+      <View style={styles.clubInfo}>
+        {!data.club.logoIsGenerated ? (
+          <Text style={styles.clubNameSide}>{data.club.name}</Text>
+        ) : null}
+        {data.club.address ? <Text>{data.club.address}</Text> : null}
+      </View>
+    </View>
+  );
+}
+
 function AnnexPage({
   data,
   labels,
@@ -144,6 +197,7 @@ function AnnexPage({
 
   return (
     <Page size="A4" style={styles.page}>
+      <View style={styles.accentBar} />
       <Text style={styles.annexTitle}>{labels.title}</Text>
 
       <Text style={styles.annexSubtitle}>
@@ -206,19 +260,8 @@ export function MinutePDFDocument({ data }: { data: MinutePDFData }) {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <View style={styles.header}>
-          {data.club.logoUrl ? (
-            <Image src={data.club.logoUrl} style={styles.logo} />
-          ) : (
-            <View style={styles.logo} />
-          )}
-          <View style={styles.clubInfo}>
-            <Text style={{ fontWeight: "bold", color: "#0d2d52", fontSize: 11 }}>
-              {data.club.name}
-            </Text>
-            {data.club.address && <Text>{data.club.address}</Text>}
-          </View>
-        </View>
+        <View style={styles.accentBar} />
+        <PdfClubHeader data={data} />
 
         <Text style={styles.title}>{data.title}</Text>
         <Text style={styles.subtitle}>

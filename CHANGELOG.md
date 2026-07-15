@@ -8,6 +8,17 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Unreleased]
 
 ### Added
+- **Charte Rotary — PV, PDF et emails**
+  - Couleurs officielles Brand Center (`#17458B`, `#F7A81B`) sur aperçu PV, PDF procès-verbal, rapport assiduité et emails club
+  - Logo club avec espace de respiration ; logo généré par défaut si aucun fichier n'est téléversé : wordmark Rotary officiel (`public/brand/rotary-wordmark.png`) + nom du club sous « Rotary », à gauche de la roue (retour à la ligne automatique, colonne gauche limitée)
+  - PDF : rasterisation PNG du logo (sharp), sans césure ni cadre parasite ; pas de doublon du nom du club dans l'en-tête
+  - Module `rotary-brand.ts`, générateur `club-default-logo.ts`, raster `club-default-logo-raster.ts`, en-têtes `ClubDocumentHeader` / `ClubBrandFallback` / `ClubDefaultLogoPdf`
+  - API `/api/media/club/[id]/logo` sert le logo téléversé ou le SVG généré
+  - Script `scripts/generate-sample-minute-pdf.ts` ; tests `club-default-logo.test.ts`, `rotary-brand.test.ts`
+- **Membres — membres d'honneur**
+  - Case « Membre d'honneur » à l'ajout et à l'édition d'un membre
+  - Exclusion des listes de présence, rapports d'assiduité, statistiques et taux (PV, réunions, club)
+  - Import CSV : colonnes `isHonoraryMember`, `honoraryMember` ou `honorary`
 - **Annonces club — email + in-app**
   - Envoi parallèle `sendClubEmail` pour tous les ciblages (notamment `NO_APP_ACCOUNT`)
   - Résolution destinataires via `resolveClubAnnouncementDelivery` (userIds + emails)
@@ -105,6 +116,7 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 - Migration `20260715160000_meeting_commission_id` — `Meeting.commissionId`
 - Migration `20260715161000_role_config_label_es` — libellés rôles en espagnol
 - Migration `20260715170000_minute_ai_assist` — enum `AddonKey.MINUTE_AI`, `ClubFeatures.minuteAiAssistEnabled`
+- Migration `20260715180000_member_honorary_attendance` — `Member.isHonoraryMember`
 
 ### Fixed
 - **Membres — changement de rôle** : correction de l’erreur React #482 lors de la modification du rôle dans l’annuaire (`MemberDuesBadge` converti en composant client ; sélecteurs de rôle contrôlés)

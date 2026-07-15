@@ -48,8 +48,11 @@ export async function getCheckInMeeting(token: string) {
   });
   if (!row || row.expiresAt < new Date()) return null;
 
+  const { attendanceEligibleMemberWhere } = await import(
+    "@/lib/member-attendance-eligibility"
+  );
   const members = await prisma.member.findMany({
-    where: { clubId: row.meeting.clubId, isActive: true },
+    where: attendanceEligibleMemberWhere(row.meeting.clubId),
     orderBy: { lastName: "asc" },
     select: { id: true, firstName: true, lastName: true },
   });

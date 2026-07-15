@@ -65,17 +65,25 @@ export function isAttendancePresent(category: string): boolean {
 
 /** Taux basé sur les présences enregistrées (liste réunions, PV). */
 export function computeRecordedAttendanceRate(
-  attendances: Array<{ category: string }>
+  attendances: Array<{ category: string; memberId?: string | null }>,
+  excludeMemberIds?: ReadonlySet<string>
 ): number | null {
-  if (attendances.length === 0) return null;
-  const present = attendances.filter((a) => isAttendancePresent(a.category)).length;
-  return Math.round(calculateAttendanceRate(present, attendances.length).rate);
+  const countable = excludeMemberIds
+    ? attendances.filter((a) => !a.memberId || !excludeMemberIds.has(a.memberId))
+    : attendances;
+  if (countable.length === 0) return null;
+  const present = countable.filter((a) => isAttendancePresent(a.category)).length;
+  return Math.round(calculateAttendanceRate(present, countable.length).rate);
 }
 
 export function countPresentAttendances(
-  attendances: Array<{ category: string }>
+  attendances: Array<{ category: string; memberId?: string | null }>,
+  excludeMemberIds?: ReadonlySet<string>
 ): number {
-  return attendances.filter((a) => isAttendancePresent(a.category)).length;
+  const countable = excludeMemberIds
+    ? attendances.filter((a) => !a.memberId || !excludeMemberIds.has(a.memberId))
+    : attendances;
+  return countable.filter((a) => isAttendancePresent(a.category)).length;
 }
 
 /** Taux en direct : présents / membres actifs du club. */
