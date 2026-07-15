@@ -350,7 +350,7 @@ export async function markDuesPaid(
   const remaining = duesRemaining(periodAmount, alreadyPaid);
   if (remaining <= 0) return { error: "ALREADY_PAID" as const };
 
-  let paymentAmount = opts?.amount != null ? roundMoney(opts.amount) : remaining;
+  const paymentAmount = opts?.amount != null ? roundMoney(opts.amount) : remaining;
   if (paymentAmount <= 0) return { error: "INVALID_AMOUNT" as const };
   if (paymentAmount > remaining) return { error: "AMOUNT_EXCEEDS_REMAINING" as const };
 

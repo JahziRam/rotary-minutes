@@ -4,7 +4,10 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getClubContext } from "@/lib/club-context";
 import { hasRolePermission } from "@/lib/roles";
-import { resolveClubAnnouncementRecipients } from "@/lib/club-announcement-targeting";
+import { resolveClubAnnouncementDelivery } from "@/lib/club-announcement-targeting";
+import { clubAnnouncementEmail } from "@/lib/email";
+import { sendClubEmail } from "@/lib/club-smtp";
+import { recordEmailCampaign } from "@/lib/email-history";
 import type { ClubAnnouncementTarget, ClubRole } from "@/generated/prisma/client";
 
 function revalidate() {
@@ -13,6 +16,12 @@ function revalidate() {
     revalidatePath(`/${loc}/dashboard`);
     revalidatePath(`/${loc}/settings`);
   }
+}
+
+function clubLocale(language: string): "fr" | "en" | "es" {
+  if (language === "EN") return "en";
+  if (language === "ES") return "es";
+  return "fr";
 }
 
 export async function getClubCommissionsForAnnouncements() {
@@ -61,7 +70,7 @@ export async function sendClubAnnouncement(data: {
         "COMMISSION_CHAIR",
       ]) as ClubRole[];
 
-  const recipientIds = await resolveClubAnnouncementRecipients({
+  const delivery = await resolveClubAnnouncementDelivery({
     clubId: ctx.clubId,
     targetType: data.targetType,
     targetRoles: roles,
@@ -81,12 +90,11 @@ export async function sendClubAnnouncement(data: {
     },
   });
 
-  const locale =
-    ctx.club.language === "EN" ? "en" : ctx.club.language === "ES" ? "es" : "fr";
+  const locale = clubLocale(ctx.club.language);
 
-  if (recipientIds.length) {
+  if (delivery.userIds.length) {
     await prisma.notification.createMany({
-      data: recipientIds.map((userId) => ({
+      data: delivery.userIds.map((userId) => ({
         userId,
         clubId: ctx.clubId,
         type: "ANNOUNCEMENT" as const,
@@ -98,10 +106,80 @@ export async function sendClubAnnouncement(data: {
     });
   }
 
+  let emailsSent = 0;
+  let emailsFailed = 0;
+  const emailRecipients: Array<{
+    email: string;
+    status: "sent" | "failed";
+    error?: string | null;
+  }> = [];
+
+  if (delivery.emails.length) {
+    const mail = await clubAnnouncementEmail({
+      clubName: ctx.club.name,
+      clubId: ctx.clubId,
+      title: data.title.trim(),
+      message: data.message.trim(),
+      locale,
+      logoUrl: ctx.club.logoUrl ?? undefined,
+    });
+
+    for (const to of delivery.emails) {
+      const result = await sendClubEmail(ctx.clubId, {
+        to,
+        subject: mail.subject,
+        html: mail.html,
+        attachments: mail.attachments,
+      });
+      if (result.ok) emailsSent++;
+      else emailsFailed++;
+      emailRecipients.push({
+        email: to,
+        status: result.ok ? "sent" : "failed",
+        error: result.error ?? null,
+      });
+    }
+
+    if (emailRecipients.length) {
+      await recordEmailCampaign({
+        clubId: ctx.clubId,
+        name:
+          locale === "fr"
+            ? `Annonce club — ${data.title.trim().slice(0, 80)}`
+            : locale === "es"
+              ? `Anuncio del club — ${data.title.trim().slice(0, 80)}`
+              : `Club announcement — ${data.title.trim().slice(0, 80)}`,
+        subject: mail.subject,
+        body: mail.html,
+        recipients: emailRecipients,
+      });
+    }
+  }
+
+  await prisma.auditLog.create({
+    data: {
+      clubId: ctx.clubId,
+      userId: ctx.userId,
+      action: "CLUB_ANNOUNCEMENT_SENT",
+      entity: "ClubAnnouncement",
+      entityId: announcement.id,
+      metadata: {
+        targetType: data.targetType,
+        inApp: delivery.userIds.length,
+        emails: delivery.emails.length,
+        emailsSent,
+        emailsFailed,
+      },
+    },
+  });
+
   revalidate();
   return {
     success: true as const,
     announcementId: announcement.id,
-    recipients: recipientIds.length,
+    recipients: delivery.userIds.length,
+    emails: delivery.emails.length,
+    emailsSent,
+    emailsFailed,
   };
 }

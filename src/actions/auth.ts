@@ -16,16 +16,18 @@ import {
 import { linkClubReferral } from "@/actions/billing";
 import {
   findDuplicateClub,
-  findExistingMemberInClub,
   findExistingMembership,
   generateUniqueClubSlug,
 } from "@/lib/registration";
+import { findMemberDuplicateInClub } from "@/lib/member-dedup";
 import type { ClubType } from "@/generated/prisma/client";
 import {
   createAuthCaptchaChallenge,
   validateAuthFormGuard,
   type AuthFormGuardPayload,
 } from "@/lib/auth-form-guard";
+import { assertAuthRateLimit, logAuthEvent } from "@/lib/auth-rate-limit";
+import { getTranslations } from "next-intl/server";
 
 export async function getAuthCaptchaChallenge() {
   return createAuthCaptchaChallenge();
@@ -243,14 +245,28 @@ export async function registerMember(data: {
       }
     }
 
-    const isDuplicate = await findExistingMemberInClub(club.id, normalizedEmail, existingUser.id);
-    if (isDuplicate) {
-      return { error: "ALREADY_MEMBER" as const };
+  }
+
+  const duplicateMember = await findMemberDuplicateInClub(club.id, {
+    email: normalizedEmail,
+    firstName: data.firstName,
+    lastName: data.lastName,
+  });
+
+  if (duplicateMember) {
+    if (existingUser && duplicateMember.userId === existingUser.id) {
+      return { error: "MEMBERSHIP_PENDING" as const };
     }
-  } else {
-    const isDuplicate = await findExistingMemberInClub(club.id, normalizedEmail);
-    if (isDuplicate) {
-      return { error: "MEMBER_EXISTS_IN_CLUB" as const };
+    return { error: "MEMBER_EXISTS_IN_CLUB" as const };
+  }
+
+  if (existingUser) {
+    const memberByUser = await prisma.member.findFirst({
+      where: { clubId: club.id, userId: existingUser.id },
+      select: { id: true },
+    });
+    if (memberByUser) {
+      return { error: "ALREADY_MEMBER" as const };
     }
   }
 
@@ -303,14 +319,21 @@ export async function registerMember(data: {
     });
 
     if (adminMemberships.length > 0) {
+      const clubLocale =
+        data.language === "EN" ? "en" : data.language === "ES" ? "es" : "fr";
+      const tNotify = await getTranslations({
+        locale: clubLocale,
+        namespace: "notifications.joinRequest",
+      });
+      const memberName = `${data.firstName} ${data.lastName}`;
       await tx.notification.createMany({
         data: adminMemberships.map((m) => ({
           userId: m.userId,
           clubId: club.id,
           type: "SYSTEM" as const,
-          title: "Demande d'adhésion",
-          message: `${data.firstName} ${data.lastName} souhaite rejoindre le club.`,
-          link: "/dashboard",
+          title: tNotify("title"),
+          message: tNotify("message", { name: memberName }),
+          link: `/${clubLocale}/dashboard`,
         })),
       });
     }
@@ -343,9 +366,22 @@ export async function registerMember(data: {
 
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
 
-export async function requestPasswordReset(email: string, locale = "fr") {
+export async function requestPasswordReset(
+  email: string,
+  locale = "fr",
+  captcha?: AuthFormGuardPayload
+) {
+  const captchaCheck = validateAuthCaptcha(captcha);
+  if ("error" in captchaCheck) {
+    await logAuthEvent("AUTH_CAPTCHA_FAILED", email, { flow: "password_reset" });
+    return captchaCheck;
+  }
+
   const normalized = email.trim().toLowerCase();
   if (!normalized) return { error: "INVALID_EMAIL" as const };
+
+  const rateCheck = await assertAuthRateLimit("PASSWORD_RESET", normalized);
+  if (!rateCheck.ok) return { error: "RATE_LIMIT" as const };
 
   const user = await prisma.user.findUnique({
     where: { email: normalized },
@@ -368,6 +404,7 @@ export async function requestPasswordReset(email: string, locale = "fr") {
       locale: safeLocale,
     });
     await sendEmail({ to: normalized, subject: mail.subject, html: mail.html });
+    await logAuthEvent("PASSWORD_RESET", normalized, { userId: user.id });
   }
 
   return { success: true as const };
@@ -484,22 +521,31 @@ export async function loginUser(
   password: string,
   captcha?: AuthFormGuardPayload
 ) {
+  const normalized = email.trim().toLowerCase();
+
   const captchaCheck = validateAuthCaptcha(captcha);
-  if ("error" in captchaCheck) return captchaCheck;
+  if ("error" in captchaCheck) {
+    await logAuthEvent("AUTH_CAPTCHA_FAILED", normalized, { flow: "login" });
+    return captchaCheck;
+  }
+
+  const rateCheck = await assertAuthRateLimit("LOGIN_FAILED", normalized);
+  if (!rateCheck.ok) return { error: "RATE_LIMIT" as const };
 
   try {
     const result = await signIn("credentials", {
-      email,
+      email: normalized,
       password,
       redirect: false,
     });
 
     if (typeof result === "string" && result.includes("error=")) {
+      await logAuthEvent("LOGIN_FAILED", normalized, { reason: "invalid_credentials" });
       return { error: "INVALID_CREDENTIALS" as const };
     }
 
     const user = await prisma.user.findUnique({
-      where: { email: email.trim().toLowerCase() },
+      where: { email: normalized },
       select: {
         isSuperAdmin: true,
         mustChangePassword: true,
@@ -517,6 +563,7 @@ export async function loginUser(
       },
     });
     if (!user) {
+      await logAuthEvent("LOGIN_FAILED", normalized, { reason: "user_not_found" });
       return { error: "INVALID_CREDENTIALS" as const };
     }
 
@@ -533,8 +580,10 @@ export async function loginUser(
   } catch (error) {
     if (error instanceof AuthError) {
       if (error.type === "CredentialsSignin") {
+        await logAuthEvent("LOGIN_FAILED", normalized, { reason: "credentials_signin" });
         return { error: "INVALID_CREDENTIALS" as const };
       }
+      await logAuthEvent("LOGIN_FAILED", normalized, { reason: error.type });
       return { error: "AUTH_ERROR" as const };
     }
     throw error;

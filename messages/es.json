@@ -77,6 +77,10 @@
   "notifications": {
     "title": "Notificaciones y anuncios",
     "unauthorized": "Debe iniciar sesión para ver sus notificaciones.",
+    "joinRequest": {
+      "title": "Solicitud de adhesión",
+      "message": "{name} desea unirse al club."
+    },
     "push": {
       "title": "Notificaciones push",
       "hint": "Activadas por defecto para los miembros del club. Recordatorio 1 h antes de cada reunión — puede desactivarlas aquí.",
@@ -657,6 +661,7 @@
       "refresh": "Nuevo cálculo",
       "failed": "Verificación anti-robot fallida. Inténtelo de nuevo."
     },
+    "rateLimit": "Demasiados intentos. Inténtelo de nuevo en una hora.",
     "requiredPassword": {
       "title": "Cambio de contraseña obligatorio",
       "description": "Por su seguridad, elija una contraseña personal nueva antes de acceder a la aplicación.",
@@ -754,7 +759,11 @@
     "today": "Hoy",
     "createError": "No se pudo crear la reunión. Inténtelo de nuevo.",
     "createErrorUnauthorized": "Debe iniciar sesión para crear una reunión.",
-    "createErrorForbidden": "No tiene permiso para crear una reunión."
+    "createErrorForbidden": "No tiene permiso para crear una reunión.",
+    "createErrorCommissionRequired": "Asocie su cuenta a una comisión antes de crear una reunión de comisión.",
+    "commission": "Comisión",
+    "selectCommission": "Elegir una comisión…",
+    "commissionChairTypeHint": "Reunión de comisión — {commission}"
   },
   "attendance": {
     "title": "Asistencia",
@@ -913,14 +922,18 @@
     "roleManagementHint": "Por defecto, cada acceso es « Miembro / Lector ». Los demás roles se modifican aquí (directorio o ficha) por el presidente o el administrador del club.",
     "appRoleOnCreateHint": "Por defecto: Miembro / Lector. Otro rol solo se aplica si ya existe una cuenta con este email.",
     "roleNotAssignedYet": "Miembro añadido. El rol Miembro / Lector se asignará cuando exista la cuenta.",
+    "errors": {
+      "duplicateMember": "Este miembro ya existe en el club (email, n.º de inscripción o nombre)."
+    },
     "import": {
       "title": "Importar miembros",
-      "hint": "Pegue datos CSV o suba un archivo. Descargue la plantilla para el formato esperado.",
+      "hint": "Pegue datos CSV o suba un archivo. Solo se añaden miembros nuevos; los duplicados (email, n.º de inscripción o nombre sin email) se omiten.",
       "pastePlaceholder": "firstName,lastName,email,phone,position,registrationNumber,joinedAt",
       "downloadTemplate": "Plantilla CSV",
       "uploadFile": "Subir CSV",
       "import": "Importar",
       "success": "{count} miembro(s) importado(s)",
+      "skipped": ", {count} omitido(s) (ya presentes)",
       "errors": "error(es)",
       "error": {
         "EMPTY_CSV": "CSV vacío",
@@ -1365,6 +1378,8 @@
     "title": "Configuración",
     "club": "Club",
     "users": "Usuarios",
+    "usersManageHint": "Gestione los accesos y roles de los usuarios de su club.",
+    "usersManageHintClub": "Gestione los accesos y roles de los usuarios de {clubName}.",
     "subscription": "Suscripción",
     "language": "Idioma",
     "timezone": "Zona horaria",
@@ -2058,16 +2073,16 @@
   },
   "clubAnnouncements": {
     "title": "Anuncio del club",
-    "description": "Envíe una notificación en la aplicación a los miembros seleccionados.",
+    "description": "Envíe una notificación en la aplicación y un correo a los miembros seleccionados.",
     "announcementTitle": "Título",
     "message": "Mensaje",
     "targetType": "Segmentación",
     "targetRoles": "Destinatarios (roles)",
     "targetCommission": "Comisión",
     "selectCommission": "Elegir una comisión…",
-    "noAppAccountHint": "Este segmento apunta a miembros sin cuenta activa en la app. Solo quienes ya tengan cuenta recibirán una notificación in-app.",
+    "noAppAccountHint": "Miembros sin cuenta app activa: recibirán un correo si hay una dirección en el directorio.",
     "send": "Enviar anuncio",
-    "success": "Anuncio enviado a {count} miembro(s)",
+    "success": "Anuncio enviado — {count} notificación(es) in-app, {emails} correo(s)",
     "error": "No se pudo enviar el anuncio",
     "targetTypes": {
       "ALL_MEMBERS": "Todos los miembros activos",

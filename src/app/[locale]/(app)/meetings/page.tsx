@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import { fr, enUS, es } from "date-fns/locale";
 import { isFeatureEnabled } from "@/lib/feature-gate";
 import { searchMeetingsPaginated } from "@/lib/queries/meetings-list";
+import { applyMeetingScopeToWhere } from "@/lib/commission-scope";
 import { parseListParams, listParamsToRecord } from "@/lib/server-list";
 import { GuidedEmptyState } from "@/components/assistance/guided-empty-state";
 import { MeetingInvitationButton } from "@/components/meetings/meeting-invitation-button";
@@ -33,10 +34,12 @@ export default async function MeetingsPage({
 
   const listParams = parseListParams({ q: sp.q, page: sp.page }, 10);
 
+  const meetingScope = ctx ? await applyMeetingScopeToWhere(ctx) : undefined;
+
   const [meetingsPage, totalMeetings, scheduledMeeting] = ctx
     ? await Promise.all([
-        searchMeetingsPaginated(ctx.clubId, listParams),
-        prisma.meeting.count({ where: { clubId: ctx.clubId } }),
+        searchMeetingsPaginated(ctx.clubId, listParams, meetingScope),
+        prisma.meeting.count({ where: meetingScope ?? { clubId: ctx.clubId } }),
         sp.scheduled
           ? prisma.meeting.findFirst({
               where: { id: sp.scheduled, clubId: ctx.clubId },

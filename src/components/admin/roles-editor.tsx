@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Toast } from "@/components/ui/toast";
-import { ALL_PERMISSIONS, PERMISSION_LABELS, type Permission } from "@/lib/permissions";
+import { ALL_PERMISSIONS, getPermissionLabel, type Permission } from "@/lib/permissions";
+import { getRoleLabel } from "@/lib/role-labels";
 import { updateRolePermissions, toggleRoleActive } from "@/actions/admin-platform";
 import {
   createCustomRole,
@@ -19,6 +20,7 @@ interface BuiltinRoleRow {
   role: string;
   labelFr: string;
   labelEn: string;
+  labelEs: string | null;
   description: string | null;
   permissions: string[];
   isActive: boolean;
@@ -58,7 +60,6 @@ export function RolesEditor({
       <div className="grid sm:grid-cols-2 gap-2">
         {ALL_PERMISSIONS.map((perm) => {
           const checked = permissions.includes(perm);
-          const labels = PERMISSION_LABELS[perm];
           return (
             <label
               key={perm}
@@ -75,7 +76,7 @@ export function RolesEditor({
                   onChange(next as Permission[]);
                 }}
               />
-              {locale === "fr" ? labels.fr : labels.en}
+              {getPermissionLabel(perm, locale)}
             </label>
           );
         })}
@@ -98,7 +99,7 @@ export function RolesEditor({
                 >
                   <div>
                     <p className="font-medium text-gray-900">
-                      {locale === "fr" ? r.labelFr : r.labelEn}
+                      {getRoleLabel(r.role as never, locale)}
                       <span className="text-gray-400 font-normal ml-2 text-sm">({r.role})</span>
                     </p>
                     {r.description && (

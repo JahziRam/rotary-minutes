@@ -17,6 +17,11 @@ import {
   minutePdfInclude,
 } from "@/lib/pdf/build-minute-pdf";
 import { getAgendaTemplateForMeeting } from "@/lib/minute-templates";
+import {
+  applyMinuteScopeToWhere,
+  assertMinuteAccess,
+  loadMinuteForContext,
+} from "@/lib/commission-scope";
 import type { MinuteStatus, Prisma } from "@/generated/prisma/client";
 
 function revalidateMinutePaths(minuteId: string, locale?: string) {
@@ -50,12 +55,17 @@ export async function saveMinute(
   if (auth.error) return { error: auth.error };
   const { ctx } = auth;
 
-  const minute = await prisma.minute.findFirst({
+  const minute = await loadMinuteForContext(ctx, minuteId);
+  if (!minute) return { error: "NOT_FOUND" };
+  const access = await assertMinuteAccess(ctx, minute);
+  if ("error" in access) return { error: access.error };
+
+  const minuteFull = await prisma.minute.findFirst({
     where: { id: minuteId, clubId: ctx.clubId },
     include: { agendaItems: true, versions: true },
   });
-  if (!minute) return { error: "NOT_FOUND" };
-  if (["FINALIZED", "ARCHIVED", "REVIEW"].includes(minute.status)) {
+  if (!minuteFull) return { error: "NOT_FOUND" };
+  if (["FINALIZED", "ARCHIVED", "REVIEW"].includes(minuteFull.status)) {
     return { error: "LOCKED" };
   }
 
@@ -68,7 +78,7 @@ export async function saveMinute(
   });
 
   if (currentSnapshot) {
-    const version = minute.versions.length + 1;
+    const version = minuteFull.versions.length + 1;
     const hash = generateMinuteHash({
       id: minuteId,
       title: currentSnapshot.title,
@@ -102,7 +112,7 @@ export async function saveMinute(
     })),
   });
 
-  if (minute.status === "DRAFT") {
+  if (minuteFull.status === "DRAFT") {
     await prisma.minute.update({
       where: { id: minuteId },
       data: { status: "IN_PROGRESS" },
@@ -123,6 +133,8 @@ export async function applyAgendaTemplate(minuteId: string, locale: string) {
     include: { meeting: true, agendaItems: true },
   });
   if (!minute) return { error: "NOT_FOUND" };
+  const access = await assertMinuteAccess(ctx, minute);
+  if ("error" in access) return { error: access.error };
   if (["FINALIZED", "ARCHIVED", "REVIEW"].includes(minute.status)) {
     return { error: "LOCKED" };
   }
@@ -546,9 +558,9 @@ export async function searchMinutes(filters: {
   const pageSize = Math.min(100, Math.max(1, filters.pageSize ?? 12));
   const skip = (page - 1) * pageSize;
 
-  const where: Prisma.MinuteWhereInput = {
+  const where = await applyMinuteScopeToWhere(ctx, {
     clubId: ctx.clubId,
-  };
+  });
 
   if (filters.status) {
     where.status = filters.status;
@@ -625,6 +637,8 @@ export async function duplicateMinute(minuteId: string, locale: string) {
     include: { agendaItems: true, meeting: true },
   });
   if (!source) return { error: "NOT_FOUND" };
+  const access = await assertMinuteAccess(ctx, source);
+  if ("error" in access) return { error: access.error };
 
   const newDate = new Date();
   newDate.setDate(newDate.getDate() + 7);
@@ -639,6 +653,7 @@ export async function duplicateMinute(minuteId: string, locale: string) {
       presidedBy: source.meeting.presidedBy,
       secretary: source.meeting.secretary,
       type: source.meeting.type,
+      commissionId: source.meeting.commissionId,
       typeMetadata: source.meeting.typeMetadata ?? undefined,
     },
   });
@@ -685,10 +700,10 @@ export async function archiveMinute(minuteId: string, locale: string) {
   if (auth.error) return { error: auth.error };
   const { ctx } = auth;
 
-  const minute = await prisma.minute.findFirst({
-    where: { id: minuteId, clubId: ctx.clubId },
-  });
+  const minute = await loadMinuteForContext(ctx, minuteId);
   if (!minute) return { error: "NOT_FOUND" };
+  const access = await assertMinuteAccess(ctx, minute);
+  if ("error" in access) return { error: access.error };
 
   await prisma.minute.update({
     where: { id: minuteId },
@@ -990,8 +1005,12 @@ export async function getMinuteById(minuteId: string) {
 
   const ctx = await getClubContext();
   if (ctx) {
+    const scopedWhere = await applyMinuteScopeToWhere(ctx, {
+      id: minuteId,
+      clubId: ctx.clubId,
+    });
     const ownClubMinute = await prisma.minute.findFirst({
-      where: { id: minuteId, clubId: ctx.clubId },
+      where: scopedWhere,
       include: minuteDetailInclude,
     });
     if (ownClubMinute) return ownClubMinute;

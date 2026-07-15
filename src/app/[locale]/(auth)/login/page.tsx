@@ -38,7 +38,9 @@ export default function LoginPage() {
             ? t("invalidCredentials")
             : result.error === "CAPTCHA_FAILED"
               ? t("captcha.failed")
-              : t("loginError")
+              : result.error === "RATE_LIMIT"
+                ? t("rateLimit")
+                : t("loginError")
         );
         return;
       }

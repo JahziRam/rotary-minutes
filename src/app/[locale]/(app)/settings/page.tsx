@@ -87,7 +87,7 @@ export default async function SettingsPage({
                 <CardContent>
                   <div className="flex items-center justify-between p-4 rounded-lg bg-navy/5 border border-navy/10">
                     <p className="text-sm text-gray-600">
-                      Gérez les accès et rôles des utilisateurs de votre club.
+                      {t("settings.usersManageHint")}
                     </p>
                     <Link
                       href={`/${locale}/settings/users`}

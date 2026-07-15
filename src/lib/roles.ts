@@ -11,7 +11,16 @@ export function getDefaultPermissions(role: ClubRoleType): Permission[] {
 }
 
 const getRoleConfigsMap = cache(async () => {
-  const configs = await prisma.roleConfig.findMany();
+  let configs = await prisma.roleConfig.findMany();
+  const existingRoles = new Set(configs.map((c) => c.role));
+  const missingRoles = CLUB_ROLES.filter((role) => !existingRoles.has(role));
+  const staleLabelEs = configs.some((c) => !c.labelEs && ROLE_LABELS[c.role as ClubRoleType]);
+
+  if (missingRoles.length > 0 || staleLabelEs) {
+    await ensureRoleConfigs();
+    configs = await prisma.roleConfig.findMany();
+  }
+
   return new Map(
     configs.map((c) => [
       c.role as ClubRoleType,
@@ -30,11 +39,19 @@ export async function ensureRoleConfigs() {
       : defaults;
     await prisma.roleConfig.upsert({
       where: { role },
-      update: { permissions },
+      update: {
+        permissions,
+        labelFr: labels.fr,
+        labelEn: labels.en,
+        labelEs: labels.es,
+        description: labels.desc,
+        isActive: true,
+      },
       create: {
         role,
         labelFr: labels.fr,
         labelEn: labels.en,
+        labelEs: labels.es,
         description: labels.desc,
         permissions: defaults,
       },

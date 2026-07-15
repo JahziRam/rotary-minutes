@@ -79,6 +79,10 @@
   "notifications": {
     "title": "Notifications & Announcements",
     "unauthorized": "You must be signed in to view your notifications.",
+    "joinRequest": {
+      "title": "Join request",
+      "message": "{name} would like to join the club."
+    },
     "push": {
       "title": "Push notifications",
       "hint": "Enabled by default for club members. Reminder 1 hour before each meeting — you can turn them off here.",
@@ -191,6 +195,7 @@
       "refresh": "New challenge",
       "failed": "Anti-bot verification failed. Please try again."
     },
+    "rateLimit": "Too many attempts. Try again in one hour.",
     "requiredPassword": {
       "title": "Password change required",
       "description": "For your security, choose a new personal password before accessing the app.",
@@ -288,7 +293,11 @@
     "today": "Today",
     "createError": "Could not create the meeting. Please try again.",
     "createErrorUnauthorized": "You must be signed in to create a meeting.",
-    "createErrorForbidden": "You do not have permission to create a meeting."
+    "createErrorForbidden": "You do not have permission to create a meeting.",
+    "createErrorCommissionRequired": "Link your account to a commission before creating a commission meeting.",
+    "commission": "Commission",
+    "selectCommission": "Select a commission…",
+    "commissionChairTypeHint": "Commission meeting — {commission}"
   },
   "attendance": {
     "title": "Attendance",
@@ -447,14 +456,18 @@
     "roleManagementHint": "By default, every access is « Member / Reader ». Other roles can be changed here (directory or member profile) by the president or club administrator.",
     "appRoleOnCreateHint": "Default: Member / Reader. Another role is only applied when a user account already exists with this email.",
     "roleNotAssignedYet": "Member added. The Member / Reader role will be assigned when an app account exists.",
+    "errors": {
+      "duplicateMember": "This member already exists in the club (email, registration number, or name)."
+    },
     "import": {
       "title": "Import members",
-      "hint": "Paste CSV data or upload a file. Download the template for the expected format.",
+      "hint": "Paste CSV data or upload a file. Only new members are added; duplicates (email, registration number, or name without email) are skipped.",
       "pastePlaceholder": "firstName,lastName,email,phone,position,registrationNumber,joinedAt",
       "downloadTemplate": "CSV template",
       "uploadFile": "Upload CSV",
       "import": "Import",
       "success": "{count} member(s) imported",
+      "skipped": ", {count} skipped (already present)",
       "errors": "error(s)",
       "error": {
         "EMPTY_CSV": "Empty CSV",
@@ -1020,6 +1033,8 @@
     "title": "Settings",
     "club": "Club",
     "users": "Users",
+    "usersManageHint": "Manage access and roles for your club users.",
+    "usersManageHintClub": "Manage access and roles for users of {clubName}.",
     "subscription": "Subscription",
     "language": "Language",
     "timezone": "Timezone",
@@ -2252,16 +2267,16 @@
   },
   "clubAnnouncements": {
     "title": "Club announcement",
-    "description": "Send an in-app notification to selected members.",
+    "description": "Send an in-app notification and email to selected members.",
     "announcementTitle": "Title",
     "message": "Message",
     "targetType": "Targeting",
     "targetRoles": "Recipients (roles)",
     "targetCommission": "Commission",
     "selectCommission": "Select a commission…",
-    "noAppAccountHint": "This targets members without an active app account. Only those who already have an account will receive an in-app notification.",
+    "noAppAccountHint": "Members without an active app account will receive an email if an address is listed in the directory.",
     "send": "Send announcement",
-    "success": "Announcement sent to {count} member(s)",
+    "success": "Announcement sent — {count} in-app notification(s), {emails} email(s)",
     "error": "Could not send announcement",
     "targetTypes": {
       "ALL_MEMBERS": "All active members",

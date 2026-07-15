@@ -8,6 +8,29 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Unreleased]
 
 ### Added
+- **Annonces club — email + in-app**
+  - Envoi parallèle `sendClubEmail` pour tous les ciblages (notamment `NO_APP_ACCOUNT`)
+  - Résolution destinataires via `resolveClubAnnouncementDelivery` (userIds + emails)
+  - Historique email (`EmailCampaign`) et audit `CLUB_ANNOUNCEMENT_SENT`
+- **Président de commission — périmètre commission**
+  - Filtrage réunions et PV par `member.commissionId` (`commission-scope.ts`)
+  - Création réunion commission forcée pour `COMMISSION_CHAIR`
+  - Contrôles create/edit/archive PV et actions réunion
+- **Auth — sécurité complémentaire**
+  - Rate limiting login / reset MDP / captcha (`auth-rate-limit.ts`)
+  - Captcha sur mot de passe oublié
+  - Audit `LOGIN_FAILED`, `PASSWORD_RESET`, `AUTH_CAPTCHA_FAILED`
+- **i18n**
+  - Paramètres utilisateurs, demande d'adhésion, annonces, réunions commission
+  - Libellés permissions ES (`getPermissionLabel`)
+- **Rôles — sync auto**
+  - `ensureRoleConfigs` déclenché si rôles manquants ou `labelEs` absent
+  - Migration `labelEs` sur `RoleConfig`
+- **Membres — anti-doublons**
+  - Import CSV : création des nouveaux uniquement ; doublons ignorés (email, n° d'inscription, nom sans email)
+  - Inscriptions en ligne : blocage si le membre existe déjà dans le club (actif, inactif ou en attente)
+  - Ajout manuel : refus avec message d'erreur si doublon détecté
+  - Module partagé `member-dedup.ts` et tests unitaires
 - **Auth — première connexion**
   - Flag `User.mustChangePassword` après envoi d’un mot de passe temporaire (invitation, identifiants membre)
   - Page `/change-password-required` et garde dans le layout applicatif
@@ -46,6 +69,10 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
   - Repli sur variables d'environnement `VAPID_*`
 
 ### Fixed
+- **Build / lint**
+  - Ignore `.open-next`, `dist` et `landing-worker` dans ESLint
+  - Corrections TypeScript (`auth`, annonces club, `server-messages`, webhooks Stripe)
+  - `dues.ts` : `paymentAmount` en `const`
 - **Offres / abonnements — synchronisation super admin**
   - `ensurePlanConfigs()` ne réécrit plus les noms et descriptions à chaque lecture (les réglages super admin sont conservés)
   - Libellés d’offres lus depuis `PlanConfig` partout (sidebar, paramètres, admin clubs/facturation, tableau comparatif)
@@ -61,6 +88,8 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 - Migration `20260715140000_user_password_club_features` — `mustChangePassword`, `ClubAnnouncementTarget`
 - Migration `20260715130000_notification_push_default` — préférences push
 - Migration `20260715150000_club_role_vice_president_commission_chair` — `VICE_PRESIDENT`, `COMMISSION_CHAIR`
+- Migration `20260715160000_meeting_commission_id` — `Meeting.commissionId`
+- Migration `20260715161000_role_config_label_es` — libellés rôles en espagnol
 
 ### Fixed
 - **Membres — changement de rôle** : correction de l’erreur React #482 lors de la modification du rôle dans l’annuaire (`MemberDuesBadge` converti en composant client ; sélecteurs de rôle contrôlés)

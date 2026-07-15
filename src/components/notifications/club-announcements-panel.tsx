@@ -187,7 +187,9 @@ export function ClubAnnouncementsPanel({
                 setToast(t("error"));
                 return;
               }
-              setToast(t("success", { count: result.recipients }));
+              const inApp = result.recipients ?? 0;
+              const emails = "emailsSent" in result ? result.emailsSent ?? 0 : 0;
+              setToast(t("success", { count: inApp, emails }));
               setTitle("");
               setMessage("");
               router.refresh();

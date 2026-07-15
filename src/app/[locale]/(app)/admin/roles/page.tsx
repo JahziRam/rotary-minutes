@@ -34,6 +34,7 @@ export default async function AdminRolesPage({
             role: r.role,
             labelFr: r.labelFr,
             labelEn: r.labelEn,
+            labelEs: r.labelEs,
             description: r.description,
             permissions: r.permissions as string[],
             isActive: r.isActive,

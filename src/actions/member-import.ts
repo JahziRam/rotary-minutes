@@ -1,6 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import {
+  buildMemberDuplicateIndex,
+  isDuplicateInMemberIndex,
+  trackMemberInDuplicateIndex,
+} from "@/lib/member-dedup";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/require-permission";
 
@@ -45,6 +50,18 @@ export async function importMembersFromCsv(csv: string) {
     return { error: "INVALID_HEADERS" as const };
   }
 
+  const existingMembers = await prisma.member.findMany({
+    where: { clubId: ctx.clubId },
+    select: {
+      email: true,
+      registrationNumber: true,
+      firstName: true,
+      lastName: true,
+    },
+  });
+  const existingIndex = buildMemberDuplicateIndex(existingMembers);
+  const batchIndex = buildMemberDuplicateIndex([]);
+
   let imported = 0;
   let skipped = 0;
   const errors: string[] = [];
@@ -65,52 +82,28 @@ export async function importMembersFromCsv(csv: string) {
     const joinDateRaw = cols[idx("joindate")]?.trim() || cols[idx("joinedat")]?.trim();
     const joinDate = joinDateRaw ? new Date(joinDateRaw) : null;
 
+    const row = { email, registrationNumber, firstName, lastName };
+
+    if (isDuplicateInMemberIndex(existingIndex, batchIndex, row)) {
+      skipped++;
+      continue;
+    }
+
     try {
-      if (email) {
-        const existing = await prisma.member.findFirst({
-          where: { clubId: ctx.clubId, email },
-        });
-        if (existing) {
-          await prisma.member.update({
-            where: { id: existing.id },
-            data: {
-              firstName,
-              lastName,
-              phone,
-              position,
-              registrationNumber,
-              ...(joinDate && !Number.isNaN(joinDate.getTime()) ? { joinDate } : {}),
-            },
-          });
-        } else {
-          await prisma.member.create({
-            data: {
-              clubId: ctx.clubId,
-              firstName,
-              lastName,
-              email,
-              phone,
-              position,
-              registrationNumber,
-              joinDate: joinDate && !Number.isNaN(joinDate.getTime()) ? joinDate : undefined,
-              isActive: true,
-            },
-          });
-        }
-      } else {
-        await prisma.member.create({
-          data: {
-            clubId: ctx.clubId,
-            firstName,
-            lastName,
-            phone,
-            position,
-            registrationNumber,
-            joinDate: joinDate && !Number.isNaN(joinDate.getTime()) ? joinDate : undefined,
-            isActive: true,
-          },
-        });
-      }
+      await prisma.member.create({
+        data: {
+          clubId: ctx.clubId,
+          firstName,
+          lastName,
+          email,
+          phone,
+          position,
+          registrationNumber,
+          joinDate: joinDate && !Number.isNaN(joinDate.getTime()) ? joinDate : undefined,
+          isActive: true,
+        },
+      });
+      trackMemberInDuplicateIndex(batchIndex, row);
       imported++;
     } catch (e) {
       errors.push(`Ligne ${i + 1}: ${e instanceof Error ? e.message : "erreur"}`);

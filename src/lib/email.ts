@@ -283,6 +283,38 @@ export async function memberLoginEmail(opts: {
   };
 }
 
+export async function clubAnnouncementEmail(opts: {
+  clubName: string;
+  clubId?: string;
+  title: string;
+  message: string;
+  locale: string;
+  logoUrl?: string;
+}) {
+  const isFr = opts.locale === "fr";
+  const isEs = opts.locale === "es";
+  const intro = isFr
+    ? `<p><strong>${opts.clubName}</strong> — annonce du club</p>`
+    : isEs
+      ? `<p><strong>${opts.clubName}</strong> — anuncio del club</p>`
+      : `<p><strong>${opts.clubName}</strong> — club announcement</p>`;
+  const body = `${intro}<h2 style="margin:16px 0 8px;font-size:18px;color:#0f172a">${opts.title}</h2><div style="white-space:pre-wrap;line-height:1.6">${opts.message}</div>`;
+  const branded = await prepareBrandedEmail(body, {
+    clubName: opts.clubName,
+    clubId: opts.clubId,
+    logoUrl: opts.logoUrl,
+  });
+  return {
+    subject: isFr
+      ? `${opts.title} — ${opts.clubName}`
+      : isEs
+        ? `${opts.title} — ${opts.clubName}`
+        : `${opts.title} — ${opts.clubName}`,
+    html: branded.html,
+    attachments: branded.attachments,
+  };
+}
+
 export async function passwordResetEmail(opts: {
   appName?: string;
   userName: string;

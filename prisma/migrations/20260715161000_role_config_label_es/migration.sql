@@ -1,0 +1,1 @@
+ALTER TABLE "RoleConfig" ADD COLUMN IF NOT EXISTS "labelEs" TEXT;

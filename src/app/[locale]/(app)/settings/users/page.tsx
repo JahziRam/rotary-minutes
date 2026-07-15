@@ -84,7 +84,7 @@ export default async function ClubUsersPage({
           <CardHeader>
             <CardTitle>{t("settings.users")}</CardTitle>
             <p className="text-sm text-gray-500 mt-1">
-              Gérez les accès et rôles des utilisateurs de {ctx.clubName}.
+              {t("settings.usersManageHintClub", { clubName: ctx.clubName })}
             </p>
           </CardHeader>
           <CardContent>

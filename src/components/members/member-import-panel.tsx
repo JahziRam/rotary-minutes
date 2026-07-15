@@ -24,11 +24,14 @@ export function MemberImportPanel({ canManage }: { canManage: boolean }) {
     startTransition(async () => {
       const result = await importMembersFromCsv(text);
       if ("success" in result && result.success) {
-        const errMsg =
-          result.errors.length > 0
-            ? ` (${result.errors.length} ${t("errors")})`
-            : "";
-        setToast(`${t("success", { count: result.imported })}${errMsg}`);
+        let msg = t("success", { count: result.imported });
+        if (result.skipped > 0) {
+          msg += t("skipped", { count: result.skipped });
+        }
+        if (result.errors.length > 0) {
+          msg += ` (${result.errors.length} ${t("errors")})`;
+        }
+        setToast(msg);
         setCsv("");
         router.refresh();
       } else if ("error" in result) {

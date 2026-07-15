@@ -9,6 +9,7 @@ import {
   DEFAULT_MEMBER_APP_ROLE,
 } from "@/lib/member-roles";
 import type { ClubRole } from "@/generated/prisma/client";
+import { findMemberDuplicateInClub } from "@/lib/member-dedup";
 
 function revalidateMembers() {
   for (const loc of ["fr", "en"]) {
@@ -39,6 +40,16 @@ export async function createMember(data: {
   const auth = await requirePermission("members.manage");
   if (auth.error) return { error: auth.error };
   const { ctx } = auth;
+
+  const duplicate = await findMemberDuplicateInClub(ctx.clubId, {
+    email: data.email,
+    registrationNumber: data.registrationNumber,
+    firstName: data.firstName,
+    lastName: data.lastName,
+  });
+  if (duplicate) {
+    return { error: "DUPLICATE_MEMBER" as const };
+  }
 
   const member = await prisma.member.create({
     data: {

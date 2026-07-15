@@ -599,6 +599,7 @@ model Commission {
 
   club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
   members   Member[]
+  meetings  Meeting[]
 
   @@index([clubId])
 }
@@ -616,6 +617,7 @@ model Meeting {
   presidedBy      String?
   secretary       String?
   type            MeetingType @default(STATUTORY)
+  commissionId    String?
   // Type-specific fields (JSON for flexibility)
   typeMetadata    Json?
   isLive          Boolean     @default(false)
@@ -623,11 +625,13 @@ model Meeting {
   updatedAt       DateTime    @updatedAt
 
   club            Club        @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  commission      Commission? @relation(fields: [commissionId], references: [id], onDelete: SetNull)
   attendances     MeetingAttendance[]
   minute          Minute?
   checkInToken    MeetingCheckInToken?
 
   @@index([clubId, date])
+  @@index([clubId, commissionId])
 }
 
 model MeetingAttendance {
@@ -1069,6 +1073,7 @@ model RoleConfig {
   role          ClubRole @id
   labelFr       String
   labelEn       String
+  labelEs       String?
   description   String?
   permissions   Json
   isActive      Boolean  @default(true)

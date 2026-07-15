@@ -34,21 +34,17 @@ export async function findExistingMemberInClub(
   email: string,
   userId?: string
 ): Promise<boolean> {
-  const normalizedEmail = email.trim().toLowerCase();
-
-  const byEmail = await prisma.member.findFirst({
-    where: {
-      clubId,
-      email: { equals: normalizedEmail, mode: "insensitive" },
-      isActive: true,
-    },
-    select: { id: true },
+  const { findMemberDuplicateInClub } = await import("@/lib/member-dedup");
+  const duplicate = await findMemberDuplicateInClub(clubId, {
+    email,
+    firstName: "",
+    lastName: "",
   });
-  if (byEmail) return true;
+  if (duplicate) return true;
 
   if (userId) {
     const byUser = await prisma.member.findFirst({
-      where: { clubId, userId, isActive: true },
+      where: { clubId, userId },
       select: { id: true },
     });
     if (byUser) return true;

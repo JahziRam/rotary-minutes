@@ -25,9 +25,10 @@ export type MeetingListRow = {
 
 function buildMeetingWhere(
   clubId: string,
-  params: ParsedListParams
+  params: ParsedListParams,
+  extraWhere?: Prisma.MeetingWhereInput
 ): Prisma.MeetingWhereInput {
-  const where: Prisma.MeetingWhereInput = { clubId };
+  const where: Prisma.MeetingWhereInput = { clubId, ...extraWhere };
 
   if (params.q) {
     where.OR = [
@@ -50,9 +51,10 @@ function buildMeetingWhere(
 
 export async function searchMeetingsPaginated(
   clubId: string,
-  params: ParsedListParams
+  params: ParsedListParams,
+  extraWhere?: Prisma.MeetingWhereInput
 ): Promise<PaginatedResult<MeetingListRow>> {
-  const where = buildMeetingWhere(clubId, params);
+  const where = buildMeetingWhere(clubId, params, extraWhere);
 
   const [total, meetings] = await Promise.all([
     prisma.meeting.count({ where }),

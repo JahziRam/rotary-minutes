@@ -56,7 +56,7 @@ describe("stripe webhooks payment logging", () => {
       currency: "eur",
       payment_status: "paid",
       mode: "subscription",
-    } as Stripe.Checkout.Session);
+    } as unknown as Stripe.Checkout.Session);
 
     expect(recordPaymentMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -79,7 +79,7 @@ describe("stripe webhooks payment logging", () => {
       payment_intent: "pi_1",
       lines: { data: [{ period: { end: 1_700_000_000 } }] },
       status_transitions: { paid_at: 1_699_000_000 },
-    } as Stripe.Invoice);
+    } as unknown as Stripe.Invoice);
 
     expect(recordPaymentMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -102,7 +102,7 @@ describe("stripe webhooks payment logging", () => {
       amount_total: 0,
       currency: "eur",
       payment_status: "paid",
-    } as Stripe.Checkout.Session);
+    } as unknown as Stripe.Checkout.Session);
 
     expect(recordPaymentMock).not.toHaveBeenCalled();
   });

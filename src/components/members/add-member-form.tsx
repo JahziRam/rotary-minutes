@@ -69,6 +69,11 @@ export function AddMemberForm({
               locale,
             });
 
+            if ("error" in result && result.error === "DUPLICATE_MEMBER") {
+              setToast(t("errors.duplicateMember"));
+              return;
+            }
+
             if (result.success) {
               if (result.loginSent) {
                 setToast(t("loginSent"));

@@ -1,6 +1,8 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getClubContext } from "@/lib/club-context";
 import { getLastMeetingDefaults } from "@/actions/meetings";
+import { getCommissionChairCommissionId } from "@/lib/commission-scope";
+import { prisma } from "@/lib/prisma";
 import { getAgendaTemplateForMeeting } from "@/lib/minute-templates";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { MeetingForm } from "@/components/meetings/meeting-form";
@@ -18,9 +20,27 @@ export default async function NewMeetingPage({
   const t = await getTranslations();
   const ctx = await getClubContext(true);
 
+  const isCommissionChair = ctx?.role === "COMMISSION_CHAIR" && !ctx.isSuperAdmin;
+  const chairCommissionId = ctx ? await getCommissionChairCommissionId(ctx) : null;
+  const commissions = ctx
+    ? await prisma.commission.findMany({
+        where: { clubId: ctx.clubId },
+        select: { id: true, name: true },
+        orderBy: { name: "asc" },
+      })
+    : [];
+  const chairCommissionName =
+    chairCommissionId != null
+      ? commissions.find((c) => c.id === chairCommissionId)?.name ?? null
+      : null;
+
   const lastMeeting = ctx ? await getLastMeetingDefaults(ctx.clubId) : null;
   const initialAgenda = ctx
-    ? await getAgendaTemplateForMeeting("STATUTORY", locale, ctx.clubId)
+    ? await getAgendaTemplateForMeeting(
+        isCommissionChair ? "COMMISSION" : "STATUTORY",
+        locale,
+        ctx.clubId
+      )
     : [];
 
   return (
@@ -32,6 +52,10 @@ export default async function NewMeetingPage({
           lastMeeting={lastMeeting}
           fromLast={from === "last"}
           initialAgenda={initialAgenda}
+          isCommissionChair={isCommissionChair}
+          chairCommissionId={chairCommissionId}
+          chairCommissionName={chairCommissionName}
+          commissions={commissions}
         />
       ) : (
         <p className="text-gray-500">Accès non autorisé</p>

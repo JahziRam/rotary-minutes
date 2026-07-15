@@ -62,6 +62,10 @@ export function MeetingForm({
   lastMeeting,
   fromLast = false,
   initialAgenda = [],
+  isCommissionChair = false,
+  chairCommissionId = null,
+  chairCommissionName = null,
+  commissions = [],
 }: {
   clubDefaults: ClubDefaults;
   members: MemberOption[];
@@ -74,11 +78,15 @@ export function MeetingForm({
   fromLast?: boolean;
   /** Agenda template for the default meeting type (STATUTORY) */
   initialAgenda?: Array<{ title: string; description?: string | null }>;
+  isCommissionChair?: boolean;
+  chairCommissionId?: string | null;
+  chairCommissionName?: string | null;
+  commissions?: Array<{ id: string; name: string }>;
 }) {
   const t = useTranslations("meetings");
   const tMinutes = useTranslations("minutes");
   const locale = useLocale();
-  const [type, setType] = useState<string>("STATUTORY");
+  const [type, setType] = useState<string>(isCommissionChair ? "COMMISSION" : "STATUTORY");
   const [mode, setMode] = useState<"now" | "scheduled">("scheduled");
   const [agendaItems, setAgendaItems] = useState<MeetingAgendaDraft[]>(() =>
     toDraftItems(initialAgenda)
@@ -158,6 +166,8 @@ export function MeetingForm({
         return t("createErrorUnauthorized");
       case "FORBIDDEN":
         return t("createErrorForbidden");
+      case "COMMISSION_REQUIRED":
+        return t("createErrorCommissionRequired");
       default:
         return t("createError");
     }
@@ -260,17 +270,29 @@ export function MeetingForm({
             )}
             <div className="space-y-1.5" data-assist="meeting-form-type">
               <label className="text-sm font-medium text-gray-700">{t("type")}</label>
-              <select
-                value={type}
-                onChange={(e) => setType(e.target.value)}
-                className="flex h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm focus:border-navy focus:outline-none focus:ring-2 focus:ring-navy/20"
-              >
-                {MEETING_TYPES.map((mt) => (
-                  <option key={mt} value={mt}>
-                    {t(`types.${mt}`)}
-                  </option>
-                ))}
-              </select>
+              {isCommissionChair ? (
+                <>
+                  <input type="hidden" name="type" value="COMMISSION" />
+                  <input type="hidden" name="commissionId" value={chairCommissionId ?? ""} />
+                  <p className="text-sm text-gray-800 rounded-lg border border-navy/15 bg-navy/5 px-3 py-2">
+                    {t("commissionChairTypeHint", {
+                      commission: chairCommissionName ?? t("types.COMMISSION"),
+                    })}
+                  </p>
+                </>
+              ) : (
+                <select
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
+                  className="flex h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm focus:border-navy focus:outline-none focus:ring-2 focus:ring-navy/20"
+                >
+                  {MEETING_TYPES.map((mt) => (
+                    <option key={mt} value={mt}>
+                      {t(`types.${mt}`)}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
           </div>
 
@@ -321,9 +343,28 @@ export function MeetingForm({
             </div>
           </div>
 
-          {extraFields.map((field) => (
-            <Input key={field} name={field} label={t(field as "commissionName")} />
-          ))}
+          {!isCommissionChair && type === "COMMISSION" && commissions.length > 0 && (
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-gray-700">{t("commission")}</label>
+              <select
+                name="commissionId"
+                required
+                className="flex h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm focus:border-navy focus:outline-none focus:ring-2 focus:ring-navy/20"
+              >
+                <option value="">{t("selectCommission")}</option>
+                {commissions.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          {extraFields
+            .filter((field) => !(type === "COMMISSION" && field === "commissionName"))
+            .map((field) => (
+              <Input key={field} name={field} label={t(field as "commissionName")} />
+            ))}
         </CardContent>
       </Card>
 

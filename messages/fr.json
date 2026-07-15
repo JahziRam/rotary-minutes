@@ -79,6 +79,10 @@
   "notifications": {
     "title": "Notifications & Annonces",
     "unauthorized": "Vous devez être connecté pour voir vos notifications.",
+    "joinRequest": {
+      "title": "Demande d'adhésion",
+      "message": "{name} souhaite rejoindre le club."
+    },
     "push": {
       "title": "Notifications push",
       "hint": "Activées par défaut pour les membres du club. Rappel 1 h avant chaque réunion — vous pouvez les désactiver ici.",
@@ -191,6 +195,7 @@
       "refresh": "Nouveau calcul",
       "failed": "Vérification anti-robot échouée. Réessayez."
     },
+    "rateLimit": "Trop de tentatives. Réessayez dans une heure.",
     "requiredPassword": {
       "title": "Changement de mot de passe requis",
       "description": "Pour votre sécurité, choisissez un nouveau mot de passe personnel avant d'accéder à l'application.",
@@ -288,7 +293,11 @@
     "today": "Aujourd'hui",
     "createError": "Impossible de créer la réunion. Réessayez.",
     "createErrorUnauthorized": "Vous devez être connecté pour créer une réunion.",
-    "createErrorForbidden": "Vous n'avez pas la permission de créer une réunion."
+    "createErrorForbidden": "Vous n'avez pas la permission de créer une réunion.",
+    "createErrorCommissionRequired": "Associez votre compte à une commission pour créer une réunion de commission.",
+    "commission": "Commission",
+    "selectCommission": "Choisir une commission…",
+    "commissionChairTypeHint": "Réunion de commission — {commission}"
   },
   "attendance": {
     "title": "Présences",
@@ -447,14 +456,18 @@
     "roleManagementHint": "Par défaut, chaque accès est « Membre / Lecteur ». Les autres rôles se modifient ici (annuaire ou fiche membre) par le président ou l'administrateur du club.",
     "appRoleOnCreateHint": "Par défaut : Membre / Lecteur. Un autre rôle n'est appliqué que si un compte utilisateur existe déjà avec cet email.",
     "roleNotAssignedYet": "Membre ajouté. Le rôle Membre / Lecteur sera assigné lorsque le compte applicatif existera.",
+    "errors": {
+      "duplicateMember": "Ce membre existe déjà dans le club (email, n° d'inscription ou nom)."
+    },
     "import": {
       "title": "Importer des membres",
-      "hint": "Collez des données CSV ou importez un fichier. Téléchargez le modèle pour le format attendu.",
+      "hint": "Collez des données CSV ou importez un fichier. Seuls les nouveaux membres sont ajoutés ; les doublons (email, n° d'inscription ou nom sans email) sont ignorés.",
       "pastePlaceholder": "firstName,lastName,email,phone,position,registrationNumber,joinedAt",
       "downloadTemplate": "Modèle CSV",
       "uploadFile": "Importer CSV",
       "import": "Importer",
       "success": "{count} membre(s) importé(s)",
+      "skipped": ", {count} ignoré(s) (déjà présents)",
       "errors": "erreur(s)",
       "error": {
         "EMPTY_CSV": "CSV vide",
@@ -1020,6 +1033,8 @@
     "title": "Paramètres",
     "club": "Club",
     "users": "Utilisateurs",
+    "usersManageHint": "Gérez les accès et rôles des utilisateurs de votre club.",
+    "usersManageHintClub": "Gérez les accès et rôles des utilisateurs de {clubName}.",
     "subscription": "Abonnement",
     "language": "Langue",
     "timezone": "Fuseau horaire",
@@ -2384,16 +2399,16 @@
   },
   "clubAnnouncements": {
     "title": "Annonce au club",
-    "description": "Envoyez une notification in-app aux membres sélectionnés.",
+    "description": "Envoyez une notification in-app et un email aux membres sélectionnés.",
     "announcementTitle": "Titre",
     "message": "Message",
     "targetType": "Ciblage",
     "targetRoles": "Destinataires (rôles)",
     "targetCommission": "Commission",
     "selectCommission": "Choisir une commission…",
-    "noAppAccountHint": "Ce ciblage concerne les membres sans compte actif dans l'app. Seuls ceux ayant déjà un compte recevront une notification in-app.",
+    "noAppAccountHint": "Membres sans compte app actif : ils recevront un email si une adresse est renseignée dans l'annuaire.",
     "send": "Envoyer l'annonce",
-    "success": "Annonce envoyée à {count} membre(s)",
+    "success": "Annonce envoyée — {count} notification(s) in-app, {emails} email(s)",
     "error": "Impossible d'envoyer l'annonce",
     "targetTypes": {
       "ALL_MEMBERS": "Tous les membres actifs",

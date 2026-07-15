@@ -10,6 +10,12 @@ import { sendClubEmail } from "@/lib/club-smtp";
 import { prepareBrandedEmail } from "@/lib/email-branding";
 import { icsAttachment } from "@/lib/ics";
 import { isFeatureEnabled } from "@/lib/feature-gate";
+import {
+  assertCommissionChairHasCommission,
+  assertCommissionMeetingAccess,
+  applyMeetingScopeToWhere,
+  isCommissionChairRole,
+} from "@/lib/commission-scope";
 
 /** Parse YYYY-MM-DD as local calendar date (noon) to avoid UTC day-shift.
  *  Must stay non-exported: "use server" files may only export async actions. */
@@ -163,6 +169,18 @@ export async function createMeeting(
   if (auth.error) return { error: auth.error };
   const { ctx } = auth;
 
+  let meetingType = ((data.type as MeetingType) || "STATUTORY") as MeetingType;
+  let commissionId: string | null = data.commissionId?.trim() || null;
+
+  if (isCommissionChairRole(ctx)) {
+    const chairScope = await assertCommissionChairHasCommission(ctx);
+    if ("error" in chairScope) return { error: chairScope.error };
+    meetingType = "COMMISSION";
+    commissionId = chairScope.commissionId;
+  } else if (meetingType === "COMMISSION" && !commissionId) {
+    return { error: "COMMISSION_REQUIRED" as const };
+  }
+
   const mode = data.mode === "now" ? "now" : "scheduled";
   const typeMetadata: Record<string, string> = {};
   for (const [key, value] of Object.entries(data)) {
@@ -199,13 +217,12 @@ export async function createMeeting(
       endTime: mode === "now" ? undefined : data.endTime || undefined,
       presidedBy: data.presidedBy || ctx.club.presidentName,
       secretary: data.secretary || ctx.club.secretaryName,
-      type: (data.type as MeetingType) || "STATUTORY",
+      type: meetingType,
+      commissionId,
       typeMetadata: Object.keys(typeMetadata).length ? typeMetadata : undefined,
       isLive: goLive,
     },
   });
-
-  const meetingType = (data.type as MeetingType) || "STATUTORY";
   const formAgenda = parseAgendaFromForm(data);
   const templateItems =
     formAgenda ?? (await getAgendaTemplateForMeeting(meetingType, locale, ctx.clubId));
@@ -274,6 +291,9 @@ export async function startLiveMeeting(meetingId: string, locale: string) {
   });
   if (!meeting) return { error: "NOT_FOUND" as const };
 
+  const access = await assertCommissionMeetingAccess(ctx, meeting);
+  if ("error" in access) return { error: access.error };
+
   if (!meeting.isLive) {
     await prisma.meeting.update({
       where: { id: meetingId },
@@ -306,6 +326,9 @@ export async function endLiveMeeting(meetingId: string, locale: string) {
     include: { minute: { select: { id: true } } },
   });
   if (!meeting) return { error: "NOT_FOUND" as const };
+
+  const access = await assertCommissionMeetingAccess(ctx, meeting);
+  if ("error" in access) return { error: access.error };
 
   const now = new Date();
   const endTime =
@@ -356,6 +379,9 @@ export async function sendMeetingInvitation(meetingId: string, locale: string) {
     },
   });
   if (!meeting) return { error: "NOT_FOUND" as const };
+
+  const access = await assertCommissionMeetingAccess(ctx, meeting);
+  if ("error" in access) return { error: access.error };
 
   const members = await prisma.member.findMany({
     where: { clubId: ctx.clubId, isActive: true, email: { not: null } },
