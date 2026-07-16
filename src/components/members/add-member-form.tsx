@@ -85,50 +85,52 @@ export function AddMemberForm({
             }
           });
         }}
-        className="space-y-3"
+        className="flex min-h-0 flex-1 flex-col"
       >
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-5 py-4">
           <h3 className="font-semibold text-gray-900">{t("add")}</h3>
           <button type="button" onClick={() => setOpen(false)} className="text-gray-400 hover:text-gray-600">
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <Input name="firstName" label="Prénom" required />
-          <Input name="lastName" label="Nom" required />
-        </div>
-        <Input name="email" type="email" label="Email" />
-        <Input name="phone" label={t("phone")} />
-        <Input name="registrationNumber" label={t("registrationNumber")} />
-        <Input name="position" label={t("position")} />
-        <Input name="birthday" type="date" label={t("birthday")} />
-        <Input name="joinDate" type="date" label={t("joinDate")} />
-        <label className="flex items-start gap-2 text-sm text-gray-700">
-          <input type="checkbox" name="isHonoraryMember" className="mt-0.5" />
-          <span>
-            <span className="font-medium">{t("honoraryMember")}</span>
-            <span className="block text-xs text-gray-500">{t("honoraryMemberHint")}</span>
-          </span>
-        </label>
-        {canManageRoles && (
-          <div className="space-y-2">
-            <div className="space-y-1.5">
-              <AppRolePicker
-                roleOptions={roleOptions}
-                customRoles={customRoles}
-              />
-              <p className="text-xs text-gray-500">{t("appRoleOnCreateHint")}</p>
-            </div>
-            <label className="flex items-start gap-2 text-sm text-gray-700">
-              <input type="checkbox" name="sendLogin" className="mt-0.5" />
-              <span>
-                <span className="font-medium">{t("sendLoginOnCreate")}</span>
-                <span className="block text-xs text-gray-500">{t("sendLoginHint")}</span>
-              </span>
-            </label>
+        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-5 py-4 native-scroll">
+          <div className="grid grid-cols-2 gap-3">
+            <Input name="firstName" label="Prénom" required />
+            <Input name="lastName" label="Nom" required />
           </div>
-        )}
-        <div className="flex gap-2 justify-end">
+          <Input name="email" type="email" label="Email" />
+          <Input name="phone" label={t("phone")} />
+          <Input name="registrationNumber" label={t("registrationNumber")} />
+          <Input name="position" label={t("position")} />
+          <Input name="birthday" type="date" label={t("birthday")} />
+          <Input name="joinDate" type="date" label={t("joinDate")} />
+          <label className="flex items-start gap-2 text-sm text-gray-700">
+            <input type="checkbox" name="isHonoraryMember" className="mt-0.5" />
+            <span>
+              <span className="font-medium">{t("honoraryMember")}</span>
+              <span className="block text-xs text-gray-500">{t("honoraryMemberHint")}</span>
+            </span>
+          </label>
+          {canManageRoles && (
+            <div className="space-y-2">
+              <div className="space-y-1.5">
+                <AppRolePicker
+                  roleOptions={roleOptions}
+                  customRoles={customRoles}
+                />
+                <p className="text-xs text-gray-500">{t("appRoleOnCreateHint")}</p>
+              </div>
+              <label className="flex items-start gap-2 text-sm text-gray-700">
+                <input type="checkbox" name="sendLogin" className="mt-0.5" />
+                <span>
+                  <span className="font-medium">{t("sendLoginOnCreate")}</span>
+                  <span className="block text-xs text-gray-500">{t("sendLoginHint")}</span>
+                </span>
+              </label>
+            </div>
+          )}
+        </div>
+        <div className="flex shrink-0 justify-end gap-2 border-t border-gray-100 px-5 py-4">
           <Button type="button" variant="outline" onClick={() => setOpen(false)}>
             {tCommon("cancel")}
           </Button>
@@ -146,7 +148,7 @@ function CardForm({ children, onClose }: { children: React.ReactNode; onClose: (
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" onClick={onClose}>
       <div
-        className="bg-white rounded-xl border border-gray-200 shadow-lg p-5 w-full max-w-md"
+        className="flex max-h-[min(90dvh,90vh)] w-full max-w-md flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
         {children}

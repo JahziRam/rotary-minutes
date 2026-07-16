@@ -10,6 +10,8 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 ### Fixed
 - **PV — périmètre commission**
   - Correction du filtre `minuteWhereForContext` : les rôles autres que président de commission voient à nouveau tous les PV du club (liste et détail) au lieu d'une liste vide et d'une erreur 404
+- **Membres — ajout**
+  - Modal « Ajouter un membre » : hauteur limitée à l'écran, corps défilable et boutons Annuler / Enregistrer toujours visibles en bas
 
 ### Added
 - **Charte Rotary — PV, PDF et emails**
