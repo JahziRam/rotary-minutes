@@ -35,10 +35,19 @@ export async function getMinuteAiStatus() {
   };
 }
 
+export type PolishMinuteAgendaItemInput = {
+  agendaItemId: string;
+  agendaTitle: string;
+  rawNotes: string;
+  existingDecisions?: string;
+  existingActions?: string;
+  existingResponsible?: string;
+  existingDueDate?: string;
+};
+
 export async function polishMinuteAgendaItem(
   minuteId: string,
-  agendaItemId: string,
-  rawNotes: string
+  input: PolishMinuteAgendaItemInput
 ) {
   const auth = await requirePermission("minutes.edit");
   if (auth.error) return auth;
@@ -58,13 +67,11 @@ export async function polishMinuteAgendaItem(
   const accessMeeting = await assertMinuteAccess(ctx, minute);
   if ("error" in accessMeeting) return { error: accessMeeting.error };
 
-  const item = await prisma.agendaItem.findFirst({
-    where: { id: agendaItemId, minuteId, minute: { clubId: ctx.clubId } },
-  });
-  if (!item) return { error: "NOT_FOUND" as const };
-
-  const notes = rawNotes.trim();
+  const notes = input.rawNotes.trim();
   if (!notes) return { error: "EMPTY_NOTES" as const };
+
+  const agendaTitle = input.agendaTitle.trim();
+  if (!agendaTitle) return { error: "NOT_FOUND" as const };
 
   const club = await prisma.club.findUnique({
     where: { id: ctx.clubId },
@@ -83,14 +90,12 @@ export async function polishMinuteAgendaItem(
       {
         locale,
         meetingType: minute.meeting.type,
-        agendaTitle: item.title,
+        agendaTitle,
         rawNotes: notes,
-        existingDecisions: item.decisions ?? "",
-        existingActions: item.actions ?? "",
-        existingResponsible: item.responsible ?? "",
-        existingDueDate: item.dueDate
-          ? item.dueDate.toISOString().split("T")[0]
-          : "",
+        existingDecisions: input.existingDecisions ?? "",
+        existingActions: input.existingActions ?? "",
+        existingResponsible: input.existingResponsible ?? "",
+        existingDueDate: input.existingDueDate ?? "",
       },
       platform.model,
       apiKey,
@@ -103,10 +108,11 @@ export async function polishMinuteAgendaItem(
         userId: ctx.userId,
         action: "MINUTE_AI_POLISH",
         entity: "AgendaItem",
-        entityId: agendaItemId,
+        entityId: input.agendaItemId,
         metadata: {
           minuteId,
-          agendaTitle: item.title,
+          agendaTitle,
+          provider: platform.provider,
         },
       },
     });
@@ -123,6 +129,9 @@ export async function polishMinuteAgendaItem(
     if (message === "API_KEY_MISSING") return { error: "API_KEY_MISSING" as const };
     if (message === "EMPTY_NOTES") return { error: "EMPTY_NOTES" as const };
     if (message.startsWith("API_ERROR")) return { error: "AI_UNAVAILABLE" as const };
+    if (message === "INVALID_RESPONSE" || message === "EMPTY_RESPONSE") {
+      return { error: "AI_ERROR" as const };
+    }
     return { error: "AI_ERROR" as const };
   }
 }

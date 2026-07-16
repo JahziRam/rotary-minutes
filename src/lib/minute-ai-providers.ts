@@ -75,3 +75,19 @@ export function resolveChatCompletionsUrl(provider: MinuteAiProvider): string {
 export function primaryEnvApiKeyVar(provider: MinuteAiProvider): string {
   return PROVIDER_META[provider].envApiKeyVars[0]!;
 }
+
+export function resolveModelForProvider(
+  provider: MinuteAiProvider,
+  model: string | undefined | null
+): string {
+  const trimmed = model?.trim() ?? "";
+  if (!trimmed) return defaultModelForProvider(provider);
+
+  const looksLikeQwen = /^qwen/i.test(trimmed);
+  const looksLikeXai = /^grok/i.test(trimmed);
+
+  if (provider === "qwen" && looksLikeXai) return defaultModelForProvider("qwen");
+  if (provider === "xai" && looksLikeQwen) return defaultModelForProvider("xai");
+
+  return trimmed;
+}

@@ -1,6 +1,7 @@
 import {
   parseMinuteAiProvider,
   resolveChatCompletionsUrl,
+  resolveModelForProvider,
   type MinuteAiProvider,
 } from "@/lib/minute-ai-providers";
 
@@ -81,6 +82,42 @@ export function parsePolishedResponse(text: string): PolishedAgendaItem | null {
   }
 }
 
+type ChatRequestBody = {
+  model: string;
+  temperature: number;
+  messages: Array<{ role: string; content: string }>;
+  response_format?: { type: "json_object" };
+};
+
+async function requestChatCompletion(
+  provider: MinuteAiProvider,
+  apiKey: string,
+  body: ChatRequestBody
+): Promise<Response> {
+  const url = resolveChatCompletionsUrl(provider);
+  const headers = {
+    Authorization: `Bearer ${apiKey}`,
+    "Content-Type": "application/json",
+  };
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+  });
+
+  if (response.ok || !body.response_format) {
+    return response;
+  }
+
+  const { response_format: _rf, ...fallbackBody } = body;
+  return fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(fallbackBody),
+  });
+}
+
 export async function polishAgendaItemNotes(
   input: PolishAgendaItemInput,
   model: string,
@@ -98,21 +135,17 @@ export async function polishAgendaItemNotes(
   }
 
   const resolvedProvider = parseMinuteAiProvider(provider);
-  const response = await fetch(resolveChatCompletionsUrl(resolvedProvider), {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model,
-      temperature: 0.3,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: buildSystemPrompt(input.locale) },
-        { role: "user", content: buildUserPrompt(input) },
-      ],
-    }),
+  const resolvedModel = resolveModelForProvider(resolvedProvider, model);
+  const messages = [
+    { role: "system", content: buildSystemPrompt(input.locale) },
+    { role: "user", content: buildUserPrompt(input) },
+  ];
+
+  const response = await requestChatCompletion(resolvedProvider, key, {
+    model: resolvedModel,
+    temperature: 0.3,
+    response_format: { type: "json_object" },
+    messages,
   });
 
   if (!response.ok) {

@@ -98,6 +98,18 @@ export function MinuteEditor({
   const [, startTransition] = useTransition();
   const readOnly = ["FINALIZED", "ARCHIVED", "REVIEW"].includes(status);
 
+  const syncAgendaItemIds = useCallback(
+    (saved: Array<{ id: string; sortOrder: number }>) => {
+      setItems((prev) =>
+        prev.map((item, index) => ({
+          ...item,
+          id: saved[index]?.id ?? item.id,
+        }))
+      );
+    },
+    []
+  );
+
   const doSave = useCallback(async () => {
     if (["FINALIZED", "ARCHIVED", "REVIEW"].includes(status)) return;
     setSaving(true);
@@ -113,12 +125,46 @@ export function MinuteEditor({
 
     setIsOffline(false);
     const result = await saveMinute(minute.id, payload);
-    if (!result?.error) {
+    if ("success" in result && result.success) {
+      if (result.agendaItems?.length) {
+        syncAgendaItemIds(result.agendaItems);
+      }
       await markDraftSynced(minute.id);
       setLastSaved(new Date());
     }
     setSaving(false);
-  }, [minute.id, clubId, items, status]);
+  }, [minute.id, clubId, items, status, syncAgendaItemIds]);
+
+  const ensureSavedForPolish = useCallback(
+    async (agendaItemId: string): Promise<string | { error: string }> => {
+      const index = items.findIndex((item) => item.id === agendaItemId);
+      if (index < 0) return { error: "NOT_FOUND" };
+
+      if (["FINALIZED", "ARCHIVED", "REVIEW"].includes(status)) {
+        return { error: "LOCKED" };
+      }
+
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        return { error: "AI_UNAVAILABLE" };
+      }
+
+      const result = await saveMinute(minute.id, { agendaItems: items });
+      if ("error" in result && result.error) {
+        return { error: result.error };
+      }
+      if (!("success" in result) || !result.success) {
+        return { error: "AI_ERROR" };
+      }
+
+      const savedId = result.agendaItems?.[index]?.id;
+      if (!savedId) return { error: "NOT_FOUND" };
+
+      syncAgendaItemIds(result.agendaItems ?? []);
+      setLastSaved(new Date());
+      return savedId;
+    },
+    [items, minute.id, status, syncAgendaItemIds]
+  );
 
   const syncOfflineDrafts = useCallback(async () => {
     const drafts = await getUnsyncedDrafts();
@@ -126,9 +172,18 @@ export function MinuteEditor({
       if (draft.id !== minute.id) continue;
       const data = draft.data as { agendaItems: AgendaItem[] };
       const result = await saveMinute(draft.id, data);
-      if (!result?.error) {
+      if ("success" in result && result.success) {
         await markDraftSynced(draft.id);
-        if (data.agendaItems) setItems(data.agendaItems);
+        if (data.agendaItems && result.agendaItems?.length) {
+          setItems(
+            data.agendaItems.map((item, index) => ({
+              ...item,
+              id: result.agendaItems?.[index]?.id ?? item.id,
+            }))
+          );
+        } else if (data.agendaItems) {
+          setItems(data.agendaItems);
+        }
         setLastSaved(new Date());
         setIsOffline(false);
         startTransition(() => router.refresh());
@@ -370,7 +425,13 @@ export function MinuteEditor({
                   <MinuteAiPolishButton
                     minuteId={minute.id}
                     agendaItemId={item.id}
+                    agendaTitle={item.title}
                     rawNotes={item.description}
+                    existingDecisions={item.decisions}
+                    existingActions={item.actions}
+                    existingResponsible={item.responsible}
+                    existingDueDate={item.dueDate}
+                    onEnsureSaved={ensureSavedForPolish}
                     onPolished={(polished) => {
                       setItems((prev) =>
                         prev.map((row) =>

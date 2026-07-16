@@ -13,6 +13,11 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
   - Repli clé API via `DASHSCOPE_API_KEY` ou `QWEN_API_KEY` ; base URL personnalisable (`QWEN_API_BASE_URL`)
 
 ### Fixed
+- **Assistant IA — reformulation PV**
+  - Sauvegarde automatique avant reformulation et resynchronisation des IDs des points d'ordre du jour
+  - Reformulation basée sur les données du formulaire (plus de dépendance à l'ID en base)
+  - Qwen : repli sans `response_format` si refusé, et correction auto si le modèle configuré ne correspond pas au fournisseur (ex. `grok-3-mini` avec Qwen)
+  - Messages d'erreur explicites : point introuvable, PV verrouillé, permission refusée, service IA indisponible
 - **PV — périmètre commission**
   - Correction du filtre `minuteWhereForContext` : les rôles autres que président de commission voient à nouveau tous les PV du club (liste et détail) au lieu d'une liste vide et d'une erreur 404
 - **Membres — ajout**

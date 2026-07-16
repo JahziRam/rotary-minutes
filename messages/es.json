@@ -844,6 +844,11 @@
         "QUOTA_EXCEEDED": "Cuota mensual alcanzada",
         "AI_UNAVAILABLE": "Servicio IA no disponible — inténtelo más tarde",
         "AI_ERROR": "Error al reformular",
+        "NOT_FOUND": "Punto del orden del día no encontrado — guarde el acta e inténtelo de nuevo",
+        "LOCKED": "Acta bloqueada — ya no se puede reformular",
+        "FORBIDDEN": "No tiene permiso para reformular este acta",
+        "COMMISSION_REQUIRED": "Acceso limitado a su comisión",
+        "UNAUTHORIZED": "Sesión caducada — vuelva a iniciar sesión",
         "generic": "No se pudo reformular"
       }
     },

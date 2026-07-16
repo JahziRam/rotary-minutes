@@ -388,6 +388,11 @@
         "QUOTA_EXCEEDED": "Monthly quota reached",
         "AI_UNAVAILABLE": "AI service unavailable — try again later",
         "AI_ERROR": "Polish failed",
+        "NOT_FOUND": "Agenda item not found — save the minutes and try again",
+        "LOCKED": "Minutes are locked — polishing is no longer available",
+        "FORBIDDEN": "You do not have permission to polish these minutes",
+        "COMMISSION_REQUIRED": "Access limited to your commission",
+        "UNAUTHORIZED": "Session expired — sign in again",
         "generic": "Could not polish notes"
       }
     },

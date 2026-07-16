@@ -388,6 +388,11 @@
         "QUOTA_EXCEEDED": "Quota mensuel atteint",
         "AI_UNAVAILABLE": "Service IA indisponible — réessayez plus tard",
         "AI_ERROR": "Erreur de reformulation",
+        "NOT_FOUND": "Point d'ordre du jour introuvable — enregistrez le PV puis réessayez",
+        "LOCKED": "PV verrouillé — la reformulation n'est plus possible",
+        "FORBIDDEN": "Vous n'avez pas la permission de reformuler ce PV",
+        "COMMISSION_REQUIRED": "Accès limité à votre commission",
+        "UNAUTHORIZED": "Session expirée — reconnectez-vous",
         "generic": "Reformulation impossible"
       }
     },

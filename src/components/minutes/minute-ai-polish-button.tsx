@@ -6,17 +6,56 @@ import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { polishMinuteAgendaItem } from "@/actions/minute-ai";
 
+const POLISH_ERROR_KEYS = [
+  "FEATURE_DISABLED",
+  "GLOBALLY_DISABLED",
+  "API_KEY_MISSING",
+  "QUOTA_EXCEEDED",
+  "AI_UNAVAILABLE",
+  "AI_ERROR",
+  "EMPTY_NOTES",
+  "NOT_FOUND",
+  "LOCKED",
+  "FORBIDDEN",
+  "COMMISSION_REQUIRED",
+  "UNAUTHORIZED",
+] as const;
+
+type PolishErrorKey = (typeof POLISH_ERROR_KEYS)[number];
+
+function resolvePolishError(
+  code: string,
+  t: (key: string) => string
+): string {
+  if (POLISH_ERROR_KEYS.includes(code as PolishErrorKey)) {
+    return t(`error.${code}`);
+  }
+  return t("error.generic");
+}
+
 export function MinuteAiPolishButton({
   minuteId,
   agendaItemId,
+  agendaTitle,
   rawNotes,
+  existingDecisions = "",
+  existingActions = "",
+  existingResponsible = "",
+  existingDueDate = "",
   disabled,
+  onEnsureSaved,
   onPolished,
 }: {
   minuteId: string;
   agendaItemId: string;
+  agendaTitle: string;
   rawNotes: string;
+  existingDecisions?: string;
+  existingActions?: string;
+  existingResponsible?: string;
+  existingDueDate?: string;
   disabled?: boolean;
+  onEnsureSaved?: (agendaItemId: string) => Promise<string | { error: string }>;
   onPolished: (data: {
     description: string;
     decisions: string;
@@ -30,6 +69,11 @@ export function MinuteAiPolishButton({
   const [error, setError] = useState<string | null>(null);
 
   function handlePolish() {
+    if (!agendaTitle.trim()) {
+      setError(t("error.NOT_FOUND"));
+      return;
+    }
+
     if (!rawNotes.trim()) {
       setError(t("error.emptyNotes"));
       return;
@@ -37,7 +81,25 @@ export function MinuteAiPolishButton({
 
     setError(null);
     startTransition(async () => {
-      const result = await polishMinuteAgendaItem(minuteId, agendaItemId, rawNotes);
+      let resolvedAgendaItemId = agendaItemId;
+      if (onEnsureSaved) {
+        const ensured = await onEnsureSaved(agendaItemId);
+        if (typeof ensured !== "string") {
+          setError(resolvePolishError(ensured.error, t));
+          return;
+        }
+        resolvedAgendaItemId = ensured;
+      }
+
+      const result = await polishMinuteAgendaItem(minuteId, {
+        agendaItemId: resolvedAgendaItemId,
+        agendaTitle,
+        rawNotes,
+        existingDecisions,
+        existingActions,
+        existingResponsible,
+        existingDueDate,
+      });
       if ("success" in result && result.success) {
         onPolished({
           description: result.polished.description,
@@ -50,21 +112,11 @@ export function MinuteAiPolishButton({
       }
 
       if ("error" in result && result.error) {
-        const known = [
-          "FEATURE_DISABLED",
-          "GLOBALLY_DISABLED",
-          "API_KEY_MISSING",
-          "QUOTA_EXCEEDED",
-          "AI_UNAVAILABLE",
-          "AI_ERROR",
-          "EMPTY_NOTES",
-        ] as const;
-        if (known.includes(result.error as (typeof known)[number])) {
-          setError(t(`error.${result.error}` as "error.generic"));
-        } else {
-          setError(t("error.generic"));
-        }
+        setError(resolvePolishError(result.error, t));
+        return;
       }
+
+      setError(t("error.generic"));
     });
   }
 

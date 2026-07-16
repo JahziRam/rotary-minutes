@@ -4,6 +4,7 @@ import {
   parseMinuteAiProvider,
   resolveChatCompletionsUrl,
   resolveEnvApiKey,
+  resolveModelForProvider,
 } from "./minute-ai-providers";
 
 describe("minute-ai-providers", () => {
@@ -47,5 +48,11 @@ describe("minute-ai-providers", () => {
     expect(defaultModelForProvider("qwen")).toBe("qwen-plus");
     process.env.QWEN_MINUTE_AI_MODEL = "qwen-turbo";
     expect(defaultModelForProvider("qwen")).toBe("qwen-turbo");
+  });
+
+  it("replaces mismatched models for the selected provider", () => {
+    expect(resolveModelForProvider("qwen", "grok-3-mini")).toBe("qwen-plus");
+    expect(resolveModelForProvider("xai", "qwen-plus")).toBe("grok-3-mini");
+    expect(resolveModelForProvider("qwen", "qwen-turbo")).toBe("qwen-turbo");
   });
 });

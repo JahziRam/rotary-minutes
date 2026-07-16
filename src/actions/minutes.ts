@@ -112,6 +112,12 @@ export async function saveMinute(
     })),
   });
 
+  const savedAgendaItems = await prisma.agendaItem.findMany({
+    where: { minuteId },
+    orderBy: { sortOrder: "asc" },
+    select: { id: true, sortOrder: true },
+  });
+
   if (minuteFull.status === "DRAFT") {
     await prisma.minute.update({
       where: { id: minuteId },
@@ -120,7 +126,13 @@ export async function saveMinute(
   }
 
   revalidateMinutePaths(minuteId);
-  return { success: true };
+  return {
+    success: true as const,
+    agendaItems: savedAgendaItems.map((item) => ({
+      id: item.id,
+      sortOrder: item.sortOrder,
+    })),
+  };
 }
 
 export async function applyAgendaTemplate(minuteId: string, locale: string) {
