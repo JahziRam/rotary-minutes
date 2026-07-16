@@ -64,6 +64,7 @@ export default async function AdminSettingsPage({
       apiConfigured: false,
       apiKeySet: false,
       apiKeyPreview: "",
+      apiBaseUrl: "",
       envFallback: false,
       envFallbackVar: "XAI_API_KEY",
     }),
