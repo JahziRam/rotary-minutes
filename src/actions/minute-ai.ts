@@ -13,6 +13,7 @@ import {
   getMinuteAiPlatformConfig,
   resolveMinuteAiApiKey,
 } from "@/lib/minute-ai-config";
+import { parseMinuteAiProvider } from "@/lib/minute-ai-providers";
 
 function revalidateMinuteAiPaths(minuteId: string) {
   for (const loc of ["fr", "en", "es"]) {
@@ -92,7 +93,8 @@ export async function polishMinuteAgendaItem(
           : "",
       },
       platform.model,
-      apiKey
+      apiKey,
+      platform.provider
     );
 
     await prisma.auditLog.create({
@@ -128,6 +130,7 @@ export async function polishMinuteAgendaItem(
 export async function updateMinuteAiPlatformSettings(data: {
   globallyEnabled: boolean;
   monthlyQuotaPerClub: number;
+  provider?: string;
   model?: string;
   apiKey?: string;
 }) {
@@ -139,6 +142,9 @@ export async function updateMinuteAiPlatformSettings(data: {
   await saveMinuteAiPlatformConfig({
     globallyEnabled: data.globallyEnabled,
     monthlyQuotaPerClub: quota,
+    ...(data.provider?.trim()
+      ? { provider: parseMinuteAiProvider(data.provider.trim()) }
+      : {}),
     ...(data.model?.trim() ? { model: data.model.trim() } : {}),
     ...(data.apiKey?.trim() ? { apiKey: data.apiKey.trim() } : {}),
   });
@@ -152,6 +158,7 @@ export async function updateMinuteAiPlatformSettings(data: {
       metadata: {
         globallyEnabled: data.globallyEnabled,
         monthlyQuotaPerClub: quota,
+        provider: data.provider?.trim() || undefined,
         apiKeyUpdated: Boolean(data.apiKey?.trim()),
       },
     },

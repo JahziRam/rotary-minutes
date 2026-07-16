@@ -7,6 +7,11 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+### Added
+- **Assistant IA — Qwen**
+  - Fournisseur alternatif Qwen (DashScope) à SpaceXAI pour la rédaction PV ; sélection dans **Admin → Paramètres**
+  - Repli clé API via `DASHSCOPE_API_KEY` ou `QWEN_API_KEY` ; base URL personnalisable (`QWEN_API_BASE_URL`)
+
 ### Fixed
 - **PV — périmètre commission**
   - Correction du filtre `minuteWhereForContext` : les rôles autres que président de commission voient à nouveau tous les PV du club (liste et détail) au lieu d'une liste vide et d'une erreur 404

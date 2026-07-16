@@ -1,3 +1,9 @@
+import {
+  parseMinuteAiProvider,
+  resolveChatCompletionsUrl,
+  type MinuteAiProvider,
+} from "@/lib/minute-ai-providers";
+
 export type PolishedAgendaItem = {
   description: string;
   decisions: string;
@@ -78,7 +84,8 @@ export function parsePolishedResponse(text: string): PolishedAgendaItem | null {
 export async function polishAgendaItemNotes(
   input: PolishAgendaItemInput,
   model: string,
-  apiKey: string
+  apiKey: string,
+  provider: MinuteAiProvider = "xai"
 ): Promise<PolishedAgendaItem> {
   const key = apiKey.trim();
   if (!key) {
@@ -90,7 +97,8 @@ export async function polishAgendaItemNotes(
     throw new Error("EMPTY_NOTES");
   }
 
-  const response = await fetch("https://api.x.ai/v1/chat/completions", {
+  const resolvedProvider = parseMinuteAiProvider(provider);
+  const response = await fetch(resolveChatCompletionsUrl(resolvedProvider), {
     method: "POST",
     headers: {
       Authorization: `Bearer ${key}`,

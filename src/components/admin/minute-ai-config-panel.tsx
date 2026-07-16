@@ -9,6 +9,11 @@ import { Badge } from "@/components/ui/badge";
 import { Toast } from "@/components/ui/toast";
 import { updateMinuteAiPlatformSettings } from "@/actions/minute-ai";
 import type { MinuteAiAdminView } from "@/lib/minute-ai-config";
+import {
+  getMinuteAiProviderMeta,
+  MINUTE_AI_PROVIDER_IDS,
+  type MinuteAiProvider,
+} from "@/lib/minute-ai-providers";
 
 export function MinuteAiConfigPanel({ config }: { config: MinuteAiAdminView }) {
   const locale = useLocale();
@@ -16,6 +21,8 @@ export function MinuteAiConfigPanel({ config }: { config: MinuteAiAdminView }) {
   const [pending, startTransition] = useTransition();
   const [toast, setToast] = useState<string | null>(null);
   const [globallyEnabled, setGloballyEnabled] = useState(config.globallyEnabled);
+  const [provider, setProvider] = useState<MinuteAiProvider>(config.provider);
+  const providerMeta = getMinuteAiProviderMeta(provider);
 
   return (
     <div className="mt-8 rounded-xl border border-violet-200 bg-violet-50/40 p-4 space-y-4">
@@ -27,8 +34,8 @@ export function MinuteAiConfigPanel({ config }: { config: MinuteAiAdminView }) {
           </h3>
           <p className="text-sm text-gray-500 mt-1">
             {isFr
-              ? "Clé API xAI, activation plateforme et quota mensuel par club. La variable XAI_API_KEY sert de repli."
-              : "xAI API key, platform toggle and monthly quota per club. XAI_API_KEY env var is fallback."}
+              ? "Fournisseur IA (SpaceXAI ou Qwen), clé API, activation plateforme et quota mensuel par club."
+              : "AI provider (SpaceXAI or Qwen), API key, platform toggle and monthly quota per club."}
           </p>
         </div>
         <Badge variant={config.apiConfigured ? "success" : "muted"}>
@@ -45,8 +52,8 @@ export function MinuteAiConfigPanel({ config }: { config: MinuteAiAdminView }) {
       {config.envFallback && (
         <p className="text-xs text-amber-700 bg-amber-50 rounded-lg p-3">
           {isFr
-            ? "Clé active depuis la variable d'environnement XAI_API_KEY. Enregistrez une clé ici pour la gérer depuis l'admin."
-            : "Key active from XAI_API_KEY environment variable. Save a key here to manage it from admin."}
+            ? `Clé active depuis la variable d'environnement ${config.envFallbackVar}. Enregistrez une clé ici pour la gérer depuis l'admin.`
+            : `Key active from ${config.envFallbackVar} environment variable. Save a key here to manage it from admin.`}
         </p>
       )}
 
@@ -59,6 +66,7 @@ export function MinuteAiConfigPanel({ config }: { config: MinuteAiAdminView }) {
                 (fd.get("monthlyQuotaPerClub") as string) || "50",
                 10
               ),
+              provider: (fd.get("provider") as string) || undefined,
               model: (fd.get("model") as string) || undefined,
               apiKey: (fd.get("apiKey") as string) || undefined,
             });
@@ -71,7 +79,28 @@ export function MinuteAiConfigPanel({ config }: { config: MinuteAiAdminView }) {
       >
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-gray-700">
-            {isFr ? "Clé API xAI" : "xAI API key"}
+            {isFr ? "Fournisseur IA" : "AI provider"}
+          </label>
+          <select
+            name="provider"
+            value={provider}
+            onChange={(e) => setProvider(e.target.value as MinuteAiProvider)}
+            className="flex h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm"
+          >
+            {MINUTE_AI_PROVIDER_IDS.map((id) => {
+              const meta = getMinuteAiProviderMeta(id);
+              return (
+                <option key={id} value={id}>
+                  {isFr ? meta.labelFr : meta.labelEn}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-gray-700">
+            {isFr ? "Clé API" : "API key"}
           </label>
           <input
             name="apiKey"
@@ -80,9 +109,7 @@ export function MinuteAiConfigPanel({ config }: { config: MinuteAiAdminView }) {
             placeholder={
               config.apiKeySet
                 ? config.apiKeyPreview || "••••••••"
-                : isFr
-                  ? "xai-..."
-                  : "xai-..."
+                : providerMeta.apiKeyPlaceholder
             }
             className="flex h-10 w-full rounded-lg border border-gray-200 px-3 text-sm font-mono"
           />
@@ -93,6 +120,11 @@ export function MinuteAiConfigPanel({ config }: { config: MinuteAiAdminView }) {
                 : "Leave empty to keep the current key"}
             </p>
           )}
+          <p className="text-xs text-gray-400">
+            {isFr
+              ? `Repli serveur : ${providerMeta.envApiKeyVars.join(" ou ")}`
+              : `Server fallback: ${providerMeta.envApiKeyVars.join(" or ")}`}
+          </p>
         </div>
 
         <label className="flex items-center gap-2 text-sm">
@@ -114,9 +146,9 @@ export function MinuteAiConfigPanel({ config }: { config: MinuteAiAdminView }) {
         />
         <Input
           name="model"
-          label={isFr ? "Modèle xAI" : "xAI model"}
+          label={isFr ? "Modèle" : "Model"}
           defaultValue={config.model}
-          placeholder="grok-3-mini"
+          placeholder={providerMeta.defaultModel}
         />
         <Button type="submit" variant="outline" size="sm" disabled={pending}>
           {isFr ? "Enregistrer" : "Save"}

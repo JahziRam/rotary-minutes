@@ -1,10 +1,20 @@
 import { startOfMonth } from "date-fns";
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
+import {
+  defaultModelForProvider,
+  parseMinuteAiProvider,
+  primaryEnvApiKeyVar,
+  resolveEnvApiKey,
+  type MinuteAiProvider,
+} from "@/lib/minute-ai-providers";
+
+export type { MinuteAiProvider } from "@/lib/minute-ai-providers";
 
 export type MinuteAiPlatformConfig = {
   globallyEnabled: boolean;
   monthlyQuotaPerClub: number;
+  provider: MinuteAiProvider;
   model: string;
 };
 
@@ -13,16 +23,20 @@ export type MinuteAiAdminView = MinuteAiPlatformConfig & {
   apiKeySet: boolean;
   apiKeyPreview: string;
   envFallback: boolean;
+  envFallbackVar: string;
 };
 
 type MinuteAiStoredConfig = MinuteAiPlatformConfig & {
   apiKey?: string;
 };
 
+const DEFAULT_MINUTE_AI_PROVIDER: MinuteAiProvider = "xai";
+
 const DEFAULT_MINUTE_AI_CONFIG: MinuteAiPlatformConfig = {
   globallyEnabled: true,
   monthlyQuotaPerClub: 50,
-  model: process.env.XAI_MINUTE_AI_MODEL ?? "grok-3-mini",
+  provider: DEFAULT_MINUTE_AI_PROVIDER,
+  model: defaultModelForProvider(DEFAULT_MINUTE_AI_PROVIDER),
 };
 
 type AppConfigJson = {
@@ -31,10 +45,12 @@ type AppConfigJson = {
 
 function readStoredMinuteAi(config: unknown): MinuteAiStoredConfig {
   const stored = (config as AppConfigJson | null)?.minuteAi ?? {};
+  const provider = parseMinuteAiProvider(stored.provider);
   return {
     ...DEFAULT_MINUTE_AI_CONFIG,
     ...stored,
-    model: stored.model ?? DEFAULT_MINUTE_AI_CONFIG.model,
+    provider,
+    model: stored.model ?? defaultModelForProvider(provider),
   };
 }
 
@@ -54,11 +70,12 @@ export async function getStoredMinuteAi(): Promise<MinuteAiStoredConfig> {
 
 export async function resolveMinuteAiApiKey(): Promise<string> {
   const stored = await getStoredMinuteAi();
-  return stored.apiKey?.trim() || process.env.XAI_API_KEY?.trim() || "";
+  return stored.apiKey?.trim() || resolveEnvApiKey(stored.provider);
 }
 
 export async function isMinuteAiApiConfigured(): Promise<boolean> {
-  return Boolean(await resolveMinuteAiApiKey());
+  const stored = await getStoredMinuteAi();
+  return Boolean(stored.apiKey?.trim() || resolveEnvApiKey(stored.provider));
 }
 
 export async function getMinuteAiPlatformConfig(): Promise<MinuteAiPlatformConfig> {
@@ -77,14 +94,17 @@ export async function getMinuteAiAdminView(): Promise<MinuteAiAdminView> {
     resolveMinuteAiApiKey(),
   ]);
   const { apiKey: _apiKey, ...publicConfig } = stored;
-  const envFallback = !stored.apiKey?.trim() && Boolean(process.env.XAI_API_KEY?.trim());
+  const provider = parseMinuteAiProvider(stored.provider);
+  const envFallback = !stored.apiKey?.trim() && Boolean(resolveEnvApiKey(provider));
 
   return {
     ...publicConfig,
+    provider,
     apiConfigured: Boolean(resolvedKey),
-    apiKeySet: Boolean(stored.apiKey?.trim() || process.env.XAI_API_KEY?.trim()),
+    apiKeySet: Boolean(stored.apiKey?.trim() || resolveEnvApiKey(provider)),
     apiKeyPreview: maskMinuteAiApiKey(resolvedKey),
     envFallback,
+    envFallbackVar: primaryEnvApiKeyVar(provider),
   };
 }
 
@@ -98,10 +118,15 @@ export async function saveMinuteAiPlatformConfig(
   const current = readStoredMinuteAi(settings?.config);
   const config = (settings?.config as AppConfigJson | null) ?? {};
 
+  const provider = patch.provider
+    ? parseMinuteAiProvider(patch.provider)
+    : current.provider;
+
   const next: MinuteAiStoredConfig = {
     globallyEnabled: patch.globallyEnabled ?? current.globallyEnabled,
     monthlyQuotaPerClub: patch.monthlyQuotaPerClub ?? current.monthlyQuotaPerClub,
-    model: patch.model?.trim() || current.model,
+    provider,
+    model: patch.model?.trim() || current.model || defaultModelForProvider(provider),
     apiKey: patch.apiKey?.trim() || current.apiKey,
   };
 

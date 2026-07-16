@@ -59,11 +59,13 @@ export default async function AdminSettingsPage({
     adminQuery("minuteAi", () => getMinuteAiAdminView(), {
       globallyEnabled: true,
       monthlyQuotaPerClub: 50,
+      provider: "xai" as const,
       model: "grok-3-mini",
       apiConfigured: false,
       apiKeySet: false,
       apiKeyPreview: "",
       envFallback: false,
+      envFallbackVar: "XAI_API_KEY",
     }),
   ]);
 
