@@ -11,6 +11,9 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 - **Assistant IA — Qwen**
   - Fournisseur alternatif Qwen (DashScope) à SpaceXAI pour la rédaction PV ; sélection dans **Admin → Paramètres**
   - Repli clé API via `DASHSCOPE_API_KEY` ou `QWEN_API_KEY` ; base URL personnalisable (`QWEN_API_BASE_URL`)
+- **Assistant IA — OpenAI**
+  - Fournisseur OpenAI (API compatible) pour la rédaction PV ; sélection dans **Admin → Paramètres**
+  - Repli clé API via `OPENAI_API_KEY` ; modèle par défaut `gpt-4o-mini` ; base URL personnalisable (`OPENAI_API_BASE_URL`)
 
 ### Fixed
 - **Assistant IA — reformulation PV**

@@ -1,6 +1,6 @@
-export type MinuteAiProvider = "xai" | "qwen";
+export type MinuteAiProvider = "xai" | "qwen" | "openai";
 
-export const MINUTE_AI_PROVIDER_IDS: MinuteAiProvider[] = ["xai", "qwen"];
+export const MINUTE_AI_PROVIDER_IDS: MinuteAiProvider[] = ["xai", "qwen", "openai"];
 
 export type MinuteAiProviderMeta = {
   id: MinuteAiProvider;
@@ -31,10 +31,21 @@ const PROVIDER_META: Record<MinuteAiProvider, MinuteAiProviderMeta> = {
     envModelVar: "QWEN_MINUTE_AI_MODEL",
     apiKeyPlaceholder: "sk-...",
   },
+  openai: {
+    id: "openai",
+    labelEn: "OpenAI",
+    labelFr: "OpenAI",
+    defaultModel: "gpt-4o-mini",
+    envApiKeyVars: ["OPENAI_API_KEY"],
+    envModelVar: "OPENAI_MINUTE_AI_MODEL",
+    apiKeyPlaceholder: "sk-...",
+  },
 };
 
 export function parseMinuteAiProvider(value: unknown): MinuteAiProvider {
-  return value === "qwen" ? "qwen" : "xai";
+  if (value === "qwen") return "qwen";
+  if (value === "openai") return "openai";
+  return "xai";
 }
 
 export function getMinuteAiProviderMeta(provider: MinuteAiProvider): MinuteAiProviderMeta {
@@ -64,6 +75,14 @@ export function resolveChatCompletionsUrl(provider: MinuteAiProvider): string {
     return "https://api.x.ai/v1/chat/completions";
   }
 
+  if (provider === "openai") {
+    const base =
+      process.env.OPENAI_API_BASE_URL?.trim() ||
+      process.env.OPENAI_BASE_URL?.trim() ||
+      "https://api.openai.com/v1";
+    return `${base.replace(/\/$/, "")}/chat/completions`;
+  }
+
   const base =
     process.env.QWEN_API_BASE_URL?.trim() ||
     process.env.DASHSCOPE_BASE_URL?.trim() ||
@@ -76,6 +95,13 @@ export function primaryEnvApiKeyVar(provider: MinuteAiProvider): string {
   return PROVIDER_META[provider].envApiKeyVars[0]!;
 }
 
+function modelFamily(model: string): MinuteAiProvider | "unknown" {
+  if (/^grok/i.test(model)) return "xai";
+  if (/^qwen/i.test(model)) return "qwen";
+  if (/^gpt-|^o[0-9](-|$)/i.test(model)) return "openai";
+  return "unknown";
+}
+
 export function resolveModelForProvider(
   provider: MinuteAiProvider,
   model: string | undefined | null
@@ -83,11 +109,10 @@ export function resolveModelForProvider(
   const trimmed = model?.trim() ?? "";
   if (!trimmed) return defaultModelForProvider(provider);
 
-  const looksLikeQwen = /^qwen/i.test(trimmed);
-  const looksLikeXai = /^grok/i.test(trimmed);
-
-  if (provider === "qwen" && looksLikeXai) return defaultModelForProvider("qwen");
-  if (provider === "xai" && looksLikeQwen) return defaultModelForProvider("xai");
+  const family = modelFamily(trimmed);
+  if (family !== "unknown" && family !== provider) {
+    return defaultModelForProvider(provider);
+  }
 
   return trimmed;
 }

@@ -34,8 +34,8 @@ export function MinuteAiConfigPanel({ config }: { config: MinuteAiAdminView }) {
           </h3>
           <p className="text-sm text-gray-500 mt-1">
             {isFr
-              ? "Fournisseur IA (SpaceXAI ou Qwen), clé API, activation plateforme et quota mensuel par club."
-              : "AI provider (SpaceXAI or Qwen), API key, platform toggle and monthly quota per club."}
+              ? "Fournisseur IA (SpaceXAI, Qwen ou OpenAI), clé API, activation plateforme et quota mensuel par club."
+              : "AI provider (SpaceXAI, Qwen or OpenAI), API key, platform toggle and monthly quota per club."}
           </p>
         </div>
         <Badge variant={config.apiConfigured ? "success" : "muted"}>
