@@ -64,3 +64,15 @@ services:
         value: "30"
       - key: RUN_DB_SEED
         value: "1"
+      - key: XAI_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_API_BASE_URL
+        sync: false
+      - key: OPENAI_MINUTE_AI_MODEL
+        sync: false
+      - key: DASHSCOPE_API_KEY
+        sync: false
+      - key: QWEN_API_BASE_URL
+        sync: false

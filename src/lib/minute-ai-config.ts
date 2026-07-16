@@ -5,6 +5,7 @@ import {
   defaultModelForProvider,
   parseMinuteAiProvider,
   primaryEnvApiKeyVar,
+  resolveEnvApiBaseUrl,
   resolveEnvApiKey,
   type MinuteAiProvider,
 } from "@/lib/minute-ai-providers";
@@ -22,12 +23,14 @@ export type MinuteAiAdminView = MinuteAiPlatformConfig & {
   apiConfigured: boolean;
   apiKeySet: boolean;
   apiKeyPreview: string;
+  apiBaseUrl: string;
   envFallback: boolean;
   envFallbackVar: string;
 };
 
 type MinuteAiStoredConfig = MinuteAiPlatformConfig & {
   apiKey?: string;
+  apiBaseUrl?: string;
 };
 
 const DEFAULT_MINUTE_AI_PROVIDER: MinuteAiProvider = "xai";
@@ -73,6 +76,11 @@ export async function resolveMinuteAiApiKey(): Promise<string> {
   return stored.apiKey?.trim() || resolveEnvApiKey(stored.provider);
 }
 
+export async function resolveMinuteAiApiBaseUrl(): Promise<string> {
+  const stored = await getStoredMinuteAi();
+  return stored.apiBaseUrl?.trim() || resolveEnvApiBaseUrl(stored.provider);
+}
+
 export async function isMinuteAiApiConfigured(): Promise<boolean> {
   const stored = await getStoredMinuteAi();
   return Boolean(stored.apiKey?.trim() || resolveEnvApiKey(stored.provider));
@@ -103,6 +111,7 @@ export async function getMinuteAiAdminView(): Promise<MinuteAiAdminView> {
     apiConfigured: Boolean(resolvedKey),
     apiKeySet: Boolean(stored.apiKey?.trim() || resolveEnvApiKey(provider)),
     apiKeyPreview: maskMinuteAiApiKey(resolvedKey),
+    apiBaseUrl: stored.apiBaseUrl?.trim() || resolveEnvApiBaseUrl(provider),
     envFallback,
     envFallbackVar: primaryEnvApiKeyVar(provider),
   };
@@ -128,6 +137,10 @@ export async function saveMinuteAiPlatformConfig(
     provider,
     model: patch.model?.trim() || current.model || defaultModelForProvider(provider),
     apiKey: patch.apiKey?.trim() || current.apiKey,
+    apiBaseUrl:
+      patch.apiBaseUrl !== undefined
+        ? patch.apiBaseUrl.trim() || current.apiBaseUrl
+        : current.apiBaseUrl,
   };
 
   await prisma.appSettings.upsert({

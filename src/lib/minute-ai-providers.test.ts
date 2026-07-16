@@ -33,7 +33,7 @@ describe("minute-ai-providers", () => {
     );
   });
 
-  it("honors custom base URLs", () => {
+  it("honors custom base URLs from env", () => {
     process.env.QWEN_API_BASE_URL =
       "https://dashscope-us.aliyuncs.com/compatible-mode/v1/";
     expect(resolveChatCompletionsUrl("qwen")).toBe(
@@ -44,6 +44,13 @@ describe("minute-ai-providers", () => {
     expect(resolveChatCompletionsUrl("openai")).toBe(
       "https://api.openai.com/v1/chat/completions"
     );
+  });
+
+  it("prefers admin override over env base URL", () => {
+    process.env.OPENAI_API_BASE_URL = "https://api.openai.com/v1";
+    expect(
+      resolveChatCompletionsUrl("openai", "https://bazaarlink.ai/api/v1")
+    ).toBe("https://bazaarlink.ai/api/v1/chat/completions");
   });
 
   it("resolves env API keys per provider", () => {

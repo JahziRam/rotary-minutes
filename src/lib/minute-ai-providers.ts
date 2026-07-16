@@ -70,22 +70,45 @@ export function defaultModelForProvider(provider: MinuteAiProvider): string {
   return resolveEnvDefaultModel(provider) || PROVIDER_META[provider].defaultModel;
 }
 
-export function resolveChatCompletionsUrl(provider: MinuteAiProvider): string {
+export function resolveEnvApiBaseUrl(provider: MinuteAiProvider): string {
+  if (provider === "openai") {
+    return (
+      process.env.OPENAI_API_BASE_URL?.trim() ||
+      process.env.OPENAI_BASE_URL?.trim() ||
+      ""
+    );
+  }
+  if (provider === "qwen") {
+    return (
+      process.env.QWEN_API_BASE_URL?.trim() ||
+      process.env.DASHSCOPE_BASE_URL?.trim() ||
+      ""
+    );
+  }
+  return "";
+}
+
+export function resolveChatCompletionsUrl(
+  provider: MinuteAiProvider,
+  apiBaseUrlOverride?: string
+): string {
   if (provider === "xai") {
     return "https://api.x.ai/v1/chat/completions";
   }
 
+  const override = apiBaseUrlOverride?.trim();
+
   if (provider === "openai") {
     const base =
-      process.env.OPENAI_API_BASE_URL?.trim() ||
-      process.env.OPENAI_BASE_URL?.trim() ||
+      override ||
+      resolveEnvApiBaseUrl("openai") ||
       "https://api.openai.com/v1";
     return `${base.replace(/\/$/, "")}/chat/completions`;
   }
 
   const base =
-    process.env.QWEN_API_BASE_URL?.trim() ||
-    process.env.DASHSCOPE_BASE_URL?.trim() ||
+    override ||
+    resolveEnvApiBaseUrl("qwen") ||
     "https://dashscope-intl.aliyuncs.com/compatible-mode/v1";
 
   return `${base.replace(/\/$/, "")}/chat/completions`;

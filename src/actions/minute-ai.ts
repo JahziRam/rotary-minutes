@@ -11,6 +11,7 @@ import { polishAgendaItemNotes } from "@/lib/minute-ai";
 import { resolveMinuteAiAccess } from "@/lib/minute-ai-access";
 import {
   getMinuteAiPlatformConfig,
+  resolveMinuteAiApiBaseUrl,
   resolveMinuteAiApiKey,
 } from "@/lib/minute-ai-config";
 import { parseMinuteAiProvider } from "@/lib/minute-ai-providers";
@@ -80,9 +81,10 @@ export async function polishMinuteAgendaItem(
   const locale =
     club?.language === "EN" ? "en" : club?.language === "ES" ? "es" : "fr";
 
-  const [platform, apiKey] = await Promise.all([
+  const [platform, apiKey, apiBaseUrl] = await Promise.all([
     getMinuteAiPlatformConfig(),
     resolveMinuteAiApiKey(),
+    resolveMinuteAiApiBaseUrl(),
   ]);
 
   try {
@@ -99,7 +101,8 @@ export async function polishMinuteAgendaItem(
       },
       platform.model,
       apiKey,
-      platform.provider
+      platform.provider,
+      apiBaseUrl
     );
 
     await prisma.auditLog.create({
@@ -142,6 +145,7 @@ export async function updateMinuteAiPlatformSettings(data: {
   provider?: string;
   model?: string;
   apiKey?: string;
+  apiBaseUrl?: string;
 }) {
   const auth = await requireSuperAdmin();
   if (auth.error) return auth;
@@ -156,6 +160,7 @@ export async function updateMinuteAiPlatformSettings(data: {
       : {}),
     ...(data.model?.trim() ? { model: data.model.trim() } : {}),
     ...(data.apiKey?.trim() ? { apiKey: data.apiKey.trim() } : {}),
+    ...(data.apiBaseUrl !== undefined ? { apiBaseUrl: data.apiBaseUrl } : {}),
   });
 
   await prisma.auditLog.create({

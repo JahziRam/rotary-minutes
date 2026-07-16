@@ -16,6 +16,8 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
   - Repli clé API via `OPENAI_API_KEY` ; modèle par défaut `gpt-4o-mini` ; base URL personnalisable (`OPENAI_API_BASE_URL`)
 
 ### Fixed
+- **Assistant IA — production OpenAI compatible**
+  - URL de base API configurable dans **Admin → Paramètres** (ex. Bazaarlink) ; auparavant lue uniquement depuis `OPENAI_API_BASE_URL` en env, absente sur Render → erreur « Service IA indisponible »
 - **Auth — connexion locale**
   - Message explicite si PostgreSQL est inaccessible (`DATABASE_UNAVAILABLE`) au lieu de « Erreur de connexion » générique
   - Scripts `npm run db:setup-local` / `scripts/setup-local-postgres.ps1` pour créer l'utilisateur `rotary` et la base `rotary_minutes`

@@ -69,6 +69,7 @@ export function MinuteAiConfigPanel({ config }: { config: MinuteAiAdminView }) {
               provider: (fd.get("provider") as string) || undefined,
               model: (fd.get("model") as string) || undefined,
               apiKey: (fd.get("apiKey") as string) || undefined,
+              apiBaseUrl: (fd.get("apiBaseUrl") as string) ?? undefined,
             });
             if ("success" in result && result.success) {
               setToast(isFr ? "Réglages IA enregistrés" : "AI settings saved");
@@ -144,6 +145,35 @@ export function MinuteAiConfigPanel({ config }: { config: MinuteAiAdminView }) {
           label={isFr ? "Quota mensuel par club" : "Monthly quota per club"}
           defaultValue={String(config.monthlyQuotaPerClub)}
         />
+        {(provider === "openai" || provider === "qwen") && (
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-gray-700">
+              {isFr ? "URL de base API" : "API base URL"}
+            </label>
+            <input
+              name="apiBaseUrl"
+              type="url"
+              autoComplete="off"
+              defaultValue={config.apiBaseUrl}
+              placeholder={
+                provider === "openai"
+                  ? "https://api.openai.com/v1"
+                  : "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
+              }
+              className="flex h-10 w-full rounded-lg border border-gray-200 px-3 text-sm font-mono"
+            />
+            <p className="text-xs text-gray-400">
+              {isFr
+                ? provider === "openai"
+                  ? "Obligatoire pour les API compatibles OpenAI (ex. Bazaarlink). Repli : OPENAI_API_BASE_URL."
+                  : "Requis pour un endpoint Qwen personnalisé. Repli : QWEN_API_BASE_URL."
+                : provider === "openai"
+                  ? "Required for OpenAI-compatible APIs (e.g. Bazaarlink). Fallback: OPENAI_API_BASE_URL."
+                  : "Custom Qwen endpoint. Fallback: QWEN_API_BASE_URL."}
+            </p>
+          </div>
+        )}
+
         <Input
           name="model"
           label={isFr ? "Modèle" : "Model"}

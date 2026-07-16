@@ -92,9 +92,10 @@ type ChatRequestBody = {
 async function requestChatCompletion(
   provider: MinuteAiProvider,
   apiKey: string,
-  body: ChatRequestBody
+  body: ChatRequestBody,
+  apiBaseUrl?: string
 ): Promise<Response> {
-  const url = resolveChatCompletionsUrl(provider);
+  const url = resolveChatCompletionsUrl(provider, apiBaseUrl);
   const headers = {
     Authorization: `Bearer ${apiKey}`,
     "Content-Type": "application/json",
@@ -122,7 +123,8 @@ export async function polishAgendaItemNotes(
   input: PolishAgendaItemInput,
   model: string,
   apiKey: string,
-  provider: MinuteAiProvider = "xai"
+  provider: MinuteAiProvider = "xai",
+  apiBaseUrl?: string
 ): Promise<PolishedAgendaItem> {
   const key = apiKey.trim();
   if (!key) {
@@ -141,12 +143,17 @@ export async function polishAgendaItemNotes(
     { role: "user", content: buildUserPrompt(input) },
   ];
 
-  const response = await requestChatCompletion(resolvedProvider, key, {
-    model: resolvedModel,
-    temperature: 0.3,
-    response_format: { type: "json_object" },
-    messages,
-  });
+  const response = await requestChatCompletion(
+    resolvedProvider,
+    key,
+    {
+      model: resolvedModel,
+      temperature: 0.3,
+      response_format: { type: "json_object" },
+      messages,
+    },
+    apiBaseUrl
+  );
 
   if (!response.ok) {
     const body = await response.text().catch(() => "");
