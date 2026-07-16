@@ -137,6 +137,7 @@
     "hasAccount": "Already have an account?",
     "trialInfo": "14-day free trial, no credit card required",
     "invalidCredentials": "Incorrect email or password",
+    "databaseUnavailable": "Local database unreachable. Check PostgreSQL and DATABASE_URL in .env (see scripts/setup-local-postgres.ps1).",
     "loginError": "Sign-in failed. Please try again or contact support.",
     "loggingIn": "Signing in…",
     "newPassword": "New password",

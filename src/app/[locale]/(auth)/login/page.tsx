@@ -40,7 +40,9 @@ export default function LoginPage() {
               ? t("captcha.failed")
               : result.error === "RATE_LIMIT"
                 ? t("rateLimit")
-                : t("loginError")
+                : result.error === "DATABASE_UNAVAILABLE"
+                  ? t("databaseUnavailable")
+                  : t("loginError")
         );
         return;
       }

@@ -16,6 +16,13 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
   - Repli clé API via `OPENAI_API_KEY` ; modèle par défaut `gpt-4o-mini` ; base URL personnalisable (`OPENAI_API_BASE_URL`)
 
 ### Fixed
+- **Auth — connexion locale**
+  - Message explicite si PostgreSQL est inaccessible (`DATABASE_UNAVAILABLE`) au lieu de « Erreur de connexion » générique
+  - Scripts `npm run db:setup-local` / `scripts/setup-local-postgres.ps1` pour créer l'utilisateur `rotary` et la base `rotary_minutes`
+  - Hyperdrive local : `localConnectionString` dans `wrangler.jsonc` et génération de `.dev.vars` pour `next dev`
+- **Assistant IA — bouton Reformuler**
+  - Mise à jour du point d'ordre du jour par index (plus par ID périmé après sauvegarde) : le texte reformulé s'affiche à nouveau
+  - Indicateur « Reformulation… » fiable et gestion d'erreurs réseau ; suppression de la sauvegarde bloquante avant chaque appel IA
 - **Assistant IA — reformulation PV**
   - Sauvegarde automatique avant reformulation et resynchronisation des IDs des points d'ordre du jour
   - Reformulation basée sur les données du formulaire (plus de dépendance à l'ID en base)

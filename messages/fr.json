@@ -137,6 +137,7 @@
     "hasAccount": "Déjà un compte ?",
     "trialInfo": "Essai gratuit de 14 jours, sans carte bancaire",
     "invalidCredentials": "Email ou mot de passe incorrect",
+    "databaseUnavailable": "Base de données locale inaccessible. Vérifiez PostgreSQL et DATABASE_URL dans .env (voir scripts/setup-local-postgres.ps1).",
     "loginError": "Erreur de connexion. Réessayez ou contactez le support.",
     "loggingIn": "Connexion en cours…",
     "newPassword": "Nouveau mot de passe",

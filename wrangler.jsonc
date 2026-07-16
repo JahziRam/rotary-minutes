@@ -21,7 +21,8 @@
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
-      "id": "53e93e89591b48ae87f3a160776f26fe"
+      "id": "53e93e89591b48ae87f3a160776f26fe",
+      "localConnectionString": "postgresql://rotary:rotary@localhost:5432/rotary_minutes?schema=public"
     }
   ],
   "routes": [

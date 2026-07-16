@@ -17,6 +17,7 @@
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "db:seed": "npx tsx prisma/seed.ts",
+    "db:setup-local": "node scripts/ensure-local-db.mjs",
     "verify": "npx tsx scripts/verify-app.mjs",
     "verify:integrations": "npx tsx scripts/verify-integrations.mjs",
     "test": "vitest run",

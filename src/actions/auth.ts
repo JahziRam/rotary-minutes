@@ -516,6 +516,12 @@ export async function logoutUser(formData: FormData) {
   await signOut({ redirectTo: `/${locale}/login` });
 }
 
+function isDatabaseConnectionError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const code = (error as { code?: string }).code;
+  return code === "P1000" || code === "P1001" || code === "P1017";
+}
+
 export async function loginUser(
   email: string,
   password: string,
@@ -525,14 +531,17 @@ export async function loginUser(
 
   const captchaCheck = validateAuthCaptcha(captcha);
   if ("error" in captchaCheck) {
-    await logAuthEvent("AUTH_CAPTCHA_FAILED", normalized, { flow: "login" });
+    try {
+      await logAuthEvent("AUTH_CAPTCHA_FAILED", normalized, { flow: "login" });
+    } catch {
+      // ignore when audit DB unavailable
+    }
     return captchaCheck;
   }
 
-  const rateCheck = await assertAuthRateLimit("LOGIN_FAILED", normalized);
-  if (!rateCheck.ok) return { error: "RATE_LIMIT" as const };
-
   try {
+    const rateCheck = await assertAuthRateLimit("LOGIN_FAILED", normalized);
+    if (!rateCheck.ok) return { error: "RATE_LIMIT" as const };
     const result = await signIn("credentials", {
       email: normalized,
       password,
@@ -578,12 +587,23 @@ export async function loginUser(
       mustChangePassword: user.mustChangePassword,
     };
   } catch (error) {
+    if (isDatabaseConnectionError(error)) {
+      return { error: "DATABASE_UNAVAILABLE" as const };
+    }
     if (error instanceof AuthError) {
       if (error.type === "CredentialsSignin") {
-        await logAuthEvent("LOGIN_FAILED", normalized, { reason: "credentials_signin" });
+        try {
+          await logAuthEvent("LOGIN_FAILED", normalized, { reason: "credentials_signin" });
+        } catch {
+          // ignore when audit DB unavailable
+        }
         return { error: "INVALID_CREDENTIALS" as const };
       }
-      await logAuthEvent("LOGIN_FAILED", normalized, { reason: error.type });
+      try {
+        await logAuthEvent("LOGIN_FAILED", normalized, { reason: error.type });
+      } catch {
+        // ignore when audit DB unavailable
+      }
       return { error: "AUTH_ERROR" as const };
     }
     throw error;

@@ -135,37 +135,6 @@ export function MinuteEditor({
     setSaving(false);
   }, [minute.id, clubId, items, status, syncAgendaItemIds]);
 
-  const ensureSavedForPolish = useCallback(
-    async (agendaItemId: string): Promise<string | { error: string }> => {
-      const index = items.findIndex((item) => item.id === agendaItemId);
-      if (index < 0) return { error: "NOT_FOUND" };
-
-      if (["FINALIZED", "ARCHIVED", "REVIEW"].includes(status)) {
-        return { error: "LOCKED" };
-      }
-
-      if (typeof navigator !== "undefined" && !navigator.onLine) {
-        return { error: "AI_UNAVAILABLE" };
-      }
-
-      const result = await saveMinute(minute.id, { agendaItems: items });
-      if ("error" in result && result.error) {
-        return { error: result.error };
-      }
-      if (!("success" in result) || !result.success) {
-        return { error: "AI_ERROR" };
-      }
-
-      const savedId = result.agendaItems?.[index]?.id;
-      if (!savedId) return { error: "NOT_FOUND" };
-
-      syncAgendaItemIds(result.agendaItems ?? []);
-      setLastSaved(new Date());
-      return savedId;
-    },
-    [items, minute.id, status, syncAgendaItemIds]
-  );
-
   const syncOfflineDrafts = useCallback(async () => {
     const drafts = await getUnsyncedDrafts();
     for (const draft of drafts) {
@@ -431,11 +400,10 @@ export function MinuteEditor({
                     existingActions={item.actions}
                     existingResponsible={item.responsible}
                     existingDueDate={item.dueDate}
-                    onEnsureSaved={ensureSavedForPolish}
                     onPolished={(polished) => {
                       setItems((prev) =>
-                        prev.map((row) =>
-                          row.id === item.id
+                        prev.map((row, rowIndex) =>
+                          rowIndex === index
                             ? {
                                 ...row,
                                 description: polished.description,

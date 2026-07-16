@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -43,7 +43,6 @@ export function MinuteAiPolishButton({
   existingResponsible = "",
   existingDueDate = "",
   disabled,
-  onEnsureSaved,
   onPolished,
 }: {
   minuteId: string;
@@ -55,7 +54,6 @@ export function MinuteAiPolishButton({
   existingResponsible?: string;
   existingDueDate?: string;
   disabled?: boolean;
-  onEnsureSaved?: (agendaItemId: string) => Promise<string | { error: string }>;
   onPolished: (data: {
     description: string;
     decisions: string;
@@ -65,10 +63,10 @@ export function MinuteAiPolishButton({
   }) => void;
 }) {
   const t = useTranslations("minutes.aiAssist");
-  const [pending, startTransition] = useTransition();
+  const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function handlePolish() {
+  async function handlePolish() {
     if (!agendaTitle.trim()) {
       setError(t("error.NOT_FOUND"));
       return;
@@ -80,19 +78,11 @@ export function MinuteAiPolishButton({
     }
 
     setError(null);
-    startTransition(async () => {
-      let resolvedAgendaItemId = agendaItemId;
-      if (onEnsureSaved) {
-        const ensured = await onEnsureSaved(agendaItemId);
-        if (typeof ensured !== "string") {
-          setError(resolvePolishError(ensured.error, t));
-          return;
-        }
-        resolvedAgendaItemId = ensured;
-      }
+    setPending(true);
 
+    try {
       const result = await polishMinuteAgendaItem(minuteId, {
-        agendaItemId: resolvedAgendaItemId,
+        agendaItemId,
         agendaTitle,
         rawNotes,
         existingDecisions,
@@ -100,6 +90,7 @@ export function MinuteAiPolishButton({
         existingResponsible,
         existingDueDate,
       });
+
       if ("success" in result && result.success) {
         onPolished({
           description: result.polished.description,
@@ -117,7 +108,11 @@ export function MinuteAiPolishButton({
       }
 
       setError(t("error.generic"));
-    });
+    } catch {
+      setError(t("error.AI_UNAVAILABLE"));
+    } finally {
+      setPending(false);
+    }
   }
 
   return (
