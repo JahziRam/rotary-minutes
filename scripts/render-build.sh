@@ -4,7 +4,19 @@ set -euo pipefail
 
 LOCK_HASH="node_modules/.package-lock.hash"
 
-if [[ -f "$LOCK_HASH" ]] && cmp -s package-lock.json "$LOCK_HASH"; then
+# Cache Render peut échouer (tar corrupt) tout en laissant un hash orphelin :
+# n'ignorer npm ci que si le lock est stable ET les modules critiques sont présents.
+deps_ok=false
+if [[ -f "$LOCK_HASH" ]] \
+  && cmp -s package-lock.json "$LOCK_HASH" \
+  && [[ -d node_modules/dotenv ]] \
+  && [[ -d node_modules/next ]] \
+  && [[ -d node_modules/prisma ]] \
+  && [[ -d node_modules/@prisma/client ]]; then
+  deps_ok=true
+fi
+
+if [[ "$deps_ok" == "true" ]]; then
   echo ">>> Dependencies unchanged — skipping npm ci"
 else
   echo ">>> Installing dependencies..."
