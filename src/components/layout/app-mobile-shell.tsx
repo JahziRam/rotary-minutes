@@ -10,7 +10,7 @@ import { MobileMenuDrawer } from "./mobile-menu-drawer";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { UsageGuideLauncher } from "@/components/assistant/usage-guide-launcher";
 import { useAppBranding } from "@/components/brand/app-branding-provider";
-import { CLUB_NAV_ITEMS } from "@/lib/nav-config";
+import { getVisibleNavGroups } from "@/lib/nav-config";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useNativeApp } from "@/hooks/use-native-app";
@@ -34,6 +34,7 @@ export function AppMobileShell({
   canManageSubscription,
   subscriptionPlan,
   showUsageGuide = false,
+  showDistrictNav = false,
   children,
 }: {
   title: string;
@@ -50,6 +51,7 @@ export function AppMobileShell({
   canManageSubscription?: boolean;
   subscriptionPlan?: string;
   showUsageGuide?: boolean;
+  showDistrictNav?: boolean;
   children: React.ReactNode;
 }) {
   const t = useTranslations("nav");
@@ -60,16 +62,31 @@ export function AppMobileShell({
   const { appName } = useAppBranding();
   const { isNative } = useNativeApp();
 
+  const navGroups = getVisibleNavGroups(hiddenNavKeys ?? [], { showDistrictNav });
   const drawerItems = [
     ...(isSuperAdmin
       ? [{ key: "admin", href: "/admin", icon: Shield, label: t("superAdmin") }]
       : []),
-    ...CLUB_NAV_ITEMS.filter((item) => !hiddenNavKeys?.includes(item.key)).map((item) => ({
-      ...item,
-      label: t(item.key === "dashboard" ? "dashboard" : item.key),
-      locked: lockedNavKeys?.includes(item.key),
-      badge: item.key === "notifications" ? notificationCount : undefined,
-    })),
+    ...navGroups.flatMap((group) => [
+      ...(group.id
+        ? [
+            {
+              key: `group-${group.id}`,
+              href: "#",
+              icon: Shield,
+              label: t(`groups.${group.id}`),
+              isGroupHeader: true as const,
+            },
+          ]
+        : []),
+      ...group.items.map((item) => ({
+        ...item,
+        label: t(item.key === "dashboard" ? "dashboard" : item.key),
+        locked: lockedNavKeys?.includes(item.key),
+        badge: item.key === "notifications" ? notificationCount : undefined,
+        isGroupHeader: false as const,
+      })),
+    ]),
   ];
 
   const notifHref = `/${locale}/notifications`;

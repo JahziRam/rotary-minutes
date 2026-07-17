@@ -6,7 +6,7 @@
   "nav": {
     "home": "Accueil",
     "meetings": "Réunions",
-    "minutes": "Procès-verbaux",
+    "minutes": "PV",
     "emails": "Emails",
     "members": "Membres",
     "dues": "Cotisations",
@@ -15,7 +15,7 @@
     "events": "Événements",
     "documents": "Documents",
     "treasury": "Trésorerie",
-    "actions": "Gestion des tâches",
+    "actions": "Tâches",
     "calendar": "Calendrier",
     "statistics": "Statistiques",
     "district": "District",
@@ -30,7 +30,15 @@
     "mobileTabs": "Navigation principale",
     "projects": "Projets",
     "myWork": "Mon travail",
-    "treasuryPlan": "Plan mandat"
+    "treasuryPlan": "Plan mandat",
+    "groups": {
+      "clubLife": "Vie du club",
+      "work": "Travail",
+      "finance": "Finance",
+      "tools": "Outils",
+      "account": "Compte"
+    },
+    "commissions": "Commissions"
   },
   "adminNav": {
     "badge": "Plateforme",

@@ -7,6 +7,12 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+### Changed
+- **Navigation club — sidebar regroupée**
+  - Menus organisés en groupes repliables : Accueil, Vie du club, Travail, Finance, Outils, Compte
+  - Sous-entrées : commissions, cotisations, plan mandat (plus de liste plate de ~20 items)
+  - Drawer mobile avec en-têtes de groupe ; mémorisation de l’état ouvert/fermé (localStorage)
+
 ### Added
 - **Suite productivité club (2026-07)**
   - Budget événements (prévu / réalisé / documents) aligné sur les projets

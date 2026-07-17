@@ -15,7 +15,7 @@
     "events": "Eventos",
     "documents": "Documentos",
     "treasury": "Tesorería",
-    "actions": "Gestión de tareas",
+    "actions": "Tareas",
     "calendar": "Calendario",
     "statistics": "Estadísticas",
     "district": "Distrito",
@@ -30,7 +30,15 @@
     "mobileTabs": "Navegación principal",
     "projects": "Proyectos",
     "myWork": "Mi trabajo",
-    "treasuryPlan": "Plan mandato"
+    "treasuryPlan": "Plan mandato",
+    "groups": {
+      "clubLife": "Vida del club",
+      "work": "Trabajo",
+      "finance": "Finanzas",
+      "tools": "Herramientas",
+      "account": "Cuenta"
+    },
+    "commissions": "Comisiones"
   },
   "adminNav": {
     "badge": "Plataforma",

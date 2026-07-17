@@ -112,6 +112,7 @@ export function AppShell({
           canManageSubscription={canManageSubscription}
           subscriptionPlan={subscriptionPlan}
           showUsageGuide={usageGuide?.guideEnabled && usageGuide.clubSetupComplete}
+          showDistrictNav={showDistrictNav}
         >
           {isViewingAsClub && clubName && (
             <ViewAsClubBanner clubName={clubName} locale={shellLocale} />

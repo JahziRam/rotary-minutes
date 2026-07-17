@@ -15,7 +15,7 @@
     "events": "Events",
     "documents": "Documents",
     "treasury": "Treasury",
-    "actions": "Task management",
+    "actions": "Tasks",
     "calendar": "Calendar",
     "statistics": "Statistics",
     "district": "District",
@@ -30,7 +30,15 @@
     "mobileTabs": "Main navigation",
     "projects": "Projects",
     "myWork": "My work",
-    "treasuryPlan": "Mandate plan"
+    "treasuryPlan": "Mandate plan",
+    "groups": {
+      "clubLife": "Club life",
+      "work": "Work",
+      "finance": "Finance",
+      "tools": "Tools",
+      "account": "Account"
+    },
+    "commissions": "Commissions"
   },
   "adminNav": {
     "badge": "Platform",

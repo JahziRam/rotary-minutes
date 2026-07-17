@@ -1,17 +1,28 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
-import { Shield, Lock, CreditCard } from "lucide-react";
+import { Shield, Lock, CreditCard, ChevronDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { cn } from "@/lib/utils";
 import { UsageGuideLauncher } from "@/components/assistant/usage-guide-launcher";
 import { AppBrandName } from "@/components/brand/app-brand-name";
-import { CLUB_NAV_ITEMS } from "@/lib/nav-config";
+import {
+  getVisibleNavGroups,
+  isNavItemActive,
+  type ClubNavItem,
+} from "@/lib/nav-config";
 import { ClubViewAsSwitcher, type ViewAsClubOption } from "./club-view-as-switcher";
+
+const STORAGE_KEY = "rotary-sidebar-groups";
+
+function navLabelKey(key: string): string {
+  return key === "dashboard" ? "dashboard" : key;
+}
 
 export function Sidebar({
   clubName,
@@ -49,6 +60,99 @@ export function Sidebar({
   const locale = useLocale();
   const pathname = usePathname();
 
+  const groups = useMemo(
+    () => getVisibleNavGroups(hiddenNavKeys, { showDistrictNav }),
+    [hiddenNavKeys, showDistrictNav]
+  );
+
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        setOpenGroups(JSON.parse(raw) as Record<string, boolean>);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    // Auto-open group containing active route
+    setOpenGroups((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      for (const group of groups) {
+        if (!group.id) continue;
+        const hasActive = group.items.some((item) =>
+          isNavItemActive(pathname, locale, item.href)
+        );
+        if (hasActive && next[group.id] !== true) {
+          next[group.id] = true;
+          changed = true;
+        }
+      }
+      if (changed) {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        } catch {
+          // ignore
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [pathname, locale, groups]);
+
+  function toggleGroup(id: string) {
+    setOpenGroups((prev) => {
+      const next = { ...prev, [id]: !isGroupOpen(id, prev) };
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  }
+
+  function isGroupOpen(id: string, state: Record<string, boolean> = openGroups) {
+    if (state[id] !== undefined) return state[id];
+    // Default: open groups with active item, else open first time
+    return true;
+  }
+
+  function renderItem(item: ClubNavItem) {
+    const { key, href, icon: Icon } = item;
+    const fullHref = `/${locale}${href}`;
+    const isActive = isNavItemActive(pathname, locale, href);
+    const isLocked = lockedNavKeys.includes(key);
+    return (
+      <Link
+        key={key}
+        href={fullHref}
+        data-guide={key}
+        className={cn(
+          "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+          isActive
+            ? "bg-white/15 text-gold"
+            : isLocked
+              ? "text-white/50 hover:bg-white/5"
+              : "text-white/70 hover:bg-white/10 hover:text-white"
+        )}
+      >
+        <Icon className="h-4.5 w-4.5 shrink-0 h-[18px] w-[18px]" />
+        <span className="flex-1 truncate">{t(navLabelKey(key))}</span>
+        {isLocked && <Lock className="h-3.5 w-3.5 text-amber-400 shrink-0" />}
+        {key === "notifications" && notificationCount > 0 && (
+          <Badge variant="danger" className="h-5 min-w-5 px-1.5 text-[10px]">
+            {notificationCount}
+          </Badge>
+        )}
+      </Link>
+    );
+  }
+
   return (
     <aside className="hidden lg:flex lg:flex-col lg:w-[var(--sidebar-w)] lg:fixed lg:inset-y-0 bg-navy-dark text-white">
       <div className="h-1 bg-gold" />
@@ -62,18 +166,20 @@ export function Sidebar({
               <p className="text-xs text-white/60 mt-1 truncate">{clubName}</p>
             )}
             {userRole && (!isSuperAdmin || isViewingAsClub) && (
-              <p className="text-[10px] text-white/40 mt-0.5 uppercase tracking-wide">{userRole}</p>
+              <p className="text-[10px] text-white/40 mt-0.5 uppercase tracking-wide">
+                {userRole}
+              </p>
             )}
           </Link>
         </div>
 
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+        <nav className="flex-1 p-3 space-y-3 overflow-y-auto">
           {isSuperAdmin && (
             <>
               <Link
                 href={`/${locale}/admin`}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors mb-2",
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors mb-1",
                   pathname.startsWith(`/${locale}/admin`)
                     ? "bg-gold/20 text-gold"
                     : "text-gold/80 hover:bg-gold/10 hover:text-gold"
@@ -86,41 +192,51 @@ export function Sidebar({
                 clubs={viewAsClubs}
                 currentClubId={viewAsClubId}
                 locale={shellLocale}
-                className="mb-3"
+                className="mb-2"
               />
             </>
           )}
-          {CLUB_NAV_ITEMS.map(({ key, href, icon: Icon }) => {
-            if (key === "district" && !showDistrictNav) return null;
-            if (hiddenNavKeys.includes(key)) return null;
-            const fullHref = `/${locale}${href}`;
-            const isActive = pathname.startsWith(fullHref);
-            const isLocked = lockedNavKeys.includes(key);
+
+          {groups.map((group) => {
+            if (!group.id) {
+              return (
+                <div key="top" className="space-y-0.5">
+                  {group.items.map(renderItem)}
+                </div>
+              );
+            }
+
+            const open = isGroupOpen(group.id);
+            const groupHasActive = group.items.some((item) =>
+              isNavItemActive(pathname, locale, item.href)
+            );
+
             return (
-              <Link
-                key={key}
-                href={fullHref}
-                data-guide={key}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-white/15 text-gold"
-                    : isLocked
-                      ? "text-white/50 hover:bg-white/5"
-                      : "text-white/70 hover:bg-white/10 hover:text-white"
+              <div key={group.id} className="space-y-0.5">
+                <button
+                  type="button"
+                  onClick={() => toggleGroup(group.id!)}
+                  className={cn(
+                    "flex w-full items-center gap-2 px-3 py-1.5 rounded-md text-[10px] font-semibold uppercase tracking-wider transition-colors",
+                    groupHasActive
+                      ? "text-gold/90"
+                      : "text-white/40 hover:text-white/60"
+                  )}
+                >
+                  <span className="flex-1 text-left">
+                    {t(`groups.${group.id}`)}
+                  </span>
+                  <ChevronDown
+                    className={cn(
+                      "h-3.5 w-3.5 shrink-0 transition-transform",
+                      open ? "rotate-0" : "-rotate-90"
+                    )}
+                  />
+                </button>
+                {open && (
+                  <div className="space-y-0.5 pl-0.5">{group.items.map(renderItem)}</div>
                 )}
-              >
-                <Icon className="h-5 w-5 shrink-0" />
-                <span className="flex-1">
-                  {t(key === "dashboard" ? "dashboard" : key)}
-                </span>
-                {isLocked && <Lock className="h-3.5 w-3.5 text-amber-400 shrink-0" />}
-                {key === "notifications" && notificationCount > 0 && (
-                  <Badge variant="danger" className="h-5 min-w-5 px-1.5 text-[10px]">
-                    {notificationCount}
-                  </Badge>
-                )}
-              </Link>
+              </div>
             );
           })}
         </nav>

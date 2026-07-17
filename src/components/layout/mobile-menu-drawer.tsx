@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useLocale } from "next-intl";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { isNavItemActive } from "@/lib/nav-config";
 
 export type MobileNavItem = {
   key: string;
@@ -14,6 +15,7 @@ export type MobileNavItem = {
   label?: string;
   locked?: boolean;
   badge?: number;
+  isGroupHeader?: boolean;
 };
 
 export function MobileMenuDrawer({
@@ -73,16 +75,26 @@ export function MobileMenuDrawer({
           </button>
         </div>
         <nav className="flex-1 overflow-y-auto p-3 space-y-0.5 native-scroll">
-          {items.map(({ key, href, icon: Icon, label, locked, badge }) => {
-            const fullHref = `/${locale}${href}`;
-            const isActive = pathname.startsWith(fullHref);
+          {items.map(({ key, href, icon: Icon, label, locked, badge, isGroupHeader }) => {
+            if (isGroupHeader) {
+              return (
+                <p
+                  key={key}
+                  className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-white/40"
+                >
+                  {label ?? key}
+                </p>
+              );
+            }
+
+            const isActive = isNavItemActive(pathname, locale, href);
             return (
               <Link
                 key={key}
-                href={fullHref}
+                href={`/${locale}${href}`}
                 onClick={onClose}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-3.5 rounded-xl text-sm font-medium transition-colors active:scale-[0.98]",
+                  "flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors active:scale-[0.98]",
                   isActive
                     ? "bg-white/15 text-gold"
                     : "text-white/75 hover:bg-white/10 hover:text-white"
@@ -91,7 +103,9 @@ export function MobileMenuDrawer({
                 <Icon className="h-5 w-5 shrink-0" />
                 <span className="flex-1">{label ?? key}</span>
                 {locked && (
-                  <span className="text-[10px] text-amber-400 uppercase font-semibold">Pro</span>
+                  <span className="text-[10px] text-amber-400 uppercase font-semibold">
+                    Pro
+                  </span>
                 )}
                 {badge != null && badge > 0 && (
                   <span className="h-5 min-w-5 px-1.5 rounded-full bg-red-500 text-[10px] font-bold flex items-center justify-center">
