@@ -1,0 +1,3 @@
+-- AlterEnum NotificationType
+ALTER TYPE "NotificationType" ADD VALUE IF NOT EXISTS 'ACTION_ASSIGNED';
+ALTER TYPE "NotificationType" ADD VALUE IF NOT EXISTS 'PROJECT_ASSIGNED';
