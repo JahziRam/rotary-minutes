@@ -46,6 +46,10 @@ export async function getClubProjectById(clubId: string, projectId: string) {
   });
 }
 
+export type ClubProjectDetail = NonNullable<
+  Awaited<ReturnType<typeof getClubProjectById>>
+>;
+
 export async function getProjectMembers(clubId: string) {
   return prisma.member.findMany({
     where: { clubId, isActive: true },
