@@ -32,6 +32,7 @@ export default async function ProjectDetailPage({
       <ProjectDetailPanel
         project={data.project}
         members={data.members}
+        commissions={data.commissions}
         canManage={data.canManage}
         locale={locale}
         currency={data.currency}

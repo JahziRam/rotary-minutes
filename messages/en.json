@@ -520,7 +520,8 @@
         "INVALID_HEADERS": "Invalid headers (firstName, lastName required)",
         "TOO_LARGE": "File too large (max 5 MB)"
       }
-    }
+    },
+    "commissionsLink": "Manage commissions"
   },
   "dues": {
     "title": "Member dues",
@@ -2959,5 +2960,34 @@
         "OTHER": "Other"
       }
     }
+  },
+  "assignees": {
+    "members": "Assigned people",
+    "commission": "Assigned commission",
+    "noCommission": "No commission"
+  },
+  "commissions": {
+    "title": "Commissions",
+    "subtitle": "Create commissions and assign members to them.",
+    "addCommission": "New commission",
+    "name": "Name",
+    "chairName": "Commission chair",
+    "chairOptional": "Optional",
+    "save": "Create",
+    "created": "Commission created",
+    "deleted": "Commission deactivated",
+    "deleteConfirm": "Deactivate this commission? Members will be unassigned.",
+    "noCommissions": "No commissions yet",
+    "noMembers": "No members in this commission",
+    "chair": "Chair: {name}",
+    "noChair": "No chair named",
+    "memberCount": "{count} member(s)",
+    "selectMember": "Select a member…",
+    "addMember": "Add",
+    "memberAdded": "Member added to commission",
+    "memberRemoved": "Member removed from commission",
+    "reassign": "reassign",
+    "unassignedCount": "{count} member(s) without commission",
+    "forbidden": "Access denied"
   }
 }

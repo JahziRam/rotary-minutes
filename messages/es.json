@@ -1128,7 +1128,8 @@
         "INVALID_HEADERS": "Encabezados no válidos (firstName, lastName obligatorios)",
         "TOO_LARGE": "Archivo demasiado grande (máx. 5 MB)"
       }
-    }
+    },
+    "commissionsLink": "Gestionar comisiones"
   },
   "dues": {
     "title": "Cuotas de los miembros",
@@ -2655,5 +2656,34 @@
         "OTHER": "Otro"
       }
     }
+  },
+  "assignees": {
+    "members": "Personas asignadas",
+    "commission": "Comisión asignada",
+    "noCommission": "Sin comisión"
+  },
+  "commissions": {
+    "title": "Comisiones",
+    "subtitle": "Cree comisiones y asigne miembros.",
+    "addCommission": "Nueva comisión",
+    "name": "Nombre",
+    "chairName": "Presidente de comisión",
+    "chairOptional": "Opcional",
+    "save": "Crear",
+    "created": "Comisión creada",
+    "deleted": "Comisión desactivada",
+    "deleteConfirm": "¿Desactivar esta comisión? Los miembros se desvincularán.",
+    "noCommissions": "Sin comisiones",
+    "noMembers": "Sin miembros en esta comisión",
+    "chair": "Presidente: {name}",
+    "noChair": "Sin presidente",
+    "memberCount": "{count} miembro(s)",
+    "selectMember": "Elegir miembro…",
+    "addMember": "Añadir",
+    "memberAdded": "Miembro añadido",
+    "memberRemoved": "Miembro retirado",
+    "reassign": "reasignar",
+    "unassignedCount": "{count} miembro(s) sin comisión",
+    "forbidden": "Acceso denegado"
   }
 }

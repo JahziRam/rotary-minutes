@@ -551,7 +551,9 @@ model Member {
   memberDues   MemberDues[]
   duesPayments DuesPayment[]
   assignedActions ClubAction[] @relation("MemberAssignedActions")
+  actionAssignments ClubActionAssignee[]
   ownedProjects   ClubProject[] @relation("ProjectOwner")
+  projectAssignments ClubProjectAssignee[]
   eventRegistrations EventRegistration[]
 
   @@index([clubId])
@@ -625,6 +627,8 @@ model Commission {
   club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
   members   Member[]
   meetings  Meeting[]
+  assignedActions ClubAction[] @relation("ActionCommission")
+  assignedProjects ClubProject[] @relation("ProjectCommission")
 
   @@index([clubId])
 }
@@ -1665,14 +1669,31 @@ model ClubProject {
 
   club            Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
   ownerMember     Member?           @relation("ProjectOwner", fields: [ownerMemberId], references: [id], onDelete: SetNull)
+  commissionId    String?
+  commission      Commission?       @relation("ProjectCommission", fields: [commissionId], references: [id], onDelete: SetNull)
   createdBy       User?             @relation("ProjectCreator", fields: [createdById], references: [id], onDelete: SetNull)
   tasks           ClubAction[]
+  assignees       ClubProjectAssignee[]
   budgetEntries   BudgetEntry[]
   budgetDocuments BudgetDocument[]
 
   @@index([clubId, status])
   @@index([clubId, endDate])
   @@index([ownerMemberId])
+  @@index([commissionId])
+}
+
+model ClubProjectAssignee {
+  id        String   @id @default(cuid())
+  projectId String
+  memberId  String
+  createdAt DateTime @default(now())
+
+  project   ClubProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  member    Member      @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, memberId])
+  @@index([memberId])
 }
 
 model ClubAction {
@@ -1686,6 +1707,7 @@ model ClubAction {
   status             ClubActionStatus   @default(OPEN)
   priority           ClubActionPriority @default(NORMAL)
   projectId          String?
+  commissionId       String?
   minuteId           String?
   agendaItemId       String?
   lastRemindedAt     DateTime?
@@ -1696,7 +1718,9 @@ model ClubAction {
 
   club               Club               @relation(fields: [clubId], references: [id], onDelete: Cascade)
   project            ClubProject?       @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  commission         Commission?        @relation("ActionCommission", fields: [commissionId], references: [id], onDelete: SetNull)
   responsibleMember  Member?            @relation("MemberAssignedActions", fields: [responsibleMemberId], references: [id], onDelete: SetNull)
+  assignees          ClubActionAssignee[]
   minute             Minute?            @relation(fields: [minuteId], references: [id], onDelete: SetNull)
   agendaItem         AgendaItem?        @relation(fields: [agendaItemId], references: [id], onDelete: SetNull)
   createdBy          User?              @relation("ActionCreator", fields: [createdById], references: [id], onDelete: SetNull)
@@ -1707,6 +1731,20 @@ model ClubAction {
   @@index([clubId, dueDate])
   @@index([responsibleMemberId])
   @@index([projectId])
+  @@index([commissionId])
+}
+
+model ClubActionAssignee {
+  id        String   @id @default(cuid())
+  actionId  String
+  memberId  String
+  createdAt DateTime @default(now())
+
+  action    ClubAction @relation(fields: [actionId], references: [id], onDelete: Cascade)
+  member    Member     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([actionId, memberId])
+  @@index([memberId])
 }
 
 model ClubCalendarNote {

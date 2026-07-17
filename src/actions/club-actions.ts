@@ -15,6 +15,7 @@ import { logoSrcFromResult, resolveLogoForEmail } from "@/lib/email-logo";
 import { buildClubEmailVars, renderEmailContent } from "@/lib/email-render";
 import { ensureEmailSystemTemplates, SYSTEM_EMAIL_TEMPLATES } from "@/lib/email-system-templates";
 import {
+  getActionCommissions,
   getActionMembers,
   getClubActions,
   type ActionFilters,
@@ -68,9 +69,10 @@ export async function listActions(filters?: {
     minuteId: filters?.minuteId,
   };
 
-  const [actions, members] = await Promise.all([
+  const [actions, members, commissions] = await Promise.all([
     getClubActions(ctx.clubId, parsed),
     getActionMembers(ctx.clubId),
+    getActionCommissions(ctx.clubId),
   ]);
 
   const canManage = await hasRolePermission(ctx.role, "actions.manage", ctx.isSuperAdmin);
@@ -78,28 +80,71 @@ export async function listActions(filters?: {
   return {
     canManage,
     members,
-    actions: actions.map((a) => ({
-      id: a.id,
-      title: a.title,
-      description: a.description,
-      status: a.status,
-      priority: a.priority,
-      dueDate: a.dueDate?.toISOString() ?? null,
-      responsibleMemberId: a.responsibleMemberId,
-      responsibleName:
+    commissions,
+    actions: actions.map((a) => {
+      const assignees = a.assignees.map((x) => ({
+        id: x.member.id,
+        firstName: x.member.firstName,
+        lastName: x.member.lastName,
+        email: x.member.email,
+      }));
+      const names = assignees.map((m) => `${m.firstName} ${m.lastName}`);
+      const primaryName =
         a.responsibleMember
           ? `${a.responsibleMember.firstName} ${a.responsibleMember.lastName}`
-          : a.responsibleName,
-      responsibleEmail: a.responsibleMember?.email ?? null,
-      minuteId: a.minuteId,
-      minuteTitle: a.minute?.title ?? null,
-      agendaItemId: a.agendaItemId,
-      agendaItemTitle: a.agendaItem?.title ?? null,
-      completedAt: a.completedAt?.toISOString() ?? null,
-      lastRemindedAt: a.lastRemindedAt?.toISOString() ?? null,
-      createdAt: a.createdAt.toISOString(),
-    })),
+          : a.responsibleName;
+      return {
+        id: a.id,
+        title: a.title,
+        description: a.description,
+        status: a.status,
+        priority: a.priority,
+        dueDate: a.dueDate?.toISOString() ?? null,
+        responsibleMemberId: a.responsibleMemberId,
+        responsibleName: primaryName,
+        responsibleEmail: a.responsibleMember?.email ?? null,
+        assigneeIds: assignees.map((m) => m.id),
+        assignees,
+        commissionId: a.commissionId,
+        commissionName: a.commission?.name ?? null,
+        assigneeLabel:
+          [a.commission?.name, names.length ? names.join(", ") : primaryName]
+            .filter(Boolean)
+            .join(" · ") || null,
+        minuteId: a.minuteId,
+        minuteTitle: a.minute?.title ?? null,
+        agendaItemId: a.agendaItemId,
+        agendaItemTitle: a.agendaItem?.title ?? null,
+        completedAt: a.completedAt?.toISOString() ?? null,
+        lastRemindedAt: a.lastRemindedAt?.toISOString() ?? null,
+        createdAt: a.createdAt.toISOString(),
+      };
+    }),
   };
+}
+
+async function syncActionAssignees(
+  actionId: string,
+  memberIds: string[],
+  clubId: string
+) {
+  const unique = [...new Set(memberIds.filter(Boolean))];
+  if (unique.length > 0) {
+    const valid = await prisma.member.findMany({
+      where: { clubId, id: { in: unique }, isActive: true },
+      select: { id: true },
+    });
+    const ids = valid.map((m) => m.id);
+    await prisma.clubActionAssignee.deleteMany({ where: { actionId } });
+    if (ids.length > 0) {
+      await prisma.clubActionAssignee.createMany({
+        data: ids.map((memberId) => ({ actionId, memberId })),
+      });
+    }
+    return ids;
+  }
+  await prisma.clubActionAssignee.deleteMany({ where: { actionId } });
+  return [] as string[];
 }
 
 export async function createAction(data: {
@@ -107,6 +152,8 @@ export async function createAction(data: {
   description?: string;
   responsibleMemberId?: string;
   responsibleName?: string;
+  assigneeMemberIds?: string[];
+  commissionId?: string;
   dueDate?: string;
   priority?: ClubActionPriority;
   minuteId?: string;
@@ -124,13 +171,31 @@ export async function createAction(data: {
     if (!project) return { error: "NOT_FOUND" as const };
   }
 
+  if (data.commissionId) {
+    const commission = await prisma.commission.findFirst({
+      where: { id: data.commissionId, clubId: ctx.clubId, isActive: true },
+      select: { id: true },
+    });
+    if (!commission) return { error: "NOT_FOUND" as const };
+  }
+
+  const assigneeIds = [
+    ...new Set(
+      [
+        ...(data.assigneeMemberIds ?? []),
+        data.responsibleMemberId,
+      ].filter((x): x is string => Boolean(x))
+    ),
+  ];
+
   const action = await prisma.clubAction.create({
     data: {
       clubId: ctx.clubId,
       title: data.title,
       description: data.description || null,
-      responsibleMemberId: data.responsibleMemberId || null,
+      responsibleMemberId: assigneeIds[0] || data.responsibleMemberId || null,
       responsibleName: data.responsibleName || null,
+      commissionId: data.commissionId || null,
       dueDate: data.dueDate ? new Date(data.dueDate) : null,
       priority: data.priority ?? "NORMAL",
       minuteId: data.minuteId || null,
@@ -138,6 +203,8 @@ export async function createAction(data: {
       createdById: ctx.userId,
     },
   });
+
+  await syncActionAssignees(action.id, assigneeIds, ctx.clubId);
 
   await prisma.auditLog.create({
     data: {

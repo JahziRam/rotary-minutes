@@ -14,6 +14,12 @@ export async function getClubProjects(clubId: string, filters?: ProjectFilters) 
     orderBy: [{ status: "asc" }, { updatedAt: "desc" }],
     include: {
       ownerMember: { select: { id: true, firstName: true, lastName: true } },
+      commission: { select: { id: true, name: true } },
+      assignees: {
+        include: {
+          member: { select: { id: true, firstName: true, lastName: true } },
+        },
+      },
       _count: {
         select: {
           tasks: true,
@@ -33,11 +39,27 @@ export async function getClubProjectById(clubId: string, projectId: string) {
       ownerMember: {
         select: { id: true, firstName: true, lastName: true, email: true },
       },
+      commission: { select: { id: true, name: true } },
+      assignees: {
+        include: {
+          member: {
+            select: { id: true, firstName: true, lastName: true, email: true },
+          },
+        },
+      },
       tasks: {
         orderBy: [{ status: "asc" }, { dueDate: "asc" }, { createdAt: "desc" }],
         include: {
           responsibleMember: {
             select: { id: true, firstName: true, lastName: true, email: true },
+          },
+          commission: { select: { id: true, name: true } },
+          assignees: {
+            include: {
+              member: {
+                select: { id: true, firstName: true, lastName: true, email: true },
+              },
+            },
           },
           minute: { select: { id: true, title: true } },
         },
@@ -55,5 +77,13 @@ export async function getProjectMembers(clubId: string) {
     where: { clubId, isActive: true },
     select: { id: true, firstName: true, lastName: true, email: true },
     orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+  });
+}
+
+export async function getProjectCommissions(clubId: string) {
+  return prisma.commission.findMany({
+    where: { clubId, isActive: true },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true },
   });
 }

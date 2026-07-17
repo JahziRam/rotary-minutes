@@ -18,6 +18,7 @@ import {
   updateProjectTaskStatus,
 } from "@/actions/club-projects";
 import { ProjectBudgetPanel } from "@/components/projects/project-budget-panel";
+import { AssigneePicker } from "@/components/ui/assignee-picker";
 import type {
   BudgetDocumentKind,
   ClubActionPriority,
@@ -34,6 +35,8 @@ type TaskRow = {
   dueDate: string | null;
   responsibleMemberId: string | null;
   responsibleName: string | null;
+  assigneeLabel?: string | null;
+  commissionName?: string | null;
   minuteId: string | null;
   minuteTitle: string | null;
 };
@@ -48,6 +51,8 @@ type ProjectDetail = {
   color: string | null;
   ownerMemberId: string | null;
   ownerName: string | null;
+  assigneeLabel?: string | null;
+  commissionName?: string | null;
   budgetPlanned: number | null;
   budgetNotes: string | null;
   budget: {
@@ -107,18 +112,21 @@ const TASK_STATUS_VARIANT: Record<
 export function ProjectDetailPanel({
   project,
   members,
+  commissions = [],
   canManage,
   locale,
   currency,
 }: {
   project: ProjectDetail;
   members: Member[];
+  commissions?: Array<{ id: string; name: string }>;
   canManage: boolean;
   locale: string;
   currency: string;
 }) {
   const t = useTranslations("projects");
   const tActions = useTranslations("actions");
+  const tAssign = useTranslations("assignees");
   const tCommon = useTranslations("common");
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -127,7 +135,8 @@ export function ProjectDetailPanel({
   const [taskForm, setTaskForm] = useState({
     title: "",
     description: "",
-    responsibleMemberId: "",
+    assigneeMemberIds: [] as string[],
+    commissionId: "",
     dueDate: "",
     priority: "NORMAL" as ClubActionPriority,
   });
@@ -160,7 +169,8 @@ export function ProjectDetailPanel({
       const result = await createProjectTask(project.id, {
         title: taskForm.title,
         description: taskForm.description || undefined,
-        responsibleMemberId: taskForm.responsibleMemberId || undefined,
+        assigneeMemberIds: taskForm.assigneeMemberIds,
+        commissionId: taskForm.commissionId || undefined,
         dueDate: taskForm.dueDate || undefined,
         priority: taskForm.priority,
       });
@@ -170,7 +180,8 @@ export function ProjectDetailPanel({
         setTaskForm({
           title: "",
           description: "",
-          responsibleMemberId: "",
+          assigneeMemberIds: [],
+          commissionId: "",
           dueDate: "",
           priority: "NORMAL",
         });
@@ -210,8 +221,10 @@ export function ProjectDetailPanel({
             <p className="text-sm text-gray-600 max-w-2xl">{project.description}</p>
           )}
           <p className="text-xs text-gray-400">
-            {project.ownerName
-              ? t("ownedBy", { name: project.ownerName })
+            {project.assigneeLabel || project.ownerName
+              ? t("ownedBy", {
+                  name: project.assigneeLabel || project.ownerName || "",
+                })
               : t("noOwner")}
             {project.startDate
               ? ` · ${format(new Date(project.startDate), "d MMM yyyy", { locale: dateLocale })}`
@@ -287,23 +300,23 @@ export function ProjectDetailPanel({
                   }
                 />
               </label>
-              <label className="space-y-1">
-                <span className="text-sm font-medium text-gray-700">{tActions("responsible")}</span>
-                <select
-                  className="flex h-10 w-full rounded-lg border border-gray-200 px-3 text-sm bg-white"
-                  value={taskForm.responsibleMemberId}
-                  onChange={(e) =>
-                    setTaskForm((f) => ({ ...f, responsibleMemberId: e.target.value }))
+              <div className="sm:col-span-2">
+                <AssigneePicker
+                  members={members}
+                  commissions={commissions}
+                  selectedMemberIds={taskForm.assigneeMemberIds}
+                  commissionId={taskForm.commissionId}
+                  onMembersChange={(ids) =>
+                    setTaskForm((f) => ({ ...f, assigneeMemberIds: ids }))
                   }
-                >
-                  <option value="">{tActions("noResponsible")}</option>
-                  {members.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.firstName} {m.lastName}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  onCommissionChange={(id) =>
+                    setTaskForm((f) => ({ ...f, commissionId: id }))
+                  }
+                  membersLabel={tAssign("members")}
+                  commissionLabel={tAssign("commission")}
+                  noCommissionLabel={tAssign("noCommission")}
+                />
+              </div>
               <label className="space-y-1">
                 <span className="text-sm font-medium text-gray-700">{tActions("dueDate")}</span>
                 <input
@@ -362,7 +375,9 @@ export function ProjectDetailPanel({
                       <p className="text-sm text-gray-500 line-clamp-2">{task.description}</p>
                     )}
                     <p className="text-xs text-gray-400">
-                      {task.responsibleName || tActions("noResponsible")}
+                      {task.assigneeLabel ||
+                        task.responsibleName ||
+                        tActions("noResponsible")}
                       {task.dueDate
                         ? ` · ${format(new Date(task.dueDate), "d MMM yyyy", {
                             locale: dateLocale,

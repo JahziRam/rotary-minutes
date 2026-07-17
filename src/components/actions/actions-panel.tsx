@@ -30,6 +30,7 @@ import {
   sendActionReminder,
   exportActions,
 } from "@/actions/club-actions";
+import { AssigneePicker } from "@/components/ui/assignee-picker";
 import type { ClubActionPriority, ClubActionStatus } from "@/generated/prisma/client";
 
 type ActionRow = {
@@ -42,11 +43,14 @@ type ActionRow = {
   responsibleMemberId: string | null;
   responsibleName: string | null;
   responsibleEmail: string | null;
+  assigneeLabel?: string | null;
+  commissionName?: string | null;
   minuteId: string | null;
   minuteTitle: string | null;
 };
 
 type Member = { id: string; firstName: string; lastName: string };
+type Commission = { id: string; name: string };
 
 const STATUS_VARIANT: Record<
   ClubActionStatus,
@@ -64,16 +68,19 @@ const KANBAN_COLUMNS: ClubActionStatus[] = ["OPEN", "IN_PROGRESS", "COMPLETED"];
 export function ActionsPanel({
   actions,
   members,
+  commissions = [],
   canManage,
   locale,
 }: {
   actions: ActionRow[];
   members: Member[];
+  commissions?: Commission[];
   canManage: boolean;
   locale: string;
 }) {
   const t = useTranslations("actions");
   const tCommon = useTranslations("common");
+  const tAssign = useTranslations("assignees");
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [toast, setToast] = useState<string | null>(null);
@@ -83,7 +90,8 @@ export function ActionsPanel({
   const [form, setForm] = useState({
     title: "",
     description: "",
-    responsibleMemberId: "",
+    assigneeMemberIds: [] as string[],
+    commissionId: "",
     dueDate: "",
     priority: "NORMAL" as ClubActionPriority,
   });
@@ -93,7 +101,16 @@ export function ActionsPanel({
     (a: ActionRow, q: string) => {
       if (statusFilter && a.status !== statusFilter) return false;
       return matchesAny(
-        [a.title, a.description, a.responsibleName, a.minuteTitle, a.status, a.priority],
+        [
+          a.title,
+          a.description,
+          a.responsibleName,
+          a.assigneeLabel,
+          a.commissionName,
+          a.minuteTitle,
+          a.status,
+          a.priority,
+        ],
         q
       );
     },
@@ -197,19 +214,18 @@ export function ActionsPanel({
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 min-h-[60px]"
             />
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <select
-                value={form.responsibleMemberId}
-                onChange={(e) => setForm({ ...form, responsibleMemberId: e.target.value })}
-                className="text-sm border border-gray-200 rounded-lg px-3 py-2"
-              >
-                <option value="">{t("noResponsible")}</option>
-                {members.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.firstName} {m.lastName}
-                  </option>
-                ))}
-              </select>
+            <AssigneePicker
+              members={members}
+              commissions={commissions}
+              selectedMemberIds={form.assigneeMemberIds}
+              commissionId={form.commissionId}
+              onMembersChange={(ids) => setForm((f) => ({ ...f, assigneeMemberIds: ids }))}
+              onCommissionChange={(id) => setForm((f) => ({ ...f, commissionId: id }))}
+              membersLabel={tAssign("members")}
+              commissionLabel={tAssign("commission")}
+              noCommissionLabel={tAssign("noCommission")}
+            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <input
                 type="date"
                 value={form.dueDate}
@@ -240,7 +256,8 @@ export function ActionsPanel({
                     createAction({
                       title: form.title,
                       description: form.description || undefined,
-                      responsibleMemberId: form.responsibleMemberId || undefined,
+                      assigneeMemberIds: form.assigneeMemberIds,
+                      commissionId: form.commissionId || undefined,
                       dueDate: form.dueDate || undefined,
                       priority: form.priority,
                     }),
@@ -269,8 +286,10 @@ export function ActionsPanel({
                     {column.map((action) => (
                       <Card key={action.id} className="p-3 bg-white">
                         <p className="font-medium text-sm text-gray-900">{action.title}</p>
-                        {action.responsibleName && (
-                          <p className="text-xs text-gray-500 mt-1">{action.responsibleName}</p>
+                        {(action.assigneeLabel || action.responsibleName) && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            {action.assigneeLabel || action.responsibleName}
+                          </p>
                         )}
                         {action.dueDate && (
                           <p className="text-xs text-gray-400 mt-0.5">
@@ -365,7 +384,9 @@ export function ActionsPanel({
                           </Link>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-gray-700">{action.responsibleName ?? "—"}</td>
+                      <td className="px-4 py-3 text-gray-700">
+                        {action.assigneeLabel || action.responsibleName || "—"}
+                      </td>
                       <td className="px-4 py-3 text-gray-700">
                         {action.dueDate
                           ? format(new Date(action.dueDate), "PP", { locale: dateLocale })

@@ -20,6 +20,11 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
   - API `/api/budget/documents` (consultation, téléchargement, upload)
   - Champs budget optionnels sur événements (`budgetPlanned`) pour extension activités
   - Migration `20260717140000_project_budget_documents`
+- **Assignation multi-personnes & commissions**
+  - Tâches et projets assignables à plusieurs membres et/ou une commission
+  - Tables `ClubActionAssignee` / `ClubProjectAssignee` + `commissionId`
+  - Page **Membres → Commissions** : créer des commissions, ajouter/retirer des membres
+  - Migration `20260717150000_multi_assignees_commissions`
 - **Assistant IA — Qwen**
   - Fournisseur alternatif Qwen (DashScope) à SpaceXAI pour la rédaction PV ; sélection dans **Admin → Paramètres**
   - Repli clé API via `DASHSCOPE_API_KEY` ou `QWEN_API_KEY` ; base URL personnalisable (`QWEN_API_BASE_URL`)

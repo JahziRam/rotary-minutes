@@ -111,6 +111,13 @@ export default async function MembersPage({
                 }`}
           </p>
           <div className="flex items-center gap-2">
+            <Link
+              href={`/${locale}/members/commissions`}
+              className="inline-flex items-center justify-center gap-2 h-8 rounded-md px-3 text-xs font-medium border border-gray-200 bg-white hover:bg-gray-50 text-gray-900 transition-all"
+            >
+              <Users className="h-4 w-4" />
+              {t("members.commissionsLink")}
+            </Link>
             {showDues && (
               <Link
                 href={`/${locale}/members/dues`}

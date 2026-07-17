@@ -29,6 +29,7 @@ export default async function ProjectsPage({
       <ProjectsPanel
         projects={data.projects}
         members={data.members}
+        commissions={data.commissions}
         canManage={data.canManage}
         locale={locale}
       />

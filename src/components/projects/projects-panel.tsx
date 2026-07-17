@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/list-controls";
 import { matchesAny } from "@/lib/client-list";
 import { createProject } from "@/actions/club-projects";
+import { AssigneePicker } from "@/components/ui/assignee-picker";
 import type { ClubProjectStatus } from "@/generated/prisma/client";
 
 export type ProjectRow = {
@@ -30,6 +31,8 @@ export type ProjectRow = {
   color: string | null;
   ownerMemberId: string | null;
   ownerName: string | null;
+  assigneeLabel?: string | null;
+  commissionName?: string | null;
   taskCount: number;
   openTaskCount: number;
   completedTaskCount: number;
@@ -38,6 +41,7 @@ export type ProjectRow = {
 };
 
 type Member = { id: string; firstName: string; lastName: string };
+type Commission = { id: string; name: string };
 
 const STATUS_VARIANT: Record<
   ClubProjectStatus,
@@ -53,16 +57,19 @@ const STATUS_VARIANT: Record<
 export function ProjectsPanel({
   projects,
   members,
+  commissions = [],
   canManage,
   locale,
 }: {
   projects: ProjectRow[];
   members: Member[];
+  commissions?: Commission[];
   canManage: boolean;
   locale: string;
 }) {
   const t = useTranslations("projects");
   const tCommon = useTranslations("common");
+  const tAssign = useTranslations("assignees");
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [toast, setToast] = useState<string | null>(null);
@@ -74,14 +81,18 @@ export function ProjectsPanel({
     status: "PLANNING" as ClubProjectStatus,
     startDate: "",
     endDate: "",
-    ownerMemberId: "",
+    assigneeMemberIds: [] as string[],
+    commissionId: "",
   });
   const dateLocale = locale === "fr" ? fr : enUS;
 
   const filterFn = useCallback(
     (p: ProjectRow, q: string) => {
       if (statusFilter && p.status !== statusFilter) return false;
-      return matchesAny([p.name, p.description, p.ownerName, p.status], q);
+      return matchesAny(
+        [p.name, p.description, p.ownerName, p.assigneeLabel, p.commissionName, p.status],
+        q
+      );
     },
     [statusFilter]
   );
@@ -100,7 +111,8 @@ export function ProjectsPanel({
         status: form.status,
         startDate: form.startDate || undefined,
         endDate: form.endDate || undefined,
-        ownerMemberId: form.ownerMemberId || undefined,
+        assigneeMemberIds: form.assigneeMemberIds,
+        commissionId: form.commissionId || undefined,
       });
       if ("success" in result && result.success) {
         setToast(t("projectCreated"));
@@ -111,7 +123,8 @@ export function ProjectsPanel({
           status: "PLANNING",
           startDate: "",
           endDate: "",
-          ownerMemberId: "",
+          assigneeMemberIds: [],
+          commissionId: "",
         });
         router.refresh();
       }
@@ -173,21 +186,21 @@ export function ProjectsPanel({
                 ))}
               </select>
             </label>
-            <label className="space-y-1">
-              <span className="text-sm font-medium text-gray-700">{t("owner")}</span>
-              <select
-                className="flex h-10 w-full rounded-lg border border-gray-200 px-3 text-sm"
-                value={form.ownerMemberId}
-                onChange={(e) => setForm((f) => ({ ...f, ownerMemberId: e.target.value }))}
-              >
-                <option value="">{t("noOwner")}</option>
-                {members.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.firstName} {m.lastName}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <div className="sm:col-span-2">
+              <AssigneePicker
+                members={members}
+                commissions={commissions}
+                selectedMemberIds={form.assigneeMemberIds}
+                commissionId={form.commissionId}
+                onMembersChange={(ids) =>
+                  setForm((f) => ({ ...f, assigneeMemberIds: ids }))
+                }
+                onCommissionChange={(id) => setForm((f) => ({ ...f, commissionId: id }))}
+                membersLabel={tAssign("members")}
+                commissionLabel={tAssign("commission")}
+                noCommissionLabel={tAssign("noCommission")}
+              />
+            </div>
             <label className="space-y-1">
               <span className="text-sm font-medium text-gray-700">{t("startDate")}</span>
               <input
@@ -265,8 +278,8 @@ export function ProjectsPanel({
                     })}
                   </p>
                   <p className="text-xs text-gray-400">
-                    {p.ownerName
-                      ? t("ownedBy", { name: p.ownerName })
+                    {p.assigneeLabel || p.ownerName
+                      ? t("ownedBy", { name: p.assigneeLabel || p.ownerName || "" })
                       : t("noOwner")}
                     {p.endDate
                       ? ` · ${t("endsOn", {

@@ -29,6 +29,7 @@ export default async function ActionsPage({
       <ActionsPanel
         actions={data.actions}
         members={data.members}
+        commissions={data.commissions}
         canManage={data.canManage}
         locale={locale}
       />

@@ -520,7 +520,8 @@
         "INVALID_HEADERS": "En-têtes invalides (firstName, lastName requis)",
         "TOO_LARGE": "Fichier trop volumineux (max 5 Mo)"
       }
-    }
+    },
+    "commissionsLink": "Gérer les commissions"
   },
   "dues": {
     "title": "Cotisations",
@@ -3019,5 +3020,34 @@
         "OTHER": "Autre"
       }
     }
+  },
+  "assignees": {
+    "members": "Personnes assignées",
+    "commission": "Commission assignée",
+    "noCommission": "Aucune commission"
+  },
+  "commissions": {
+    "title": "Commissions",
+    "subtitle": "Créez des commissions et y rattachez des membres.",
+    "addCommission": "Nouvelle commission",
+    "name": "Nom",
+    "chairName": "Président de commission",
+    "chairOptional": "Optionnel",
+    "save": "Créer",
+    "created": "Commission créée",
+    "deleted": "Commission désactivée",
+    "deleteConfirm": "Désactiver cette commission ? Les membres seront détachés.",
+    "noCommissions": "Aucune commission",
+    "noMembers": "Aucun membre dans cette commission",
+    "chair": "Président : {name}",
+    "noChair": "Sans président nommé",
+    "memberCount": "{count} membre(s)",
+    "selectMember": "Choisir un membre…",
+    "addMember": "Ajouter",
+    "memberAdded": "Membre ajouté à la commission",
+    "memberRemoved": "Membre retiré de la commission",
+    "reassign": "réaffectation",
+    "unassignedCount": "{count} membre(s) sans commission",
+    "forbidden": "Accès non autorisé"
   }
 }

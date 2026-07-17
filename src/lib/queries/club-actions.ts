@@ -13,11 +13,17 @@ export async function getClubActions(clubId: string, filters?: ActionFilters) {
     status?: ClubActionStatus;
     responsibleMemberId?: string;
     minuteId?: string;
+    OR?: Array<Record<string, unknown>>;
   } = { clubId };
 
   if (filters?.status) where.status = filters.status;
-  if (filters?.responsibleMemberId) where.responsibleMemberId = filters.responsibleMemberId;
   if (filters?.minuteId) where.minuteId = filters.minuteId;
+  if (filters?.responsibleMemberId) {
+    where.OR = [
+      { responsibleMemberId: filters.responsibleMemberId },
+      { assignees: { some: { memberId: filters.responsibleMemberId } } },
+    ];
+  }
 
   return prisma.clubAction.findMany({
     where,
@@ -25,6 +31,14 @@ export async function getClubActions(clubId: string, filters?: ActionFilters) {
     include: {
       responsibleMember: {
         select: { id: true, firstName: true, lastName: true, email: true },
+      },
+      commission: { select: { id: true, name: true } },
+      assignees: {
+        include: {
+          member: {
+            select: { id: true, firstName: true, lastName: true, email: true },
+          },
+        },
       },
       minute: { select: { id: true, title: true, meetingId: true } },
       agendaItem: { select: { id: true, title: true } },
@@ -38,6 +52,14 @@ export async function getActionMembers(clubId: string) {
     where: { clubId, isActive: true },
     orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
     select: { id: true, firstName: true, lastName: true, email: true },
+  });
+}
+
+export async function getActionCommissions(clubId: string) {
+  return prisma.commission.findMany({
+    where: { clubId, isActive: true },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true },
   });
 }
 
@@ -55,6 +77,19 @@ export async function getOverdueActionsForReminders(cooldownCutoff: Date) {
       club: { select: { id: true, name: true, logoUrl: true, language: true } },
       responsibleMember: {
         select: { id: true, firstName: true, lastName: true, email: true, userId: true },
+      },
+      assignees: {
+        include: {
+          member: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              userId: true,
+            },
+          },
+        },
       },
       minute: { select: { id: true, title: true } },
     },
