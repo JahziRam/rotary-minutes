@@ -50,7 +50,10 @@ describe("minuteWhereForContext", () => {
   });
 
   it("scopes commission chair to their commission", async () => {
-    prismaMock.member.findFirst.mockResolvedValue({ commissionId: "comm-1" });
+    prismaMock.member.findFirst.mockResolvedValue({
+      commissionId: "comm-1",
+      commissionMemberships: [{ commissionId: "comm-1" }],
+    });
 
     const scope = await minuteWhereForContext(makeCtx("COMMISSION_CHAIR"));
 
@@ -61,7 +64,10 @@ describe("minuteWhereForContext", () => {
   });
 
   it("returns empty commission scope when chair has no commission", async () => {
-    prismaMock.member.findFirst.mockResolvedValue({ commissionId: null });
+    prismaMock.member.findFirst.mockResolvedValue({
+      commissionId: null,
+      commissionMemberships: [],
+    });
 
     const scope = await minuteWhereForContext(makeCtx("COMMISSION_CHAIR"));
 
