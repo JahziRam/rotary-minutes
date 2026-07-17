@@ -21,9 +21,10 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
   - Champs budget optionnels sur événements (`budgetPlanned`) pour extension activités
   - Migration `20260717140000_project_budget_documents`
 - **Assignation multi-personnes & commissions**
-  - Tâches et projets assignables à plusieurs membres et/ou une commission
-  - Tables `ClubActionAssignee` / `ClubProjectAssignee` + `commissionId`
-  - Page **Membres → Commissions** : créer des commissions, ajouter/retirer des membres
+  - Tâches et projets assignables à plusieurs membres et/ou une commission (`AssigneePicker`)
+  - Tables `ClubActionAssignee` / `ClubProjectAssignee` + `commissionId` sur action et projet
+  - Page **Membres → Commissions** (`/members/commissions`) : créer des commissions, ajouter/retirer des membres
+  - Lien depuis l’annuaire membres ; i18n fr / en / es
   - Migration `20260717150000_multi_assignees_commissions`
 - **Assistant IA — Qwen**
   - Fournisseur alternatif Qwen (DashScope) à SpaceXAI pour la rédaction PV ; sélection dans **Admin → Paramètres**

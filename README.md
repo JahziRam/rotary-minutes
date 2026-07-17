@@ -15,6 +15,8 @@ Production : [https://clubminutes.api.mg](https://clubminutes.api.mg)
 - **Emails** — Templates, campagnes, contacts, planification
 - **Projets** — Gestion de projets club, tâches associées et **budget** (prévu / réalisé, devis & proformas) via `/projects`
 - **Tâches** — Suivi des actions (dont issues de PV) via `/actions`
+- **Assignation** — Tâches et projets assignables à **plusieurs membres** et/ou une **commission**
+- **Commissions** — Création et peuplement des commissions (`/members/commissions`)
 - **Tableau de bord** — Statistiques, mandat Rotary (1er juillet – 30 juin)
 - **Mode hors ligne** — IndexedDB + synchronisation automatique
 - **Stripe** — Abonnements et essai gratuit 14 jours
@@ -92,14 +94,16 @@ src/
 ├── app/[locale]/          # Pages i18n (fr, en, es)
 │   ├── (auth)/            # Login, inscription
 │   ├── (app)/             # Application authentifiée
-│   │   ├── projects/      # Module projets
+│   │   ├── projects/      # Module projets (+ budget)
 │   │   ├── actions/       # Gestion des tâches
+│   │   ├── members/       # Annuaire, cotisations, commissions
 │   │   └── ...
 │   └── verify/[hash]/     # Vérification PV
 ├── components/
-│   ├── ui/                # Composants de base
+│   ├── ui/                # Composants de base (ex. AssigneePicker)
 │   ├── layout/            # Navigation, sidebar
-│   ├── projects/          # Projets & tâches projet
+│   ├── projects/          # Projets, tâches projet, budget
+│   ├── members/           # Annuaire, commissions
 │   ├── minutes/           # Éditeur PV + assistant IA
 │   └── ...
 ├── lib/
@@ -118,15 +122,26 @@ messages/                  # Traductions fr / en / es
 
 Les modules se basculent par club (super admin → Clubs → fonctionnalités) ou via les presets d’offre :
 
-| Module | Routes | Flags |
-|--------|--------|--------|
-| Projets | `/projects`, `/projects/[id]` | `projectsEnabled` |
-| Tâches | `/actions` | `actionsEnabled` |
-| Trésorerie | `/treasury` | `treasuryEnabled` |
+| Module | Routes | Flags / notes |
+|--------|--------|----------------|
+| Projets | `/projects`, `/projects/[id]` | `projectsEnabled` — budget, multi-assignees, commission |
+| Tâches | `/actions` | `actionsEnabled` — multi-assignees, commission |
+| Commissions | `/members/commissions` | Gestion des membres par commission |
+| Trésorerie | `/treasury` | `treasuryEnabled` — budget mandat (sous-comptes) |
 | Cotisations | `/members/dues` | `duesEnabled` |
 | Assistant IA PV | éditeur de PV | `minuteAiAssistEnabled` (+ clé API plateforme) |
 
-Permissions projets : `projects.view`, `projects.manage`.
+Permissions projets : `projects.view`, `projects.manage`.  
+Permissions tâches : `actions.view`, `actions.manage`.  
+Gestion commissions : `members.manage`.
+
+### Budgétisation (rappel)
+
+| Niveau | Où |
+|--------|-----|
+| Mandat club | Trésorerie → tableau budgétaire (sous-comptes `budgetPlanned`) |
+| Projet | Fiche projet → budget prévu / réalisé + pièces (devis, proforma…) |
+| Documents budgétaires | API `/api/budget/documents` |
 
 ## Rôles et permissions
 
