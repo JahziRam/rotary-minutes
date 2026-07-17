@@ -34,6 +34,7 @@ export default async function ProjectDetailPage({
         members={data.members}
         canManage={data.canManage}
         locale={locale}
+        currency={data.currency}
       />
     </AppShellServer>
   );

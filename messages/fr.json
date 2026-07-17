@@ -2982,6 +2982,42 @@
       "ON_HOLD": "En pause",
       "COMPLETED": "Terminé",
       "CANCELLED": "Annulé"
+    },
+    "budget": {
+      "title": "Budget du projet",
+      "planned": "Budget prévu",
+      "income": "Recettes",
+      "expense": "Dépenses",
+      "variance": "Écart (réalisé − prévu)",
+      "notes": "Notes budgétaires",
+      "saveBudget": "Enregistrer le budget",
+      "budgetSaved": "Budget enregistré",
+      "entriesTitle": "Opérations liées",
+      "amount": "Montant",
+      "description": "Libellé",
+      "addEntry": "Ajouter une opération",
+      "entryCreated": "Opération enregistrée",
+      "noEntries": "Aucune opération liée à ce projet",
+      "documentsTitle": "Devis, proformas et pièces",
+      "documentsHint": "Joignez devis, factures proforma, bons de commande, contrats ou autres documents budgétaires.",
+      "docLabel": "Libellé du document",
+      "docAmount": "Montant du devis (optionnel)",
+      "docNotes": "Notes",
+      "upload": "Téléverser",
+      "documentUploaded": "Document(s) ajouté(s)",
+      "documentDeleted": "Document supprimé",
+      "uploadError": "Échec du téléversement",
+      "noDocuments": "Aucun document budgétaire",
+      "view": "Voir",
+      "kinds": {
+        "QUOTE": "Devis",
+        "PROFORMA": "Proforma",
+        "PURCHASE_ORDER": "Bon de commande",
+        "CONTRACT": "Contrat",
+        "ESTIMATE": "Estimation",
+        "INVOICE": "Facture",
+        "OTHER": "Autre"
+      }
     }
   }
 }

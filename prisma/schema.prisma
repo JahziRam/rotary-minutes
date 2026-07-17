@@ -153,6 +153,16 @@ enum ClubProjectStatus {
   CANCELLED
 }
 
+enum BudgetDocumentKind {
+  QUOTE
+  PROFORMA
+  PURCHASE_ORDER
+  CONTRACT
+  ESTIMATE
+  INVOICE
+  OTHER
+}
+
 enum ClubEventStatus {
   DRAFT
   PUBLISHED
@@ -384,6 +394,7 @@ model User {
   clubActionsCreated ClubAction[] @relation("ActionCreator")
   clubProjectsCreated ClubProject[] @relation("ProjectCreator")
   clubDocumentsUploaded ClubDocument[]
+  budgetDocumentsUploaded BudgetDocument[] @relation("BudgetDocumentUploader")
   treasuryVouchersUploaded TreasuryVoucher[] @relation("TreasuryVoucherUploader")
   clubBackupsCreated ClubBackup[] @relation("ClubBackupCreator")
   platformBackupsCreated PlatformBackup[] @relation("PlatformBackupCreator")
@@ -467,6 +478,7 @@ model Club {
   clubProjects    ClubProject[]
   clubEvents      ClubEvent[]
   clubDocuments   ClubDocument[]
+  budgetDocuments BudgetDocument[]
   documentFolders DocumentFolder[]
   clubBackups     ClubBackup[]
   governanceRecords GovernanceRecord[]
@@ -1472,6 +1484,7 @@ model BudgetEntry {
   date          DateTime
   description   String
   eventId       String?
+  projectId     String?
   duesPaymentId String?
   actionId      String?
   paymentMethod PaymentMethod?
@@ -1486,6 +1499,7 @@ model BudgetEntry {
   category              BudgetCategory?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   subAccount            TreasurySubAccount? @relation(fields: [subAccountId], references: [id], onDelete: SetNull)
   event                 ClubEvent?       @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  project               ClubProject?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
   duesPayment           DuesPayment?     @relation(fields: [duesPaymentId], references: [id], onDelete: SetNull)
   action                ClubAction?      @relation(fields: [actionId], references: [id], onDelete: SetNull)
   eventRegistration     EventRegistration? @relation(fields: [eventRegistrationId], references: [id], onDelete: SetNull)
@@ -1496,6 +1510,35 @@ model BudgetEntry {
   @@index([clubId, date])
   @@index([clubId, type])
   @@index([clubId, subAccountId])
+  @@index([projectId])
+}
+
+model BudgetDocument {
+  id           String             @id @default(cuid())
+  clubId       String
+  kind         BudgetDocumentKind @default(OTHER)
+  label        String?
+  fileUrl      String             @db.Text
+  fileName     String
+  mimeType     String
+  amount       Decimal?           @db.Decimal(12, 2)
+  projectId    String?
+  eventId      String?
+  actionId     String?
+  mandateYear  Int?
+  notes        String?            @db.Text
+  uploadedById String?
+  createdAt    DateTime           @default(now())
+
+  club         Club               @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  project      ClubProject?       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  event        ClubEvent?         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  action       ClubAction?        @relation(fields: [actionId], references: [id], onDelete: SetNull)
+  uploadedBy   User?              @relation("BudgetDocumentUploader", fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  @@index([clubId, projectId])
+  @@index([clubId, eventId])
+  @@index([clubId, mandateYear])
 }
 
 model TreasurySubAccount {
@@ -1614,6 +1657,8 @@ model ClubProject {
   endDate         DateTime?
   ownerMemberId   String?
   color           String?
+  budgetPlanned   Decimal?          @db.Decimal(12, 2)
+  budgetNotes     String?           @db.Text
   createdById     String?
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
@@ -1622,6 +1667,8 @@ model ClubProject {
   ownerMember     Member?           @relation("ProjectOwner", fields: [ownerMemberId], references: [id], onDelete: SetNull)
   createdBy       User?             @relation("ProjectCreator", fields: [createdById], references: [id], onDelete: SetNull)
   tasks           ClubAction[]
+  budgetEntries   BudgetEntry[]
+  budgetDocuments BudgetDocument[]
 
   @@index([clubId, status])
   @@index([clubId, endDate])
@@ -1654,6 +1701,7 @@ model ClubAction {
   agendaItem         AgendaItem?        @relation(fields: [agendaItemId], references: [id], onDelete: SetNull)
   createdBy          User?              @relation("ActionCreator", fields: [createdById], references: [id], onDelete: SetNull)
   budgetEntries      BudgetEntry[]
+  budgetDocuments    BudgetDocument[]
 
   @@index([clubId, status])
   @@index([clubId, dueDate])
@@ -1690,12 +1738,15 @@ model ClubEvent {
   price           Decimal?         @db.Decimal(10, 2)
   currency        String           @default("EUR")
   requiresPayment Boolean          @default(false)
+  budgetPlanned   Decimal?         @db.Decimal(12, 2)
+  budgetNotes     String?          @db.Text
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
   club            Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
   registrations   EventRegistration[]
   budgetEntries   BudgetEntry[]
+  budgetDocuments BudgetDocument[]
   priceTiers      EventPriceTier[]
   ticketSlots     EventTicketSlot[]
 

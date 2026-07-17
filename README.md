@@ -13,7 +13,7 @@ Production : [https://clubminutes.api.mg](https://clubminutes.api.mg)
 - **Réunions** — Types dynamiques, présences, assiduité automatique
 - **PDF authentifié** — Logo, QR code, hash SHA-256 inviolable
 - **Emails** — Templates, campagnes, contacts, planification
-- **Projets** — Gestion de projets club et tâches associées (`/projects`)
+- **Projets** — Gestion de projets club, tâches associées et **budget** (prévu / réalisé, devis & proformas) via `/projects`
 - **Tâches** — Suivi des actions (dont issues de PV) via `/actions`
 - **Tableau de bord** — Statistiques, mandat Rotary (1er juillet – 30 juin)
 - **Mode hors ligne** — IndexedDB + synchronisation automatique

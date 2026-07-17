@@ -2618,6 +2618,42 @@
       "ON_HOLD": "En pausa",
       "COMPLETED": "Completado",
       "CANCELLED": "Cancelado"
+    },
+    "budget": {
+      "title": "Presupuesto del proyecto",
+      "planned": "Presupuesto previsto",
+      "income": "Ingresos",
+      "expense": "Gastos",
+      "variance": "Desviación (real − previsto)",
+      "notes": "Notas presupuestarias",
+      "saveBudget": "Guardar presupuesto",
+      "budgetSaved": "Presupuesto guardado",
+      "entriesTitle": "Operaciones vinculadas",
+      "amount": "Importe",
+      "description": "Concepto",
+      "addEntry": "Añadir operación",
+      "entryCreated": "Operación registrada",
+      "noEntries": "Sin operaciones en este proyecto",
+      "documentsTitle": "Presupuestos, proformas y archivos",
+      "documentsHint": "Adjunte presupuestos, proformas, pedidos, contratos u otros documentos presupuestarios.",
+      "docLabel": "Etiqueta del documento",
+      "docAmount": "Importe (opcional)",
+      "docNotes": "Notas",
+      "upload": "Subir",
+      "documentUploaded": "Documento(s) subido(s)",
+      "documentDeleted": "Documento eliminado",
+      "uploadError": "Error al subir",
+      "noDocuments": "Sin documentos presupuestarios",
+      "view": "Ver",
+      "kinds": {
+        "QUOTE": "Presupuesto",
+        "PROFORMA": "Proforma",
+        "PURCHASE_ORDER": "Pedido",
+        "CONTRACT": "Contrato",
+        "ESTIMATE": "Estimación",
+        "INVOICE": "Factura",
+        "OTHER": "Otro"
+      }
     }
   }
 }

@@ -134,14 +134,51 @@ export async function getProject(projectId: string) {
   const project = await getClubProjectById(ctx.clubId, projectId);
   if (!project) return { error: "NOT_FOUND" as const };
 
-  const [members, canManage] = await Promise.all([
+  const [members, canManage, entries, documents, club] = await Promise.all([
     getProjectMembers(ctx.clubId),
     hasRolePermission(ctx.role, "projects.manage", ctx.isSuperAdmin),
+    prisma.budgetEntry.findMany({
+      where: { clubId: ctx.clubId, projectId },
+      orderBy: { date: "desc" },
+      take: 50,
+      select: {
+        id: true,
+        type: true,
+        amount: true,
+        currency: true,
+        date: true,
+        description: true,
+      },
+    }),
+    prisma.budgetDocument.findMany({
+      where: { clubId: ctx.clubId, projectId },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.club.findUnique({
+      where: { id: ctx.clubId },
+      select: { currency: true },
+    }),
   ]);
+
+  let income = 0;
+  let expense = 0;
+  for (const e of entries) {
+    const amt = Number(e.amount);
+    if (e.type === "INCOME") income += amt;
+    else expense += amt;
+  }
+  const planned =
+    project.budgetPlanned != null ? Number(project.budgetPlanned) : null;
+  const actual = income - expense;
+
+  const { budgetDocumentDownloadUrl, budgetDocumentViewUrl } = await import(
+    "@/lib/budget-document-urls"
+  );
 
   return {
     canManage,
     members,
+    currency: club?.currency ?? "EUR",
     project: {
       id: project.id,
       name: project.name,
@@ -154,6 +191,35 @@ export async function getProject(projectId: string) {
       ownerName: project.ownerMember
         ? `${project.ownerMember.firstName} ${project.ownerMember.lastName}`
         : null,
+      budgetPlanned: planned,
+      budgetNotes: project.budgetNotes,
+      budget: {
+        planned,
+        income,
+        expense,
+        actual,
+        variance: planned != null ? actual - planned : null,
+      },
+      budgetEntries: entries.map((e) => ({
+        id: e.id,
+        type: e.type,
+        amount: Number(e.amount),
+        currency: e.currency,
+        date: e.date.toISOString(),
+        description: e.description,
+      })),
+      budgetDocuments: documents.map((d) => ({
+        id: d.id,
+        kind: d.kind,
+        label: d.label,
+        fileName: d.fileName,
+        mimeType: d.mimeType,
+        amount: d.amount != null ? Number(d.amount) : null,
+        notes: d.notes,
+        createdAt: d.createdAt.toISOString(),
+        viewUrl: budgetDocumentViewUrl(d.id, d.mimeType),
+        downloadUrl: budgetDocumentDownloadUrl(d.id),
+      })),
       tasks: project.tasks.map(serializeTask),
       createdAt: project.createdAt.toISOString(),
       updatedAt: project.updatedAt.toISOString(),
@@ -215,6 +281,8 @@ export async function updateProject(
     endDate?: string | null;
     ownerMemberId?: string | null;
     color?: string | null;
+    budgetPlanned?: number | null;
+    budgetNotes?: string | null;
   }
 ) {
   const auth = await requireProjectsManage();
@@ -245,6 +313,15 @@ export async function updateProject(
         ownerMemberId: data.ownerMemberId || null,
       }),
       ...(data.color !== undefined && { color: data.color?.trim() || null }),
+      ...(data.budgetPlanned !== undefined && {
+        budgetPlanned:
+          data.budgetPlanned == null || !Number.isFinite(data.budgetPlanned)
+            ? null
+            : data.budgetPlanned,
+      }),
+      ...(data.budgetNotes !== undefined && {
+        budgetNotes: data.budgetNotes?.trim() || null,
+      }),
     },
   });
 
@@ -292,6 +369,72 @@ export async function deleteProject(projectId: string) {
 
   revalidateProjects();
   return { success: true as const };
+}
+
+export async function updateProjectBudget(
+  projectId: string,
+  data: { budgetPlanned?: number | null; budgetNotes?: string | null }
+) {
+  return updateProject(projectId, data);
+}
+
+export async function createProjectBudgetEntry(
+  projectId: string,
+  data: {
+    type: "INCOME" | "EXPENSE";
+    amount: number;
+    date: string;
+    description: string;
+  }
+) {
+  const auth = await requireProjectsManage();
+  if (auth.error) return auth;
+  const { ctx } = auth;
+
+  const project = await prisma.clubProject.findFirst({
+    where: { id: projectId, clubId: ctx.clubId },
+    select: { id: true },
+  });
+  if (!project) return { error: "NOT_FOUND" as const };
+
+  if (!data.description.trim() || !Number.isFinite(data.amount) || data.amount <= 0) {
+    return { error: "INVALID" as const };
+  }
+
+  const club = await prisma.club.findUnique({
+    where: { id: ctx.clubId },
+    select: { currency: true },
+  });
+
+  const entry = await prisma.budgetEntry.create({
+    data: {
+      clubId: ctx.clubId,
+      projectId,
+      type: data.type,
+      amount: data.amount,
+      currency: club?.currency ?? "EUR",
+      date: new Date(data.date),
+      description: data.description.trim(),
+      recordedById: ctx.userId,
+    },
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      clubId: ctx.clubId,
+      userId: ctx.userId,
+      action: "PROJECT_BUDGET_ENTRY_CREATED",
+      entity: "BudgetEntry",
+      entityId: entry.id,
+      metadata: { projectId, type: data.type, amount: data.amount },
+    },
+  });
+
+  revalidateProjects(projectId);
+  for (const loc of ["fr", "en", "es"]) {
+    revalidatePath(`/${loc}/treasury`);
+  }
+  return { success: true as const, entryId: entry.id };
 }
 
 export async function createProjectTask(

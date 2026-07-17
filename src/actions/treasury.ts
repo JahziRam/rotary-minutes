@@ -16,9 +16,10 @@ import {
 import { buildTreasuryReportPdfBuffer } from "@/lib/pdf/build-treasury-pdf";
 import type { BudgetEntryType, PaymentMethod, TreasuryCollectionStatus } from "@/generated/prisma/client";
 
-function revalidateTreasury() {
-  for (const loc of ["fr", "en"]) {
+function revalidateTreasury(projectId?: string | null) {
+  for (const loc of ["fr", "en", "es"]) {
     revalidatePath(`/${loc}/treasury`);
+    if (projectId) revalidatePath(`/${loc}/projects/${projectId}`);
   }
 }
 
@@ -128,6 +129,7 @@ export async function createEntry(data: {
   categoryId?: string;
   subAccountId?: string;
   eventId?: string;
+  projectId?: string;
   actionId?: string;
   paymentMethod?: PaymentMethod;
   reference?: string;
@@ -137,6 +139,14 @@ export async function createEntry(data: {
   const auth = await requireTreasuryManage();
   if (auth.error) return auth;
   const { ctx } = auth;
+
+  if (data.projectId) {
+    const project = await prisma.clubProject.findFirst({
+      where: { id: data.projectId, clubId: ctx.clubId },
+      select: { id: true },
+    });
+    if (!project) return { error: "NOT_FOUND" as const };
+  }
 
   const club = await prisma.club.findUnique({
     where: { id: ctx.clubId },
@@ -154,6 +164,7 @@ export async function createEntry(data: {
       categoryId: data.categoryId || null,
       subAccountId: data.subAccountId || null,
       eventId: data.eventId || null,
+      projectId: data.projectId || null,
       actionId: data.actionId || null,
       paymentMethod: data.paymentMethod || null,
       reference: data.reference || null,
@@ -181,7 +192,7 @@ export async function createEntry(data: {
     description: data.description,
   });
 
-  revalidateTreasury();
+  revalidateTreasury(data.projectId);
   return { success: true, entry };
 }
 

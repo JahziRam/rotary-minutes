@@ -2922,6 +2922,42 @@
       "ON_HOLD": "On hold",
       "COMPLETED": "Completed",
       "CANCELLED": "Cancelled"
+    },
+    "budget": {
+      "title": "Project budget",
+      "planned": "Planned budget",
+      "income": "Income",
+      "expense": "Expenses",
+      "variance": "Variance (actual − planned)",
+      "notes": "Budget notes",
+      "saveBudget": "Save budget",
+      "budgetSaved": "Budget saved",
+      "entriesTitle": "Linked transactions",
+      "amount": "Amount",
+      "description": "Description",
+      "addEntry": "Add transaction",
+      "entryCreated": "Transaction recorded",
+      "noEntries": "No transactions linked to this project",
+      "documentsTitle": "Quotes, proformas & files",
+      "documentsHint": "Attach quotes, proforma invoices, purchase orders, contracts or other budget documents.",
+      "docLabel": "Document label",
+      "docAmount": "Quote amount (optional)",
+      "docNotes": "Notes",
+      "upload": "Upload",
+      "documentUploaded": "Document(s) uploaded",
+      "documentDeleted": "Document deleted",
+      "uploadError": "Upload failed",
+      "noDocuments": "No budget documents",
+      "view": "View",
+      "kinds": {
+        "QUOTE": "Quote",
+        "PROFORMA": "Proforma",
+        "PURCHASE_ORDER": "Purchase order",
+        "CONTRACT": "Contract",
+        "ESTIMATE": "Estimate",
+        "INVOICE": "Invoice",
+        "OTHER": "Other"
+      }
     }
   }
 }

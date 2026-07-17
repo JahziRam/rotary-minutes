@@ -14,6 +14,12 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
   - Pages `/projects` et `/projects/[id]`, navigation, feature flags `projectsEnabled` / `projectsMenuVisible`
   - Permissions `projects.view` / `projects.manage`
   - Migration `20260717120000_club_projects`
+- **Budgétisation projets + documents**
+  - Budget prévu / réalisé / écart sur la fiche projet ; opérations liées (`BudgetEntry.projectId`)
+  - Upload de devis, proformas, bons de commande, contrats, factures (`BudgetDocument`)
+  - API `/api/budget/documents` (consultation, téléchargement, upload)
+  - Champs budget optionnels sur événements (`budgetPlanned`) pour extension activités
+  - Migration `20260717140000_project_budget_documents`
 - **Assistant IA — Qwen**
   - Fournisseur alternatif Qwen (DashScope) à SpaceXAI pour la rédaction PV ; sélection dans **Admin → Paramètres**
   - Repli clé API via `DASHSCOPE_API_KEY` ou `QWEN_API_KEY` ; base URL personnalisable (`QWEN_API_BASE_URL`)

@@ -17,7 +17,9 @@ import {
   updateProject,
   updateProjectTaskStatus,
 } from "@/actions/club-projects";
+import { ProjectBudgetPanel } from "@/components/projects/project-budget-panel";
 import type {
+  BudgetDocumentKind,
   ClubActionPriority,
   ClubActionStatus,
   ClubProjectStatus,
@@ -46,6 +48,35 @@ type ProjectDetail = {
   color: string | null;
   ownerMemberId: string | null;
   ownerName: string | null;
+  budgetPlanned: number | null;
+  budgetNotes: string | null;
+  budget: {
+    planned: number | null;
+    income: number;
+    expense: number;
+    actual: number;
+    variance: number | null;
+  };
+  budgetEntries: Array<{
+    id: string;
+    type: "INCOME" | "EXPENSE";
+    amount: number;
+    currency: string;
+    date: string;
+    description: string;
+  }>;
+  budgetDocuments: Array<{
+    id: string;
+    kind: BudgetDocumentKind;
+    label: string | null;
+    fileName: string;
+    mimeType: string;
+    amount: number | null;
+    notes: string | null;
+    createdAt: string;
+    viewUrl: string;
+    downloadUrl: string;
+  }>;
   tasks: TaskRow[];
 };
 
@@ -78,11 +109,13 @@ export function ProjectDetailPanel({
   members,
   canManage,
   locale,
+  currency,
 }: {
   project: ProjectDetail;
   members: Member[];
   canManage: boolean;
   locale: string;
+  currency: string;
 }) {
   const t = useTranslations("projects");
   const tActions = useTranslations("actions");
@@ -211,6 +244,17 @@ export function ProjectDetailPanel({
           </div>
         )}
       </div>
+
+      <ProjectBudgetPanel
+        projectId={project.id}
+        currency={currency}
+        locale={locale}
+        canManage={canManage}
+        budget={project.budget}
+        budgetNotes={project.budgetNotes}
+        entries={project.budgetEntries}
+        documents={project.budgetDocuments}
+      />
 
       <Card>
         <CardHeader className="flex-row items-center justify-between gap-3">
