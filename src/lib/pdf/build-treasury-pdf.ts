@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 import { getAppBaseUrl } from "@/lib/app-url";
+import { formatBudgetMoney } from "@/lib/budget-utils";
 import { isDataUrl } from "@/lib/image-storage";
 import { resolveClubLogoUrl } from "@/lib/media-url";
 import type { BudgetEntryType } from "@/generated/prisma/client";
@@ -33,10 +34,7 @@ function resolveLogo(club: ClubForPdf, baseUrl: string): string | undefined {
 }
 
 function formatMoney(amount: number, currency: string, locale: string): string {
-  return new Intl.NumberFormat(locale === "fr" ? "fr-FR" : "en-US", {
-    style: "currency",
-    currency,
-  }).format(amount);
+  return formatBudgetMoney(amount, currency, locale);
 }
 
 function typeLabel(type: BudgetEntryType, locale: string): string {

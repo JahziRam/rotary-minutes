@@ -81,8 +81,15 @@ export default async function DashboardPage({
     ctx && treasuryOn
       ? await hasRolePermission(ctx.role, "treasury.view", ctx.isSuperAdmin)
       : false;
-  const treasurySummary =
-    ctx && canViewTreasury ? await getTreasuryDashboardSummary(ctx.clubId) : null;
+  let treasurySummary: Awaited<ReturnType<typeof getTreasuryDashboardSummary>> | null =
+    null;
+  if (ctx && canViewTreasury) {
+    try {
+      treasurySummary = await getTreasuryDashboardSummary(ctx.clubId);
+    } catch (error) {
+      console.error("[dashboard] treasury summary failed", ctx.clubId, error);
+    }
+  }
   const duesOverview =
     ctx && isFeatureEnabled(ctx.features, "duesEnabled", ctx.isSuperAdmin)
       ? await hasRolePermission(ctx.role, "dues.view", ctx.isSuperAdmin).then((ok) =>

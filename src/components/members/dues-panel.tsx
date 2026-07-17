@@ -26,6 +26,7 @@ import {
 } from "@/actions/dues";
 import { RecordDuesPayment } from "@/components/members/record-dues-payment";
 import { TreasuryVoucherPanel } from "@/components/treasury/treasury-voucher-panel";
+import { formatDuesMoney } from "@/lib/dues";
 import type { DuesPaymentPlan, DuesStatus, PaymentMethod } from "@/generated/prisma/client";
 
 const PAYMENT_METHODS: PaymentMethod[] = [
@@ -541,8 +542,5 @@ export function DuesPanel({
 }
 
 function formatMoney(amount: number, currency: string, locale: string): string {
-  return new Intl.NumberFormat(locale === "fr" ? "fr-FR" : "en-US", {
-    style: "currency",
-    currency,
-  }).format(amount);
+  return formatDuesMoney(amount, currency, locale);
 }

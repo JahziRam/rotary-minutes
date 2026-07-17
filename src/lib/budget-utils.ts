@@ -1,13 +1,10 @@
 import type { BudgetEntryType } from "@/generated/prisma/client";
 import { getRotaryMandateYear } from "@/lib/rotary";
 import { currentFiscalYear, fiscalYearLabel } from "@/lib/dues";
+import { formatMoneyAmount } from "@/lib/currency";
 
 export function formatBudgetMoney(amount: number, currency: string, locale: string): string {
-  return new Intl.NumberFormat(locale === "fr" ? "fr-FR" : "en-US", {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 2,
-  }).format(amount);
+  return formatMoneyAmount(amount, currency, locale, { maximumFractionDigits: 2 });
 }
 
 export function csvCell(value: string | number | null | undefined): string {

@@ -198,13 +198,17 @@ export async function updateDuesSettings(data: {
   if (auth.error) return auth;
   const { ctx } = auth;
 
+  const { normalizeCurrencyCode } = await import("@/lib/currency");
+
   await prisma.club.update({
     where: { id: ctx.clubId },
     data: {
       ...(data.defaultAnnualDues !== undefined && {
         defaultAnnualDues: data.defaultAnnualDues,
       }),
-      ...(data.currency && { currency: data.currency }),
+      ...(data.currency && {
+        currency: normalizeCurrencyCode(data.currency, ctx.club.currency || "EUR"),
+      }),
       ...(data.duesAutoInvoiceEmail !== undefined && {
         duesAutoInvoiceEmail: data.duesAutoInvoiceEmail,
       }),

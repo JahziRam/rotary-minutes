@@ -31,6 +31,7 @@ import {
   uploadVoucherFilesClient,
 } from "@/components/treasury/treasury-voucher-panel";
 import type { getTreasuryDashboardData } from "@/lib/queries/treasury";
+import { formatBudgetMoney } from "@/lib/budget-utils";
 import type {
   BudgetEntryType,
   TreasuryCollectionStatus,
@@ -196,10 +197,7 @@ export function TreasuryPanel({
   );
 
   function formatMoney(amount: number) {
-    return new Intl.NumberFormat(locale === "fr" ? "fr-FR" : "en-US", {
-      style: "currency",
-      currency,
-    }).format(amount);
+    return formatBudgetMoney(amount, currency, locale);
   }
 
   function run<T extends { success?: boolean; error?: string }>(

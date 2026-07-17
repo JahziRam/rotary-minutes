@@ -1,6 +1,7 @@
 import { addMonths, format, startOfMonth } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 import { prisma } from "@/lib/prisma";
+import { formatMoneyAmount } from "@/lib/currency";
 import { getRotaryMandateYear } from "@/lib/rotary";
 import type { DuesPaymentPlan } from "@/generated/prisma/client";
 
@@ -73,10 +74,7 @@ export async function nextReceiptNumber(clubId: string, fiscalYear: number): Pro
 }
 
 export function formatDuesMoney(amount: number, currency: string, locale: string): string {
-  return new Intl.NumberFormat(locale === "fr" ? "fr-FR" : "en-US", {
-    style: "currency",
-    currency,
-  }).format(amount);
+  return formatMoneyAmount(amount, currency, locale);
 }
 
 export function roundMoney(amount: number): number {

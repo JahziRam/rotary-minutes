@@ -1,5 +1,6 @@
 import type { BillingInterval, SubscriptionPlan } from "@/generated/prisma/client";
 import type { ComparisonRowKey } from "@/lib/plan-comparison";
+import { formatMoneyAmount } from "@/lib/currency";
 
 export interface PlanConfigData {
   plan: SubscriptionPlan;
@@ -156,13 +157,9 @@ export function toPublicPlan(
 }
 
 export function formatPrice(amount: number, currency: string, locale: string): string {
-  const numberLocale =
-    locale === "fr" ? "fr-FR" : locale === "es" ? "es-ES" : "en-US";
-  return new Intl.NumberFormat(numberLocale, {
-    style: "currency",
-    currency,
+  return formatMoneyAmount(amount, currency, locale, {
     maximumFractionDigits: amount % 1 === 0 ? 0 : 2,
-  }).format(amount);
+  });
 }
 
 export function getStripePriceId(

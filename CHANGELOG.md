@@ -16,6 +16,8 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
   - Repli clé API via `OPENAI_API_KEY` ; modèle par défaut `gpt-4o-mini` ; base URL personnalisable (`OPENAI_API_BASE_URL`)
 
 ### Fixed
+- **Dashboard club — devise invalide**
+  - Crash serveur (« This page couldn’t load ») pour certains clubs (ex. Antananarivo) quand la devise n’est pas un code ISO 4217 (`Ar`, `Ariary`, etc.) : normalisation + format monétaire sûr (alias MGA)
 - **Assistant IA — production OpenAI compatible**
   - URL de base API configurable dans **Admin → Paramètres** (ex. Bazaarlink) ; auparavant lue uniquement depuis `OPENAI_API_BASE_URL` en env, absente sur Render → erreur « Service IA indisponible »
 - **Auth — connexion locale**

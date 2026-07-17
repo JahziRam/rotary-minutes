@@ -9,6 +9,7 @@ import { Search } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ServerListPagination } from "@/components/ui/list-controls";
 import { getPlanLabel } from "@/lib/feature-gate";
+import { formatPrice } from "@/lib/plans-utils";
 import type { AdminBillingSummary } from "@/lib/queries/admin-billing";
 import type { PaginatedResult } from "@/lib/server-list";
 
@@ -26,10 +27,7 @@ type PaymentRow = {
 };
 
 function formatMoney(cents: number, currency: string, locale: string) {
-  return new Intl.NumberFormat(locale === "fr" ? "fr-FR" : "en-US", {
-    style: "currency",
-    currency: currency.toUpperCase(),
-  }).format(cents / 100);
+  return formatPrice(cents / 100, currency, locale);
 }
 
 export function BillingReport({
