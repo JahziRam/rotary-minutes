@@ -8,25 +8,31 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Unreleased]
 
 ### Added
+- **Module Projets**
+  - Gestion de projets club (statuts planification / actif / pause / terminé / annulé)
+  - Tâches rattachées aux projets (réutilise `ClubAction` avec `projectId`)
+  - Pages `/projects` et `/projects/[id]`, navigation, feature flags `projectsEnabled` / `projectsMenuVisible`
+  - Permissions `projects.view` / `projects.manage`
+  - Migration `20260717120000_club_projects`
 - **Assistant IA — Qwen**
   - Fournisseur alternatif Qwen (DashScope) à SpaceXAI pour la rédaction PV ; sélection dans **Admin → Paramètres**
   - Repli clé API via `DASHSCOPE_API_KEY` ou `QWEN_API_KEY` ; base URL personnalisable (`QWEN_API_BASE_URL`)
 - **Assistant IA — OpenAI**
   - Fournisseur OpenAI (API compatible) pour la rédaction PV ; sélection dans **Admin → Paramètres**
   - Repli clé API via `OPENAI_API_KEY` ; modèle par défaut `gpt-4o-mini` ; base URL personnalisable (`OPENAI_API_BASE_URL`)
-
-### Added
-- **Module Projets**
-  - Gestion de projets club (statuts planification / actif / pause / terminé / annulé)
-  - Tâches rattachées aux projets (réutilise `ClubAction` avec `projectId`)
-  - Pages `/projects` et `/projects/[id]`, navigation, feature flags `projectsEnabled` / `projectsMenuVisible`
-  - Permissions `projects.view` / `projects.manage`
+  - Champ **URL de base API** en admin (Bazaarlink, etc.) pour la production sans dépendre uniquement des env Render
+- **Charte Rotary — PV, PDF et emails**
+  - Couleurs officielles Brand Center (`#17458B`, `#F7A81B`) sur aperçu PV, PDF procès-verbal, rapport assiduité et emails club
+  - Logo club avec espace de respiration ; logo généré par défaut si aucun fichier n'est téléversé : wordmark Rotary officiel (`public/brand/rotary-wordmark.png`) + nom du club sur une ligne sous « Rotary », aligné à droite dans la colonne gauche (à gauche de la roue)
+  - PDF : rasterisation PNG du logo (sharp), sans césure ni cadre parasite ; pas de doublon du nom du club dans l'en-tête
+  - Module `rotary-brand.ts`, générateur `club-default-logo.ts`, raster `club-default-logo-raster.ts`, en-têtes `ClubDocumentHeader` / `ClubBrandFallback` / `ClubDefaultLogoPdf`
 
 ### Fixed
 - **Dashboard club — devise invalide**
   - Crash serveur (« This page couldn’t load ») pour certains clubs (ex. Antananarivo) quand la devise n’est pas un code ISO 4217 (`Ar`, `Ariary`, etc.) : normalisation + format monétaire sûr (alias MGA)
-- **Assistant IA — production OpenAI compatible**
-  - URL de base API configurable dans **Admin → Paramètres** (ex. Bazaarlink) ; auparavant lue uniquement depuis `OPENAI_API_BASE_URL` en env, absente sur Render → erreur « Service IA indisponible »
+- **Build Render / Client Components**
+  - Ne plus importer `dues.ts` / Prisma depuis des Client Components ; `budget-utils` sans dépendance serveur
+  - `render-build.sh` : `npm ci` si cache corrompu ou modules critiques manquants ; `dotenv` optionnel dans `prisma.config.ts`
 - **Auth — connexion locale**
   - Message explicite si PostgreSQL est inaccessible (`DATABASE_UNAVAILABLE`) au lieu de « Erreur de connexion » générique
   - Scripts `npm run db:setup-local` / `scripts/setup-local-postgres.ps1` pour créer l'utilisateur `rotary` et la base `rotary_minutes`
@@ -35,21 +41,16 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
   - Mise à jour du point d'ordre du jour par index (plus par ID périmé après sauvegarde) : le texte reformulé s'affiche à nouveau
   - Indicateur « Reformulation… » fiable et gestion d'erreurs réseau ; suppression de la sauvegarde bloquante avant chaque appel IA
 - **Assistant IA — reformulation PV**
-  - Sauvegarde automatique avant reformulation et resynchronisation des IDs des points d'ordre du jour
   - Reformulation basée sur les données du formulaire (plus de dépendance à l'ID en base)
-  - Qwen : repli sans `response_format` si refusé, et correction auto si le modèle configuré ne correspond pas au fournisseur (ex. `grok-3-mini` avec Qwen)
+  - Qwen : repli sans `response_format` si refusé, et correction auto si le modèle configuré ne correspond pas au fournisseur
   - Messages d'erreur explicites : point introuvable, PV verrouillé, permission refusée, service IA indisponible
 - **PV — périmètre commission**
-  - Correction du filtre `minuteWhereForContext` : les rôles autres que président de commission voient à nouveau tous les PV du club (liste et détail) au lieu d'une liste vide et d'une erreur 404
+  - Correction du filtre `minuteWhereForContext` : les rôles autres que président de commission voient à nouveau tous les PV du club
 - **Membres — ajout**
   - Modal « Ajouter un membre » : hauteur limitée à l'écran, corps défilable et boutons Annuler / Enregistrer toujours visibles en bas
 
-### Added
-- **Charte Rotary — PV, PDF et emails**
-  - Couleurs officielles Brand Center (`#17458B`, `#F7A81B`) sur aperçu PV, PDF procès-verbal, rapport assiduité et emails club
-  - Logo club avec espace de respiration ; logo généré par défaut si aucun fichier n'est téléversé : wordmark Rotary officiel (`public/brand/rotary-wordmark.png`) + nom du club sur une ligne sous « Rotary », aligné à droite dans la colonne gauche (à gauche de la roue)
-  - PDF : rasterisation PNG du logo (sharp), sans césure ni cadre parasite ; pas de doublon du nom du club dans l'en-tête
-  - Module `rotary-brand.ts`, générateur `club-default-logo.ts`, raster `club-default-logo-raster.ts`, en-têtes `ClubDocumentHeader` / `ClubBrandFallback` / `ClubDefaultLogoPdf`
+### Added (suite)
+- **Charte Rotary — médias**
   - API `/api/media/club/[id]/logo` sert le logo téléversé ou le SVG généré
   - Script `scripts/generate-sample-minute-pdf.ts` ; tests `club-default-logo.test.ts`, `rotary-brand.test.ts`
 - **Membres — membres d'honneur**
