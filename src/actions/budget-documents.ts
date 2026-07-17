@@ -198,10 +198,18 @@ export async function uploadBudgetDocument(formData: FormData) {
 
   const created: string[] = [];
   for (const file of files) {
-    const dataUrl = await fileToDocumentDataUrl(file);
-    if (!dataUrl || !validateDocumentDataUrl(dataUrl)) {
+    let dataUrl: string;
+    let mimeType: string;
+    try {
+      const converted = await fileToDocumentDataUrl(file);
+      dataUrl = converted.dataUrl;
+      mimeType = converted.mimeType;
+    } catch {
       return { error: "INVALID_FILE" as const };
     }
+    const formatError = validateDocumentDataUrl(dataUrl);
+    if (formatError) return { error: "INVALID_FILE" as const };
+
     const doc = await prisma.budgetDocument.create({
       data: {
         clubId: ctx.clubId,
@@ -221,7 +229,7 @@ export async function uploadBudgetDocument(formData: FormData) {
         amount: amount != null && Number.isFinite(amount) ? amount : null,
         fileUrl: dataUrl,
         fileName: file.name,
-        mimeType: file.type || "application/octet-stream",
+        mimeType,
         uploadedById: ctx.userId,
         ...scopeCreateData(scope),
       },
