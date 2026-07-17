@@ -1,6 +1,5 @@
 import type { BudgetEntryType } from "@/generated/prisma/client";
 import { getRotaryMandateYear } from "@/lib/rotary";
-import { currentFiscalYear, fiscalYearLabel } from "@/lib/dues";
 import { formatMoneyAmount } from "@/lib/currency";
 
 export function formatBudgetMoney(amount: number, currency: string, locale: string): string {
@@ -15,6 +14,10 @@ export function csvCell(value: string | number | null | undefined): string {
   return s;
 }
 
+function fiscalYearLabel(year: number): string {
+  return `${year}-${year + 1}`;
+}
+
 export function mandateRangeForYear(fiscalYear: number) {
   return {
     from: new Date(fiscalYear, 6, 1),
@@ -24,7 +27,7 @@ export function mandateRangeForYear(fiscalYear: number) {
 }
 
 export function listFiscalYearOptions(count = 5, ref = new Date()): number[] {
-  const current = currentFiscalYear(ref);
+  const current = getRotaryMandateYear(ref).start.getFullYear();
   return Array.from({ length: count }, (_, i) => current - i);
 }
 
