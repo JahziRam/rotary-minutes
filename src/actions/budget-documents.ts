@@ -193,8 +193,8 @@ export async function uploadBudgetDocument(formData: FormData) {
     .filter((f): f is File => f instanceof File && f.size > 0);
   if (files.length === 0) return { error: "NO_FILES" as const };
 
-  const validation = validateUploadFiles(files);
-  if (!validation.ok) return { error: validation.error };
+  const validationError = validateUploadFiles(files);
+  if (validationError) return { error: validationError };
 
   const created: string[] = [];
   for (const file of files) {
