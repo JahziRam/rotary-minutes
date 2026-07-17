@@ -28,7 +28,9 @@
     "superAdmin": "Super Admin",
     "openMenu": "Open menu",
     "mobileTabs": "Main navigation",
-    "projects": "Projects"
+    "projects": "Projects",
+    "myWork": "My work",
+    "treasuryPlan": "Mandate plan"
   },
   "adminNav": {
     "badge": "Platform",
@@ -2959,12 +2961,20 @@
         "INVOICE": "Invoice",
         "OTHER": "Other"
       }
-    }
+    },
+    "exportCsv": "Export CSV",
+    "exported": "Export downloaded",
+    "exportBudgetPdf": "Budget PDF",
+    "exportDone": "Budget export ready",
+    "activityTitle": "Project activity"
   },
   "assignees": {
     "members": "Assigned people",
     "commission": "Assigned commission",
-    "noCommission": "No commission"
+    "noCommission": "No commission",
+    "editAssignees": "Edit assignees",
+    "save": "Save assignees",
+    "saved": "Assignees updated"
   },
   "commissions": {
     "title": "Commissions",
@@ -2988,6 +2998,35 @@
     "memberRemoved": "Member removed from commission",
     "reassign": "reassign",
     "unassignedCount": "{count} member(s) without commission",
-    "forbidden": "Access denied"
+    "forbidden": "Access denied",
+    "roleChair": "Chair",
+    "roleMember": "Member",
+    "roleUpdated": "Role updated"
+  },
+  "myWork": {
+    "title": "My work",
+    "subtitle": "Projects and tasks assigned to you (or your commissions).",
+    "myProjects": "My projects",
+    "myTasks": "My tasks",
+    "noProjects": "No assigned projects",
+    "noTasks": "No assigned tasks",
+    "tasksCount": "{count} task(s)",
+    "openActions": "Tasks"
+  },
+  "mandatePlan": {
+    "title": "Mandate budget plan",
+    "subtitle": "Consolidated view: sub-accounts, projects and events.",
+    "mandate": "Mandate",
+    "backTreasury": "Back to treasury",
+    "planned": "Planned",
+    "income": "Income",
+    "expense": "Expenses",
+    "actual": "Actual",
+    "variance": "Variance",
+    "subAccounts": "Sub-accounts",
+    "projects": "Projects",
+    "events": "Events",
+    "name": "Name",
+    "mandateDocuments": "Mandate budget documents"
   }
 }

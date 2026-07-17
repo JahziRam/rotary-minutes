@@ -27,9 +27,11 @@ import { matchesAny } from "@/lib/client-list";
 import {
   createAction,
   updateActionStatus,
+  updateActionAssignees,
   sendActionReminder,
   exportActions,
 } from "@/actions/club-actions";
+import { exportActionsCsv } from "@/actions/exports-work";
 import { AssigneePicker } from "@/components/ui/assignee-picker";
 import type { ClubActionPriority, ClubActionStatus } from "@/generated/prisma/client";
 
@@ -43,7 +45,9 @@ type ActionRow = {
   responsibleMemberId: string | null;
   responsibleName: string | null;
   responsibleEmail: string | null;
+  assigneeIds?: string[];
   assigneeLabel?: string | null;
+  commissionId?: string | null;
   commissionName?: string | null;
   minuteId: string | null;
   minuteTitle: string | null;
@@ -87,6 +91,11 @@ export function ActionsPanel({
   const [view, setView] = useState<"kanban" | "table">("kanban");
   const [statusFilter, setStatusFilter] = useState<"" | ClubActionStatus>("");
   const [showForm, setShowForm] = useState(false);
+  const [editAssignId, setEditAssignId] = useState<string | null>(null);
+  const [editAssign, setEditAssign] = useState({
+    assigneeMemberIds: [] as string[],
+    commissionId: "",
+  });
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -185,7 +194,22 @@ export function ActionsPanel({
               size="sm"
               variant="outline"
               disabled={pending}
-              onClick={() => run(() => exportActions(), t("exported"))}
+              onClick={() =>
+                run(async () => {
+                  const r = await exportActionsCsv();
+                  if ("success" in r && r.success && r.csv) {
+                    const blob = new Blob([r.csv], { type: "text/csv" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = r.filename;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    return { success: true };
+                  }
+                  return exportActions();
+                }, t("exported"))
+              }
             >
               <Download className="h-4 w-4 mr-1" />
               {t("exportCsv")}
@@ -289,6 +313,21 @@ export function ActionsPanel({
                         {(action.assigneeLabel || action.responsibleName) && (
                           <p className="text-xs text-gray-500 mt-1">
                             {action.assigneeLabel || action.responsibleName}
+                            {canManage && (
+                              <button
+                                type="button"
+                                className="ml-2 text-navy underline text-xs"
+                                onClick={() => {
+                                  setEditAssignId(action.id);
+                                  setEditAssign({
+                                    assigneeMemberIds: action.assigneeIds ?? [],
+                                    commissionId: action.commissionId ?? "",
+                                  });
+                                }}
+                              >
+                                {tAssign("editAssignees")}
+                              </button>
+                            )}
                           </p>
                         )}
                         {action.dueDate && (
@@ -464,6 +503,49 @@ export function ActionsPanel({
           <p className="text-sm text-gray-500 text-center py-6">{tCommon("noResults")}</p>
         )}
       </div>
+      {editAssignId && canManage && (
+        <Card className="p-4 space-y-3">
+          <AssigneePicker
+            members={members}
+            commissions={commissions}
+            selectedMemberIds={editAssign.assigneeMemberIds}
+            commissionId={editAssign.commissionId}
+            onMembersChange={(ids) =>
+              setEditAssign((f) => ({ ...f, assigneeMemberIds: ids }))
+            }
+            onCommissionChange={(id) =>
+              setEditAssign((f) => ({ ...f, commissionId: id }))
+            }
+            membersLabel={tAssign("members")}
+            commissionLabel={tAssign("commission")}
+            noCommissionLabel={tAssign("noCommission")}
+          />
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              disabled={pending}
+              onClick={() =>
+                run(
+                  () =>
+                    updateActionAssignees(editAssignId, {
+                      assigneeMemberIds: editAssign.assigneeMemberIds,
+                      commissionId: editAssign.commissionId || null,
+                    }).then((r) => {
+                      if ("success" in r && r.success) setEditAssignId(null);
+                      return r;
+                    }),
+                  tAssign("saved")
+                )
+              }
+            >
+              {tAssign("save")}
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setEditAssignId(null)}>
+              {tCommon("cancel")}
+            </Button>
+          </div>
+        </Card>
+      )}
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
     </>
   );

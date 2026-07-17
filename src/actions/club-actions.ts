@@ -216,8 +216,70 @@ export async function createAction(data: {
     },
   });
 
+  const { notifyAssignment } = await import("@/lib/assignment-notify");
+  void notifyAssignment({
+    clubId: ctx.clubId,
+    kind: "action",
+    entityId: action.id,
+    title: data.title,
+    memberIds: assigneeIds,
+    commissionId: data.commissionId,
+    actorUserId: ctx.userId,
+  });
+
   revalidateActions();
   return { success: true, action };
+}
+
+export async function updateActionAssignees(
+  actionId: string,
+  data: { assigneeMemberIds: string[]; commissionId?: string | null }
+) {
+  const auth = await requireActionsManage();
+  if (auth.error) return auth;
+  const { ctx } = auth;
+
+  const existing = await prisma.clubAction.findFirst({
+    where: { id: actionId, clubId: ctx.clubId },
+    select: { id: true, title: true },
+  });
+  if (!existing) return { error: "NOT_FOUND" as const };
+
+  if (data.commissionId) {
+    const commission = await prisma.commission.findFirst({
+      where: { id: data.commissionId, clubId: ctx.clubId, isActive: true },
+      select: { id: true },
+    });
+    if (!commission) return { error: "NOT_FOUND" as const };
+  }
+
+  const ids = await syncActionAssignees(
+    actionId,
+    data.assigneeMemberIds,
+    ctx.clubId
+  );
+
+  await prisma.clubAction.update({
+    where: { id: actionId },
+    data: {
+      responsibleMemberId: ids[0] ?? null,
+      commissionId: data.commissionId ?? null,
+    },
+  });
+
+  const { notifyAssignment } = await import("@/lib/assignment-notify");
+  void notifyAssignment({
+    clubId: ctx.clubId,
+    kind: "action",
+    entityId: actionId,
+    title: existing.title,
+    memberIds: ids,
+    commissionId: data.commissionId,
+    actorUserId: ctx.userId,
+  });
+
+  revalidateActions();
+  return { success: true as const };
 }
 
 export async function updateActionStatus(actionId: string, status: ClubActionStatus) {

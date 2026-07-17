@@ -65,11 +65,19 @@ export default async function TreasuryPage({
   return (
     <AppShellServer title={t("title")}>
       <div className="space-y-6 mb-6">
-        <TreasuryMandatePanel
-          clubId={ctx.clubId}
-          currency={ctx.club.currency}
-          locale={locale}
-        />
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <TreasuryMandatePanel
+            clubId={ctx.clubId}
+            currency={ctx.club.currency}
+            locale={locale}
+          />
+        </div>
+        <a
+          href={`/${locale}/treasury/mandate-plan`}
+          className="inline-flex text-sm font-medium text-navy hover:underline"
+        >
+          → Plan budgétaire du mandat (projets + événements + sous-comptes)
+        </a>
         <BankReconciliationPanel canManage={canManageTreasury} />
       </div>
       {data.entries.length === 0 && (

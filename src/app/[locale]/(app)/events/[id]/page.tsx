@@ -1,8 +1,9 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { getEventDetail } from "@/actions/events";
+import { getEventBudget, getEventDetail } from "@/actions/events";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { EventDetailPanel } from "@/components/events/event-detail-panel";
+import { EventBudgetPanel } from "@/components/events/event-budget-panel";
 
 export default async function EventDetailPage({
   params,
@@ -13,7 +14,10 @@ export default async function EventDetailPage({
   setRequestLocale(locale);
   const t = await getTranslations("events");
 
-  const data = await getEventDetail(id);
+  const [data, budgetData] = await Promise.all([
+    getEventDetail(id),
+    getEventBudget(id),
+  ]);
   if ("error" in data) {
     if (data.error === "NOT_FOUND") notFound();
     return (
@@ -25,15 +29,29 @@ export default async function EventDetailPage({
 
   return (
     <AppShellServer title={data.event.title}>
-      <EventDetailPanel
-        event={data.event}
-        registrations={data.registrations}
-        canManage={data.canManage}
-        eventsAdvanced={data.eventsAdvanced}
-        myMemberId={data.myMemberId}
-        myRegistration={data.myRegistration}
-        locale={locale}
-      />
+      <div className="space-y-6">
+        <EventDetailPanel
+          event={data.event}
+          registrations={data.registrations}
+          canManage={data.canManage}
+          eventsAdvanced={data.eventsAdvanced}
+          myMemberId={data.myMemberId}
+          myRegistration={data.myRegistration}
+          locale={locale}
+        />
+        {"budget" in budgetData && (
+          <EventBudgetPanel
+            eventId={id}
+            currency={budgetData.currency}
+            locale={locale}
+            canManage={budgetData.canManage}
+            budget={budgetData.budget}
+            budgetNotes={budgetData.budgetNotes}
+            entries={budgetData.budgetEntries}
+            documents={budgetData.budgetDocuments}
+          />
+        )}
+      </div>
     </AppShellServer>
   );
 }

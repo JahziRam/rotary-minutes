@@ -196,32 +196,41 @@ export async function getProject(projectId: string) {
   const project = await getClubProjectById(ctx.clubId, projectId);
   if (!project) return { error: "NOT_FOUND" as const };
 
-  const [members, commissions, canManage, entries, documents, club] = await Promise.all([
-    getProjectMembers(ctx.clubId),
-    getProjectCommissions(ctx.clubId),
-    hasRolePermission(ctx.role, "projects.manage", ctx.isSuperAdmin),
-    prisma.budgetEntry.findMany({
-      where: { clubId: ctx.clubId, projectId },
-      orderBy: { date: "desc" },
-      take: 50,
-      select: {
-        id: true,
-        type: true,
-        amount: true,
-        currency: true,
-        date: true,
-        description: true,
-      },
-    }),
-    prisma.budgetDocument.findMany({
-      where: { clubId: ctx.clubId, projectId },
-      orderBy: { createdAt: "desc" },
-    }),
-    prisma.club.findUnique({
-      where: { id: ctx.clubId },
-      select: { currency: true },
-    }),
-  ]);
+  const [members, commissions, canManage, entries, documents, club, activityLogs] =
+    await Promise.all([
+      getProjectMembers(ctx.clubId),
+      getProjectCommissions(ctx.clubId),
+      hasRolePermission(ctx.role, "projects.manage", ctx.isSuperAdmin),
+      prisma.budgetEntry.findMany({
+        where: { clubId: ctx.clubId, projectId },
+        orderBy: { date: "desc" },
+        take: 50,
+        select: {
+          id: true,
+          type: true,
+          amount: true,
+          currency: true,
+          date: true,
+          description: true,
+        },
+      }),
+      prisma.budgetDocument.findMany({
+        where: { clubId: ctx.clubId, projectId },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.club.findUnique({
+        where: { id: ctx.clubId },
+        select: { currency: true },
+      }),
+      prisma.projectActivityLog.findMany({
+        where: { projectId, clubId: ctx.clubId },
+        orderBy: { createdAt: "desc" },
+        take: 40,
+        include: {
+          user: { select: { firstName: true, lastName: true } },
+        },
+      }),
+    ]);
 
   let income = 0;
   let expense = 0;
@@ -307,6 +316,15 @@ export async function getProject(projectId: string) {
         downloadUrl: budgetDocumentDownloadUrl(d.id),
       })),
       tasks: project.tasks.map(serializeTask),
+      activityLogs: activityLogs.map((log) => ({
+        id: log.id,
+        action: log.action,
+        summary: log.summary,
+        createdAt: log.createdAt.toISOString(),
+        userName: log.user
+          ? `${log.user.firstName} ${log.user.lastName}`
+          : null,
+      })),
       createdAt: project.createdAt.toISOString(),
       updatedAt: project.updatedAt.toISOString(),
     },
@@ -374,8 +392,92 @@ export async function createProject(data: {
     },
   });
 
+  const { logProjectActivity } = await import("@/lib/project-activity");
+  void logProjectActivity({
+    projectId: project.id,
+    clubId: ctx.clubId,
+    userId: ctx.userId,
+    action: "CREATED",
+    summary: `Projet créé : ${name}`,
+  });
+
+  const { notifyAssignment } = await import("@/lib/assignment-notify");
+  void notifyAssignment({
+    clubId: ctx.clubId,
+    kind: "project",
+    entityId: project.id,
+    title: name,
+    memberIds: assigneeIds,
+    commissionId: data.commissionId,
+    actorUserId: ctx.userId,
+  });
+
   revalidateProjects(project.id);
   return { success: true as const, projectId: project.id };
+}
+
+export async function updateProjectAssignees(
+  projectId: string,
+  data: { assigneeMemberIds: string[]; commissionId?: string | null }
+) {
+  const auth = await requireProjectsManage();
+  if (auth.error) return auth;
+  const { ctx } = auth;
+
+  const existing = await prisma.clubProject.findFirst({
+    where: { id: projectId, clubId: ctx.clubId },
+    select: { id: true, name: true },
+  });
+  if (!existing) return { error: "NOT_FOUND" as const };
+
+  if (data.commissionId) {
+    const commission = await prisma.commission.findFirst({
+      where: { id: data.commissionId, clubId: ctx.clubId, isActive: true },
+      select: { id: true },
+    });
+    if (!commission) return { error: "NOT_FOUND" as const };
+  }
+
+  const ids = await syncProjectAssignees(
+    projectId,
+    data.assigneeMemberIds,
+    ctx.clubId
+  );
+
+  await prisma.clubProject.update({
+    where: { id: projectId },
+    data: {
+      ownerMemberId: ids[0] ?? null,
+      commissionId: data.commissionId ?? null,
+    },
+  });
+
+  const { logProjectActivity } = await import("@/lib/project-activity");
+  void logProjectActivity({
+    projectId,
+    clubId: ctx.clubId,
+    userId: ctx.userId,
+    action: "ASSIGNEES_UPDATED",
+    summary: "Assignations mises à jour",
+    metadata: {
+      assigneeMemberIds: ids,
+      commissionId: data.commissionId ?? null,
+    },
+  });
+
+  const { notifyAssignment } = await import("@/lib/assignment-notify");
+  void notifyAssignment({
+    clubId: ctx.clubId,
+    kind: "project",
+    entityId: projectId,
+    title: existing.name,
+    memberIds: ids,
+    commissionId: data.commissionId,
+    actorUserId: ctx.userId,
+  });
+
+  revalidateProjects(projectId);
+  return { success: true as const };
 }
 
 export async function updateProject(
@@ -461,6 +563,20 @@ export async function updateProject(
       entity: "ClubProject",
       entityId: projectId,
     },
+  });
+
+  const { logProjectActivity } = await import("@/lib/project-activity");
+  const parts: string[] = [];
+  if (data.status !== undefined) parts.push(`statut → ${data.status}`);
+  if (data.budgetPlanned !== undefined) parts.push("budget modifié");
+  if (data.name !== undefined) parts.push("nom modifié");
+  void logProjectActivity({
+    projectId,
+    clubId: ctx.clubId,
+    userId: ctx.userId,
+    action: "UPDATED",
+    summary: parts.length ? parts.join(", ") : "Projet mis à jour",
+    metadata: data as object,
   });
 
   revalidateProjects(projectId);

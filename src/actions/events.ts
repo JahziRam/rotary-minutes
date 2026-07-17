@@ -16,11 +16,13 @@ import type {
 } from "@/generated/prisma/client";
 
 function revalidateEvents(eventId?: string) {
-  for (const loc of ["fr", "en"]) {
+  for (const loc of ["fr", "en", "es"]) {
     revalidatePath(`/${loc}/events`);
     if (eventId) revalidatePath(`/${loc}/events/${eventId}`);
     revalidatePath(`/${loc}/my-account`);
     revalidatePath(`/${loc}/calendar`);
+    revalidatePath(`/${loc}/treasury`);
+    revalidatePath(`/${loc}/treasury/mandate-plan`);
   }
 }
 
@@ -132,6 +134,9 @@ export async function getEventDetail(eventId: string) {
       price: event.price ? Number(event.price) : null,
       currency: event.currency,
       requiresPayment: event.requiresPayment,
+      budgetPlanned:
+        event.budgetPlanned != null ? Number(event.budgetPlanned) : null,
+      budgetNotes: event.budgetNotes,
       registrationCount: event._count.registrations,
       priceTiers: event.priceTiers.map((t) => ({
         id: t.id,
@@ -234,6 +239,8 @@ export async function updateEvent(
     currency?: string;
     requiresPayment?: boolean;
     status?: ClubEventStatus;
+    budgetPlanned?: number | null;
+    budgetNotes?: string | null;
   }
 ) {
   const auth = await requireEventsManage();
@@ -262,6 +269,15 @@ export async function updateEvent(
       ...(data.currency !== undefined && { currency: data.currency }),
       ...(data.requiresPayment !== undefined && { requiresPayment: data.requiresPayment }),
       ...(data.status !== undefined && { status: data.status }),
+      ...(data.budgetPlanned !== undefined && {
+        budgetPlanned:
+          data.budgetPlanned == null || !Number.isFinite(data.budgetPlanned)
+            ? null
+            : data.budgetPlanned,
+      }),
+      ...(data.budgetNotes !== undefined && {
+        budgetNotes: data.budgetNotes?.trim() || null,
+      }),
     },
   });
 
@@ -696,4 +712,130 @@ export async function exportParticipants(eventId: string) {
     csv,
     filename,
   };
+}
+
+export async function getEventBudget(eventId: string) {
+  const auth = await requireEventsView();
+  if ("error" in auth && auth.error) return { error: auth.error as string };
+  const { ctx } = auth;
+
+  const event = await prisma.clubEvent.findFirst({
+    where: { id: eventId, clubId: ctx.clubId },
+    select: {
+      id: true,
+      budgetPlanned: true,
+      budgetNotes: true,
+      currency: true,
+    },
+  });
+  if (!event) return { error: "NOT_FOUND" as const };
+
+  const [entries, documents, canManage] = await Promise.all([
+    prisma.budgetEntry.findMany({
+      where: { clubId: ctx.clubId, eventId },
+      orderBy: { date: "desc" },
+      take: 50,
+      select: {
+        id: true,
+        type: true,
+        amount: true,
+        currency: true,
+        date: true,
+        description: true,
+      },
+    }),
+    prisma.budgetDocument.findMany({
+      where: { clubId: ctx.clubId, eventId },
+      orderBy: { createdAt: "desc" },
+    }),
+    hasRolePermission(ctx.role, "events.manage", ctx.isSuperAdmin),
+  ]);
+
+  let income = 0;
+  let expense = 0;
+  for (const e of entries) {
+    const amt = Number(e.amount);
+    if (e.type === "INCOME") income += amt;
+    else expense += amt;
+  }
+  const planned =
+    event.budgetPlanned != null ? Number(event.budgetPlanned) : null;
+  const actual = income - expense;
+
+  const { budgetDocumentDownloadUrl, budgetDocumentViewUrl } = await import(
+    "@/lib/budget-document-urls"
+  );
+
+  return {
+    canManage,
+    currency: event.currency,
+    budgetPlanned: planned,
+    budgetNotes: event.budgetNotes,
+    budget: {
+      planned,
+      income,
+      expense,
+      actual,
+      variance: planned != null ? actual - planned : null,
+    },
+    budgetEntries: entries.map((e) => ({
+      id: e.id,
+      type: e.type,
+      amount: Number(e.amount),
+      currency: e.currency,
+      date: e.date.toISOString(),
+      description: e.description,
+    })),
+    budgetDocuments: documents.map((d) => ({
+      id: d.id,
+      kind: d.kind,
+      label: d.label,
+      fileName: d.fileName,
+      mimeType: d.mimeType,
+      amount: d.amount != null ? Number(d.amount) : null,
+      notes: d.notes,
+      createdAt: d.createdAt.toISOString(),
+      viewUrl: budgetDocumentViewUrl(d.id, d.mimeType),
+      downloadUrl: budgetDocumentDownloadUrl(d.id),
+    })),
+  };
+}
+
+export async function createEventBudgetEntry(
+  eventId: string,
+  data: {
+    type: "INCOME" | "EXPENSE";
+    amount: number;
+    date: string;
+    description: string;
+  }
+) {
+  const auth = await requireEventsManage();
+  if ("error" in auth && auth.error) return { error: auth.error as string };
+  const { ctx } = auth;
+
+  const event = await prisma.clubEvent.findFirst({
+    where: { id: eventId, clubId: ctx.clubId },
+    select: { id: true, currency: true },
+  });
+  if (!event) return { error: "NOT_FOUND" as const };
+  if (!data.description.trim() || !Number.isFinite(data.amount) || data.amount <= 0) {
+    return { error: "INVALID" as const };
+  }
+
+  await prisma.budgetEntry.create({
+    data: {
+      clubId: ctx.clubId,
+      eventId,
+      type: data.type,
+      amount: data.amount,
+      currency: event.currency,
+      date: new Date(data.date),
+      description: data.description.trim(),
+      recordedById: ctx.userId,
+    },
+  });
+
+  revalidateEvents(eventId);
+  return { success: true as const };
 }

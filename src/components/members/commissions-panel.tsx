@@ -12,7 +12,9 @@ import {
   createCommission,
   deleteCommission,
   removeMemberFromCommission,
+  setCommissionMemberRole,
 } from "@/actions/commissions";
+import type { CommissionMemberRole } from "@/generated/prisma/client";
 
 type CommissionMember = {
   id: string;
@@ -20,6 +22,7 @@ type CommissionMember = {
   lastName: string;
   email: string | null;
   position: string | null;
+  role?: CommissionMemberRole;
 };
 
 type CommissionRow = {
@@ -36,6 +39,7 @@ type MemberOption = {
   lastName: string;
   email: string | null;
   commissionId: string | null;
+  commissionIds?: string[];
 };
 
 export function CommissionsPanel({
@@ -58,7 +62,10 @@ export function CommissionsPanel({
   const [addMemberId, setAddMemberId] = useState<Record<string, string>>({});
 
   const unassigned = useMemo(
-    () => members.filter((m) => !m.commissionId),
+    () =>
+      members.filter(
+        (m) => !(m.commissionIds?.length || m.commissionId)
+      ),
     [members]
   );
 
@@ -191,23 +198,46 @@ export function CommissionsPanel({
                             {m.firstName} {m.lastName}
                           </p>
                           <p className="text-xs text-gray-400">
-                            {m.position || m.email || "—"}
+                            {m.role === "CHAIR" ? t("roleChair") : t("roleMember")}
+                            {m.position ? ` · ${m.position}` : ""}
+                            {m.email ? ` · ${m.email}` : ""}
                           </p>
                         </div>
                         {canManage && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={pending}
-                            onClick={() =>
-                              run(
-                                () => removeMemberFromCommission(m.id),
-                                t("memberRemoved")
-                              )
-                            }
-                          >
-                            <UserMinus className="h-3.5 w-3.5" />
-                          </Button>
+                          <div className="flex gap-1">
+                            <select
+                              className="h-8 rounded border border-gray-200 text-xs px-1"
+                              value={m.role ?? "MEMBER"}
+                              disabled={pending}
+                              onChange={(e) =>
+                                run(
+                                  () =>
+                                    setCommissionMemberRole(
+                                      c.id,
+                                      m.id,
+                                      e.target.value as CommissionMemberRole
+                                    ),
+                                  t("roleUpdated")
+                                )
+                              }
+                            >
+                              <option value="MEMBER">{t("roleMember")}</option>
+                              <option value="CHAIR">{t("roleChair")}</option>
+                            </select>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={pending}
+                              onClick={() =>
+                                run(
+                                  () => removeMemberFromCommission(m.id, c.id),
+                                  t("memberRemoved")
+                                )
+                              }
+                            >
+                              <UserMinus className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
                         )}
                       </li>
                     ))}
@@ -225,11 +255,19 @@ export function CommissionsPanel({
                     >
                       <option value="">{t("selectMember")}</option>
                       {members
-                        .filter((m) => m.commissionId !== c.id)
+                        .filter(
+                          (m) =>
+                            !(
+                              m.commissionIds?.includes(c.id) ||
+                              m.commissionId === c.id
+                            )
+                        )
                         .map((m) => (
                           <option key={m.id} value={m.id}>
                             {m.firstName} {m.lastName}
-                            {m.commissionId ? ` (${t("reassign")})` : ""}
+                            {(m.commissionIds?.length || m.commissionId)
+                              ? ` (+)`
+                              : ""}
                           </option>
                         ))}
                     </select>

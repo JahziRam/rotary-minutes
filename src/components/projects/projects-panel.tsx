@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
-import { FolderKanban, Plus } from "lucide-react";
+import { Download, FolderKanban, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/list-controls";
 import { matchesAny } from "@/lib/client-list";
 import { createProject } from "@/actions/club-projects";
+import { exportProjectsCsv } from "@/actions/exports-work";
 import { AssigneePicker } from "@/components/ui/assignee-picker";
 import type { ClubProjectStatus } from "@/generated/prisma/client";
 
@@ -141,12 +142,37 @@ export function ProjectsPanel({
           </h2>
           <p className="text-sm text-gray-500 mt-0.5">{t("subtitle")}</p>
         </div>
-        {canManage && (
-          <Button size="sm" variant="gold" onClick={() => setShowForm((v) => !v)}>
-            <Plus className="h-4 w-4" />
-            {t("addProject")}
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={pending}
+            onClick={() => {
+              startTransition(async () => {
+                const r = await exportProjectsCsv();
+                if ("success" in r && r.success && r.csv) {
+                  const blob = new Blob([r.csv], { type: "text/csv" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = r.filename;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  setToast(t("exported"));
+                }
+              });
+            }}
+          >
+            <Download className="h-4 w-4" />
+            {t("exportCsv")}
           </Button>
-        )}
+          {canManage && (
+            <Button size="sm" variant="gold" onClick={() => setShowForm((v) => !v)}>
+              <Plus className="h-4 w-4" />
+              {t("addProject")}
+            </Button>
+          )}
+        </div>
       </div>
 
       {showForm && canManage && (

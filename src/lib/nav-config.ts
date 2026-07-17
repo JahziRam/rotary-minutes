@@ -18,6 +18,8 @@ import {
   CheckSquare,
   FolderKanban,
   CalendarDays,
+  ListTodo,
+  PieChart,
 } from "lucide-react";
 
 export type ClubNavItem = {
@@ -39,7 +41,9 @@ export const CLUB_NAV_ITEMS: ClubNavItem[] = [
   { key: "treasury", href: "/treasury", icon: Wallet },
   { key: "actions", href: "/actions", icon: CheckSquare },
   { key: "projects", href: "/projects", icon: FolderKanban },
+  { key: "myWork", href: "/my-work", icon: ListTodo },
   { key: "calendar", href: "/calendar", icon: CalendarDays },
+  { key: "treasuryPlan", href: "/treasury/mandate-plan", icon: PieChart },
   { key: "myAccount", href: "/my-account", icon: UserCircle, mobileTab: true },
   { key: "attendanceReports", href: "/attendance-reports", icon: ClipboardList },
   { key: "events", href: "/events", icon: PartyPopper },

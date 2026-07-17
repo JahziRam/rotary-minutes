@@ -28,7 +28,9 @@
     "superAdmin": "Super Admin",
     "openMenu": "Ouvrir le menu",
     "mobileTabs": "Navigation principale",
-    "projects": "Projets"
+    "projects": "Projets",
+    "myWork": "Mon travail",
+    "treasuryPlan": "Plan mandat"
   },
   "adminNav": {
     "badge": "Plateforme",
@@ -3019,12 +3021,20 @@
         "INVOICE": "Facture",
         "OTHER": "Autre"
       }
-    }
+    },
+    "exportCsv": "Exporter CSV",
+    "exported": "Export téléchargé",
+    "exportBudgetPdf": "Budget PDF",
+    "exportDone": "Export budget prêt",
+    "activityTitle": "Historique du projet"
   },
   "assignees": {
     "members": "Personnes assignées",
     "commission": "Commission assignée",
-    "noCommission": "Aucune commission"
+    "noCommission": "Aucune commission",
+    "editAssignees": "Modifier les assignations",
+    "save": "Enregistrer les assignations",
+    "saved": "Assignations mises à jour"
   },
   "commissions": {
     "title": "Commissions",
@@ -3048,6 +3058,35 @@
     "memberRemoved": "Membre retiré de la commission",
     "reassign": "réaffectation",
     "unassignedCount": "{count} membre(s) sans commission",
-    "forbidden": "Accès non autorisé"
+    "forbidden": "Accès non autorisé",
+    "roleChair": "Président",
+    "roleMember": "Membre",
+    "roleUpdated": "Rôle mis à jour"
+  },
+  "myWork": {
+    "title": "Mon travail",
+    "subtitle": "Projets et tâches qui vous sont assignés (ou à vos commissions).",
+    "myProjects": "Mes projets",
+    "myTasks": "Mes tâches",
+    "noProjects": "Aucun projet assigné",
+    "noTasks": "Aucune tâche assignée",
+    "tasksCount": "{count} tâche(s)",
+    "openActions": "Tâches"
+  },
+  "mandatePlan": {
+    "title": "Plan budgétaire du mandat",
+    "subtitle": "Vue consolidée : sous-comptes, projets et événements.",
+    "mandate": "Mandat",
+    "backTreasury": "Retour trésorerie",
+    "planned": "Prévu",
+    "income": "Recettes",
+    "expense": "Dépenses",
+    "actual": "Réalisé",
+    "variance": "Écart",
+    "subAccounts": "Sous-comptes",
+    "projects": "Projets",
+    "events": "Événements",
+    "name": "Libellé",
+    "mandateDocuments": "Pièces budgétaires du mandat"
   }
 }

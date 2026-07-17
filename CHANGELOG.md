@@ -8,6 +8,18 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Unreleased]
 
 ### Added
+- **Suite productivité club (2026-07)**
+  - Budget événements (prévu / réalisé / documents) aligné sur les projets
+  - Multi-commissions par membre (`CommissionMembership`) avec rôles Président / Membre
+  - Notifications d’assignation (in-app, email, web-push) pour tâches et projets
+  - Page **Mon travail** (`/my-work`) : mes projets et tâches (ou via commission)
+  - **Plan budgétaire du mandat** (`/treasury/mandate-plan`) : sous-comptes + projets + événements
+  - Pièces budgétaires au niveau mandat depuis le plan / trésorerie
+  - Édition des assignations après création (tâches et projets)
+  - Historique d’activité projet (`ProjectActivityLog`)
+  - Export CSV projets/tâches et PDF budget projet
+  - i18n fr / en / es pour les nouveaux modules
+  - Migration `20260717160000_multi_commission_activity`
 - **Module Projets**
   - Gestion de projets club (statuts planification / actif / pause / terminé / annulé)
   - Tâches rattachées aux projets (réutilise `ClubAction` avec `projectId`)

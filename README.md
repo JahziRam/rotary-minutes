@@ -15,8 +15,10 @@ Production : [https://clubminutes.api.mg](https://clubminutes.api.mg)
 - **Emails** — Templates, campagnes, contacts, planification
 - **Projets** — Gestion de projets club, tâches associées et **budget** (prévu / réalisé, devis & proformas) via `/projects`
 - **Tâches** — Suivi des actions (dont issues de PV) via `/actions`
-- **Assignation** — Tâches et projets assignables à **plusieurs membres** et/ou une **commission**
-- **Commissions** — Création et peuplement des commissions (`/members/commissions`)
+- **Assignation** — Tâches et projets assignables à **plusieurs membres** et/ou une **commission** (modifiable après création, avec notifications)
+- **Commissions** — Multi-appartenance, rôles Président/Membre (`/members/commissions`)
+- **Mon travail** — Vue personnelle des projets et tâches assignés (`/my-work`)
+- **Plan budgétaire du mandat** — Consolidation sous-comptes + projets + événements (`/treasury/mandate-plan`)
 - **Tableau de bord** — Statistiques, mandat Rotary (1er juillet – 30 juin)
 - **Mode hors ligne** — IndexedDB + synchronisation automatique
 - **Stripe** — Abonnements et essai gratuit 14 jours

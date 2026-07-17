@@ -28,7 +28,9 @@
     "superAdmin": "Super Admin",
     "openMenu": "Abrir menú",
     "mobileTabs": "Navegación principal",
-    "projects": "Proyectos"
+    "projects": "Proyectos",
+    "myWork": "Mi trabajo",
+    "treasuryPlan": "Plan mandato"
   },
   "adminNav": {
     "badge": "Plataforma",
@@ -2655,12 +2657,20 @@
         "INVOICE": "Factura",
         "OTHER": "Otro"
       }
-    }
+    },
+    "exportCsv": "Exportar CSV",
+    "exported": "Exportación descargada",
+    "exportBudgetPdf": "Presupuesto PDF",
+    "exportDone": "Exportación lista",
+    "activityTitle": "Historial del proyecto"
   },
   "assignees": {
     "members": "Personas asignadas",
     "commission": "Comisión asignada",
-    "noCommission": "Sin comisión"
+    "noCommission": "Sin comisión",
+    "editAssignees": "Editar asignaciones",
+    "save": "Guardar asignaciones",
+    "saved": "Asignaciones actualizadas"
   },
   "commissions": {
     "title": "Comisiones",
@@ -2684,6 +2694,35 @@
     "memberRemoved": "Miembro retirado",
     "reassign": "reasignar",
     "unassignedCount": "{count} miembro(s) sin comisión",
-    "forbidden": "Acceso denegado"
+    "forbidden": "Acceso denegado",
+    "roleChair": "Presidente",
+    "roleMember": "Miembro",
+    "roleUpdated": "Rol actualizado"
+  },
+  "myWork": {
+    "title": "Mi trabajo",
+    "subtitle": "Proyectos y tareas asignados a usted (o a sus comisiones).",
+    "myProjects": "Mis proyectos",
+    "myTasks": "Mis tareas",
+    "noProjects": "Sin proyectos asignados",
+    "noTasks": "Sin tareas asignadas",
+    "tasksCount": "{count} tarea(s)",
+    "openActions": "Tareas"
+  },
+  "mandatePlan": {
+    "title": "Plan presupuestario del mandato",
+    "subtitle": "Vista consolidada: subcuentas, proyectos y eventos.",
+    "mandate": "Mandato",
+    "backTreasury": "Volver a tesorería",
+    "planned": "Previsto",
+    "income": "Ingresos",
+    "expense": "Gastos",
+    "actual": "Realizado",
+    "variance": "Desviación",
+    "subAccounts": "Subcuentas",
+    "projects": "Proyectos",
+    "events": "Eventos",
+    "name": "Nombre",
+    "mandateDocuments": "Documentos presupuestarios del mandato"
   }
 }

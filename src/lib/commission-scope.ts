@@ -9,10 +9,20 @@ export async function getCommissionChairCommissionId(
 
   const member = await prisma.member.findFirst({
     where: { clubId: ctx.clubId, userId: ctx.userId, isActive: true },
-    select: { commissionId: true },
+    select: {
+      commissionId: true,
+      commissionMemberships: {
+        where: { role: "CHAIR" },
+        select: { commissionId: true },
+        take: 1,
+      },
+    },
   });
 
-  return member?.commissionId ?? null;
+  if (!member) return null;
+  return (
+    member.commissionMemberships[0]?.commissionId ?? member.commissionId ?? null
+  );
 }
 
 export function isCommissionChairRole(ctx: ClubContext): boolean {

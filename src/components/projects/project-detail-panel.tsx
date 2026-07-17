@@ -15,8 +15,10 @@ import {
   createProjectTask,
   deleteProject,
   updateProject,
+  updateProjectAssignees,
   updateProjectTaskStatus,
 } from "@/actions/club-projects";
+import { exportProjectBudgetPdf } from "@/actions/exports-work";
 import { ProjectBudgetPanel } from "@/components/projects/project-budget-panel";
 import { AssigneePicker } from "@/components/ui/assignee-picker";
 import type {
@@ -83,6 +85,15 @@ type ProjectDetail = {
     downloadUrl: string;
   }>;
   tasks: TaskRow[];
+  activityLogs?: Array<{
+    id: string;
+    action: string;
+    summary: string;
+    createdAt: string;
+    userName: string | null;
+  }>;
+  assigneeIds?: string[];
+  commissionId?: string | null;
 };
 
 type Member = { id: string; firstName: string; lastName: string };
@@ -132,6 +143,11 @@ export function ProjectDetailPanel({
   const [pending, startTransition] = useTransition();
   const [toast, setToast] = useState<string | null>(null);
   const [showTaskForm, setShowTaskForm] = useState(false);
+  const [showAssignEdit, setShowAssignEdit] = useState(false);
+  const [assignForm, setAssignForm] = useState({
+    assigneeMemberIds: project.assigneeIds ?? [],
+    commissionId: project.commissionId ?? "",
+  });
   const [taskForm, setTaskForm] = useState({
     title: "",
     description: "",
@@ -250,6 +266,43 @@ export function ProjectDetailPanel({
                 </option>
               ))}
             </select>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setShowAssignEdit((v) => !v)}
+              disabled={pending}
+            >
+              {tAssign("editAssignees")}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={pending}
+              onClick={() => {
+                startTransition(async () => {
+                  const result = await exportProjectBudgetPdf(project.id, locale);
+                  if ("success" in result && result.success && result.pdfBase64) {
+                    const bin = atob(result.pdfBase64);
+                    const bytes = new Uint8Array(bin.length);
+                    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+                    const blob = new Blob([bytes], {
+                      type: result.filename.endsWith(".txt")
+                        ? "text/plain"
+                        : "application/pdf",
+                    });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = result.filename;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    setToast(t("exportDone"));
+                  }
+                });
+              }}
+            >
+              {t("exportBudgetPdf")}
+            </Button>
             <Button size="sm" variant="outline" onClick={removeProject} disabled={pending}>
               <Trash2 className="h-4 w-4" />
               {tCommon("delete")}
@@ -257,6 +310,47 @@ export function ProjectDetailPanel({
           </div>
         )}
       </div>
+
+      {showAssignEdit && canManage && (
+        <Card>
+          <CardContent className="pt-4 space-y-3">
+            <AssigneePicker
+              members={members}
+              commissions={commissions}
+              selectedMemberIds={assignForm.assigneeMemberIds}
+              commissionId={assignForm.commissionId}
+              onMembersChange={(ids) =>
+                setAssignForm((f) => ({ ...f, assigneeMemberIds: ids }))
+              }
+              onCommissionChange={(id) =>
+                setAssignForm((f) => ({ ...f, commissionId: id }))
+              }
+              membersLabel={tAssign("members")}
+              commissionLabel={tAssign("commission")}
+              noCommissionLabel={tAssign("noCommission")}
+            />
+            <Button
+              size="sm"
+              disabled={pending}
+              onClick={() => {
+                startTransition(async () => {
+                  const result = await updateProjectAssignees(project.id, {
+                    assigneeMemberIds: assignForm.assigneeMemberIds,
+                    commissionId: assignForm.commissionId || null,
+                  });
+                  if ("success" in result && result.success) {
+                    setToast(tAssign("saved"));
+                    setShowAssignEdit(false);
+                    router.refresh();
+                  }
+                });
+              }}
+            >
+              {tAssign("save")}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       <ProjectBudgetPanel
         projectId={project.id}
@@ -419,6 +513,29 @@ export function ProjectDetailPanel({
           )}
         </CardContent>
       </Card>
+
+      {project.activityLogs && project.activityLogs.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">{t("activityTitle")}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="divide-y divide-gray-100 text-sm">
+              {project.activityLogs.map((log) => (
+                <li key={log.id} className="py-2">
+                  <p className="font-medium text-gray-900">{log.summary}</p>
+                  <p className="text-xs text-gray-400">
+                    {log.userName || "—"}
+                    {` · ${format(new Date(log.createdAt), "d MMM yyyy HH:mm", {
+                      locale: dateLocale,
+                    })}`}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
 
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
     </div>
