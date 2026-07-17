@@ -2,6 +2,7 @@
 export const CLUB_MODULES = [
   { key: "treasury", enabled: "treasuryEnabled", menuVisible: "treasuryMenuVisible", href: "/treasury", navKey: "treasury", labelFr: "Trésorerie", labelEn: "Treasury" },
   { key: "actions", enabled: "actionsEnabled", menuVisible: "actionsMenuVisible", href: "/actions", navKey: "actions", labelFr: "Actions", labelEn: "Actions" },
+  { key: "projects", enabled: "projectsEnabled", menuVisible: "projectsMenuVisible", href: "/projects", navKey: "projects", labelFr: "Projets", labelEn: "Projects" },
   { key: "calendar", enabled: "calendarEnabled", menuVisible: "calendarMenuVisible", href: "/calendar", navKey: "calendar", labelFr: "Calendrier", labelEn: "Calendar" },
   { key: "memberPortal", enabled: "memberPortalEnabled", menuVisible: "memberPortalMenuVisible", href: "/my-account", navKey: "myAccount", labelFr: "Mon compte", labelEn: "My account" },
   { key: "attendanceReports", enabled: "attendanceReportsEnabled", menuVisible: "attendanceReportsMenuVisible", href: "/attendance-reports", navKey: "attendanceReports", labelFr: "Assiduité", labelEn: "Attendance" },

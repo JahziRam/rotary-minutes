@@ -134,6 +134,9 @@ export default async function AdminClubsPage({
           clubBackupEnabled: c.features.clubBackupEnabled ?? DEFAULT_FEATURES.clubBackupEnabled,
           minuteAiAssistEnabled:
             c.features.minuteAiAssistEnabled ?? DEFAULT_FEATURES.minuteAiAssistEnabled,
+          projectsEnabled: c.features.projectsEnabled ?? DEFAULT_FEATURES.projectsEnabled,
+          projectsMenuVisible:
+            c.features.projectsMenuVisible ?? DEFAULT_FEATURES.projectsMenuVisible,
           memberLimit: c.features.memberLimit,
         }
       : DEFAULT_FEATURES,

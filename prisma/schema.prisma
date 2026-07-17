@@ -145,6 +145,14 @@ enum ClubActionPriority {
   URGENT
 }
 
+enum ClubProjectStatus {
+  PLANNING
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
 enum ClubEventStatus {
   DRAFT
   PUBLISHED
@@ -374,6 +382,7 @@ model User {
   duesPaymentsRecorded DuesPayment[]
   budgetEntriesRecorded BudgetEntry[]
   clubActionsCreated ClubAction[] @relation("ActionCreator")
+  clubProjectsCreated ClubProject[] @relation("ProjectCreator")
   clubDocumentsUploaded ClubDocument[]
   treasuryVouchersUploaded TreasuryVoucher[] @relation("TreasuryVoucherUploader")
   clubBackupsCreated ClubBackup[] @relation("ClubBackupCreator")
@@ -455,6 +464,7 @@ model Club {
   budgetCategories BudgetCategory[]
   budgetEntries   BudgetEntry[]
   clubActions     ClubAction[]
+  clubProjects    ClubProject[]
   clubEvents      ClubEvent[]
   clubDocuments   ClubDocument[]
   documentFolders DocumentFolder[]
@@ -529,6 +539,7 @@ model Member {
   memberDues   MemberDues[]
   duesPayments DuesPayment[]
   assignedActions ClubAction[] @relation("MemberAssignedActions")
+  ownedProjects   ClubProject[] @relation("ProjectOwner")
   eventRegistrations EventRegistration[]
 
   @@index([clubId])
@@ -1066,6 +1077,8 @@ model ClubFeatures {
   treasuryImportEnabled   Boolean  @default(false)
   clubBackupEnabled       Boolean  @default(false)
   minuteAiAssistEnabled   Boolean  @default(false)
+  projectsEnabled         Boolean  @default(true)
+  projectsMenuVisible     Boolean  @default(true)
   memberLimit             Int?
   updatedAt               DateTime @updatedAt
 
@@ -1591,6 +1604,30 @@ model ClubDuesPaymentSettings {
   club Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
 }
 
+model ClubProject {
+  id              String            @id @default(cuid())
+  clubId          String
+  name            String
+  description     String?           @db.Text
+  status          ClubProjectStatus @default(PLANNING)
+  startDate       DateTime?
+  endDate         DateTime?
+  ownerMemberId   String?
+  color           String?
+  createdById     String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  club            Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  ownerMember     Member?           @relation("ProjectOwner", fields: [ownerMemberId], references: [id], onDelete: SetNull)
+  createdBy       User?             @relation("ProjectCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  tasks           ClubAction[]
+
+  @@index([clubId, status])
+  @@index([clubId, endDate])
+  @@index([ownerMemberId])
+}
+
 model ClubAction {
   id                 String             @id @default(cuid())
   clubId             String
@@ -1601,6 +1638,7 @@ model ClubAction {
   dueDate            DateTime?
   status             ClubActionStatus   @default(OPEN)
   priority           ClubActionPriority @default(NORMAL)
+  projectId          String?
   minuteId           String?
   agendaItemId       String?
   lastRemindedAt     DateTime?
@@ -1610,6 +1648,7 @@ model ClubAction {
   updatedAt          DateTime           @updatedAt
 
   club               Club               @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  project            ClubProject?       @relation(fields: [projectId], references: [id], onDelete: SetNull)
   responsibleMember  Member?            @relation("MemberAssignedActions", fields: [responsibleMemberId], references: [id], onDelete: SetNull)
   minute             Minute?            @relation(fields: [minuteId], references: [id], onDelete: SetNull)
   agendaItem         AgendaItem?        @relation(fields: [agendaItemId], references: [id], onDelete: SetNull)
@@ -1619,6 +1658,7 @@ model ClubAction {
   @@index([clubId, status])
   @@index([clubId, dueDate])
   @@index([responsibleMemberId])
+  @@index([projectId])
 }
 
 model ClubCalendarNote {

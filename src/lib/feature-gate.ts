@@ -26,6 +26,7 @@ export type GatedFeature = keyof Pick<
   | "treasuryImportEnabled"
   | "clubBackupEnabled"
   | "minuteAiAssistEnabled"
+  | "projectsEnabled"
 >;
 
 export const GATED_FEATURE_KEYS: GatedFeature[] = [
@@ -53,6 +54,7 @@ export const GATED_FEATURE_KEYS: GatedFeature[] = [
   "treasuryImportEnabled",
   "clubBackupEnabled",
   "minuteAiAssistEnabled",
+  "projectsEnabled",
 ];
 
 export function isFeatureEnabled(
@@ -83,6 +85,7 @@ const FEATURE_MENU_VISIBLE: Partial<Record<GatedFeature, keyof ClubFeatureSet>> 
   integrationsEnabled: "integrationsMenuVisible",
   eventsAdvancedEnabled: "eventsAdvancedMenuVisible",
   fileManagerEnabled: "fileManagerMenuVisible",
+  projectsEnabled: "projectsMenuVisible",
 };
 
 export function isFeatureVisibleInUi(

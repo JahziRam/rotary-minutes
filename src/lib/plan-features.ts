@@ -48,6 +48,8 @@ export function getPlanFeaturePreset(plan: SubscriptionPlan): ClubFeatureSet {
     treasuryImportEnabled: false,
     clubBackupEnabled: false,
     minuteAiAssistEnabled: false,
+    projectsEnabled: true,
+    projectsMenuVisible: true,
     memberLimit: null,
   };
 

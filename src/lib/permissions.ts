@@ -39,6 +39,13 @@ export const PERMISSIONS = {
   "actions.manage": [
     "PRESIDENT", "VICE_PRESIDENT", "SECRETARY", "PROTOCOL", "COMMISSION_CHAIR", "ADMIN",
   ],
+  "projects.view": [
+    "PRESIDENT", "VICE_PRESIDENT", "SECRETARY", "PROTOCOL", "TREASURER", "ADMIN", "READER",
+    "MEMBERSHIP_CHAIR", "COMMISSION_CHAIR", "PUBLIC_IMAGE_CHAIR", "FOUNDATION_CHAIR",
+  ],
+  "projects.manage": [
+    "PRESIDENT", "VICE_PRESIDENT", "SECRETARY", "PROTOCOL", "COMMISSION_CHAIR", "ADMIN",
+  ],
   "calendar.view": [
     "PRESIDENT", "VICE_PRESIDENT", "SECRETARY", "TREASURER", "ADMIN", "READER", "PROTOCOL",
     "MEMBERSHIP_CHAIR", "COMMISSION_CHAIR", "PUBLIC_IMAGE_CHAIR", "FOUNDATION_CHAIR",
@@ -89,6 +96,8 @@ export const PERMISSION_LABELS: Record<Permission, { fr: string; en: string; es:
   "treasury.manage": { fr: "Gérer la trésorerie", en: "Manage treasury", es: "Gestionar tesorería" },
   "actions.view": { fr: "Voir les actions", en: "View actions", es: "Ver acciones" },
   "actions.manage": { fr: "Gérer les actions", en: "Manage actions", es: "Gestionar acciones" },
+  "projects.view": { fr: "Voir les projets", en: "View projects", es: "Ver proyectos" },
+  "projects.manage": { fr: "Gérer les projets", en: "Manage projects", es: "Gestionar proyectos" },
   "calendar.view": { fr: "Voir le calendrier", en: "View calendar", es: "Ver calendario" },
   "events.view": { fr: "Voir les événements", en: "View events", es: "Ver eventos" },
   "events.manage": { fr: "Gérer les événements", en: "Manage events", es: "Gestionar eventos" },

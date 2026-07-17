@@ -16,6 +16,7 @@ import {
   FolderOpen,
   Wallet,
   CheckSquare,
+  FolderKanban,
   CalendarDays,
 } from "lucide-react";
 
@@ -37,6 +38,7 @@ export const CLUB_NAV_ITEMS: ClubNavItem[] = [
   { key: "emails", href: "/emails", icon: Mail },
   { key: "treasury", href: "/treasury", icon: Wallet },
   { key: "actions", href: "/actions", icon: CheckSquare },
+  { key: "projects", href: "/projects", icon: FolderKanban },
   { key: "calendar", href: "/calendar", icon: CalendarDays },
   { key: "myAccount", href: "/my-account", icon: UserCircle, mobileTab: true },
   { key: "attendanceReports", href: "/attendance-reports", icon: ClipboardList },

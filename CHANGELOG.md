@@ -15,6 +15,13 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
   - Fournisseur OpenAI (API compatible) pour la rédaction PV ; sélection dans **Admin → Paramètres**
   - Repli clé API via `OPENAI_API_KEY` ; modèle par défaut `gpt-4o-mini` ; base URL personnalisable (`OPENAI_API_BASE_URL`)
 
+### Added
+- **Module Projets**
+  - Gestion de projets club (statuts planification / actif / pause / terminé / annulé)
+  - Tâches rattachées aux projets (réutilise `ClubAction` avec `projectId`)
+  - Pages `/projects` et `/projects/[id]`, navigation, feature flags `projectsEnabled` / `projectsMenuVisible`
+  - Permissions `projects.view` / `projects.manage`
+
 ### Fixed
 - **Dashboard club — devise invalide**
   - Crash serveur (« This page couldn’t load ») pour certains clubs (ex. Antananarivo) quand la devise n’est pas un code ISO 4217 (`Ar`, `Ariary`, etc.) : normalisation + format monétaire sûr (alias MGA)

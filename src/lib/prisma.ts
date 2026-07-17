@@ -3,7 +3,7 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { createPgAdapter, ensureSslForRemotePostgres } from "@/lib/pg-adapter";
 
 /** Incrémenter quand le schéma Prisma change (invalide le cache dev). */
-const PRISMA_SCHEMA_VERSION = 14;
+const PRISMA_SCHEMA_VERSION = 15;
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
@@ -52,6 +52,7 @@ function isPrismaClientReady(client: PrismaClient): boolean {
   return (
     globalForPrisma.prismaSchemaVersion === PRISMA_SCHEMA_VERSION &&
     hasDelegate(client, "clubFeatures") &&
+    hasDelegate(client, "clubProject") &&
     hasDelegate(client, "planConfig") &&
     hasDelegate(client, "minuteTemplate") &&
     hasDelegate(client, "featureFlag") &&

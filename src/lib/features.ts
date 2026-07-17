@@ -63,6 +63,8 @@ function mapClubFeatures(
     treasuryImportEnabled: features.treasuryImportEnabled ?? d.treasuryImportEnabled,
     clubBackupEnabled: features.clubBackupEnabled ?? d.clubBackupEnabled,
     minuteAiAssistEnabled: features.minuteAiAssistEnabled ?? d.minuteAiAssistEnabled,
+    projectsEnabled: features.projectsEnabled ?? d.projectsEnabled,
+    projectsMenuVisible: features.projectsMenuVisible ?? d.projectsMenuVisible,
     memberLimit: features.memberLimit,
   };
 }

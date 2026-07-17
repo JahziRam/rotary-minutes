@@ -44,6 +44,8 @@ export interface ClubFeatureSet {
   treasuryImportEnabled: boolean;
   clubBackupEnabled: boolean;
   minuteAiAssistEnabled: boolean;
+  projectsEnabled: boolean;
+  projectsMenuVisible: boolean;
   memberLimit: number | null;
 }
 
@@ -91,6 +93,8 @@ export const CLUB_FEATURE_KEYS = Object.keys({
   treasuryImportEnabled: true,
   clubBackupEnabled: true,
   minuteAiAssistEnabled: true,
+  projectsEnabled: true,
+  projectsMenuVisible: true,
   memberLimit: true,
 }) as (keyof ClubFeatureSet)[];
 
@@ -141,6 +145,8 @@ export const CLUB_FEATURE_LABELS: Record<keyof ClubFeatureSet, { fr: string; en:
     fr: "Assistant IA rédaction PV",
     en: "AI minutes writing assistant",
   },
+  projectsEnabled: { fr: "Projets", en: "Projects" },
+  projectsMenuVisible: { fr: "Menu projets visible", en: "Projects menu visible" },
   memberLimit: { fr: "Limite utilisateurs", en: "Member limit" },
 };
 
@@ -188,5 +194,7 @@ export const DEFAULT_FEATURES: ClubFeatureSet = {
   treasuryImportEnabled: false,
   clubBackupEnabled: false,
   minuteAiAssistEnabled: false,
+  projectsEnabled: true,
+  projectsMenuVisible: true,
   memberLimit: null,
 };

@@ -110,10 +110,19 @@ export async function createAction(data: {
   dueDate?: string;
   priority?: ClubActionPriority;
   minuteId?: string;
+  projectId?: string;
 }) {
   const auth = await requireActionsManage();
   if (auth.error) return auth;
   const { ctx } = auth;
+
+  if (data.projectId) {
+    const project = await prisma.clubProject.findFirst({
+      where: { id: data.projectId, clubId: ctx.clubId },
+      select: { id: true },
+    });
+    if (!project) return { error: "NOT_FOUND" as const };
+  }
 
   const action = await prisma.clubAction.create({
     data: {
@@ -125,6 +134,7 @@ export async function createAction(data: {
       dueDate: data.dueDate ? new Date(data.dueDate) : null,
       priority: data.priority ?? "NORMAL",
       minuteId: data.minuteId || null,
+      projectId: data.projectId || null,
       createdById: ctx.userId,
     },
   });

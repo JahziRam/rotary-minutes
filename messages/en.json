@@ -27,7 +27,8 @@
     "support": "Support",
     "superAdmin": "Super Admin",
     "openMenu": "Open menu",
-    "mobileTabs": "Main navigation"
+    "mobileTabs": "Main navigation",
+    "projects": "Projects"
   },
   "adminNav": {
     "badge": "Platform",
@@ -1362,62 +1363,209 @@
         "READER": "Discover how to view essential club information."
       },
       "items": {
-        "schedule_meeting": { "title": "Schedule a meeting", "hint": "Date, location and statutory type" },
-        "run_live_meeting": { "title": "Use live mode", "hint": "Attendance and notes during the session" },
-        "draft_minute": { "title": "Draft minutes", "hint": "Complete the generated draft" },
-        "finalize_minute": { "title": "Finalize minutes", "hint": "Get the PDF with QR code" },
-        "add_members": { "title": "Add members", "hint": "Up-to-date club roster" },
-        "record_dues": { "title": "Record a dues payment", "hint": "Track member payments" },
-        "treasury_entry": { "title": "Record a financial entry", "hint": "Income or expense in treasury" },
-        "invite_team": { "title": "Invite your team", "hint": "Secretary, treasurer, readers" },
-        "send_email": { "title": "Send an email", "hint": "Meeting notice or dues reminder" },
-        "explore_calendar": { "title": "Explore the calendar", "hint": "Unified club activity view" },
-        "create_event": { "title": "Create an event", "hint": "Gala, training or service project" },
-        "configure_settings": { "title": "Configure the club", "hint": "Profile, workflow and preferences" },
-        "review_attendance": { "title": "Review attendance", "hint": "Rates by member and period" },
-        "update_profile": { "title": "Update my profile", "hint": "Link your account to your member record" }
+        "schedule_meeting": {
+          "title": "Schedule a meeting",
+          "hint": "Date, location and statutory type"
+        },
+        "run_live_meeting": {
+          "title": "Use live mode",
+          "hint": "Attendance and notes during the session"
+        },
+        "draft_minute": {
+          "title": "Draft minutes",
+          "hint": "Complete the generated draft"
+        },
+        "finalize_minute": {
+          "title": "Finalize minutes",
+          "hint": "Get the PDF with QR code"
+        },
+        "add_members": {
+          "title": "Add members",
+          "hint": "Up-to-date club roster"
+        },
+        "record_dues": {
+          "title": "Record a dues payment",
+          "hint": "Track member payments"
+        },
+        "treasury_entry": {
+          "title": "Record a financial entry",
+          "hint": "Income or expense in treasury"
+        },
+        "invite_team": {
+          "title": "Invite your team",
+          "hint": "Secretary, treasurer, readers"
+        },
+        "send_email": {
+          "title": "Send an email",
+          "hint": "Meeting notice or dues reminder"
+        },
+        "explore_calendar": {
+          "title": "Explore the calendar",
+          "hint": "Unified club activity view"
+        },
+        "create_event": {
+          "title": "Create an event",
+          "hint": "Gala, training or service project"
+        },
+        "configure_settings": {
+          "title": "Configure the club",
+          "hint": "Profile, workflow and preferences"
+        },
+        "review_attendance": {
+          "title": "Review attendance",
+          "hint": "Rates by member and period"
+        },
+        "update_profile": {
+          "title": "Update my profile",
+          "hint": "Link your account to your member record"
+        }
       },
       "startBtn": "Start",
       "stepsBtn": "Steps",
       "launchWalkthrough": "Launch step-by-step guide"
     },
     "hints": {
-      "minute_editor_intro": { "title": "Writing minutes", "body": "Complete each agenda item during or after the meeting. Auto-save runs every 30 seconds." },
-      "minute_editor_workflow": { "title": "Minutes approval", "body": "Submit to the president for review, then finalize to generate the official authenticated PDF." },
-      "minute_editor_agenda": { "title": "Agenda items", "body": "For each item: note decisions and follow-up actions with an owner and due date." },
-      "live_meeting_intro": { "title": "Live meeting mode", "body": "Use this screen during the session: attendance on the left, minutes on the right. No more Word after the meeting." },
-      "live_attendance": { "title": "Attendance sheet", "body": "Mark members present, absent or excused. Attendance feeds your statistics automatically." },
-      "dashboard_missions": { "title": "Getting started checklist", "body": "Follow the missions below to master Rotary Minutes in a few sessions." },
-      "minute_finalize_action": { "title": "Finalize minutes", "body": "Once content is ready, the president can approve and lock the document.", "action": "Click here to approve and finalize" },
-      "minute_submit_action": { "title": "Submit for review", "body": "Send the draft to the president before finalization.", "action": "Click here to submit to president" },
-      "emails_intro": { "title": "Email communication", "body": "Manage templates, contacts and campaigns from this section." },
-      "emails_compose_action": { "title": "Compose a message", "body": "Write an email and choose recipients.", "action": "Click here to compose" },
-      "calendar_intro": { "title": "Unified calendar", "body": "Meetings, deadlines and events in one monthly view." },
-      "calendar_export_action": { "title": "Export calendar", "body": "Download an ICS file for Google Calendar or Outlook.", "action": "Click here to export ICS" },
-      "events_intro": { "title": "Club events", "body": "Organize activities outside statutory meetings." },
-      "events_create_action": { "title": "New event", "body": "Set date, location and capacity.", "action": "Click here to create an event" },
-      "settings_intro": { "title": "Club settings", "body": "Profile, users, workflow and enabled modules." },
-      "settings_guide_action": { "title": "Club profile", "body": "Verify meeting location, officers and contact details.", "action": "Complete club profile here" },
-      "attendance_intro": { "title": "Attendance reports", "body": "Track presence rates required by Rotary." },
-      "attendance_export_action": { "title": "Export report", "body": "Generate a PDF for district or board.", "action": "Click here to export PDF" },
-      "profile_intro": { "title": "Member portal", "body": "View your dues, attendance and finalized minutes." },
-      "profile_save_action": { "title": "Link your account", "body": "Connect your email to your member record.", "action": "Click here to link profile" },
-      "dues_intro": { "title": "Dues management", "body": "Track payments by member and mandate period." },
-      "dues_record_action": { "title": "Record payment", "body": "Mark dues as paid after collection.", "action": "Click here to mark as paid" }
+      "minute_editor_intro": {
+        "title": "Writing minutes",
+        "body": "Complete each agenda item during or after the meeting. Auto-save runs every 30 seconds."
+      },
+      "minute_editor_workflow": {
+        "title": "Minutes approval",
+        "body": "Submit to the president for review, then finalize to generate the official authenticated PDF."
+      },
+      "minute_editor_agenda": {
+        "title": "Agenda items",
+        "body": "For each item: note decisions and follow-up actions with an owner and due date."
+      },
+      "live_meeting_intro": {
+        "title": "Live meeting mode",
+        "body": "Use this screen during the session: attendance on the left, minutes on the right. No more Word after the meeting."
+      },
+      "live_attendance": {
+        "title": "Attendance sheet",
+        "body": "Mark members present, absent or excused. Attendance feeds your statistics automatically."
+      },
+      "dashboard_missions": {
+        "title": "Getting started checklist",
+        "body": "Follow the missions below to master Rotary Minutes in a few sessions."
+      },
+      "minute_finalize_action": {
+        "title": "Finalize minutes",
+        "body": "Once content is ready, the president can approve and lock the document.",
+        "action": "Click here to approve and finalize"
+      },
+      "minute_submit_action": {
+        "title": "Submit for review",
+        "body": "Send the draft to the president before finalization.",
+        "action": "Click here to submit to president"
+      },
+      "emails_intro": {
+        "title": "Email communication",
+        "body": "Manage templates, contacts and campaigns from this section."
+      },
+      "emails_compose_action": {
+        "title": "Compose a message",
+        "body": "Write an email and choose recipients.",
+        "action": "Click here to compose"
+      },
+      "calendar_intro": {
+        "title": "Unified calendar",
+        "body": "Meetings, deadlines and events in one monthly view."
+      },
+      "calendar_export_action": {
+        "title": "Export calendar",
+        "body": "Download an ICS file for Google Calendar or Outlook.",
+        "action": "Click here to export ICS"
+      },
+      "events_intro": {
+        "title": "Club events",
+        "body": "Organize activities outside statutory meetings."
+      },
+      "events_create_action": {
+        "title": "New event",
+        "body": "Set date, location and capacity.",
+        "action": "Click here to create an event"
+      },
+      "settings_intro": {
+        "title": "Club settings",
+        "body": "Profile, users, workflow and enabled modules."
+      },
+      "settings_guide_action": {
+        "title": "Club profile",
+        "body": "Verify meeting location, officers and contact details.",
+        "action": "Complete club profile here"
+      },
+      "attendance_intro": {
+        "title": "Attendance reports",
+        "body": "Track presence rates required by Rotary."
+      },
+      "attendance_export_action": {
+        "title": "Export report",
+        "body": "Generate a PDF for district or board.",
+        "action": "Click here to export PDF"
+      },
+      "profile_intro": {
+        "title": "Member portal",
+        "body": "View your dues, attendance and finalized minutes."
+      },
+      "profile_save_action": {
+        "title": "Link your account",
+        "body": "Connect your email to your member record.",
+        "action": "Click here to link profile"
+      },
+      "dues_intro": {
+        "title": "Dues management",
+        "body": "Track payments by member and mandate period."
+      },
+      "dues_record_action": {
+        "title": "Record payment",
+        "body": "Mark dues as paid after collection.",
+        "action": "Click here to mark as paid"
+      }
     },
     "coach": {
       "weekLabel": "Week {week} — tip of the day",
       "tips": {
-        "week1_meetings": { "title": "Plan meetings ahead", "body": "The club calendar helps you prepare agendas and reminders." },
-        "week1_minutes": { "title": "Try live mode", "body": "At your next session, draft minutes in real time — save hours every month." },
-        "week2_members": { "title": "Update the member list", "body": "Import your Excel file or add new members for the mandate." },
-        "week2_dues": { "title": "Track dues", "body": "Record payments as they come in for targeted reminders." },
-        "week3_treasury": { "title": "Keep treasury current", "body": "Enter movements after each meeting for reliable treasurer reports." },
-        "week4_emails": { "title": "Email your members", "body": "Send invitations and reminders from the Emails section." },
-        "week4_calendar": { "title": "Share the calendar", "body": "The unified calendar centralizes meetings, deadlines and events." },
-        "week4_events": { "title": "Engage the club", "body": "Create an event to mobilize members outside statutory meetings." },
-        "week4_attendance": { "title": "Monitor attendance", "body": "Use reports to support at-risk members." },
-        "week4_profile": { "title": "Profiles up to date", "body": "Encourage each member to link their account in My account." }
+        "week1_meetings": {
+          "title": "Plan meetings ahead",
+          "body": "The club calendar helps you prepare agendas and reminders."
+        },
+        "week1_minutes": {
+          "title": "Try live mode",
+          "body": "At your next session, draft minutes in real time — save hours every month."
+        },
+        "week2_members": {
+          "title": "Update the member list",
+          "body": "Import your Excel file or add new members for the mandate."
+        },
+        "week2_dues": {
+          "title": "Track dues",
+          "body": "Record payments as they come in for targeted reminders."
+        },
+        "week3_treasury": {
+          "title": "Keep treasury current",
+          "body": "Enter movements after each meeting for reliable treasurer reports."
+        },
+        "week4_emails": {
+          "title": "Email your members",
+          "body": "Send invitations and reminders from the Emails section."
+        },
+        "week4_calendar": {
+          "title": "Share the calendar",
+          "body": "The unified calendar centralizes meetings, deadlines and events."
+        },
+        "week4_events": {
+          "title": "Engage the club",
+          "body": "Create an event to mobilize members outside statutory meetings."
+        },
+        "week4_attendance": {
+          "title": "Monitor attendance",
+          "body": "Use reports to support at-risk members."
+        },
+        "week4_profile": {
+          "title": "Profiles up to date",
+          "body": "Encourage each member to link their account in My account."
+        }
       }
     },
     "walkthrough": {
@@ -1436,47 +1584,116 @@
         "manage_dues": "Dues"
       },
       "create_meeting": {
-        "date": { "title": "Meeting date", "body": "Choose the date of your next statutory session." },
-        "type": { "title": "Meeting type", "body": "Select Statutory for a meeting requiring official minutes." },
-        "location": { "title": "Location", "body": "Enter the usual venue or a one-off address." },
-        "submit": { "title": "Save", "body": "Confirm to create the meeting and associated minutes draft." }
+        "date": {
+          "title": "Meeting date",
+          "body": "Choose the date of your next statutory session."
+        },
+        "type": {
+          "title": "Meeting type",
+          "body": "Select Statutory for a meeting requiring official minutes."
+        },
+        "location": {
+          "title": "Location",
+          "body": "Enter the usual venue or a one-off address."
+        },
+        "submit": {
+          "title": "Save",
+          "body": "Confirm to create the meeting and associated minutes draft."
+        }
       },
       "live_meeting": {
-        "attendance": { "title": "Attendance sheet", "body": "Mark members present during the session." },
-        "minute": { "title": "Minutes notes", "body": "Draft minutes in real time on the right." }
+        "attendance": {
+          "title": "Attendance sheet",
+          "body": "Mark members present during the session."
+        },
+        "minute": {
+          "title": "Minutes notes",
+          "body": "Draft minutes in real time on the right."
+        }
       },
       "finalize_minute": {
-        "content": { "title": "Minutes content", "body": "Complete each agenda item." },
-        "submit": { "title": "Submission", "body": "Secretary submits to president for review." },
-        "finalize": { "title": "Finalization", "body": "President approves and generates the official PDF." }
+        "content": {
+          "title": "Minutes content",
+          "body": "Complete each agenda item."
+        },
+        "submit": {
+          "title": "Submission",
+          "body": "Secretary submits to president for review."
+        },
+        "finalize": {
+          "title": "Finalization",
+          "body": "President approves and generates the official PDF."
+        }
       },
       "send_email": {
-        "compose": { "title": "Compose", "body": "Open the club email editor." },
-        "templates": { "title": "Templates", "body": "Reuse templates to save time." }
+        "compose": {
+          "title": "Compose",
+          "body": "Open the club email editor."
+        },
+        "templates": {
+          "title": "Templates",
+          "body": "Reuse templates to save time."
+        }
       },
       "explore_calendar": {
-        "nav": { "title": "Navigation", "body": "Browse months to anticipate deadlines." },
-        "export": { "title": "ICS export", "body": "Share the calendar with members." }
+        "nav": {
+          "title": "Navigation",
+          "body": "Browse months to anticipate deadlines."
+        },
+        "export": {
+          "title": "ICS export",
+          "body": "Share the calendar with members."
+        }
       },
       "create_event": {
-        "new": { "title": "Create", "body": "Open the new event form." },
-        "list": { "title": "List", "body": "All events for the mandate appear here." }
+        "new": {
+          "title": "Create",
+          "body": "Open the new event form."
+        },
+        "list": {
+          "title": "List",
+          "body": "All events for the mandate appear here."
+        }
       },
       "configure_settings": {
-        "club": { "title": "Club profile", "body": "Name, location, officers and contacts." },
-        "workflow": { "title": "Workflow", "body": "Minutes approval, reminders and assistance." }
+        "club": {
+          "title": "Club profile",
+          "body": "Name, location, officers and contacts."
+        },
+        "workflow": {
+          "title": "Workflow",
+          "body": "Minutes approval, reminders and assistance."
+        }
       },
       "review_attendance": {
-        "overview": { "title": "Overview", "body": "Club-wide and per-member rates for the mandate." },
-        "export": { "title": "PDF export", "body": "Download the report for the district." }
+        "overview": {
+          "title": "Overview",
+          "body": "Club-wide and per-member rates for the mandate."
+        },
+        "export": {
+          "title": "PDF export",
+          "body": "Download the report for the district."
+        }
       },
       "update_profile": {
-        "info": { "title": "Your information", "body": "Check the link between user account and member record." },
-        "save": { "title": "Link account", "body": "Confirm association to access your data." }
+        "info": {
+          "title": "Your information",
+          "body": "Check the link between user account and member record."
+        },
+        "save": {
+          "title": "Link account",
+          "body": "Confirm association to access your data."
+        }
       },
       "manage_dues": {
-        "overview": { "title": "Dues overview", "body": "Payment status by member." },
-        "payment": { "title": "Record", "body": "Mark a dues period as paid." }
+        "overview": {
+          "title": "Dues overview",
+          "body": "Payment status by member."
+        },
+        "payment": {
+          "title": "Record",
+          "body": "Mark a dues period as paid."
+        }
       }
     },
     "feedback": {
@@ -1497,21 +1714,57 @@
       "skip": "Close",
       "useClubRole": "Use my current club role",
       "roles": {
-        "SECRETARY": { "title": "Secretary", "desc": "Minutes, meetings, live mode" },
-        "TREASURER": { "title": "Treasurer", "desc": "Dues, treasury, reports" },
-        "PRESIDENT": { "title": "President", "desc": "Approval, oversight, big picture" },
-        "VICE_PRESIDENT": { "title": "Vice President", "desc": "Deputy leadership and club oversight" },
-        "COMMISSION_CHAIR": { "title": "Commission Chair", "desc": "Commission meetings and projects" },
-        "READER": { "title": "Member / reader", "desc": "View minutes and club info" }
+        "SECRETARY": {
+          "title": "Secretary",
+          "desc": "Minutes, meetings, live mode"
+        },
+        "TREASURER": {
+          "title": "Treasurer",
+          "desc": "Dues, treasury, reports"
+        },
+        "PRESIDENT": {
+          "title": "President",
+          "desc": "Approval, oversight, big picture"
+        },
+        "VICE_PRESIDENT": {
+          "title": "Vice President",
+          "desc": "Deputy leadership and club oversight"
+        },
+        "COMMISSION_CHAIR": {
+          "title": "Commission Chair",
+          "desc": "Commission meetings and projects"
+        },
+        "READER": {
+          "title": "Member / reader",
+          "desc": "View minutes and club info"
+        }
       }
     },
     "glossary": {
-      "minute": { "term": "Minutes", "definition": "Official record of a meeting, archived and sometimes authenticated with a QR code." },
-      "live_mode": { "term": "Live mode", "definition": "Real-time notes and attendance during the meeting." },
-      "finalize": { "term": "Finalize", "definition": "Lock the minutes and generate the official unalterable PDF." },
-      "dues": { "term": "Dues", "definition": "Annual financial contribution of each member to the club." },
-      "mandate": { "term": "Mandate", "definition": "Term of the club board (typically one Rotary year)." },
-      "statutory": { "term": "Statutory meeting", "definition": "Regular club meeting with official agenda and required minutes." }
+      "minute": {
+        "term": "Minutes",
+        "definition": "Official record of a meeting, archived and sometimes authenticated with a QR code."
+      },
+      "live_mode": {
+        "term": "Live mode",
+        "definition": "Real-time notes and attendance during the meeting."
+      },
+      "finalize": {
+        "term": "Finalize",
+        "definition": "Lock the minutes and generate the official unalterable PDF."
+      },
+      "dues": {
+        "term": "Dues",
+        "definition": "Annual financial contribution of each member to the club."
+      },
+      "mandate": {
+        "term": "Mandate",
+        "definition": "Term of the club board (typically one Rotary year)."
+      },
+      "statutory": {
+        "term": "Statutory meeting",
+        "definition": "Regular club meeting with official agenda and required minutes."
+      }
     }
   },
   "onboarding": {
@@ -2634,6 +2887,41 @@
         "title": "Contact",
         "body": "Questions: legal@rotaryminutes.app"
       }
+    }
+  },
+  "projects": {
+    "title": "Projects",
+    "subtitle": "Track club projects and their related tasks.",
+    "addProject": "New project",
+    "fieldName": "Project name",
+    "description": "Description",
+    "status": "Status",
+    "owner": "Project owner",
+    "noOwner": "Unassigned",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "saveProject": "Create project",
+    "projectCreated": "Project created",
+    "search": "Search projects…",
+    "allStatuses": "All statuses",
+    "noProjects": "No projects yet",
+    "tasksProgress": "{done}/{total} tasks done · {open} open",
+    "ownedBy": "Owner: {name}",
+    "endsOn": "Due {date}",
+    "backToList": "All projects",
+    "tasksTitle": "Project tasks",
+    "addTask": "Add task",
+    "saveTask": "Save task",
+    "taskCreated": "Task created",
+    "noTasks": "No tasks on this project",
+    "statusUpdated": "Project status updated",
+    "deleteConfirm": "Delete this project? Tasks will be unlinked (not deleted).",
+    "statuses": {
+      "PLANNING": "Planning",
+      "ACTIVE": "Active",
+      "ON_HOLD": "On hold",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled"
     }
   }
 }
