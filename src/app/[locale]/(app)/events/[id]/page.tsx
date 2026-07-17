@@ -39,10 +39,10 @@ export default async function EventDetailPage({
           myRegistration={data.myRegistration}
           locale={locale}
         />
-        {"budget" in budgetData && (
+        {!("error" in budgetData) && (
           <EventBudgetPanel
             eventId={id}
-            currency={budgetData.currency}
+            currency={budgetData.currency ?? data.event.currency ?? "EUR"}
             locale={locale}
             canManage={budgetData.canManage}
             budget={budgetData.budget}

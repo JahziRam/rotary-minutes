@@ -768,7 +768,7 @@ export async function getEventBudget(eventId: string) {
 
   return {
     canManage,
-    currency: event.currency,
+    currency: event.currency || "EUR",
     budgetPlanned: planned,
     budgetNotes: event.budgetNotes,
     budget: {
