@@ -6,7 +6,13 @@ import {
   StyleSheet,
   Image,
 } from "@react-pdf/renderer";
-import type { MinuteAttendanceAnnex } from "@/lib/minute-attendance-annex";
+import {
+  annexColumnCount,
+  splitIntoColumns,
+  type AttendanceAnnexGroup,
+  type MinuteAttendanceAnnex,
+  type VisitorAnnexRow,
+} from "@/lib/minute-attendance-annex";
 import { ClubDefaultLogoPdf } from "@/components/brand/club-default-logo-pdf";
 import { ROTARY_BRAND, ROTARY_LOGO_DISPLAY } from "@/lib/rotary-brand";
 
@@ -130,19 +136,99 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
     color: C.royalBlue,
-    marginBottom: 12,
+    marginBottom: 4,
     textAlign: "center",
+  },
+  annexMeta: {
+    fontSize: 9,
+    color: C.muted,
+    textAlign: "center",
+    marginBottom: 12,
+  },
+  annexSummaryRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    marginBottom: 14,
+  },
+  annexChip: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    backgroundColor: C.offWhite,
+    borderRadius: 4,
+    border: `0.5pt solid ${C.border}`,
+  },
+  annexChipValue: {
+    fontSize: 10,
+    fontWeight: "bold",
+    color: C.royalBlue,
+    textAlign: "center",
+  },
+  annexChipLabel: {
+    fontSize: 7,
+    color: C.muted,
+    textAlign: "center",
+    marginTop: 1,
   },
   annexSubtitle: {
     fontSize: 11,
     fontWeight: "bold",
     color: C.royalBlue,
-    marginTop: 10,
-    marginBottom: 6,
+    marginTop: 6,
+    marginBottom: 8,
+    borderBottom: `1pt solid ${C.border}`,
+    paddingBottom: 4,
   },
-  annexListItem: { fontSize: 9, marginBottom: 2, paddingLeft: 8 },
-  annexCategory: { fontSize: 9, fontWeight: "bold", color: C.muted, marginBottom: 3 },
+  annexGroup: {
+    marginBottom: 10,
+    padding: 8,
+    backgroundColor: C.offWhite,
+    borderRadius: 4,
+    border: `0.5pt solid ${C.border}`,
+  },
+  annexGroupHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 6,
+    paddingBottom: 4,
+    borderBottom: `0.5pt solid ${C.border}`,
+  },
+  annexCategory: {
+    fontSize: 9,
+    fontWeight: "bold",
+    color: C.royalBlue,
+  },
+  annexCountBadge: {
+    fontSize: 8,
+    color: C.muted,
+    backgroundColor: C.white,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    border: `0.5pt solid ${C.border}`,
+  },
+  annexColumns: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  annexColumn: {
+    flex: 1,
+  },
+  annexListItem: {
+    fontSize: 8.5,
+    marginBottom: 2.5,
+    color: C.charcoal,
+  },
   annexEmpty: { fontSize: 9, color: C.muted, fontStyle: "italic" },
+  visitorRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 3,
+    gap: 4,
+  },
+  visitorName: { fontSize: 8.5, flex: 1, color: C.charcoal },
+  visitorType: { fontSize: 7.5, color: C.muted, maxWidth: "42%" },
 });
 
 export interface MinutePDFData {
@@ -237,12 +323,76 @@ function MinutePdfFooter({
   );
 }
 
+function NameColumns({ names }: { names: string[] }) {
+  const cols = splitIntoColumns(names, annexColumnCount(names.length));
+  return (
+    <View style={styles.annexColumns}>
+      {cols.map((col, colIdx) => (
+        <View key={`col-${colIdx}`} style={styles.annexColumn}>
+          {col.map((name, i) => (
+            <Text key={`${colIdx}-${i}`} style={styles.annexListItem}>
+              • {name}
+            </Text>
+          ))}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function MemberGroupBlock({ group }: { group: AttendanceAnnexGroup }) {
+  return (
+    <View style={styles.annexGroup} wrap={false} minPresenceAhead={56}>
+      <View style={styles.annexGroupHeader}>
+        <Text style={styles.annexCategory}>{group.label}</Text>
+        <Text style={styles.annexCountBadge}>{group.names.length}</Text>
+      </View>
+      <NameColumns names={group.names} />
+    </View>
+  );
+}
+
+function VisitorsBlock({
+  visitors,
+  noneLabel,
+}: {
+  visitors: VisitorAnnexRow[];
+  noneLabel: string;
+}) {
+  if (visitors.length === 0) {
+    return <Text style={styles.annexEmpty}>{noneLabel}</Text>;
+  }
+  const cols = splitIntoColumns(visitors, annexColumnCount(visitors.length));
+  return (
+    <View style={styles.annexGroup} wrap={false}>
+      <View style={styles.annexColumns}>
+        {cols.map((col, colIdx) => (
+          <View key={`vcol-${colIdx}`} style={styles.annexColumn}>
+            {col.map((visitor, i) => (
+              <View key={`${colIdx}-${i}`} style={styles.visitorRow}>
+                <Text style={styles.visitorName}>• {visitor.name}</Text>
+                <Text style={styles.visitorType}>{visitor.label}</Text>
+              </View>
+            ))}
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
 function AnnexPage({
   data,
   labels,
 }: {
   data: MinutePDFData;
-  labels: { title: string; attendanceList: string; visitorsList: string; none: string };
+  labels: {
+    title: string;
+    attendanceList: string;
+    visitorsList: string;
+    none: string;
+    meetingOf: string;
+  };
 }) {
   const annex = data.annex;
   if (!annex) return null;
@@ -251,6 +401,22 @@ function AnnexPage({
     <Page size="A4" style={styles.page} wrap>
       <View style={styles.accentBar} fixed />
       <Text style={styles.annexTitle}>{labels.title}</Text>
+      <Text style={styles.annexMeta}>
+        {labels.meetingOf} {data.meeting.date}
+        {data.meeting.location ? ` — ${data.meeting.location}` : ""}
+      </Text>
+
+      {/* Compact status summary chips */}
+      {annex.memberGroups.length > 0 ? (
+        <View style={styles.annexSummaryRow} wrap={false}>
+          {annex.memberGroups.map((group) => (
+            <View key={`chip-${group.category}`} style={styles.annexChip}>
+              <Text style={styles.annexChipValue}>{group.names.length}</Text>
+              <Text style={styles.annexChipLabel}>{group.label}</Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
 
       <Text style={styles.annexSubtitle}>
         {labels.attendanceList} ({annex.totalMembers})
@@ -259,31 +425,14 @@ function AnnexPage({
         <Text style={styles.annexEmpty}>{labels.none}</Text>
       ) : (
         annex.memberGroups.map((group) => (
-          <View key={group.category} style={{ marginBottom: 8 }} wrap={false}>
-            <Text style={styles.annexCategory}>
-              {group.label} ({group.names.length})
-            </Text>
-            {group.names.map((name, i) => (
-              <Text key={`${group.category}-${i}`} style={styles.annexListItem}>
-                • {name}
-              </Text>
-            ))}
-          </View>
+          <MemberGroupBlock key={group.category} group={group} />
         ))
       )}
 
       <Text style={styles.annexSubtitle}>
         {labels.visitorsList} ({annex.totalVisitors})
       </Text>
-      {annex.visitors.length === 0 ? (
-        <Text style={styles.annexEmpty}>{labels.none}</Text>
-      ) : (
-        annex.visitors.map((visitor, i) => (
-          <Text key={`visitor-${i}`} style={styles.annexListItem}>
-            • {visitor.name} — {visitor.label}
-          </Text>
-        ))
-      )}
+      <VisitorsBlock visitors={annex.visitors} noneLabel={labels.none} />
 
       <MinutePdfFooter data={data} leftLabel={`Annexe — ${data.club.name}`} />
     </Page>
@@ -297,6 +446,7 @@ export function MinutePDFDocument({ data }: { data: MinutePDFData }) {
     attendanceList: isFr ? "Liste de présence" : "Attendance list",
     visitorsList: isFr ? "Liste des visiteurs" : "Visitors list",
     none: isFr ? "Aucune entrée" : "No entries",
+    meetingOf: isFr ? "Réunion du" : "Meeting of",
   };
 
   return (

@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 import { calculateAttendanceRate, isAttendancePresent } from "@/lib/rotary";
 import {
+  annexColumnCount,
   buildMinuteAttendanceAnnex,
   MEMBER_ATTENDANCE_CATEGORIES,
 } from "@/lib/minute-attendance-annex";
@@ -235,19 +236,33 @@ export function MinutePreview({
             </div>
           </div>
 
-          {/* Annex — attendance & visitors */}
+          {/* Annex — attendance & visitors (compact multi-column) */}
           <div className="px-6 py-5 border-b border-gray-100 bg-[#faf9f7]">
             <h4 className="font-semibold text-gray-900 mb-1">{annexTitle}</h4>
-            <p className="text-xs text-gray-500 mb-4">
+            <p className="text-xs text-gray-500 mb-3">
               {locale === "fr"
                 ? "Listes enregistrées depuis la feuille de présence de la réunion."
                 : "Lists recorded from the meeting attendance sheet."}
             </p>
 
-            <div className="grid md:grid-cols-2 gap-6">
+            {annex.memberGroups.length > 0 ? (
+              <div className="flex flex-wrap gap-2 mb-4">
+                {annex.memberGroups.map((group) => (
+                  <div
+                    key={`chip-${group.category}`}
+                    className="rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-center min-w-[4.5rem]"
+                  >
+                    <p className="text-sm font-bold text-navy">{group.names.length}</p>
+                    <p className="text-[10px] text-gray-500 leading-tight">{group.label}</p>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
+            <div className="space-y-5">
               <div>
                 <h5
-                  className="text-sm font-semibold mb-2"
+                  className="text-sm font-semibold mb-2 pb-1 border-b border-gray-200"
                   style={{ color: ROTARY_BRAND.royalBlue }}
                 >
                   {attendanceListLabel} ({annex.totalMembers})
@@ -256,25 +271,47 @@ export function MinutePreview({
                   <p className="text-sm text-gray-400 italic">{noneLabel}</p>
                 ) : (
                   <div className="space-y-3">
-                    {annex.memberGroups.map((group) => (
-                      <div key={group.category}>
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                          {group.label} ({group.names.length})
-                        </p>
-                        <ul className="text-sm text-gray-800 space-y-0.5">
-                          {group.names.map((name) => (
-                            <li key={`${group.category}-${name}`}>• {name}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
+                    {annex.memberGroups.map((group) => {
+                      const cols = annexColumnCount(group.names.length);
+                      return (
+                        <div
+                          key={group.category}
+                          className="rounded-lg border border-gray-200 bg-white p-3"
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <p className="text-xs font-semibold text-navy uppercase tracking-wide">
+                              {group.label}
+                            </p>
+                            <span className="text-[10px] text-gray-500 bg-gray-50 border border-gray-100 rounded-full px-2 py-0.5">
+                              {group.names.length}
+                            </span>
+                          </div>
+                          <ul
+                            className="text-sm text-gray-800 gap-x-4 gap-y-0.5"
+                            style={{
+                              columnCount: cols,
+                              columnGap: "1.25rem",
+                            }}
+                          >
+                            {group.names.map((name) => (
+                              <li
+                                key={`${group.category}-${name}`}
+                                className="break-inside-avoid"
+                              >
+                                • {name}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
 
               <div>
                 <h5
-                  className="text-sm font-semibold mb-2"
+                  className="text-sm font-semibold mb-2 pb-1 border-b border-gray-200"
                   style={{ color: ROTARY_BRAND.royalBlue }}
                 >
                   {visitorsListLabel} ({annex.totalVisitors})
@@ -282,14 +319,27 @@ export function MinutePreview({
                 {annex.visitors.length === 0 ? (
                   <p className="text-sm text-gray-400 italic">{noneLabel}</p>
                 ) : (
-                  <ul className="text-sm text-gray-800 space-y-1">
-                    {annex.visitors.map((visitor) => (
-                      <li key={`${visitor.category}-${visitor.name}`}>
-                        • {visitor.name}
-                        <span className="text-gray-500"> — {visitor.label}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="rounded-lg border border-gray-200 bg-white p-3">
+                    <ul
+                      className="text-sm text-gray-800 gap-x-6 gap-y-1"
+                      style={{
+                        columnCount: annexColumnCount(annex.visitors.length),
+                        columnGap: "1.25rem",
+                      }}
+                    >
+                      {annex.visitors.map((visitor) => (
+                        <li
+                          key={`${visitor.category}-${visitor.name}`}
+                          className="break-inside-avoid flex justify-between gap-2"
+                        >
+                          <span>• {visitor.name}</span>
+                          <span className="text-xs text-gray-500 shrink-0">
+                            {visitor.label}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
               </div>
             </div>

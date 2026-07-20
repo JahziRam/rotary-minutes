@@ -118,3 +118,23 @@ export function buildMinuteAttendanceAnnex(
     totalVisitors: visitors.length,
   };
 }
+
+/** Column-first split (read top→bottom, then next column) for compact name lists. */
+export function splitIntoColumns<T>(items: T[], columns: number): T[][] {
+  const colCount = Math.max(1, Math.min(columns, items.length || 1));
+  if (items.length === 0) return Array.from({ length: colCount }, () => []);
+  const cols: T[][] = Array.from({ length: colCount }, () => []);
+  const perCol = Math.ceil(items.length / colCount);
+  for (let i = 0; i < items.length; i++) {
+    const col = Math.min(Math.floor(i / perCol), colCount - 1);
+    cols[col].push(items[i]);
+  }
+  return cols;
+}
+
+/** Adaptive columns: short lists stay single-column; long lists use 2–3 cols. */
+export function annexColumnCount(itemCount: number): number {
+  if (itemCount <= 8) return 1;
+  if (itemCount <= 24) return 2;
+  return 3;
+}
