@@ -13,9 +13,19 @@ import { ROTARY_BRAND, ROTARY_LOGO_DISPLAY } from "@/lib/rotary-brand";
 const C = ROTARY_BRAND;
 const clear = ROTARY_LOGO_DISPLAY.clearSpacePx * 0.75;
 
+/** Reserved band for fixed footer (QR + hash) so body content never overlaps. */
+const PAGE_PADDING_X = 40;
+const PAGE_PADDING_TOP = 40;
+const FOOTER_RESERVED_PT = 100;
+const FOOTER_BOTTOM_PT = 22;
+const FOOTER_HEIGHT_PT = 72;
+
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
+    paddingTop: PAGE_PADDING_TOP,
+    paddingHorizontal: PAGE_PADDING_X,
+    // Keep body clear of the absolute footer (QR + SHA-256 + page number).
+    paddingBottom: FOOTER_RESERVED_PT,
     fontSize: 10,
     fontFamily: "Helvetica",
     color: C.charcoal,
@@ -79,19 +89,32 @@ const styles = StyleSheet.create({
   agendaTitle: { fontWeight: "bold", marginBottom: 4 },
   footer: {
     position: "absolute",
-    bottom: 30,
-    left: 40,
-    right: 40,
+    bottom: FOOTER_BOTTOM_PT,
+    left: PAGE_PADDING_X,
+    right: PAGE_PADDING_X,
+    height: FOOTER_HEIGHT_PT,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-end",
     borderTop: `1pt solid ${C.border}`,
-    paddingTop: 10,
+    paddingTop: 8,
     fontSize: 8,
     color: C.muted,
   },
-  qr: { width: 60, height: 60 },
-  hash: { fontSize: 7, color: C.muted, marginTop: 4 },
+  footerMain: {
+    flex: 1,
+    paddingRight: 12,
+    justifyContent: "flex-end",
+  },
+  footerRight: {
+    alignItems: "flex-end",
+    justifyContent: "flex-end",
+    width: 70,
+  },
+  qr: { width: 52, height: 52 },
+  hash: { fontSize: 7, color: C.muted, marginTop: 3 },
+  verifyUrl: { fontSize: 6.5, color: C.muted, marginTop: 2 },
+  pageNumber: { fontSize: 8, color: C.muted, marginTop: 4 },
   stats: { flexDirection: "row", gap: 20, marginBottom: 15 },
   statBox: {
     flex: 1,
@@ -185,6 +208,35 @@ function PdfClubHeader({ data }: { data: MinutePDFData }) {
   );
 }
 
+function MinutePdfFooter({
+  data,
+  leftLabel,
+  showQr = false,
+}: {
+  data: MinutePDFData;
+  leftLabel: string;
+  showQr?: boolean;
+}) {
+  return (
+    <View style={styles.footer} fixed>
+      <View style={styles.footerMain}>
+        <Text>{leftLabel}</Text>
+        <Text style={styles.hash}>SHA-256: {data.hash.slice(0, 32)}…</Text>
+        {showQr ? <Text style={styles.verifyUrl}>{data.verifyUrl}</Text> : null}
+        <Text
+          style={styles.pageNumber}
+          render={({ pageNumber, totalPages }) => `Page ${pageNumber} / ${totalPages}`}
+        />
+      </View>
+      {showQr && data.qrCodeDataUrl ? (
+        <View style={styles.footerRight}>
+          <Image src={data.qrCodeDataUrl} style={styles.qr} />
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
 function AnnexPage({
   data,
   labels,
@@ -196,8 +248,8 @@ function AnnexPage({
   if (!annex) return null;
 
   return (
-    <Page size="A4" style={styles.page}>
-      <View style={styles.accentBar} />
+    <Page size="A4" style={styles.page} wrap>
+      <View style={styles.accentBar} fixed />
       <Text style={styles.annexTitle}>{labels.title}</Text>
 
       <Text style={styles.annexSubtitle}>
@@ -207,7 +259,7 @@ function AnnexPage({
         <Text style={styles.annexEmpty}>{labels.none}</Text>
       ) : (
         annex.memberGroups.map((group) => (
-          <View key={group.category} style={{ marginBottom: 8 }}>
+          <View key={group.category} style={{ marginBottom: 8 }} wrap={false}>
             <Text style={styles.annexCategory}>
               {group.label} ({group.names.length})
             </Text>
@@ -233,17 +285,7 @@ function AnnexPage({
         ))
       )}
 
-      <View style={styles.footer} fixed>
-        <View>
-          <Text>Annexe — {data.club.name}</Text>
-          <Text style={styles.hash}>SHA-256: {data.hash.slice(0, 32)}...</Text>
-        </View>
-        <Text
-          render={({ pageNumber, totalPages }) =>
-            `Page ${pageNumber} / ${totalPages}`
-          }
-        />
-      </View>
+      <MinutePdfFooter data={data} leftLabel={`Annexe — ${data.club.name}`} />
     </Page>
   );
 }
@@ -259,8 +301,8 @@ export function MinutePDFDocument({ data }: { data: MinutePDFData }) {
 
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
-        <View style={styles.accentBar} />
+      <Page size="A4" style={styles.page} wrap>
+        <View style={styles.accentBar} fixed />
         <PdfClubHeader data={data} />
 
         <Text style={styles.title}>{data.title}</Text>
@@ -268,7 +310,7 @@ export function MinutePDFDocument({ data }: { data: MinutePDFData }) {
           {data.meeting.date} — {data.meeting.location}
         </Text>
 
-        <View style={styles.section}>
+        <View style={styles.section} wrap={false}>
           <Text style={styles.sectionTitle}>Informations</Text>
           <View style={styles.row}>
             <Text style={styles.label}>Type</Text>
@@ -284,7 +326,7 @@ export function MinutePDFDocument({ data }: { data: MinutePDFData }) {
           </View>
         </View>
 
-        <View style={styles.stats}>
+        <View style={styles.stats} wrap={false}>
           <View style={styles.statBox}>
             <Text style={styles.statValue}>{data.attendances.present}</Text>
             <Text style={styles.statLabel}>Présents</Text>
@@ -302,7 +344,7 @@ export function MinutePDFDocument({ data }: { data: MinutePDFData }) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Ordre du jour</Text>
           {data.agendaItems.map((item, i) => (
-            <View key={i} style={styles.agendaItem}>
+            <View key={i} style={styles.agendaItem} wrap={false} minPresenceAhead={48}>
               <Text style={styles.agendaTitle}>
                 {i + 1}. {item.title}
               </Text>
@@ -319,23 +361,11 @@ export function MinutePDFDocument({ data }: { data: MinutePDFData }) {
           ))}
         </View>
 
-        <View style={styles.footer} fixed>
-          <View>
-            <Text>
-              Document authentifié — {data.club.name}
-            </Text>
-            <Text style={styles.hash}>SHA-256: {data.hash.slice(0, 32)}...</Text>
-            <Text>{data.verifyUrl}</Text>
-          </View>
-          {data.qrCodeDataUrl && (
-            <Image src={data.qrCodeDataUrl} style={styles.qr} />
-          )}
-          <Text
-            render={({ pageNumber, totalPages }) =>
-              `Page ${pageNumber} / ${totalPages}`
-            }
-          />
-        </View>
+        <MinutePdfFooter
+          data={data}
+          leftLabel={`Document authentifié — ${data.club.name}`}
+          showQr
+        />
       </Page>
       {data.annex && <AnnexPage data={data} labels={annexLabels} />}
     </Document>
