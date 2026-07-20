@@ -9,6 +9,11 @@ import { isFeatureEnabled, isFeatureVisibleInUi } from "@/lib/feature-gate";
 import { resolveMinuteVerifyUrl } from "@/lib/hash";
 import { getAppBaseUrl } from "@/lib/app-url";
 import { resolveClubBrandLogoSrc } from "@/lib/club-logo-resolution";
+import {
+  canOverrideMinuteLock,
+  isMinuteContentLocked,
+} from "@/lib/minute-lock";
+import { hasRolePermission } from "@/lib/roles";
 import { getMinuteMemberEmailCount } from "@/actions/minutes";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { MinutePreview } from "@/components/minutes/minute-preview";
@@ -64,6 +69,16 @@ export default async function MinuteDetailPage({
       ? await listMinuteComments(id)
       : { comments: [], canComment: false, canModerate: false };
 
+  const canEditMinutes =
+    isOwnClubMinute &&
+    !isDistrictReadOnly &&
+    !!ctx &&
+    (await hasRolePermission(ctx.role, "minutes.edit", ctx.isSuperAdmin, ctx.customRoleId));
+  const canEdit =
+    canEditMinutes &&
+    (!isMinuteContentLocked(minute.status) ||
+      (!!ctx && canOverrideMinuteLock(ctx)));
+
   return (
     <AppShellServer title="Aperçu du procès-verbal">
       <div className="space-y-6">
@@ -77,6 +92,7 @@ export default async function MinuteDetailPage({
           emailsEnabled={emailsEnabled && !isDistrictReadOnly}
           emailsVisible={emailsVisible && !isDistrictReadOnly}
           memberEmailCount={memberEmailCount}
+          canEdit={canEdit}
           data={{
             id: minute.id,
             title: minute.title,

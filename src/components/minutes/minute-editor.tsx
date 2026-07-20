@@ -64,6 +64,7 @@ export function MinuteEditor({
   highlightPostMeeting = false,
   minuteAiEnabled = false,
   minuteAiRemaining = 0,
+  canOverrideLock = false,
 }: {
   minute: MinuteData;
   clubId: string;
@@ -77,6 +78,8 @@ export function MinuteEditor({
   highlightPostMeeting?: boolean;
   minuteAiEnabled?: boolean;
   minuteAiRemaining?: number;
+  /** President / club admin may edit FINALIZED, ARCHIVED or REVIEW minutes. */
+  canOverrideLock?: boolean;
 }) {
   const t = useTranslations("minutes");
   const tAi = useTranslations("minutes.aiAssist");
@@ -96,7 +99,8 @@ export function MinuteEditor({
   const [isOffline, setIsOffline] = useState(false);
   const [status, setStatus] = useState(minute.status);
   const [, startTransition] = useTransition();
-  const readOnly = ["FINALIZED", "ARCHIVED", "REVIEW"].includes(status);
+  const isLockedStatus = ["FINALIZED", "ARCHIVED", "REVIEW"].includes(status);
+  const readOnly = isLockedStatus && !canOverrideLock;
 
   const syncAgendaItemIds = useCallback(
     (saved: Array<{ id: string; sortOrder: number }>) => {
@@ -111,7 +115,7 @@ export function MinuteEditor({
   );
 
   const doSave = useCallback(async () => {
-    if (["FINALIZED", "ARCHIVED", "REVIEW"].includes(status)) return;
+    if (["FINALIZED", "ARCHIVED", "REVIEW"].includes(status) && !canOverrideLock) return;
     setSaving(true);
     const payload = { agendaItems: items };
 
@@ -133,7 +137,7 @@ export function MinuteEditor({
       setLastSaved(new Date());
     }
     setSaving(false);
-  }, [minute.id, clubId, items, status, syncAgendaItemIds]);
+  }, [minute.id, clubId, items, status, canOverrideLock, syncAgendaItemIds]);
 
   const syncOfflineDrafts = useCallback(async () => {
     const drafts = await getUnsyncedDrafts();
@@ -280,10 +284,19 @@ export function MinuteEditor({
       )}
 
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Badge variant={status === "FINALIZED" ? "success" : status === "REVIEW" ? "default" : "warning"}>
             {statusLabel}
           </Badge>
+          {isLockedStatus && canOverrideLock && !readOnly ? (
+            <span className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-md px-2 py-0.5">
+              {locale === "fr"
+                ? "Modification exceptionnelle (président / admin)"
+                : locale === "es"
+                  ? "Edición excepcional (presidente / admin)"
+                  : "Override edit (president / admin)"}
+            </span>
+          ) : null}
           {isOffline ? (
             <span className="text-xs text-amber-600">{t("offlineDraft")}</span>
           ) : saving ? (
@@ -293,7 +306,7 @@ export function MinuteEditor({
           ) : null}
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={doSave} disabled={saving}>
+          <Button variant="outline" size="sm" onClick={doSave} disabled={saving || readOnly}>
             <Save className="h-4 w-4" />
             {tCommon("save")}
           </Button>
@@ -426,7 +439,8 @@ export function MinuteEditor({
                     value={item.decisions}
                     onChange={(e) => updateItem(item.id, "decisions", e.target.value)}
                     rows={2}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-navy focus:outline-none focus:ring-2 focus:ring-navy/20"
+                    disabled={readOnly}
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-navy focus:outline-none focus:ring-2 focus:ring-navy/20 disabled:opacity-60"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -435,19 +449,32 @@ export function MinuteEditor({
                     value={item.actions}
                     onChange={(e) => updateItem(item.id, "actions", e.target.value)}
                     rows={2}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-navy focus:outline-none focus:ring-2 focus:ring-navy/20"
+                    disabled={readOnly}
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-navy focus:outline-none focus:ring-2 focus:ring-navy/20 disabled:opacity-60"
                   />
                 </div>
               </div>
               <div className="grid sm:grid-cols-3 gap-3">
-                <Input label={t("responsible")} value={item.responsible} onChange={(e) => updateItem(item.id, "responsible", e.target.value)} />
-                <Input label={t("dueDate")} type="date" value={item.dueDate} onChange={(e) => updateItem(item.id, "dueDate", e.target.value)} />
+                <Input
+                  label={t("responsible")}
+                  value={item.responsible}
+                  onChange={(e) => updateItem(item.id, "responsible", e.target.value)}
+                  disabled={readOnly}
+                />
+                <Input
+                  label={t("dueDate")}
+                  type="date"
+                  value={item.dueDate}
+                  onChange={(e) => updateItem(item.id, "dueDate", e.target.value)}
+                  disabled={readOnly}
+                />
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium text-gray-700">{t("status")}</label>
                   <select
                     value={item.status}
                     onChange={(e) => updateItem(item.id, "status", e.target.value)}
-                    className="flex h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm"
+                    disabled={readOnly}
+                    className="flex h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm disabled:opacity-60"
                   >
                     <option value="OPEN">Ouvert</option>
                     <option value="IN_PROGRESS">En cours</option>

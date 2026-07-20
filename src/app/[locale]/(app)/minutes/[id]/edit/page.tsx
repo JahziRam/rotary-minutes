@@ -4,6 +4,7 @@ import { getMinuteById } from "@/actions/minutes";
 import { getClubContext } from "@/lib/club-context";
 import { prisma } from "@/lib/prisma";
 import { isFeatureEnabled, isFeatureVisibleInUi } from "@/lib/feature-gate";
+import { canOverrideMinuteLock } from "@/lib/minute-lock";
 import { hasRolePermission } from "@/lib/roles";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { MinuteEditor } from "@/components/minutes/minute-editor";
@@ -47,7 +48,9 @@ export default async function MinuteEditPage({
     },
   });
 
-  const isLocked = ["FINALIZED", "ARCHIVED"].includes(minute.status);
+  const canOverrideLock = canOverrideMinuteLock(ctx);
+  const isLocked =
+    ["FINALIZED", "ARCHIVED", "REVIEW"].includes(minute.status) && !canOverrideLock;
   const [commentsResult, minuteAiStatus] = await Promise.all([
     listMinuteComments(id),
     getMinuteAiStatus(),
@@ -71,6 +74,7 @@ export default async function MinuteEditPage({
         presidentApprovalRequired={club?.presidentApprovalRequired ?? true}
         memberEmailCount={memberEmailCount}
         highlightPostMeeting={ended === "1"}
+        canOverrideLock={canOverrideLock}
         minuteAiEnabled={
           "enabled" in minuteAiStatus ? !!minuteAiStatus.enabled : false
         }

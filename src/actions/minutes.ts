@@ -22,6 +22,7 @@ import {
   assertMinuteAccess,
   loadMinuteForContext,
 } from "@/lib/commission-scope";
+import { assertMinuteEditable } from "@/lib/minute-lock";
 import type { MinuteStatus, Prisma } from "@/generated/prisma/client";
 
 function revalidateMinutePaths(minuteId: string, locale?: string) {
@@ -65,9 +66,8 @@ export async function saveMinute(
     include: { agendaItems: true, versions: true },
   });
   if (!minuteFull) return { error: "NOT_FOUND" };
-  if (["FINALIZED", "ARCHIVED", "REVIEW"].includes(minuteFull.status)) {
-    return { error: "LOCKED" };
-  }
+  const lock = assertMinuteEditable(minuteFull.status, ctx);
+  if (lock) return lock;
 
   const currentSnapshot = await prisma.minute.findUnique({
     where: { id: minuteId },
@@ -125,6 +125,62 @@ export async function saveMinute(
     });
   }
 
+  // Keep integrity seal in sync when correcting an already-finalized PV.
+  if (minuteFull.status === "FINALIZED") {
+    const refreshed = await prisma.minute.findFirst({
+      where: { id: minuteId, clubId: ctx.clubId },
+      include: {
+        agendaItems: true,
+        meeting: { include: { attendances: attendanceWithMemberInclude } },
+      },
+    });
+    if (refreshed) {
+      const newHash = generateMinuteHash({
+        id: refreshed.id,
+        title: refreshed.title,
+        agendaItems: refreshed.agendaItems,
+        meeting: refreshed.meeting,
+        attendances: refreshed.meeting.attendances,
+      });
+      const baseUrl = getAppBaseUrl();
+      const verifyUrl = getVerifyUrl(newHash, baseUrl, "fr");
+      await prisma.minute.update({
+        where: { id: minuteId },
+        data: { contentHash: newHash, verifyUrl },
+      });
+      await prisma.auditLog.create({
+        data: {
+          clubId: ctx.clubId,
+          userId: ctx.userId,
+          action: "MINUTE_OVERRIDE_EDIT",
+          entity: "Minute",
+          entityId: minuteId,
+          metadata: {
+            previousStatus: minuteFull.status,
+            newHash,
+            role: ctx.role,
+            isSuperAdmin: ctx.isSuperAdmin,
+          },
+        },
+      });
+    }
+  } else if (minuteFull.status === "ARCHIVED" || minuteFull.status === "REVIEW") {
+    await prisma.auditLog.create({
+      data: {
+        clubId: ctx.clubId,
+        userId: ctx.userId,
+        action: "MINUTE_OVERRIDE_EDIT",
+        entity: "Minute",
+        entityId: minuteId,
+        metadata: {
+          previousStatus: minuteFull.status,
+          role: ctx.role,
+          isSuperAdmin: ctx.isSuperAdmin,
+        },
+      },
+    });
+  }
+
   revalidateMinutePaths(minuteId);
   return {
     success: true as const,
@@ -147,9 +203,8 @@ export async function applyAgendaTemplate(minuteId: string, locale: string) {
   if (!minute) return { error: "NOT_FOUND" };
   const access = await assertMinuteAccess(ctx, minute);
   if ("error" in access) return { error: access.error };
-  if (["FINALIZED", "ARCHIVED", "REVIEW"].includes(minute.status)) {
-    return { error: "LOCKED" };
-  }
+  const lock = assertMinuteEditable(minute.status, ctx);
+  if (lock) return lock;
 
   const templateItems = await getAgendaTemplateForMeeting(
     minute.meeting.type,

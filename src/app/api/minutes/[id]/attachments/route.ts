@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getClubContext } from "@/lib/club-context";
 import { hasRolePermission } from "@/lib/roles";
 import { loadMinuteForContext, assertMinuteAccess } from "@/lib/commission-scope";
+import { canOverrideMinuteLock } from "@/lib/minute-lock";
 import { uploadMinuteAttachmentFromBuffer } from "@/actions/minute-attachments";
 import { validateUploadFiles } from "@/lib/upload-limits";
 
@@ -30,7 +31,7 @@ export async function POST(
     return NextResponse.json({ error: access.error }, { status: 403 });
   }
 
-  if (minute.status === "ARCHIVED") {
+  if (minute.status === "ARCHIVED" && !canOverrideMinuteLock(ctx)) {
     return NextResponse.json({ error: "INVALID_STATUS" }, { status: 400 });
   }
 

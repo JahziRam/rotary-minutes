@@ -98,6 +98,7 @@ export function MinutePreview({
   emailsVisible = true,
   memberEmailCount = 0,
   hideBackLink = false,
+  canEdit = true,
 }: {
   data: MinutePreviewData;
   locale: string;
@@ -108,6 +109,8 @@ export function MinutePreview({
   emailsVisible?: boolean;
   memberEmailCount?: number;
   hideBackLink?: boolean;
+  /** When false, hides the edit CTA (e.g. district read-only or no override on locked PV). */
+  canEdit?: boolean;
 }) {
   const dateLocale = locale === "fr" ? fr : enUS;
   const meetingDate = new Date(data.meeting.date);
@@ -433,12 +436,16 @@ export function MinutePreview({
             )}
           </div>
 
-          {data.status !== "FINALIZED" && (
+          {canEdit && (
             <Link
               href={`/${locale}/minutes/${data.id}/edit`}
               className="flex items-center justify-center w-full h-10 rounded-xl bg-gold text-navy-dark text-sm font-semibold hover:bg-gold-light transition-colors"
             >
-              Modifier le PV
+              {locale === "fr"
+                ? "Modifier le PV"
+                : locale === "es"
+                  ? "Editar el acta"
+                  : "Edit minutes"}
             </Link>
           )}
         </div>

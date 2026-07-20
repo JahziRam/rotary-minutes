@@ -7,6 +7,7 @@ import {
   assertMinuteAccess,
   loadMinuteForContext,
 } from "@/lib/commission-scope";
+import { assertMinuteEditable } from "@/lib/minute-lock";
 import { polishAgendaItemNotes } from "@/lib/minute-ai";
 import { resolveMinuteAiAccess } from "@/lib/minute-ai-access";
 import {
@@ -61,9 +62,8 @@ export async function polishMinuteAgendaItem(
 
   const minute = await loadMinuteForContext(ctx, minuteId);
   if (!minute) return { error: "NOT_FOUND" as const };
-  if (["FINALIZED", "ARCHIVED"].includes(minute.status)) {
-    return { error: "LOCKED" as const };
-  }
+  const lock = assertMinuteEditable(minute.status, ctx);
+  if (lock) return lock;
 
   const accessMeeting = await assertMinuteAccess(ctx, minute);
   if ("error" in accessMeeting) return { error: accessMeeting.error };

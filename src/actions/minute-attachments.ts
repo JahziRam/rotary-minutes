@@ -18,6 +18,7 @@ import {
   isMinuteUserAttachment,
   titleFromFileName,
 } from "@/lib/minute-attachments";
+import { canOverrideMinuteLock } from "@/lib/minute-lock";
 import { hasRolePermission } from "@/lib/roles";
 import { validateUploadFileSize, validateUploadFiles } from "@/lib/upload-limits";
 
@@ -93,9 +94,10 @@ export async function listMinuteAttachments(minuteId: string) {
     },
   });
 
+  const hasEdit = await hasRolePermission(ctx.role, "minutes.edit", ctx.isSuperAdmin);
   const canManage =
-    minute.status !== "ARCHIVED" &&
-    (await hasRolePermission(ctx.role, "minutes.edit", ctx.isSuperAdmin));
+    hasEdit &&
+    (minute.status !== "ARCHIVED" || canOverrideMinuteLock(ctx));
 
   return {
     attachments: attachments.map(mapAttachmentRow),
@@ -116,7 +118,7 @@ export async function uploadMinuteAttachmentFromBuffer(
   if ("error" in loaded) return loaded;
   const { ctx, minute } = loaded;
 
-  if (minute.status === "ARCHIVED") {
+  if (minute.status === "ARCHIVED" && !canOverrideMinuteLock(ctx)) {
     return { error: "INVALID_STATUS" as const };
   }
 
@@ -243,7 +245,7 @@ export async function deleteMinuteAttachment(attachmentId: string) {
   const access = await assertMinuteAccess(ctx, doc.minute);
   if ("error" in access) return { error: access.error };
 
-  if (doc.minute.status === "ARCHIVED") {
+  if (doc.minute.status === "ARCHIVED" && !canOverrideMinuteLock(ctx)) {
     return { error: "INVALID_STATUS" as const };
   }
 

@@ -8,6 +8,7 @@ import {
   enrichAgendaFromMeeting,
 } from "@/lib/minute-auto-generate";
 import { attendanceWithMemberInclude } from "@/lib/pdf/build-minute-pdf";
+import { assertMinuteEditable } from "@/lib/minute-lock";
 
 function revalidateMinute(minuteId: string) {
   for (const loc of ["fr", "en"]) {
@@ -30,9 +31,8 @@ export async function autoGenerateMinuteFromMeeting(minuteId: string, locale = "
     },
   });
   if (!minute) return { error: "NOT_FOUND" as const };
-  if (["FINALIZED", "ARCHIVED"].includes(minute.status)) {
-    return { error: "LOCKED" as const };
-  }
+  const lock = assertMinuteEditable(minute.status, ctx);
+  if (lock) return lock;
 
   const meeting = {
     date: minute.meeting.date,
