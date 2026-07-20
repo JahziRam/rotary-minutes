@@ -8,6 +8,7 @@ import {
 } from "@/lib/member-dedup";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/require-permission";
+import { formatPersonNameParts } from "@/lib/format-person-name";
 
 function revalidateMembers() {
   for (const loc of ["fr", "en"]) {
@@ -68,12 +69,13 @@ export async function importMembersFromCsv(csv: string) {
 
   for (let i = 1; i < lines.length; i++) {
     const cols = parseCsvLine(lines[i]);
-    const firstName = cols[firstNameIdx]?.trim();
-    const lastName = cols[lastNameIdx]?.trim();
-    if (!firstName || !lastName) {
+    const rawFirst = cols[firstNameIdx]?.trim();
+    const rawLast = cols[lastNameIdx]?.trim();
+    if (!rawFirst || !rawLast) {
       skipped++;
       continue;
     }
+    const { firstName, lastName } = formatPersonNameParts(rawFirst, rawLast);
 
     const email = cols[idx("email")]?.trim().toLowerCase() || null;
     const phone = cols[idx("phone")]?.trim() || null;

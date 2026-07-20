@@ -1,5 +1,7 @@
 "use client";
 
+import { formatPersonName } from "@/lib/format-person-name";
+
 export type OfficerMemberOption = {
   id: string;
   firstName: string;
@@ -7,7 +9,7 @@ export type OfficerMemberOption = {
 };
 
 function memberLabel(m: OfficerMemberOption) {
-  return `${m.firstName} ${m.lastName}`.trim();
+  return formatPersonName(m.firstName, m.lastName);
 }
 
 /**

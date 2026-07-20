@@ -10,6 +10,7 @@ import {
 } from "@/lib/member-roles";
 import type { ClubRole } from "@/generated/prisma/client";
 import { findMemberDuplicateInClub } from "@/lib/member-dedup";
+import { formatPersonNameParts } from "@/lib/format-person-name";
 
 function revalidateMembers() {
   for (const loc of ["fr", "en", "es"]) {
@@ -44,11 +45,13 @@ export async function createMember(data: {
   if (auth.error) return { error: auth.error };
   const { ctx } = auth;
 
+  const nameParts = formatPersonNameParts(data.firstName, data.lastName);
+
   const duplicate = await findMemberDuplicateInClub(ctx.clubId, {
     email: data.email,
     registrationNumber: data.registrationNumber,
-    firstName: data.firstName,
-    lastName: data.lastName,
+    firstName: nameParts.firstName,
+    lastName: nameParts.lastName,
   });
   if (duplicate) {
     return { error: "DUPLICATE_MEMBER" as const };
@@ -57,8 +60,8 @@ export async function createMember(data: {
   const member = await prisma.member.create({
     data: {
       clubId: ctx.clubId,
-      firstName: data.firstName,
-      lastName: data.lastName,
+      firstName: nameParts.firstName,
+      lastName: nameParts.lastName,
       email: data.email || null,
       phone: data.phone || null,
       registrationNumber: data.registrationNumber?.trim() || null,
@@ -155,11 +158,21 @@ export async function updateMember(
   });
   if (!existing) return { error: "NOT_FOUND" };
 
+  const nameParts =
+    data.firstName !== undefined || data.lastName !== undefined
+      ? formatPersonNameParts(
+          data.firstName ?? existing.firstName,
+          data.lastName ?? existing.lastName
+        )
+      : null;
+
   await prisma.member.update({
     where: { id: memberId },
     data: {
-      ...(data.firstName && { firstName: data.firstName }),
-      ...(data.lastName && { lastName: data.lastName }),
+      ...(nameParts && {
+        firstName: nameParts.firstName,
+        lastName: nameParts.lastName,
+      }),
       ...(data.email !== undefined && { email: data.email || null }),
       ...(data.phone !== undefined && { phone: data.phone || null }),
       ...(data.registrationNumber !== undefined && {

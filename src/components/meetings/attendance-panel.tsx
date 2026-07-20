@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Toast } from "@/components/ui/toast";
 import { computeLiveAttendanceRate, isAttendancePresent } from "@/lib/rotary";
+import { formatPersonName } from "@/lib/format-person-name";
 import { saveMeetingAttendance } from "@/actions/attendance";
 import { cn } from "@/lib/utils";
 
@@ -89,7 +90,7 @@ export function AttendancePanel({
             {members.map((member) => (
               <div key={member.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 gap-2">
                 <span className="text-sm font-medium shrink-0">
-                  {member.firstName} {member.lastName}
+                  {formatPersonName(member.firstName, member.lastName)}
                 </span>
                 <div className="flex gap-1 flex-wrap justify-end">
                   {CATEGORIES.map((cat) => (

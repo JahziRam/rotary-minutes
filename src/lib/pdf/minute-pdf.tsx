@@ -19,24 +19,30 @@ import { ROTARY_BRAND, ROTARY_LOGO_DISPLAY } from "@/lib/rotary-brand";
 const C = ROTARY_BRAND;
 const clear = ROTARY_LOGO_DISPLAY.clearSpacePx * 0.75;
 
-/** Reserved band for fixed footer (QR + hash) so body content never overlaps. */
+/** Reserved band for fixed footer (QR + auth) so body content never overlaps. */
 const PAGE_PADDING_X = 40;
 const PAGE_PADDING_TOP = 40;
 const FOOTER_RESERVED_PT = 100;
 const FOOTER_BOTTOM_PT = 22;
 const FOOTER_HEIGHT_PT = 72;
 
+/**
+ * Layout mix (validé) :
+ * - Header : PV actuel (logo + clear space, non détérioré)
+ * - Corps : proposition 4 (compte-rendu clair)
+ * - Annexe : proposition 3 (compacte multi-colonnes + chips)
+ */
 const styles = StyleSheet.create({
   page: {
     paddingTop: PAGE_PADDING_TOP,
     paddingHorizontal: PAGE_PADDING_X,
-    // Keep body clear of the absolute footer (QR + SHA-256 + page number).
     paddingBottom: FOOTER_RESERVED_PT,
     fontSize: 10,
     fontFamily: "Helvetica",
     color: C.charcoal,
     backgroundColor: C.white,
   },
+  /* ── Header actuel (inchangé) ───────────────────────────────────────── */
   accentBar: {
     height: 3,
     backgroundColor: C.royalBlue,
@@ -58,41 +64,110 @@ const styles = StyleSheet.create({
     height: ROTARY_LOGO_DISPLAY.pdfMaxHeightPt,
     objectFit: "contain",
   },
-
   clubInfo: { textAlign: "right", fontSize: 9, color: C.muted, flex: 1, marginLeft: 16 },
   clubNameSide: { fontWeight: "bold", color: C.royalBlue, fontSize: 11, marginBottom: 4 },
+
+  /* ── Corps (proposition 4) ──────────────────────────────────────────── */
   title: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "bold",
-    color: C.royalBlue,
-    marginBottom: 5,
-    textAlign: "center",
+    color: C.charcoal,
+    marginBottom: 6,
   },
-  subtitle: {
-    fontSize: 11,
-    color: C.muted,
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  section: { marginBottom: 15 },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: "bold",
-    color: C.royalBlue,
-    marginBottom: 8,
-    borderBottom: `1pt solid ${C.border}`,
-    paddingBottom: 4,
-  },
-  row: { flexDirection: "row", marginBottom: 3 },
-  label: { width: 120, color: C.muted },
-  value: { flex: 1 },
-  agendaItem: {
-    marginBottom: 10,
-    padding: 8,
+  dateBand: {
     backgroundColor: C.offWhite,
     borderRadius: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    marginBottom: 12,
+    borderWidth: 0.5,
+    borderColor: C.border,
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
-  agendaTitle: { fontWeight: "bold", marginBottom: 4 },
+  dateBandText: { fontSize: 9, color: C.charcoal },
+  dateBandStrong: { fontFamily: "Helvetica-Bold", color: C.royalBlue },
+  metaRow: {
+    flexDirection: "row",
+    marginBottom: 12,
+    gap: 8,
+  },
+  metaPill: {
+    flex: 1,
+    padding: 8,
+    backgroundColor: "#E8F0FA",
+    borderRadius: 4,
+  },
+  metaLbl: { fontSize: 7, color: C.muted, marginBottom: 2 },
+  metaVal: { fontSize: 9, fontFamily: "Helvetica-Bold", color: C.royalBlue },
+  stats: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 14,
+  },
+  stat: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 8,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: C.royalBlue,
+  },
+  statVal: { fontSize: 13, fontFamily: "Helvetica-Bold", color: C.royalBlue },
+  statLbl: { fontSize: 7, color: C.muted, marginTop: 2 },
+  sectionHead: {
+    fontSize: 10,
+    fontFamily: "Helvetica-Bold",
+    color: C.white,
+    backgroundColor: C.royalBlue,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 3,
+    marginBottom: 10,
+  },
+  agendaCard: {
+    marginBottom: 10,
+    padding: 9,
+    borderWidth: 0.5,
+    borderColor: C.border,
+    borderRadius: 5,
+    backgroundColor: C.white,
+  },
+  agendaHead: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 5,
+  },
+  agendaNum: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: C.gold,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  agendaNumText: { fontSize: 9, fontFamily: "Helvetica-Bold", color: C.charcoal },
+  agendaTitle: { flex: 1, fontSize: 10, fontFamily: "Helvetica-Bold" },
+  agendaDesc: { fontSize: 9, lineHeight: 1.35, color: C.charcoal, marginBottom: 4 },
+  lineDec: {
+    fontSize: 8,
+    color: C.royalBlue,
+    marginTop: 3,
+    paddingLeft: 6,
+    borderLeftWidth: 2,
+    borderLeftColor: C.royalBlue,
+  },
+  lineAct: {
+    fontSize: 8,
+    color: "#047857",
+    marginTop: 3,
+    paddingLeft: 6,
+    borderLeftWidth: 2,
+    borderLeftColor: "#047857",
+  },
+
+  /* ── Footer ─────────────────────────────────────────────────────────── */
   footer: {
     position: "absolute",
     bottom: FOOTER_BOTTOM_PT,
@@ -118,26 +193,21 @@ const styles = StyleSheet.create({
     width: 70,
   },
   qr: { width: 52, height: 52 },
-  hash: { fontSize: 7, color: C.muted, marginTop: 3 },
-  verifyUrl: { fontSize: 6.5, color: C.muted, marginTop: 2 },
-  pageNumber: { fontSize: 8, color: C.muted, marginTop: 4 },
-  stats: { flexDirection: "row", gap: 20, marginBottom: 15 },
-  statBox: {
-    flex: 1,
-    padding: 8,
-    backgroundColor: C.offWhite,
-    borderRadius: 4,
-    textAlign: "center",
-    border: `0.5pt solid ${C.border}`,
-  },
-  statValue: { fontSize: 14, fontWeight: "bold", color: C.royalBlue },
-  statLabel: { fontSize: 8, color: C.muted },
-  annexTitle: {
-    fontSize: 14,
-    fontWeight: "bold",
+  footerAuth: {
+    fontSize: 8,
+    fontFamily: "Helvetica-Bold",
     color: C.royalBlue,
-    marginBottom: 4,
+  },
+  footerHint: { fontSize: 7.5, color: C.muted, marginTop: 3 },
+  pageNumber: { fontSize: 8, color: C.muted, marginTop: 4 },
+
+  /* ── Annexe (proposition 3) ─────────────────────────────────────────── */
+  annexTitle: {
+    fontSize: 12,
+    fontFamily: "Helvetica-Bold",
+    color: C.royalBlue,
     textAlign: "center",
+    marginBottom: 4,
   },
   annexMeta: {
     fontSize: 9,
@@ -149,18 +219,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 6,
-    marginBottom: 14,
+    marginBottom: 12,
   },
   annexChip: {
     paddingVertical: 4,
     paddingHorizontal: 8,
     backgroundColor: C.offWhite,
     borderRadius: 4,
-    border: `0.5pt solid ${C.border}`,
+    borderWidth: 0.5,
+    borderColor: C.border,
   },
   annexChipValue: {
     fontSize: 10,
-    fontWeight: "bold",
+    fontFamily: "Helvetica-Bold",
     color: C.royalBlue,
     textAlign: "center",
   },
@@ -172,31 +243,34 @@ const styles = StyleSheet.create({
   },
   annexSubtitle: {
     fontSize: 11,
-    fontWeight: "bold",
+    fontFamily: "Helvetica-Bold",
     color: C.royalBlue,
-    marginTop: 6,
+    marginTop: 4,
     marginBottom: 8,
-    borderBottom: `1pt solid ${C.border}`,
     paddingBottom: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: C.border,
   },
   annexGroup: {
-    marginBottom: 10,
+    marginBottom: 8,
     padding: 8,
     backgroundColor: C.offWhite,
     borderRadius: 4,
-    border: `0.5pt solid ${C.border}`,
+    borderWidth: 0.5,
+    borderColor: C.border,
   },
   annexGroupHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 6,
-    paddingBottom: 4,
-    borderBottom: `0.5pt solid ${C.border}`,
+    marginBottom: 5,
+    paddingBottom: 3,
+    borderBottomWidth: 0.5,
+    borderBottomColor: C.border,
   },
   annexCategory: {
     fontSize: 9,
-    fontWeight: "bold",
+    fontFamily: "Helvetica-Bold",
     color: C.royalBlue,
   },
   annexCountBadge: {
@@ -206,18 +280,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 8,
-    border: `0.5pt solid ${C.border}`,
+    borderWidth: 0.5,
+    borderColor: C.border,
   },
   annexColumns: {
     flexDirection: "row",
-    gap: 8,
+    gap: 6,
   },
   annexColumn: {
     flex: 1,
   },
   annexListItem: {
-    fontSize: 8.5,
-    marginBottom: 2.5,
+    fontSize: 8,
+    marginBottom: 2,
     color: C.charcoal,
   },
   annexEmpty: { fontSize: 9, color: C.muted, fontStyle: "italic" },
@@ -227,7 +302,7 @@ const styles = StyleSheet.create({
     marginBottom: 3,
     gap: 4,
   },
-  visitorName: { fontSize: 8.5, flex: 1, color: C.charcoal },
+  visitorName: { fontSize: 8, flex: 1, color: C.charcoal },
   visitorType: { fontSize: 7.5, color: C.muted, maxWidth: "42%" },
 });
 
@@ -298,17 +373,21 @@ function MinutePdfFooter({
   data,
   leftLabel,
   showQr = false,
+  verifyHint,
 }: {
   data: MinutePDFData;
   leftLabel: string;
   showQr?: boolean;
+  /** Short line under auth label (replaces raw SHA-256). */
+  verifyHint?: string;
 }) {
   return (
     <View style={styles.footer} fixed>
       <View style={styles.footerMain}>
-        <Text>{leftLabel}</Text>
-        <Text style={styles.hash}>SHA-256: {data.hash.slice(0, 32)}…</Text>
-        {showQr ? <Text style={styles.verifyUrl}>{data.verifyUrl}</Text> : null}
+        <Text style={styles.footerAuth}>{leftLabel}</Text>
+        {showQr && verifyHint ? (
+          <Text style={styles.footerHint}>{verifyHint}</Text>
+        ) : null}
         <Text
           style={styles.pageNumber}
           render={({ pageNumber, totalPages }) => `Page ${pageNumber} / ${totalPages}`}
@@ -381,6 +460,7 @@ function VisitorsBlock({
   );
 }
 
+/** Annexe — proposition 3 (chips + groupes multi-colonnes). */
 function AnnexPage({
   data,
   labels,
@@ -392,6 +472,15 @@ function AnnexPage({
     visitorsList: string;
     none: string;
     meetingOf: string;
+    presentLabel: string;
+    absentLabel: string;
+    rateLabel: string;
+    typeLabel: string;
+    presidedLabel: string;
+    secretaryLabel: string;
+    agendaLabel: string;
+    decisionLabel: string;
+    actionLabel: string;
   };
 }) {
   const annex = data.annex;
@@ -400,13 +489,14 @@ function AnnexPage({
   return (
     <Page size="A4" style={styles.page} wrap>
       <View style={styles.accentBar} fixed />
+      <PdfClubHeader data={data} />
+
       <Text style={styles.annexTitle}>{labels.title}</Text>
       <Text style={styles.annexMeta}>
         {labels.meetingOf} {data.meeting.date}
         {data.meeting.location ? ` — ${data.meeting.location}` : ""}
       </Text>
 
-      {/* Compact status summary chips */}
       {annex.memberGroups.length > 0 ? (
         <View style={styles.annexSummaryRow} wrap={false}>
           {annex.memberGroups.map((group) => (
@@ -415,6 +505,12 @@ function AnnexPage({
               <Text style={styles.annexChipLabel}>{group.label}</Text>
             </View>
           ))}
+          {annex.totalVisitors > 0 ? (
+            <View style={styles.annexChip}>
+              <Text style={styles.annexChipValue}>{annex.totalVisitors}</Text>
+              <Text style={styles.annexChipLabel}>{labels.visitorsList}</Text>
+            </View>
+          ) : null}
         </View>
       ) : null}
 
@@ -440,84 +536,123 @@ function AnnexPage({
 }
 
 export function MinutePDFDocument({ data }: { data: MinutePDFData }) {
-  const isFr = data.locale !== "en";
-  const annexLabels = {
-    title: isFr ? "Annexe — Présences et visiteurs" : "Annex — Attendance and visitors",
-    attendanceList: isFr ? "Liste de présence" : "Attendance list",
-    visitorsList: isFr ? "Liste des visiteurs" : "Visitors list",
-    none: isFr ? "Aucune entrée" : "No entries",
-    meetingOf: isFr ? "Réunion du" : "Meeting of",
+  const isFr = data.locale !== "en" && data.locale !== "es";
+  const isEs = data.locale === "es";
+
+  const labels = {
+    title: isFr
+      ? "Annexe — Présences et visiteurs"
+      : isEs
+        ? "Anexo — Asistencias y visitantes"
+        : "Annex — Attendance and visitors",
+    attendanceList: isFr ? "Liste de présence" : isEs ? "Lista de asistencia" : "Attendance list",
+    visitorsList: isFr ? "Visiteurs" : isEs ? "Visitantes" : "Visitors",
+    none: isFr ? "Aucune entrée" : isEs ? "Sin entradas" : "No entries",
+    meetingOf: isFr ? "Réunion du" : isEs ? "Reunión del" : "Meeting of",
+    presentLabel: isFr ? "Présents" : isEs ? "Presentes" : "Present",
+    absentLabel: isFr ? "Absents" : isEs ? "Ausentes" : "Absent",
+    rateLabel: isFr ? "Assiduité" : isEs ? "Asistencia" : "Attendance",
+    typeLabel: isFr ? "Type" : isEs ? "Tipo" : "Type",
+    presidedLabel: isFr ? "Présidée par" : isEs ? "Presidida por" : "Presided by",
+    secretaryLabel: isFr ? "Secrétaire" : isEs ? "Secretario/a" : "Secretary",
+    agendaLabel: isFr ? "Ordre du jour" : isEs ? "Orden del día" : "Agenda",
+    decisionLabel: isFr ? "Décision" : isEs ? "Decisión" : "Decision",
+    actionLabel: isFr ? "Action" : isEs ? "Acción" : "Action",
+    verifyHint: isFr
+      ? "Scannez le QR pour vérifier l’authenticité en ligne"
+      : isEs
+        ? "Escanee el QR para verificar la autenticidad en línea"
+        : "Scan the QR code to verify authenticity online",
   };
+
+  const authLabel = isFr
+    ? `Document authentifié — ${data.club.name}`
+    : isEs
+      ? `Documento autenticado — ${data.club.name}`
+      : `Authenticated document — ${data.club.name}`;
 
   return (
     <Document>
+      {/* Corps — proposition 4 */}
       <Page size="A4" style={styles.page} wrap>
         <View style={styles.accentBar} fixed />
         <PdfClubHeader data={data} />
 
         <Text style={styles.title}>{data.title}</Text>
-        <Text style={styles.subtitle}>
-          {data.meeting.date} — {data.meeting.location}
-        </Text>
 
-        <View style={styles.section} wrap={false}>
-          <Text style={styles.sectionTitle}>Informations</Text>
-          <View style={styles.row}>
-            <Text style={styles.label}>Type</Text>
-            <Text style={styles.value}>{data.meeting.type}</Text>
+        <View style={styles.dateBand} wrap={false}>
+          <Text style={styles.dateBandText}>
+            <Text style={styles.dateBandStrong}>{data.meeting.date}</Text>
+          </Text>
+          {data.meeting.location ? (
+            <Text style={styles.dateBandText}>{data.meeting.location}</Text>
+          ) : null}
+        </View>
+
+        <View style={styles.metaRow} wrap={false}>
+          <View style={styles.metaPill}>
+            <Text style={styles.metaLbl}>{labels.typeLabel}</Text>
+            <Text style={styles.metaVal}>{data.meeting.type}</Text>
           </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Présidée par</Text>
-            <Text style={styles.value}>{data.meeting.presidedBy}</Text>
+          <View style={styles.metaPill}>
+            <Text style={styles.metaLbl}>{labels.presidedLabel}</Text>
+            <Text style={styles.metaVal}>{data.meeting.presidedBy || "—"}</Text>
           </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Secrétaire</Text>
-            <Text style={styles.value}>{data.meeting.secretary}</Text>
+          <View style={styles.metaPill}>
+            <Text style={styles.metaLbl}>{labels.secretaryLabel}</Text>
+            <Text style={styles.metaVal}>{data.meeting.secretary || "—"}</Text>
           </View>
         </View>
 
         <View style={styles.stats} wrap={false}>
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>{data.attendances.present}</Text>
-            <Text style={styles.statLabel}>Présents</Text>
+          <View style={styles.stat}>
+            <Text style={styles.statVal}>{data.attendances.present}</Text>
+            <Text style={styles.statLbl}>{labels.presentLabel}</Text>
           </View>
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>{data.attendances.absent}</Text>
-            <Text style={styles.statLabel}>Absents</Text>
+          <View style={styles.stat}>
+            <Text style={styles.statVal}>{data.attendances.absent}</Text>
+            <Text style={styles.statLbl}>{labels.absentLabel}</Text>
           </View>
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>{data.attendances.rate}%</Text>
-            <Text style={styles.statLabel}>Assiduité</Text>
+          <View style={styles.stat}>
+            <Text style={styles.statVal}>{data.attendances.rate}%</Text>
+            <Text style={styles.statLbl}>{labels.rateLabel}</Text>
           </View>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Ordre du jour</Text>
-          {data.agendaItems.map((item, i) => (
-            <View key={i} style={styles.agendaItem} wrap={false} minPresenceAhead={48}>
-              <Text style={styles.agendaTitle}>
-                {i + 1}. {item.title}
-              </Text>
-              {item.description && <Text>{item.description}</Text>}
-              {item.decisions && (
-                <Text style={{ marginTop: 4 }}>
-                  Décisions : {item.decisions}
-                </Text>
-              )}
-              {item.actions && (
-                <Text style={{ marginTop: 2 }}>Actions : {item.actions}</Text>
-              )}
+        <Text style={styles.sectionHead}>{labels.agendaLabel}</Text>
+        {data.agendaItems.map((item, i) => (
+          <View key={i} style={styles.agendaCard} wrap={false} minPresenceAhead={48}>
+            <View style={styles.agendaHead}>
+              <View style={styles.agendaNum}>
+                <Text style={styles.agendaNumText}>{i + 1}</Text>
+              </View>
+              <Text style={styles.agendaTitle}>{item.title}</Text>
             </View>
-          ))}
-        </View>
+            {item.description ? (
+              <Text style={styles.agendaDesc}>{item.description}</Text>
+            ) : null}
+            {item.decisions ? (
+              <Text style={styles.lineDec}>
+                {labels.decisionLabel} — {item.decisions}
+              </Text>
+            ) : null}
+            {item.actions ? (
+              <Text style={styles.lineAct}>
+                {labels.actionLabel} — {item.actions}
+              </Text>
+            ) : null}
+          </View>
+        ))}
 
         <MinutePdfFooter
           data={data}
-          leftLabel={`Document authentifié — ${data.club.name}`}
+          leftLabel={authLabel}
           showQr
+          verifyHint={labels.verifyHint}
         />
       </Page>
-      {data.annex && <AnnexPage data={data} labels={annexLabels} />}
+
+      {data.annex ? <AnnexPage data={data} labels={labels} /> : null}
     </Document>
   );
 }

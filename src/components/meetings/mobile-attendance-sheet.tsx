@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Toast } from "@/components/ui/toast";
 import { saveMeetingAttendance, type AttendanceEntry } from "@/actions/attendance";
+import { formatPersonName } from "@/lib/format-person-name";
 import { isAttendancePresent } from "@/lib/rotary";
 import { cn } from "@/lib/utils";
 
@@ -165,7 +166,7 @@ export function MobileAttendanceSheet({
             className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm"
           >
             <p className="font-medium text-gray-900 text-sm mb-2">
-              {member.firstName} {member.lastName}
+              {formatPersonName(member.firstName, member.lastName)}
             </p>
             <div className="flex flex-wrap gap-1.5">
               {MEMBER_CATEGORIES.map((cat) => (

@@ -1,4 +1,10 @@
 import { excludeHonoraryMemberAttendances } from "@/lib/member-attendance-eligibility";
+import {
+  formatGuestName,
+  formatFirstName,
+  formatLastName,
+  formatPersonName,
+} from "@/lib/format-person-name";
 
 /** Build attendance & visitor lists for minute annex (PV). */
 
@@ -48,14 +54,29 @@ export function attendanceCategoryLabel(category: string, locale: string): strin
   return locale === "en" ? labels.en : labels.fr;
 }
 
+/** Annex display: "Prénom NOM" (uniform casing). */
 export function attendanceDisplayName(row: MinuteAttendanceRow): string {
   if (row.member) {
-    return `${row.member.firstName} ${row.member.lastName}`.trim();
+    return formatPersonName(row.member.firstName, row.member.lastName) || "—";
   }
-  return row.guestName?.trim() || "—";
+  return formatGuestName(row.guestName) || "—";
 }
 
+/** Sort by nom then prénom for stable annex lists. */
 function sortByName(a: MinuteAttendanceRow, b: MinuteAttendanceRow): number {
+  if (a.member && b.member) {
+    const byLast = formatLastName(a.member.lastName).localeCompare(
+      formatLastName(b.member.lastName),
+      "fr",
+      { sensitivity: "base" }
+    );
+    if (byLast !== 0) return byLast;
+    return formatFirstName(a.member.firstName).localeCompare(
+      formatFirstName(b.member.firstName),
+      "fr",
+      { sensitivity: "base" }
+    );
+  }
   return attendanceDisplayName(a).localeCompare(attendanceDisplayName(b), "fr", {
     sensitivity: "base",
   });
