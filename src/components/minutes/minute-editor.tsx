@@ -16,14 +16,17 @@ import {
   getUnsyncedDrafts,
   markDraftSynced,
 } from "@/lib/offline";
+import { toLocalDateInputValue } from "@/lib/local-date";
+import {
+  OfficerSelect,
+  type OfficerMemberOption,
+} from "@/components/meetings/officer-select";
 import { MinuteWorkflowActions } from "./minute-workflow-actions";
 import { MinuteAssistPanel } from "./minute-assist-panel";
 import { MinuteAttachmentsPanel } from "./minute-attachments-panel";
 import { MinuteAiPolishButton } from "./minute-ai-polish-button";
 import { ContextualHintBanner } from "@/components/assistance/contextual-hint-banner";
 import { GlossaryTerm } from "@/components/assistance/glossary-term";
-import { format } from "date-fns";
-import { fr, enUS } from "date-fns/locale";
 
 interface AgendaItem {
   id: string;
@@ -36,24 +39,29 @@ interface AgendaItem {
   status: string;
 }
 
+interface MeetingDetails {
+  date: Date | string;
+  location?: string | null;
+  startTime?: string | null;
+  endTime?: string | null;
+  presidedBy?: string | null;
+  secretary?: string | null;
+  type?: string;
+}
+
 interface MinuteData {
   id: string;
   title: string;
   status: string;
   reviewComment?: string | null;
-  meeting: {
-    date: Date | string;
-    location?: string | null;
-    presidedBy?: string | null;
-    secretary?: string | null;
-    type?: string;
-  };
+  meeting: MeetingDetails;
   agendaItems: AgendaItem[];
 }
 
 export function MinuteEditor({
   minute,
   clubId,
+  members = [],
   pdfEnabled = true,
   pdfVisible = true,
   canSubmit = false,
@@ -68,6 +76,7 @@ export function MinuteEditor({
 }: {
   minute: MinuteData;
   clubId: string;
+  members?: OfficerMemberOption[];
   pdfEnabled?: boolean;
   pdfVisible?: boolean;
   canSubmit?: boolean;
@@ -87,13 +96,21 @@ export function MinuteEditor({
   const tCommon = useTranslations("common");
   const locale = useLocale();
   const router = useRouter();
-  const dateLocale = locale === "fr" ? fr : enUS;
 
   const [items, setItems] = useState<AgendaItem[]>(
     minute.agendaItems.length > 0
       ? minute.agendaItems
       : [{ id: "1", title: "Ouverture de la séance", description: "", decisions: "", actions: "", responsible: "", dueDate: "", status: "OPEN" }]
   );
+  const [title, setTitle] = useState(minute.title);
+  const [meetingDate, setMeetingDate] = useState(
+    toLocalDateInputValue(minute.meeting.date)
+  );
+  const [location, setLocation] = useState(minute.meeting.location ?? "");
+  const [startTime, setStartTime] = useState(minute.meeting.startTime ?? "");
+  const [endTime, setEndTime] = useState(minute.meeting.endTime ?? "");
+  const [presidedBy, setPresidedBy] = useState(minute.meeting.presidedBy ?? "");
+  const [secretary, setSecretary] = useState(minute.meeting.secretary ?? "");
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isOffline, setIsOffline] = useState(false);
@@ -117,7 +134,18 @@ export function MinuteEditor({
   const doSave = useCallback(async () => {
     if (["FINALIZED", "ARCHIVED", "REVIEW"].includes(status) && !canOverrideLock) return;
     setSaving(true);
-    const payload = { agendaItems: items };
+    const payload = {
+      title,
+      agendaItems: items,
+      meeting: {
+        date: meetingDate,
+        location,
+        startTime,
+        endTime,
+        presidedBy,
+        secretary,
+      },
+    };
 
     if (typeof navigator !== "undefined" && !navigator.onLine) {
       await saveDraftOffline(minute.id, clubId, payload);
@@ -137,7 +165,21 @@ export function MinuteEditor({
       setLastSaved(new Date());
     }
     setSaving(false);
-  }, [minute.id, clubId, items, status, canOverrideLock, syncAgendaItemIds]);
+  }, [
+    minute.id,
+    clubId,
+    items,
+    status,
+    canOverrideLock,
+    title,
+    meetingDate,
+    location,
+    startTime,
+    endTime,
+    presidedBy,
+    secretary,
+    syncAgendaItemIds,
+  ]);
 
   const syncOfflineDrafts = useCallback(async () => {
     const drafts = await getUnsyncedDrafts();
@@ -240,13 +282,14 @@ export function MinuteEditor({
     startTransition(() => router.refresh());
   }
 
-  const meetingDate = new Date(minute.meeting.date);
   const statusLabel =
     status === "FINALIZED"
       ? t("finalized")
       : status === "REVIEW"
         ? t("inReview")
-        : t("draft");
+        : status === "ARCHIVED"
+          ? t("archived")
+          : t("draft");
 
   return (
     <div className="space-y-6" data-assist="minute-editor-content">
@@ -336,19 +379,66 @@ export function MinuteEditor({
       <MinuteAttachmentsPanel minuteId={minute.id} />
 
       <Card>
-        <CardHeader><CardTitle>{minute.title}</CardTitle></CardHeader>
-        <CardContent className="grid sm:grid-cols-3 gap-4 text-sm">
-          <div>
-            <span className="text-gray-500">{tMeetings("date")}</span>
-            <p className="font-medium">{format(meetingDate, "d MMMM yyyy", { locale: dateLocale })}</p>
-          </div>
-          <div>
-            <span className="text-gray-500">{tMeetings("location")}</span>
-            <p className="font-medium">{minute.meeting.location}</p>
-          </div>
-          <div>
-            <span className="text-gray-500">{tMeetings("presidedBy")}</span>
-            <p className="font-medium">{minute.meeting.presidedBy}</p>
+        <CardHeader>
+          <CardTitle>
+            {locale === "fr"
+              ? "Détails de la réunion et du PV"
+              : locale === "es"
+                ? "Detalles de la reunión y del acta"
+                : "Meeting and minutes details"}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Input
+            label={locale === "fr" ? "Titre du PV" : locale === "es" ? "Título del acta" : "Minutes title"}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            disabled={readOnly}
+          />
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <Input
+              label={tMeetings("date")}
+              type="date"
+              value={meetingDate}
+              onChange={(e) => setMeetingDate(e.target.value)}
+              disabled={readOnly}
+            />
+            <Input
+              label={tMeetings("startTime")}
+              type="time"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+              disabled={readOnly}
+            />
+            <Input
+              label={tMeetings("endTime")}
+              type="time"
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+              disabled={readOnly}
+            />
+            <Input
+              label={tMeetings("location")}
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              disabled={readOnly}
+            />
+            <OfficerSelect
+              id="minute-presided-by"
+              label={tMeetings("presidedBy")}
+              value={presidedBy}
+              onChange={setPresidedBy}
+              members={members}
+              disabled={readOnly}
+            />
+            <OfficerSelect
+              id="minute-secretary"
+              label={tMeetings("secretary")}
+              value={secretary}
+              onChange={setSecretary}
+              members={members}
+              disabled={readOnly}
+            />
           </div>
         </CardContent>
       </Card>

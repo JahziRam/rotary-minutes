@@ -17,18 +17,8 @@ import {
   isCommissionChairRole,
 } from "@/lib/commission-scope";
 
-/** Parse YYYY-MM-DD as local calendar date (noon) to avoid UTC day-shift.
- *  Must stay non-exported: "use server" files may only export async actions. */
-function parseLocalDate(dateStr: string): Date {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr.trim());
-  if (match) {
-    const year = Number(match[1]);
-    const month = Number(match[2]) - 1;
-    const day = Number(match[3]);
-    return new Date(year, month, day, 12, 0, 0, 0);
-  }
-  return new Date(dateStr);
-}
+import { parseLocalDate } from "@/lib/local-date";
+import { assertMinuteEditable } from "@/lib/minute-lock";
 
 function revalidateMeetingPaths(locale: string, meetingId?: string) {
   for (const loc of ["fr", "en", "es"]) {
@@ -470,4 +460,130 @@ export async function getLastMeetingDefaults(clubId: string) {
     orderBy: { date: "desc" },
   });
   return last;
+}
+
+export type MeetingDetailsUpdate = {
+  title?: string | null;
+  date?: string;
+  location?: string | null;
+  startTime?: string | null;
+  endTime?: string | null;
+  presidedBy?: string | null;
+  secretary?: string | null;
+};
+
+/**
+ * Update meeting header fields (date, location, officers, times).
+ * When the linked PV is locked (REVIEW/FINALIZED/ARCHIVED), only president,
+ * club admin or super admin may change these details.
+ */
+export async function updateMeeting(
+  meetingId: string,
+  data: MeetingDetailsUpdate,
+  locale: string
+) {
+  const auth = await requirePermission("meetings.edit");
+  if (auth.error) return { error: auth.error };
+  const { ctx } = auth;
+
+  const meeting = await prisma.meeting.findFirst({
+    where: { id: meetingId, clubId: ctx.clubId },
+    include: {
+      minute: { select: { id: true, status: true, title: true } },
+    },
+  });
+  if (!meeting) return { error: "NOT_FOUND" as const };
+
+  const access = await assertCommissionMeetingAccess(ctx, meeting);
+  if ("error" in access) return { error: access.error };
+
+  if (meeting.minute) {
+    const lock = assertMinuteEditable(meeting.minute.status, ctx);
+    if (lock) return lock;
+  }
+
+  const updateData: {
+    title?: string | null;
+    date?: Date;
+    location?: string | null;
+    startTime?: string | null;
+    endTime?: string | null;
+    presidedBy?: string | null;
+    secretary?: string | null;
+  } = {};
+
+  if (data.date !== undefined && data.date.trim()) {
+    updateData.date = parseLocalDate(data.date);
+  }
+  if (data.location !== undefined) {
+    updateData.location = data.location?.trim() || null;
+  }
+  if (data.startTime !== undefined) {
+    updateData.startTime = data.startTime?.trim() || null;
+  }
+  if (data.endTime !== undefined) {
+    updateData.endTime = data.endTime?.trim() || null;
+  }
+  if (data.presidedBy !== undefined) {
+    updateData.presidedBy = data.presidedBy?.trim() || null;
+  }
+  if (data.secretary !== undefined) {
+    updateData.secretary = data.secretary?.trim() || null;
+  }
+  if (data.title !== undefined) {
+    updateData.title = data.title?.trim() || null;
+  }
+
+  if (Object.keys(updateData).length === 0) {
+    return { success: true as const };
+  }
+
+  await prisma.meeting.update({
+    where: { id: meetingId },
+    data: updateData,
+  });
+
+  // Keep PV title in sync when only the meeting date changes and title is empty.
+  if (meeting.minute && updateData.date && !data.title) {
+    const currentTitle = meeting.minute.title?.trim() ?? "";
+    if (!currentTitle || /^PV\s*[—–-]/i.test(currentTitle)) {
+      const d = updateData.date;
+      const label =
+        locale === "en"
+          ? d.toLocaleDateString("en-GB")
+          : locale === "es"
+            ? d.toLocaleDateString("es-ES")
+            : d.toLocaleDateString("fr-FR");
+      await prisma.minute.update({
+        where: { id: meeting.minute.id },
+        data: { title: `PV — ${label}` },
+      });
+    }
+  }
+
+  await prisma.auditLog.create({
+    data: {
+      clubId: ctx.clubId,
+      userId: ctx.userId,
+      action: "MEETING_UPDATED",
+      entity: "Meeting",
+      entityId: meetingId,
+      metadata: {
+        fields: Object.keys(updateData),
+        minuteStatus: meeting.minute?.status ?? null,
+        role: ctx.role,
+        isSuperAdmin: ctx.isSuperAdmin,
+      },
+    },
+  });
+
+  revalidateMeetingPaths(locale, meetingId);
+  if (meeting.minute?.id) {
+    for (const loc of ["fr", "en", "es"]) {
+      revalidatePath(`/${loc}/minutes/${meeting.minute.id}`);
+      revalidatePath(`/${loc}/minutes/${meeting.minute.id}/edit`);
+    }
+  }
+
+  return { success: true as const };
 }

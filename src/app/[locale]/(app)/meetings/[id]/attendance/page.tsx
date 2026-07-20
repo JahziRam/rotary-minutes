@@ -6,10 +6,16 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { attendanceEligibleMemberWhere } from "@/lib/member-attendance-eligibility";
 import { getClubContext } from "@/lib/club-context";
+import {
+  canOverrideMinuteLock,
+  isMinuteContentLocked,
+} from "@/lib/minute-lock";
+import { hasRolePermission } from "@/lib/roles";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { UnifiedAttendanceSheet } from "@/components/meetings/unified-attendance-sheet";
 import { AttendanceQrPanel } from "@/components/meetings/attendance-qr-panel";
 import { CalendarExport } from "@/components/meetings/calendar-export";
+import { MeetingDetailsEditor } from "@/components/meetings/meeting-details-editor";
 
 export default async function MeetingAttendancePage({
   params,
@@ -28,16 +34,23 @@ export default async function MeetingAttendancePage({
     include: {
       attendances: true,
       club: { select: { name: true } },
-      minute: { select: { id: true } },
+      minute: { select: { id: true, status: true } },
     },
   });
   if (!meeting) notFound();
 
-  const members = await prisma.member.findMany({
-    where: attendanceEligibleMemberWhere(ctx.clubId),
-    orderBy: { lastName: "asc" },
-    select: { id: true, firstName: true, lastName: true },
-  });
+  const [members, officerMembers] = await Promise.all([
+    prisma.member.findMany({
+      where: attendanceEligibleMemberWhere(ctx.clubId),
+      orderBy: { lastName: "asc" },
+      select: { id: true, firstName: true, lastName: true },
+    }),
+    prisma.member.findMany({
+      where: { clubId: ctx.clubId, isActive: true },
+      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+      select: { id: true, firstName: true, lastName: true },
+    }),
+  ]);
 
   const initialEntries = meeting.attendances.map((a) => ({
     memberId: a.memberId ?? undefined,
@@ -46,6 +59,17 @@ export default async function MeetingAttendancePage({
   }));
 
   const dateLocale = locale === "fr" ? fr : locale === "es" ? es : enUS;
+  const canEditMeetings = await hasRolePermission(
+    ctx.role,
+    "meetings.edit",
+    ctx.isSuperAdmin,
+    ctx.customRoleId
+  );
+  const minuteLocked =
+    !!meeting.minute && isMinuteContentLocked(meeting.minute.status);
+  const canEditDetails =
+    canEditMeetings &&
+    (!minuteLocked || canOverrideMinuteLock(ctx));
 
   return (
     <AppShellServer title={t("title")}>
@@ -78,6 +102,22 @@ export default async function MeetingAttendancePage({
             <AttendanceQrPanel meetingId={meeting.id} />
           </div>
         </div>
+
+        <MeetingDetailsEditor
+          meetingId={meeting.id}
+          members={officerMembers}
+          canEdit={canEditDetails}
+          lockedHint={minuteLocked && canOverrideMinuteLock(ctx)}
+          initial={{
+            title: meeting.title,
+            date: meeting.date,
+            location: meeting.location,
+            startTime: meeting.startTime,
+            endTime: meeting.endTime,
+            presidedBy: meeting.presidedBy,
+            secretary: meeting.secretary,
+          }}
+        />
 
         <UnifiedAttendanceSheet
           members={members}

@@ -40,13 +40,20 @@ export default async function MinuteEditPage({
     where: { id: ctx.clubId },
     select: { presidentApprovalRequired: true },
   });
-  const memberEmailCount = await prisma.member.count({
-    where: {
-      clubId: ctx.clubId,
-      isActive: true,
-      email: { not: null },
-    },
-  });
+  const [memberEmailCount, members] = await Promise.all([
+    prisma.member.count({
+      where: {
+        clubId: ctx.clubId,
+        isActive: true,
+        email: { not: null },
+      },
+    }),
+    prisma.member.findMany({
+      where: { clubId: ctx.clubId, isActive: true },
+      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+      select: { id: true, firstName: true, lastName: true },
+    }),
+  ]);
 
   const canOverrideLock = canOverrideMinuteLock(ctx);
   const isLocked =
@@ -66,6 +73,7 @@ export default async function MinuteEditPage({
       </div>
       <MinuteEditor
         clubId={ctx.clubId}
+        members={members}
         pdfEnabled={pdfEnabled}
         pdfVisible={pdfVisible}
         canSubmit={canSubmit}
@@ -86,7 +94,15 @@ export default async function MinuteEditPage({
           title: minute.title,
           status: minute.status,
           reviewComment: minute.reviewComment,
-          meeting: { ...minute.meeting, type: minute.meeting.type },
+          meeting: {
+            date: minute.meeting.date,
+            location: minute.meeting.location,
+            startTime: minute.meeting.startTime,
+            endTime: minute.meeting.endTime,
+            presidedBy: minute.meeting.presidedBy,
+            secretary: minute.meeting.secretary,
+            type: minute.meeting.type,
+          },
           agendaItems: minute.agendaItems.map((item) => ({
             id: item.id,
             title: item.title,

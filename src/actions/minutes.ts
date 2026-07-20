@@ -23,6 +23,7 @@ import {
   loadMinuteForContext,
 } from "@/lib/commission-scope";
 import { assertMinuteEditable } from "@/lib/minute-lock";
+import { parseLocalDate } from "@/lib/local-date";
 import type { MinuteStatus, Prisma } from "@/generated/prisma/client";
 
 function revalidateMinutePaths(minuteId: string, locale?: string) {
@@ -40,6 +41,7 @@ function revalidateMinutePaths(minuteId: string, locale?: string) {
 export async function saveMinute(
   minuteId: string,
   data: {
+    title?: string;
     agendaItems: Array<{
       id?: string;
       title: string;
@@ -50,6 +52,14 @@ export async function saveMinute(
       dueDate: string;
       status: string;
     }>;
+    meeting?: {
+      date?: string;
+      location?: string | null;
+      startTime?: string | null;
+      endTime?: string | null;
+      presidedBy?: string | null;
+      secretary?: string | null;
+    };
   }
 ) {
   const auth = await requirePermission("minutes.edit");
@@ -63,7 +73,7 @@ export async function saveMinute(
 
   const minuteFull = await prisma.minute.findFirst({
     where: { id: minuteId, clubId: ctx.clubId },
-    include: { agendaItems: true, versions: true },
+    include: { agendaItems: true, versions: true, meeting: true },
   });
   if (!minuteFull) return { error: "NOT_FOUND" };
   const lock = assertMinuteEditable(minuteFull.status, ctx);
@@ -94,6 +104,53 @@ export async function saveMinute(
         contentHash: hash,
         authorId: ctx.userId,
       },
+    });
+  }
+
+  // Meeting header (date, location, officers, times)
+  if (data.meeting) {
+    const m = data.meeting;
+    const meetingUpdate: {
+      date?: Date;
+      location?: string | null;
+      startTime?: string | null;
+      endTime?: string | null;
+      presidedBy?: string | null;
+      secretary?: string | null;
+    } = {};
+    if (m.date !== undefined && m.date.trim()) {
+      meetingUpdate.date = parseLocalDate(m.date);
+    }
+    if (m.location !== undefined) {
+      meetingUpdate.location = m.location?.trim() || null;
+    }
+    if (m.startTime !== undefined) {
+      meetingUpdate.startTime = m.startTime?.trim() || null;
+    }
+    if (m.endTime !== undefined) {
+      meetingUpdate.endTime = m.endTime?.trim() || null;
+    }
+    if (m.presidedBy !== undefined) {
+      meetingUpdate.presidedBy = m.presidedBy?.trim() || null;
+    }
+    if (m.secretary !== undefined) {
+      meetingUpdate.secretary = m.secretary?.trim() || null;
+    }
+    if (Object.keys(meetingUpdate).length > 0) {
+      await prisma.meeting.update({
+        where: { id: minuteFull.meetingId },
+        data: meetingUpdate,
+      });
+    }
+  }
+
+  // Minute title
+  const nextTitle =
+    data.title !== undefined ? data.title.trim() || minuteFull.title : undefined;
+  if (nextTitle !== undefined && nextTitle !== minuteFull.title) {
+    await prisma.minute.update({
+      where: { id: minuteId },
+      data: { title: nextTitle },
     });
   }
 
@@ -160,6 +217,8 @@ export async function saveMinute(
             newHash,
             role: ctx.role,
             isSuperAdmin: ctx.isSuperAdmin,
+            updatedMeeting: !!data.meeting,
+            updatedTitle: nextTitle !== undefined,
           },
         },
       });
@@ -176,12 +235,18 @@ export async function saveMinute(
           previousStatus: minuteFull.status,
           role: ctx.role,
           isSuperAdmin: ctx.isSuperAdmin,
+          updatedMeeting: !!data.meeting,
+          updatedTitle: nextTitle !== undefined,
         },
       },
     });
   }
 
   revalidateMinutePaths(minuteId);
+  for (const loc of ["fr", "en", "es"]) {
+    revalidatePath(`/${loc}/meetings`);
+    revalidatePath(`/${loc}/meetings/${minuteFull.meetingId}/attendance`);
+  }
   return {
     success: true as const,
     agendaItems: savedAgendaItems.map((item) => ({
