@@ -63,26 +63,43 @@ export function isAttendancePresent(category: string): boolean {
   return ATTENDANCE_PRESENT_CATEGORIES.has(category);
 }
 
-/** Taux basé sur les présences enregistrées (liste réunions, PV). */
+/**
+ * Taux basé sur les présences enregistrées (liste réunions, PV).
+ * Only club members count — guests and honorary members (via excludeMemberIds) are out.
+ */
 export function computeRecordedAttendanceRate(
-  attendances: Array<{ category: string; memberId?: string | null }>,
+  attendances: Array<{
+    category: string;
+    memberId?: string | null;
+    member?: { isHonoraryMember?: boolean } | null;
+  }>,
   excludeMemberIds?: ReadonlySet<string>
 ): number | null {
-  const countable = excludeMemberIds
-    ? attendances.filter((a) => !a.memberId || !excludeMemberIds.has(a.memberId))
-    : attendances;
+  const countable = attendances.filter((a) => {
+    if (!a.memberId) return false;
+    if (a.member?.isHonoraryMember) return false;
+    if (excludeMemberIds?.has(a.memberId)) return false;
+    return true;
+  });
   if (countable.length === 0) return null;
   const present = countable.filter((a) => isAttendancePresent(a.category)).length;
   return Math.round(calculateAttendanceRate(present, countable.length).rate);
 }
 
 export function countPresentAttendances(
-  attendances: Array<{ category: string; memberId?: string | null }>,
+  attendances: Array<{
+    category: string;
+    memberId?: string | null;
+    member?: { isHonoraryMember?: boolean } | null;
+  }>,
   excludeMemberIds?: ReadonlySet<string>
 ): number {
-  const countable = excludeMemberIds
-    ? attendances.filter((a) => !a.memberId || !excludeMemberIds.has(a.memberId))
-    : attendances;
+  const countable = attendances.filter((a) => {
+    if (!a.memberId) return false;
+    if (a.member?.isHonoraryMember) return false;
+    if (excludeMemberIds?.has(a.memberId)) return false;
+    return true;
+  });
   return countable.filter((a) => isAttendancePresent(a.category)).length;
 }
 

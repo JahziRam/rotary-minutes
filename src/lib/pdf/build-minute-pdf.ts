@@ -2,8 +2,7 @@ import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 import { getAppBaseUrl } from "@/lib/app-url";
 import { generateMinuteHash, getVerifyUrl } from "@/lib/hash";
-import { computeRecordedAttendanceRate } from "@/lib/rotary";
-import { excludeHonoraryMemberAttendances } from "@/lib/member-attendance-eligibility";
+import { computeRecordedAttendanceRate, isAttendancePresent } from "@/lib/rotary";
 import { rasterizeClubDefaultLogoPng } from "@/lib/club-default-logo-raster";
 import { isDataUrl } from "@/lib/image-storage";
 import { resolveClubLogoUrl } from "@/lib/media-url";
@@ -55,7 +54,12 @@ type MinuteForPdf = {
     attendances: Array<{
       category: string;
       guestName?: string | null;
-      member?: { firstName: string; lastName: string } | null;
+      memberId?: string | null;
+      member?: {
+        firstName: string;
+        lastName: string;
+        isHonoraryMember?: boolean;
+      } | null;
     }>;
   };
 };
@@ -81,14 +85,13 @@ export async function buildMinutePdfData(
   const { default: QRCode } = await import("qrcode");
   const qrCodeDataUrl = await QRCode.toDataURL(verifyUrl, { width: 200 });
 
-  const memberAttendances = excludeHonoraryMemberAttendances(
-    minute.meeting.attendances.filter((a) =>
+  const memberAttendances = minute.meeting.attendances.filter(
+    (a) =>
+      !!a.memberId &&
+      !a.member?.isHonoraryMember &&
       (MEMBER_ATTENDANCE_CATEGORIES as readonly string[]).includes(a.category)
-    )
   );
-  const present = memberAttendances.filter(
-    (a) => a.category === "PRESENT" || a.category === "TRAVEL_RETURN"
-  ).length;
+  const present = memberAttendances.filter((a) => isAttendancePresent(a.category)).length;
   const total = memberAttendances.length;
   const rate = computeRecordedAttendanceRate(memberAttendances) ?? 0;
 

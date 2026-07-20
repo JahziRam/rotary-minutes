@@ -20,6 +20,7 @@ export async function getClubAnnualAttendance(clubId: string) {
 
   for (const meeting of meetings) {
     for (const a of meeting.attendances) {
+      // Honorary members and guests never count toward the club attendance rate.
       if (!shouldCountAttendanceForMemberId(a.memberId, honoraryMemberIds)) continue;
       totalSlots++;
       if (isAttendancePresent(a.category)) {

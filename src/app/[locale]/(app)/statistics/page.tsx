@@ -72,10 +72,16 @@ export default async function StatisticsPage({
 
   for (const m of meetings) {
     for (const a of m.attendances) {
+      // Honorary members and guests never count toward assiduity stats.
       if (!a.memberId || a.member?.isHonoraryMember) continue;
       if (!memberAttendance[a.memberId]) memberAttendance[a.memberId] = { present: 0, total: 0 };
       memberAttendance[a.memberId].total++;
-      if (a.category === "PRESENT" || a.category === "TRAVEL_RETURN") {
+      if (
+        a.category === "PRESENT" ||
+        a.category === "TRAVEL_RETURN" ||
+        a.category === "TRAVELING" ||
+        a.category === "EXTERNAL_ATTENDANCE"
+      ) {
         memberAttendance[a.memberId].present++;
       }
     }
@@ -85,9 +91,15 @@ export default async function StatisticsPage({
     const monthMeetings = meetings.filter((m) => m.date.getMonth() === i);
     let p = 0, tot = 0;
     for (const m of monthMeetings) {
-      const countable = m.attendances.filter((a) => !a.member?.isHonoraryMember);
+      const countable = m.attendances.filter(
+        (a) => !!a.memberId && !a.member?.isHonoraryMember
+      );
       p += countable.filter(
-        (a) => a.category === "PRESENT" || a.category === "TRAVEL_RETURN"
+        (a) =>
+          a.category === "PRESENT" ||
+          a.category === "TRAVEL_RETURN" ||
+          a.category === "TRAVELING" ||
+          a.category === "EXTERNAL_ATTENDANCE"
       ).length;
       tot += countable.length;
     }

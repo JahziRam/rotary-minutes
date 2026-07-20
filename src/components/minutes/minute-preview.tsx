@@ -6,12 +6,12 @@ import { ClubDocumentHeader } from "@/components/brand/club-document-header";
 import { ROTARY_BRAND } from "@/lib/rotary-brand";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
-import { calculateAttendanceRate } from "@/lib/rotary";
+import { calculateAttendanceRate, isAttendancePresent } from "@/lib/rotary";
 import {
   buildMinuteAttendanceAnnex,
   MEMBER_ATTENDANCE_CATEGORIES,
 } from "@/lib/minute-attendance-annex";
-import { excludeHonoraryMemberAttendances } from "@/lib/member-attendance-eligibility";
+import { filterAttendancesForRate } from "@/lib/member-attendance-eligibility";
 export interface MinutePreviewData {
   id: string;
   title: string;
@@ -117,16 +117,16 @@ export function MinutePreview({
   const typeLabel = MEETING_TYPE_LABELS[data.meeting.type] ?? data.meeting.type;
   const statusInfo = STATUS_LABELS[data.status] ?? STATUS_LABELS.DRAFT;
 
-  const memberAttendances = excludeHonoraryMemberAttendances(
+  const memberAttendances = filterAttendancesForRate(
     data.meeting.attendances.filter((a) =>
       (MEMBER_ATTENDANCE_CATEGORIES as readonly string[]).includes(a.category)
     )
   );
-  const present = countByCategory(memberAttendances, "PRESENT");
+  const present = memberAttendances.filter((a) => isAttendancePresent(a.category)).length;
   const excused = countByCategory(memberAttendances, "EXCUSED_ABSENT");
   const unexcused = countByCategory(memberAttendances, "UNEXCUSED_ABSENT");
   const traveling = countByCategory(memberAttendances, "TRAVELING");
-  const total = memberAttendances.length || present + excused + unexcused + traveling;
+  const total = memberAttendances.length;
   const rate = total > 0 ? Math.round(calculateAttendanceRate(present, total).rate) : 0;
   const annex = buildMinuteAttendanceAnnex(data.meeting.attendances, locale);
   const annexTitle = locale === "fr" ? "Annexe — Présences et visiteurs" : "Annex — Attendance and visitors";
