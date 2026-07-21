@@ -242,6 +242,23 @@
     "healthScore": {
       "title": "Score de santé du club",
       "allClear": "Aucun point d'attention — le club est en excellente forme."
+    },
+    "memberEngagement": {
+      "title": "Activité des membres",
+      "empty": "Aucune activité récente (connexions, lectures de PV ou notifications) sur les 30 derniers jours.",
+      "hint": "Connexions, ouvertures de PV, notifications envoyées et e-mails ouverts.",
+      "kinds": {
+        "login": "Connexion",
+        "minute_read": "Lecture PV",
+        "notification": "Notification",
+        "email_open": "E-mail ouvert"
+      },
+      "detail": {
+        "login": "S'est connecté(e) à la plateforme",
+        "minute_read": "A consulté {detail}",
+        "notification": "Notification : {detail}",
+        "email_open": "A ouvert : {detail}"
+      }
     }
   },
   "meetings": {

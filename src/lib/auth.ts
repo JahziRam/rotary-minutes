@@ -94,6 +94,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         );
         if (!valid) return null;
 
+        // Track last successful login for club dashboard engagement.
+        void prisma.user
+          .update({
+            where: { id: user.id },
+            data: { lastLoginAt: new Date() },
+          })
+          .catch((e) => console.error("[auth] lastLoginAt update failed", e));
+
         return loadUserSessionData(user.id);
       },
     }),

@@ -381,6 +381,8 @@ model User {
   isSuperAdmin  Boolean   @default(false)
   language             Language  @default(FR)
   mustChangePassword   Boolean   @default(false)
+  /** Last successful sign-in (credentials). */
+  lastLoginAt          DateTime?
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 
@@ -390,6 +392,7 @@ model User {
   minutesAuthored Minute[] @relation("MinuteAuthor")
   minuteVersions  MinuteVersion[]
   minuteComments  MinuteComment[]
+  minuteViews     MinuteView[]
   notifications Notification[]
   auditLogs     AuditLog[]
   districtAccess  DistrictAccess[]
@@ -467,6 +470,7 @@ model Club {
   commissions     Commission[]
   meetings        Meeting[]
   minutes         Minute[]
+  minuteViews     MinuteView[]
   emailContacts   EmailContact[]
   emailGroups     EmailGroup[]
   emailTemplates  EmailTemplate[]
@@ -746,6 +750,7 @@ model Minute {
   agendaItems     AgendaItem[]
   versions        MinuteVersion[]
   comments        MinuteComment[]
+  views           MinuteView[]
   clubActions     ClubAction[]
   clubDocuments   ClubDocument[]
   governanceRecords GovernanceRecord[]
@@ -753,6 +758,23 @@ model Minute {
   @@index([clubId, status])
   @@index([clubId, createdAt])
   @@index([contentHash])
+}
+
+/** Tracks when a club user opens a minute (for dashboard engagement). */
+model MinuteView {
+  id       String   @id @default(cuid())
+  clubId   String
+  minuteId String
+  userId   String
+  viewedAt DateTime @default(now())
+
+  club   Club   @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  minute Minute @relation(fields: [minuteId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([minuteId, userId])
+  @@index([clubId, viewedAt])
+  @@index([userId, viewedAt])
 }
 
 /** Member discussion on a minute (not agenda-item free text). */

@@ -911,6 +911,23 @@
     "healthScore": {
       "title": "Índice de salud del club",
       "allClear": "Sin incidencias detectadas — su club está en excelente forma."
+    },
+    "memberEngagement": {
+      "title": "Actividad de los miembros",
+      "empty": "Sin actividad reciente (accesos, lectura de actas o notificaciones) en los últimos 30 días.",
+      "hint": "Accesos, lecturas de actas, notificaciones enviadas y correos abiertos.",
+      "kinds": {
+        "login": "Conexión",
+        "minute_read": "Acta leída",
+        "notification": "Notificación",
+        "email_open": "Correo abierto"
+      },
+      "detail": {
+        "login": "Se conectó a la plataforma",
+        "minute_read": "Consultó {detail}",
+        "notification": "Notificación: {detail}",
+        "email_open": "Abrió: {detail}"
+      }
     }
   },
   "meetings": {

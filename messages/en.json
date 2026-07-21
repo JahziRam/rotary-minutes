@@ -242,6 +242,23 @@
     "healthScore": {
       "title": "Club health score",
       "allClear": "No issues detected — your club is in great shape."
+    },
+    "memberEngagement": {
+      "title": "Member activity",
+      "empty": "No recent activity (logins, minute views or notifications) in the last 30 days.",
+      "hint": "Logins, minute views, notifications sent and opened emails.",
+      "kinds": {
+        "login": "Sign-in",
+        "minute_read": "Minutes viewed",
+        "notification": "Notification",
+        "email_open": "Email opened"
+      },
+      "detail": {
+        "login": "Signed in to the platform",
+        "minute_read": "Viewed {detail}",
+        "notification": "Notification: {detail}",
+        "email_open": "Opened: {detail}"
+      }
     }
   },
   "meetings": {

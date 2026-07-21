@@ -47,6 +47,11 @@ import { getMemberHubSummary } from "@/lib/queries/member-hub";
 import { getVapidPublicKey } from "@/lib/vapid-config";
 import { isWebPushEnabledForUser } from "@/lib/push-preference";
 import { MemberMobileHub } from "@/components/member-portal/member-mobile-hub";
+import { RecentMemberEngagement } from "@/components/dashboard/recent-member-engagement";
+import {
+  canViewMemberEngagement,
+  getRecentMemberEngagement,
+} from "@/lib/queries/member-engagement";
 
 export default async function DashboardPage({
   params,
@@ -200,6 +205,12 @@ export default async function DashboardPage({
       ])
     : [null, true];
 
+  const showMemberEngagement =
+    !!ctx && canViewMemberEngagement(ctx.role, ctx.isSuperAdmin);
+  const memberEngagement = showMemberEngagement
+    ? await getRecentMemberEngagement(ctx.clubId, 12)
+    : [];
+
   return (
     <AppShellServer title={t("nav.dashboard")}>
       <div className="space-y-8">
@@ -340,84 +351,122 @@ export default async function DashboardPage({
             </DashboardSection>
 
             <DashboardSection title={tDashboard("activitySection")}>
-              <div className="grid lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader className="flex-row items-center justify-between">
-                <CardTitle>{tDashboard("nextMeeting")}</CardTitle>
-                <Link href={`/${locale}/meetings`} className="text-sm text-navy hover:underline flex items-center gap-1">
-                  {t("common.viewAll")}<ArrowRight className="h-3 w-3" />
-                </Link>
-              </CardHeader>
-              <CardContent>
-                {stats?.nextMeeting ? (
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-3 rounded-lg bg-navy/5">
-                      <div className="h-12 w-12 rounded-lg bg-navy text-white flex flex-col items-center justify-center text-xs font-bold">
-                        <span>{format(stats.nextMeeting.date, "dd", { locale: dateLocale })}</span>
-                        <span className="text-[10px] uppercase">{format(stats.nextMeeting.date, "MMM", { locale: dateLocale })}</span>
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">
-                          {format(stats.nextMeeting.date, "EEEE d MMMM yyyy", { locale: dateLocale })}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {stats.nextMeeting.location} · {stats.nextMeeting.startTime}
-                        </p>
-                      </div>
-                    </div>
-                    {liveVisible && (
-                      <Link
-                        href={`/${locale}/meetings/${stats.nextMeeting.id}/live`}
-                        className="flex items-center justify-center w-full h-10 rounded-lg text-sm font-medium border border-gray-200 bg-white hover:bg-gray-50 text-gray-900 transition-all"
-                      >
-                        {t("meetings.live")}
-                      </Link>
-                    )}
-                  </div>
-                ) : (
-                  <div className="py-2">
-                    <GuidedEmptyStateClient stateKey="dashboard_meetings" />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex-row items-center justify-between">
-                <CardTitle>{tDashboard("recentMinutes")}</CardTitle>
-                <Link href={`/${locale}/minutes`} className="text-sm text-navy hover:underline flex items-center gap-1">
-                  {t("common.viewAll")}<ArrowRight className="h-3 w-3" />
-                </Link>
-              </CardHeader>
-              <CardContent>
-                {stats?.recentMinutes && stats.recentMinutes.length > 0 ? (
-                  <ul className="space-y-2">
-                    {stats.recentMinutes.map((pv) => (
-                      <li key={pv.id}>
-                        <Link
-                          href={`/${locale}/minutes/${pv.id}`}
-                          className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors"
-                        >
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium text-gray-900 truncate">{pv.title}</p>
-                            <p className="text-xs text-gray-400">
-                              {pv.author ? `${pv.author.firstName} ${pv.author.lastName}` : ""}
+              <div
+                className={`grid gap-6 ${
+                  showMemberEngagement
+                    ? "lg:grid-cols-3"
+                    : "lg:grid-cols-2"
+                }`}
+              >
+                <Card>
+                  <CardHeader className="flex-row items-center justify-between">
+                    <CardTitle>{tDashboard("nextMeeting")}</CardTitle>
+                    <Link
+                      href={`/${locale}/meetings`}
+                      className="text-sm text-navy hover:underline flex items-center gap-1"
+                    >
+                      {t("common.viewAll")}
+                      <ArrowRight className="h-3 w-3" />
+                    </Link>
+                  </CardHeader>
+                  <CardContent>
+                    {stats?.nextMeeting ? (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3 p-3 rounded-lg bg-navy/5">
+                          <div className="h-12 w-12 rounded-lg bg-navy text-white flex flex-col items-center justify-center text-xs font-bold">
+                            <span>
+                              {format(stats.nextMeeting.date, "dd", {
+                                locale: dateLocale,
+                              })}
+                            </span>
+                            <span className="text-[10px] uppercase">
+                              {format(stats.nextMeeting.date, "MMM", {
+                                locale: dateLocale,
+                              })}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">
+                              {format(stats.nextMeeting.date, "EEEE d MMMM yyyy", {
+                                locale: dateLocale,
+                              })}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {stats.nextMeeting.location} ·{" "}
+                              {stats.nextMeeting.startTime}
                             </p>
                           </div>
-                          <Badge variant={getMinuteStatusVariant(pv.status)}>
-                            {getMinuteStatusLabel(pv.status, (k) => t(k as "minutes.finalized"))}
-                          </Badge>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <div className="py-2">
-                    <GuidedEmptyStateClient stateKey="dashboard_minutes" />
-                  </div>
+                        </div>
+                        {liveVisible && (
+                          <Link
+                            href={`/${locale}/meetings/${stats.nextMeeting.id}/live`}
+                            className="flex items-center justify-center w-full h-10 rounded-lg text-sm font-medium border border-gray-200 bg-white hover:bg-gray-50 text-gray-900 transition-all"
+                          >
+                            {t("meetings.live")}
+                          </Link>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="py-2">
+                        <GuidedEmptyStateClient stateKey="dashboard_meetings" />
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex-row items-center justify-between">
+                    <CardTitle>{tDashboard("recentMinutes")}</CardTitle>
+                    <Link
+                      href={`/${locale}/minutes`}
+                      className="text-sm text-navy hover:underline flex items-center gap-1"
+                    >
+                      {t("common.viewAll")}
+                      <ArrowRight className="h-3 w-3" />
+                    </Link>
+                  </CardHeader>
+                  <CardContent>
+                    {stats?.recentMinutes && stats.recentMinutes.length > 0 ? (
+                      <ul className="space-y-2">
+                        {stats.recentMinutes.map((pv) => (
+                          <li key={pv.id}>
+                            <Link
+                              href={`/${locale}/minutes/${pv.id}`}
+                              className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium text-gray-900 truncate">
+                                  {pv.title}
+                                </p>
+                                <p className="text-xs text-gray-400">
+                                  {pv.author
+                                    ? `${pv.author.firstName} ${pv.author.lastName}`
+                                    : ""}
+                                </p>
+                              </div>
+                              <Badge variant={getMinuteStatusVariant(pv.status)}>
+                                {getMinuteStatusLabel(pv.status, (k) =>
+                                  t(k as "minutes.finalized")
+                                )}
+                              </Badge>
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="py-2">
+                        <GuidedEmptyStateClient stateKey="dashboard_minutes" />
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {showMemberEngagement && (
+                  <RecentMemberEngagement
+                    locale={locale}
+                    items={memberEngagement}
+                  />
                 )}
-              </CardContent>
-            </Card>
               </div>
             </DashboardSection>
           </>

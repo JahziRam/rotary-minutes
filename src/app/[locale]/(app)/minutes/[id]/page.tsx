@@ -72,6 +72,16 @@ export default async function MinuteDetailPage({
 
   const birthdayMembers = await loadBirthdayMembers(minute.clubId);
 
+  // Engagement: record PV open for club users (own club only).
+  if (isOwnClubMinute && session?.user?.id && ctx) {
+    const { recordMinuteView } = await import("@/lib/member-engagement");
+    void recordMinuteView({
+      clubId: minute.clubId,
+      minuteId: minute.id,
+      userId: session.user.id,
+    });
+  }
+
   const canEditMinutes =
     isOwnClubMinute &&
     !isDistrictReadOnly &&
