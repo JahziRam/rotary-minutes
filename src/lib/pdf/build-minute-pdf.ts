@@ -10,6 +10,7 @@ import {
   buildMinuteAttendanceAnnex,
   MEMBER_ATTENDANCE_CATEGORIES,
 } from "@/lib/minute-attendance-annex";
+import { getMemberDefaultAvatarDataUrl } from "@/lib/member-default-avatar";
 import { renderMinutePdf } from "@/lib/pdf/render";
 import type { MinutePDFData } from "@/lib/pdf/minute-pdf";
 
@@ -146,10 +147,24 @@ export async function buildMinutePdfData(
     hash,
     qrCodeDataUrl,
     verifyUrl,
-    annex: buildMinuteAttendanceAnnex(minute.meeting.attendances, locale, {
-      showMemberPhotos: !!minute.club.minuteShowMemberPhotos,
-      preferDataUrlOnly: true,
-    }),
+    annex: (() => {
+      const annex = buildMinuteAttendanceAnnex(minute.meeting.attendances, locale, {
+        showMemberPhotos: !!minute.club.minuteShowMemberPhotos,
+        preferDataUrlOnly: true,
+      });
+      // Server-only: embed default wheel avatar for members without a data-URL photo.
+      if (annex.showMemberPhotos) {
+        const fallback = getMemberDefaultAvatarDataUrl();
+        for (const group of annex.memberGroups) {
+          for (const person of group.people) {
+            if (!person.photoUrl || !isDataUrl(person.photoUrl)) {
+              person.photoUrl = fallback;
+            }
+          }
+        }
+      }
+      return annex;
+    })(),
     locale,
   };
 }

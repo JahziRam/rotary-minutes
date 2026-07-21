@@ -6,7 +6,6 @@ import {
   formatPersonName,
 } from "@/lib/format-person-name";
 import { isDataUrl } from "@/lib/image-storage";
-import { getMemberDefaultAvatarDataUrl } from "@/lib/member-default-avatar";
 import { MEMBER_DEFAULT_AVATAR_PATH } from "@/lib/media-url";
 
 /** Build attendance & visitor lists for minute annex (PV). */
@@ -73,22 +72,23 @@ export function attendanceDisplayName(row: MinuteAttendanceRow): string {
 
 /**
  * Photo for annex row when club shows member photos.
- * Uses custom profile photo when available; otherwise the default wheel avatar.
- * For PDF (`preferDataUrlOnly`), embeds data URLs only (custom or default).
+ * - Web: custom photo URL/data or public default path (no Node fs — client-safe).
+ * - PDF (`preferDataUrlOnly`): only custom data: URLs; missing photos stay null
+ *   and are filled with the default avatar data URL in build-minute-pdf (server).
  */
 export function annexMemberPhotoSrc(
   row: MinuteAttendanceRow,
   options?: { preferDataUrlOnly?: boolean }
-): string {
+): string | null {
   const photo = row.member?.photoUrl?.trim();
   if (photo) {
     if (options?.preferDataUrlOnly) {
-      return isDataUrl(photo) ? photo : getMemberDefaultAvatarDataUrl();
+      return isDataUrl(photo) ? photo : null;
     }
     return photo;
   }
   if (options?.preferDataUrlOnly) {
-    return getMemberDefaultAvatarDataUrl();
+    return null;
   }
   return MEMBER_DEFAULT_AVATAR_PATH;
 }
