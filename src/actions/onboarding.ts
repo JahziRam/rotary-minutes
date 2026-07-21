@@ -326,5 +326,3 @@ export async function createOnboardingMeeting(
     minuteId: minute.id,
   };
 }
-
-export { isOnboardingComplete, ONBOARDING_WIZARD_STEPS };

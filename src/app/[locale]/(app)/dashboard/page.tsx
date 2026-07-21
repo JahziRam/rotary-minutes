@@ -28,9 +28,9 @@ import { getPendingJoinRequests } from "@/actions/registration";
 import {
   canManageClubOnboarding,
   getOnboardingBootstrap,
-  isOnboardingComplete,
   syncClubOnboardingProgress,
 } from "@/actions/onboarding";
+import { isOnboardingComplete } from "@/lib/onboarding-steps";
 import { OnboardingChecklist } from "@/components/members/onboarding-checklist";
 import { MemberWelcomeCard } from "@/components/onboarding/member-welcome-card";
 import { ClubSetupPendingBanner } from "@/components/onboarding/club-setup-pending-banner";
