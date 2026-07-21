@@ -11,6 +11,7 @@ import {
   MEMBER_ATTENDANCE_CATEGORIES,
 } from "@/lib/minute-attendance-annex";
 import { getMemberDefaultAvatarDataUrl } from "@/lib/member-default-avatar";
+import { loadBirthdayMembers } from "@/lib/queries/birthday-members";
 import { renderMinutePdf } from "@/lib/pdf/render";
 import type { MinutePDFData } from "@/lib/pdf/minute-pdf";
 
@@ -148,11 +149,14 @@ export async function buildMinutePdfData(
     hash,
     qrCodeDataUrl,
     verifyUrl,
-    annex: (() => {
+    annex: await (async () => {
+      const birthdayMembers = await loadBirthdayMembers(minute.club.id);
       const annex = buildMinuteAttendanceAnnex(minute.meeting.attendances, locale, {
         showMemberPhotos: !!minute.club.minuteShowMemberPhotos,
         memberPhotoSize: minute.club.minuteMemberPhotoSize,
         preferDataUrlOnly: true,
+        meetingDate: minute.meeting.date,
+        birthdayMembers,
       });
       // Server-only: embed default wheel avatar for members without a data-URL photo.
       if (annex.showMemberPhotos) {
@@ -162,6 +166,11 @@ export async function buildMinutePdfData(
             if (!person.photoUrl || !isDataUrl(person.photoUrl)) {
               person.photoUrl = fallback;
             }
+          }
+        }
+        for (const entry of annex.weekBirthdays) {
+          if (entry.kind === "member" && (!entry.photoUrl || !isDataUrl(entry.photoUrl))) {
+            entry.photoUrl = fallback;
           }
         }
       }

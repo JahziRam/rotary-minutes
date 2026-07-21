@@ -63,7 +63,7 @@ export const MISSION_DEFINITIONS: MissionDef[] = [
     key: "add_members",
     href: "/members",
     helpAnchor: "dues",
-    roles: ["SECRETARY", "TREASURER", "PRESIDENT", "READER"],
+    roles: ["SECRETARY", "TREASURER", "PRESIDENT"],
     order: 5,
     requiresNavKey: "members",
   },

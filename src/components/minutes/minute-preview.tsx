@@ -11,6 +11,7 @@ import {
   annexColumnCount,
   buildMinuteAttendanceAnnex,
   MEMBER_ATTENDANCE_CATEGORIES,
+  type BirthdayMemberSource,
 } from "@/lib/minute-attendance-annex";
 import {
   minuteMemberPhotoPreviewStyle,
@@ -39,6 +40,8 @@ export interface MinutePreviewData {
     minuteShowMemberPhotos?: boolean;
     minuteMemberPhotoSize?: string | null;
   };
+  /** Active members with birthday data for the week-birthdays annex section. */
+  birthdayMembers?: BirthdayMemberSource[];
   meeting: {
     date: Date | string;
     location?: string | null;
@@ -154,6 +157,8 @@ export function MinutePreview({
     showMemberPhotos: showPhotos,
     memberPhotoSize: photoSize,
     preferDataUrlOnly: false,
+    meetingDate: data.meeting.date,
+    birthdayMembers: data.birthdayMembers,
   });
   // Resolve media URLs for web preview thumbnails (custom photo or default wheel)
   if (showPhotos) {
@@ -170,11 +175,39 @@ export function MinutePreview({
         }
       }
     }
+    for (const entry of annex.weekBirthdays) {
+      if (entry.kind !== "member") continue;
+      const raw = entry.photoUrl?.trim();
+      if (raw && raw !== MEMBER_DEFAULT_AVATAR_PATH && entry.memberId) {
+        entry.photoUrl = resolveMemberPhotoUrlOrDefault(entry.memberId, raw);
+      } else if (!raw || raw === MEMBER_DEFAULT_AVATAR_PATH) {
+        entry.photoUrl = MEMBER_DEFAULT_AVATAR_PATH;
+      }
+    }
   }
-  const annexTitle = locale === "fr" ? "Annexe — Présences et visiteurs" : "Annex — Attendance and visitors";
-  const attendanceListLabel = locale === "fr" ? "Liste de présence" : "Attendance list";
-  const visitorsListLabel = locale === "fr" ? "Liste des visiteurs" : "Visitors list";
-  const noneLabel = locale === "fr" ? "Aucune entrée" : "No entries";
+  const isFr = locale === "fr";
+  const isEs = locale === "es";
+  const annexTitle = isFr
+    ? "Annexe — Présences et visiteurs"
+    : isEs
+      ? "Anexo — Asistencias y visitantes"
+      : "Annex — Attendance and visitors";
+  const attendanceListLabel = isFr
+    ? "Liste de présence"
+    : isEs
+      ? "Lista de asistencia"
+      : "Attendance list";
+  const visitorsListLabel = isFr
+    ? "Liste des visiteurs"
+    : isEs
+      ? "Lista de visitantes"
+      : "Visitors list";
+  const weekBirthdaysLabel = isFr
+    ? "Anniversaires de la semaine"
+    : isEs
+      ? "Cumpleaños de la semana"
+      : "Birthdays this week";
+  const noneLabel = isFr ? "Aucune entrée" : isEs ? "Sin entradas" : "No entries";
 
   const timeRange = [data.meeting.startTime, data.meeting.endTime]
     .filter(Boolean)
@@ -391,6 +424,60 @@ export function MinutePreview({
                           <span>• {visitor.name}</span>
                           <span className="text-xs text-gray-500 shrink-0">
                             {visitor.label}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h5
+                  className="text-sm font-semibold mb-2 pb-1 border-b border-gray-200"
+                  style={{ color: ROTARY_BRAND.royalBlue }}
+                >
+                  {weekBirthdaysLabel} ({annex.weekBirthdays.length})
+                </h5>
+                {annex.weekBirthdays.length === 0 ? (
+                  <p className="text-sm text-gray-400 italic">{noneLabel}</p>
+                ) : (
+                  <div className="rounded-lg border border-gray-200 bg-white p-3">
+                    <ul
+                      className="text-sm text-gray-800 gap-x-6 gap-y-1.5"
+                      style={{
+                        columnCount: annexColumnCount(
+                          annex.weekBirthdays.length,
+                          showPhotos,
+                          annex.memberPhotoSize
+                        ),
+                        columnGap: "1.25rem",
+                      }}
+                    >
+                      {annex.weekBirthdays.map((entry, idx) => (
+                        <li
+                          key={`${entry.kind}-${entry.memberId}-${entry.dateLabel}-${idx}`}
+                          className="break-inside-avoid flex items-start gap-1.5"
+                        >
+                          {showPhotos && entry.kind === "member" ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={entry.photoUrl || MEMBER_DEFAULT_AVATAR_PATH}
+                              alt=""
+                              className="rounded-full object-cover shrink-0 bg-gray-100 ring-1 ring-gray-200 mt-0.5"
+                              style={photoPreviewStyle}
+                            />
+                          ) : null}
+                          <span className="min-w-0">
+                            <span className="block">
+                              {showPhotos && entry.kind === "member"
+                                ? entry.name
+                                : `• ${entry.name}`}
+                            </span>
+                            <span className="block text-xs text-gray-500">
+                              {entry.dateLabel}
+                              {entry.kind === "spouse" ? ` — ${entry.kindLabel}` : ""}
+                            </span>
                           </span>
                         </li>
                       ))}

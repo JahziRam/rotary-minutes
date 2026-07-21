@@ -684,28 +684,59 @@
     }
   },
   "onboarding": {
-    "title": "Configure su club",
-    "subtitle": "Unos pasos para comenzar con Rotary Minutes",
-    "continue": "Continuar",
-    "skip": "Omitir",
-    "finish": "Finalizar",
+    "title": "Bienvenido — configuremos su club",
+    "subtitle": "Cinco pasos guiados para estar operativo: perfil, miembros, reunión, equipo, primeras actas.",
+    "badge": "Puesta en marcha",
+    "eta": "Unos 10 minutos · puede terminar más tarde",
+    "continue": "Guardar y continuar",
+    "skip": "Omitir este paso",
+    "finish": "Finalizar la configuración",
+    "finishLater": "Terminar más tarde",
+    "finishLaterHint": "Podrá reanudar la guía desde el panel o la configuración.",
     "error": "Algo salió mal. Inténtelo de nuevo.",
+    "stepOf": "Paso {current} de {total}",
+    "progressLabel": "{done} de {total} pasos",
+    "tipLabel": "Consejo:",
+    "addMemberContinue": "Añadir y continuar",
+    "importMembers": "Importar una lista",
+    "createMeetingContinue": "Crear reunión",
+    "inviteContinue": "Invitar y continuar",
+    "inviteHelp": "Dé acceso a un secretario, tesorero o miembro. Se puede enviar un correo según la configuración del club.",
+    "firstMinuteHelp": "Se crea un borrador de acta con cada reunión. Ábralo para redactar y finalícelo para el PDF autenticado.",
+    "openDraftMinute": "Abrir el borrador de acta",
+    "openMinutes": "Ver actas",
+    "resumeWizard": "Reanudar la guía",
+    "alreadyMembers": "{count} miembro(s) ya registrados — puede añadir otro u omitir.",
+    "alreadyMeetings": "{count} reunión(es) ya creadas — puede crear otra u omitir.",
+    "alreadyUsers": "{count} usuario(s) en el club — puede invitar a otro u omitir.",
+    "stats": {
+      "members": "Miembros",
+      "meetings": "Reuniones",
+      "users": "Usuarios",
+      "minutes": "Actas"
+    },
     "steps": {
       "CLUB_PROFILE": "Perfil del club",
       "MEMBERS": "Miembros",
       "FIRST_MEETING": "Primera reunión",
-      "INVITE_USERS": "Invitar usuarios",
+      "INVITE_USERS": "Invitar al equipo",
       "FIRST_MINUTE": "Primeras actas"
     },
     "descriptions": {
-      "CLUB_PROFILE": "Complete la información básica de su club.",
-      "MEMBERS": "Añada al menos un miembro del club.",
-      "FIRST_MEETING": "Programe su primera reunión estatutaria.",
-      "INVITE_USERS": "Invite a un secretario u otro directivo.",
-      "FIRST_MINUTE": "Abra el borrador de acta, añada contenido y prepárese para finalizar su primer registro oficial."
+      "CLUB_PROFILE": "Identidad del club y hábitos de reunión — usados en documentos y convocatorias.",
+      "MEMBERS": "Construya la lista de miembros para asistencia, cuotas y cumpleaños.",
+      "FIRST_MEETING": "Programe una reunión estatutaria; se genera un borrador de acta automáticamente.",
+      "INVITE_USERS": "Comparta el acceso con la junta (secretario, tesorero, lectores).",
+      "FIRST_MINUTE": "Conozca el flujo borrador → finalización → PDF con QR de autenticidad."
     },
-    "openMinutes": "Abrir actas",
-    "checklistTitle": "Primeros pasos",
+    "tips": {
+      "CLUB_PROFILE": "El lugar y el día de reunión serán valores predeterminados para las próximas sesiones.",
+      "MEMBERS": "Podrá importar Excel/CSV más adelante desde la página Miembros.",
+      "FIRST_MEETING": "El modo en vivo permite registrar asistencia y decisiones durante la sesión.",
+      "INVITE_USERS": "Un lector ve actas y calendario sin poder editarlo todo.",
+      "FIRST_MINUTE": "Tras finalizar, envíe el PDF a los miembros por correo en un clic."
+    },
+    "checklistTitle": "Primeros pasos del club",
     "markDone": "Hecho",
     "checklist": {
       "CLUB_PROFILE": "Completar perfil del club",
@@ -721,6 +752,7 @@
       "city": "Ciudad",
       "meetingLocation": "Lugar de reunión",
       "meetingDay": "Día de reunión",
+      "meetingDayHint": "ej. Martes",
       "meetingTime": "Hora de reunión",
       "email": "Correo electrónico",
       "website": "Sitio web",
@@ -736,9 +768,38 @@
       "SECRETARY": "Secretario",
       "PRESIDENT": "Presidente",
       "VICE_PRESIDENT": "Vicepresidente",
+      "TREASURER": "Tesorero",
       "COMMISSION_CHAIR": "Presidente de comisión",
-      "READER": "Lector",
+      "READER": "Lector (miembro)",
       "ADMIN": "Administrador"
+    },
+    "setupPending": {
+      "title": "{club} aún se está configurando",
+      "body": "Los responsables del club terminan la puesta en marcha. Ya puede usar lo disponible.",
+      "help": "Centro de ayuda"
+    },
+    "memberWelcome": {
+      "title": "Bienvenido a Rotary Minutes",
+      "titleNamed": "Bienvenido, {name}",
+      "subtitle": "Así puede aprovechar el espacio de miembro de {club}.",
+      "dismiss": "Ocultar",
+      "gotIt": "Entendido",
+      "linkBannerTitle": "Vincule su ficha de miembro",
+      "linkBannerBody": "Para ver cuotas, asistencia y los recordatorios correctos, asocie su cuenta a su ficha.",
+      "duesHint": "Siga el estado de sus cuotas en",
+      "duesLink": "Mi cuenta",
+      "links": {
+        "minutes": "Actas",
+        "minutesDesc": "Consulte las actas finalizadas del club",
+        "calendar": "Calendario",
+        "calendarDesc": "Reuniones, cumpleaños y eventos",
+        "account": "Mi cuenta",
+        "accountDesc": "Perfil, cuotas y asistencia",
+        "linkProfile": "Vincular mi perfil",
+        "linkProfileDesc": "Asocie su cuenta a su ficha de miembro",
+        "notifications": "Notificaciones",
+        "notificationsDesc": "Recordatorios de reunión y alertas del club"
+      }
     }
   },
   "auth": {

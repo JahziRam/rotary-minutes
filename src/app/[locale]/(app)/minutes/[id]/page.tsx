@@ -15,6 +15,7 @@ import {
 } from "@/lib/minute-lock";
 import { hasRolePermission } from "@/lib/roles";
 import { getMinuteMemberEmailCount } from "@/actions/minutes";
+import { loadBirthdayMembers } from "@/lib/queries/birthday-members";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { MinutePreview } from "@/components/minutes/minute-preview";
 import { MinuteComments } from "@/components/minutes/minute-comments";
@@ -69,6 +70,8 @@ export default async function MinuteDetailPage({
       ? await listMinuteComments(id)
       : { comments: [], canComment: false, canModerate: false };
 
+  const birthdayMembers = await loadBirthdayMembers(minute.clubId);
+
   const canEditMinutes =
     isOwnClubMinute &&
     !isDistrictReadOnly &&
@@ -115,6 +118,7 @@ export default async function MinuteDetailPage({
                 baseUrl,
               }),
             },
+            birthdayMembers,
             meeting: {
               date: minute.meeting.date,
               location: minute.meeting.location,

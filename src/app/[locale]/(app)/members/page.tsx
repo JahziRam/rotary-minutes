@@ -82,7 +82,7 @@ export default async function MembersPage({
   return (
     <AppShellServer title={t("members.title")}>
       <div className="space-y-6">
-        {onboarding && (
+        {onboarding && onboarding.currentStep !== "COMPLETE" && !onboarding.completedAt && (
           <OnboardingChecklist
             completedSteps={onboarding.completedSteps}
             currentStep={onboarding.currentStep}

@@ -13,6 +13,7 @@ import {
   type AttendanceAnnexGroup,
   type MinuteAttendanceAnnex,
   type VisitorAnnexRow,
+  type WeekBirthdayEntry,
 } from "@/lib/minute-attendance-annex";
 import {
   DEFAULT_MINUTE_MEMBER_PHOTO_SIZE,
@@ -509,6 +510,60 @@ function VisitorsBlock({
   );
 }
 
+function WeekBirthdaysBlock({
+  entries,
+  noneLabel,
+  showPhotos,
+  photoSize,
+}: {
+  entries: WeekBirthdayEntry[];
+  noneLabel: string;
+  showPhotos: boolean;
+  photoSize: MinuteMemberPhotoSize;
+}) {
+  if (entries.length === 0) {
+    return <Text style={styles.annexEmpty}>{noneLabel}</Text>;
+  }
+  const thumb = minuteMemberPhotoPdfStyle(photoSize);
+  const cols = splitIntoColumns(
+    entries,
+    annexColumnCount(entries.length, showPhotos, photoSize)
+  );
+  return (
+    <View style={styles.annexGroup} wrap={false}>
+      <View style={styles.annexColumns}>
+        {cols.map((col, colIdx) => (
+          <View key={`bcol-${colIdx}`} style={styles.annexColumn}>
+            {col.map((entry, i) => (
+              <View key={`${colIdx}-${i}`} style={styles.annexPersonRow}>
+                {showPhotos && entry.kind === "member" ? (
+                  <View style={[styles.annexThumb, thumb]}>
+                    <Image
+                      src={entry.photoUrl || ""}
+                      style={[styles.annexThumbImg, thumb]}
+                    />
+                  </View>
+                ) : null}
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.annexListItem}>
+                    {showPhotos && entry.kind === "member"
+                      ? entry.name
+                      : `• ${entry.name}`}
+                  </Text>
+                  <Text style={styles.visitorType}>
+                    {entry.dateLabel}
+                    {entry.kind === "spouse" ? ` — ${entry.kindLabel}` : ""}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
 /** Annexe — proposition 3 (chips + groupes multi-colonnes). */
 function AnnexPage({
   data,
@@ -519,6 +574,7 @@ function AnnexPage({
     title: string;
     attendanceList: string;
     visitorsList: string;
+    weekBirthdays: string;
     none: string;
     meetingOf: string;
     presentLabel: string;
@@ -534,6 +590,8 @@ function AnnexPage({
 }) {
   const annex = data.annex;
   if (!annex) return null;
+  const photoSize = annex.memberPhotoSize ?? DEFAULT_MINUTE_MEMBER_PHOTO_SIZE;
+  const weekBirthdays = annex.weekBirthdays ?? [];
 
   return (
     <Page size="A4" style={styles.page} wrap>
@@ -560,6 +618,12 @@ function AnnexPage({
               <Text style={styles.annexChipLabel}>{labels.visitorsList}</Text>
             </View>
           ) : null}
+          {weekBirthdays.length > 0 ? (
+            <View style={styles.annexChip}>
+              <Text style={styles.annexChipValue}>{weekBirthdays.length}</Text>
+              <Text style={styles.annexChipLabel}>{labels.weekBirthdays}</Text>
+            </View>
+          ) : null}
         </View>
       ) : null}
 
@@ -574,7 +638,7 @@ function AnnexPage({
             key={group.category}
             group={group}
             showPhotos={annex.showMemberPhotos}
-            photoSize={annex.memberPhotoSize ?? DEFAULT_MINUTE_MEMBER_PHOTO_SIZE}
+            photoSize={photoSize}
           />
         ))
       )}
@@ -583,6 +647,16 @@ function AnnexPage({
         {labels.visitorsList} ({annex.totalVisitors})
       </Text>
       <VisitorsBlock visitors={annex.visitors} noneLabel={labels.none} />
+
+      <Text style={styles.annexSubtitle}>
+        {labels.weekBirthdays} ({weekBirthdays.length})
+      </Text>
+      <WeekBirthdaysBlock
+        entries={weekBirthdays}
+        noneLabel={labels.none}
+        showPhotos={annex.showMemberPhotos}
+        photoSize={photoSize}
+      />
 
       <MinutePdfFooter data={data} leftLabel={`Annexe — ${data.club.name}`} />
     </Page>
@@ -601,6 +675,11 @@ export function MinutePDFDocument({ data }: { data: MinutePDFData }) {
         : "Annex — Attendance and visitors",
     attendanceList: isFr ? "Liste de présence" : isEs ? "Lista de asistencia" : "Attendance list",
     visitorsList: isFr ? "Visiteurs" : isEs ? "Visitantes" : "Visitors",
+    weekBirthdays: isFr
+      ? "Anniversaires de la semaine"
+      : isEs
+        ? "Cumpleaños de la semana"
+        : "Birthdays this week",
     none: isFr ? "Aucune entrée" : isEs ? "Sin entradas" : "No entries",
     meetingOf: isFr ? "Réunion du" : isEs ? "Reunión del" : "Meeting of",
     presentLabel: isFr ? "Présents" : isEs ? "Presentes" : "Present",

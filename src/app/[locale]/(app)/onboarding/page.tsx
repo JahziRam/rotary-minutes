@@ -1,7 +1,10 @@
 import { redirect } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getClubContext } from "@/lib/club-context";
-import { prisma } from "@/lib/prisma";
+import {
+  canManageClubOnboarding,
+  getOnboardingBootstrap,
+} from "@/actions/onboarding";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { OnboardingWizard } from "@/components/onboarding/onboarding-wizard";
 
@@ -23,11 +26,16 @@ export default async function OnboardingPage({
     redirect(`/${locale}/dashboard`);
   }
 
-  const onboarding = await prisma.clubOnboarding.findUnique({
-    where: { clubId: ctx.clubId },
-  });
+  if (!(await canManageClubOnboarding(ctx))) {
+    redirect(`/${locale}/dashboard`);
+  }
 
-  if (onboarding?.currentStep === "COMPLETE" || onboarding?.completedAt) {
+  const bootstrap = await getOnboardingBootstrap();
+  if (
+    !bootstrap ||
+    bootstrap.currentStep === "COMPLETE" ||
+    bootstrap.progressPercent >= 100
+  ) {
     redirect(`/${locale}/dashboard`);
   }
 
@@ -45,8 +53,11 @@ export default async function OnboardingPage({
           email: ctx.club.email,
           website: ctx.club.website,
         }}
-        currentStep={onboarding?.currentStep ?? "CLUB_PROFILE"}
-        completedSteps={onboarding?.completedSteps ?? []}
+        currentStep={bootstrap.currentStep}
+        completedSteps={bootstrap.completedSteps}
+        progressPercent={bootstrap.progressPercent}
+        counts={bootstrap.counts}
+        latestDraftMinuteId={bootstrap.latestDraftMinuteId}
       />
     </AppShellServer>
   );

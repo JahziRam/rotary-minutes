@@ -1794,28 +1794,59 @@
     }
   },
   "onboarding": {
-    "title": "Set up your club",
-    "subtitle": "A few steps to get started with Rotary Minutes",
-    "continue": "Continue",
-    "skip": "Skip",
-    "finish": "Finish",
+    "title": "Welcome — let's set up your club",
+    "subtitle": "Five guided steps to get operational: profile, members, meeting, team, first minutes.",
+    "badge": "Getting started",
+    "eta": "About 10 minutes · you can finish later",
+    "continue": "Save and continue",
+    "skip": "Skip this step",
+    "finish": "Finish setup",
+    "finishLater": "Finish later",
+    "finishLaterHint": "You can resume the guide from the dashboard or settings.",
     "error": "Something went wrong. Please try again.",
+    "stepOf": "Step {current} of {total}",
+    "progressLabel": "{done} of {total} steps",
+    "tipLabel": "Tip:",
+    "addMemberContinue": "Add and continue",
+    "importMembers": "Import a list",
+    "createMeetingContinue": "Create meeting",
+    "inviteContinue": "Invite and continue",
+    "inviteHelp": "Give access to a secretary, treasurer or member. An invite email may be sent depending on club email settings.",
+    "firstMinuteHelp": "A draft minute is created with each meeting. Open it to write, then finalize for the authenticated PDF.",
+    "openDraftMinute": "Open draft minutes",
+    "openMinutes": "View minutes",
+    "resumeWizard": "Resume guide",
+    "alreadyMembers": "{count} member(s) already on file — add another or skip.",
+    "alreadyMeetings": "{count} meeting(s) already created — create another or skip.",
+    "alreadyUsers": "{count} user(s) in the club — invite another or skip.",
+    "stats": {
+      "members": "Members",
+      "meetings": "Meetings",
+      "users": "Users",
+      "minutes": "Minutes"
+    },
     "steps": {
       "CLUB_PROFILE": "Club profile",
       "MEMBERS": "Members",
       "FIRST_MEETING": "First meeting",
-      "INVITE_USERS": "Invite users",
+      "INVITE_USERS": "Invite the team",
       "FIRST_MINUTE": "First minutes"
     },
     "descriptions": {
-      "CLUB_PROFILE": "Complete your club's basic information.",
-      "MEMBERS": "Add at least one club member.",
-      "FIRST_MEETING": "Schedule your first statutory meeting.",
-      "INVITE_USERS": "Invite a secretary or another officer.",
-      "FIRST_MINUTE": "Open your draft minutes, add content and get ready to finalize your first official record."
+      "CLUB_PROFILE": "Club identity and meeting habits — used on documents and invitations.",
+      "MEMBERS": "Build the member list for attendance, dues and birthdays.",
+      "FIRST_MEETING": "Schedule a statutory meeting; a draft minute is generated automatically.",
+      "INVITE_USERS": "Share access with the board (secretary, treasurer, readers).",
+      "FIRST_MINUTE": "Learn the draft → finalize → PDF with authenticity QR flow."
     },
-    "openMinutes": "Open minutes",
-    "checklistTitle": "Getting started",
+    "tips": {
+      "CLUB_PROFILE": "Meeting place and day become defaults for future meetings.",
+      "MEMBERS": "You can import Excel/CSV later from the Members page.",
+      "FIRST_MEETING": "Live mode lets you capture attendance and decisions during the meeting.",
+      "INVITE_USERS": "A reader can view minutes and the calendar without full edit rights.",
+      "FIRST_MINUTE": "After finalizing, email the PDF to members in one click."
+    },
+    "checklistTitle": "Club first steps",
     "markDone": "Done",
     "checklist": {
       "CLUB_PROFILE": "Complete club profile",
@@ -1831,6 +1862,7 @@
       "city": "City",
       "meetingLocation": "Meeting location",
       "meetingDay": "Meeting day",
+      "meetingDayHint": "e.g. Tuesday",
       "meetingTime": "Meeting time",
       "email": "Email",
       "website": "Website",
@@ -1846,9 +1878,38 @@
       "SECRETARY": "Secretary",
       "PRESIDENT": "President",
       "VICE_PRESIDENT": "Vice President",
+      "TREASURER": "Treasurer",
       "COMMISSION_CHAIR": "Commission Chair",
-      "READER": "Reader",
+      "READER": "Reader (member)",
       "ADMIN": "Administrator"
+    },
+    "setupPending": {
+      "title": "{club} is still being set up",
+      "body": "Club officers are finishing setup. You can already use what is available.",
+      "help": "Help center"
+    },
+    "memberWelcome": {
+      "title": "Welcome to Rotary Minutes",
+      "titleNamed": "Welcome, {name}",
+      "subtitle": "Here's how to get the most from the member space at {club}.",
+      "dismiss": "Dismiss",
+      "gotIt": "Got it",
+      "linkBannerTitle": "Link your member record",
+      "linkBannerBody": "To see your dues, attendance and the right reminders, link your account to your member profile.",
+      "duesHint": "Track your dues from",
+      "duesLink": "My account",
+      "links": {
+        "minutes": "Minutes",
+        "minutesDesc": "Browse finalized club minutes",
+        "calendar": "Calendar",
+        "calendarDesc": "Meetings, birthdays and events",
+        "account": "My account",
+        "accountDesc": "Profile, dues and attendance",
+        "linkProfile": "Link my profile",
+        "linkProfileDesc": "Connect your account to your member record",
+        "notifications": "Notifications",
+        "notificationsDesc": "Meeting reminders and club alerts"
+      }
     }
   },
   "offline": {

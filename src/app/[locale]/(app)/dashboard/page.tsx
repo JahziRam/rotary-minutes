@@ -25,8 +25,15 @@ import {
   type PendingJoinRequest,
 } from "@/components/dashboard/pending-join-requests";
 import { getPendingJoinRequests } from "@/actions/registration";
-import { getClubOnboarding } from "@/actions/onboarding";
+import {
+  canManageClubOnboarding,
+  getOnboardingBootstrap,
+  isOnboardingComplete,
+  syncClubOnboardingProgress,
+} from "@/actions/onboarding";
 import { OnboardingChecklist } from "@/components/members/onboarding-checklist";
+import { MemberWelcomeCard } from "@/components/onboarding/member-welcome-card";
+import { ClubSetupPendingBanner } from "@/components/onboarding/club-setup-pending-banner";
 import { DashboardAssistance } from "@/components/assistance/dashboard-assistance";
 import { GuidedEmptyStateClient } from "@/components/assistance/guided-empty-state-client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,15 +60,19 @@ export default async function DashboardPage({
   const session = await getSession();
   const ctx = await getClubContext();
 
+  let clubSetupIncomplete = false;
+  let canDriveOnboarding = false;
   if (ctx && !ctx.isSuperAdmin) {
-    const onboarding = await prisma.clubOnboarding.findUnique({
-      where: { clubId: ctx.clubId },
-    });
-    if (
-      onboarding &&
-      onboarding.currentStep !== "COMPLETE" &&
-      !onboarding.completedAt
-    ) {
+    canDriveOnboarding = await canManageClubOnboarding(ctx);
+    const onboarding = await syncClubOnboardingProgress(ctx.clubId);
+    clubSetupIncomplete = !isOnboardingComplete(
+      onboarding.currentStep,
+      onboarding.completedAt,
+      onboarding.completedSteps
+    );
+    // Only officers who can configure the club are forced into the setup wizard.
+    // Invited members / readers keep access to the app.
+    if (clubSetupIncomplete && canDriveOnboarding) {
       redirect(`/${locale}/onboarding`);
     }
   }
@@ -136,13 +147,34 @@ export default async function DashboardPage({
     }
   }
 
-  const showGuide =
-    ctx &&
+  const onboardingBootstrap =
+    ctx && !ctx.isSuperAdmin && canDriveOnboarding && clubSetupIncomplete
+      ? await getOnboardingBootstrap()
+      : null;
+
+  const membershipHints =
+    ctx && !ctx.isSuperAdmin
+      ? await prisma.clubMembership.findUnique({
+          where: {
+            clubId_userId: { clubId: ctx.clubId, userId: session!.user!.id },
+          },
+          select: { dismissedHints: true },
+        })
+      : null;
+  const showMemberWelcome =
+    !!ctx &&
     !ctx.isSuperAdmin &&
     ctx.club.guideEnabled &&
-    canManageMembers;
-  const onboardingGuide =
-    showGuide ? await getClubOnboarding() : null;
+    !canDriveOnboarding &&
+    !(membershipHints?.dismissedHints ?? []).includes("member_welcome_v1");
+
+  const linkedMember =
+    !!ctx &&
+    !!session?.user?.id &&
+    !!(await prisma.member.findFirst({
+      where: { clubId: ctx.clubId, userId: session.user.id },
+      select: { id: true },
+    }));
 
   const viewAsClubs =
     session?.user?.isSuperAdmin && !ctx
@@ -180,10 +212,29 @@ export default async function DashboardPage({
           />
         )}
 
-        {onboardingGuide && onboardingGuide.currentStep !== "COMPLETE" && (
-          <OnboardingChecklist
-            completedSteps={onboardingGuide.completedSteps}
-            currentStep={onboardingGuide.currentStep}
+        {onboardingBootstrap &&
+          onboardingBootstrap.currentStep !== "COMPLETE" && (
+            <OnboardingChecklist
+              completedSteps={onboardingBootstrap.completedSteps}
+              currentStep={onboardingBootstrap.currentStep}
+              progressPercent={onboardingBootstrap.progressPercent}
+            />
+          )}
+
+        {clubSetupIncomplete && !canDriveOnboarding && ctx && (
+          <ClubSetupPendingBanner clubName={ctx.clubName} />
+        )}
+
+        {showMemberWelcome && ctx && (
+          <MemberWelcomeCard
+            firstName={userName}
+            clubName={ctx.clubName}
+            linkedMember={linkedMember}
+            showDues={isFeatureEnabled(
+              ctx.features,
+              "duesEnabled",
+              ctx.isSuperAdmin
+            )}
           />
         )}
 

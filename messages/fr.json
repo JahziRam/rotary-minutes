@@ -1279,14 +1279,14 @@
     "openSection": "Ouvrir cette section",
     "helpCenter": "Consulter le centre d'aide",
     "welcomePoints": {
-      "1": "Découvrez les sections clés de la navigation",
-      "2": "Apprenez le flux réunion → PV → cotisations",
+      "1": "Découvrez les sections clés selon votre rôle (bureau ou membre)",
+      "2": "Parcourez le flux réunion → PV → cotisations / mon compte",
       "3": "Reprenez ce guide à tout moment via le bouton ?"
     },
     "steps": {
       "WELCOME": {
         "title": "Bienvenue dans Rotary Minutes",
-        "body": "Ce guide interactif vous présente les fonctionnalités essentielles pour administrer votre club au quotidien."
+        "body": "Ce guide interactif présente les fonctions essentielles pour piloter ou suivre la vie du club — du tableau de bord aux PV authentifiés."
       },
       "DASHBOARD": {
         "title": "Tableau de bord",
@@ -1854,28 +1854,59 @@
     }
   },
   "onboarding": {
-    "title": "Configuration de votre club",
-    "subtitle": "Quelques étapes pour démarrer avec Rotary Minutes",
-    "continue": "Continuer",
-    "skip": "Passer",
-    "finish": "Terminer",
+    "title": "Bienvenue — configurons votre club",
+    "subtitle": "Cinq étapes guidées pour être opérationnel : profil, membres, réunion, équipe, premier PV.",
+    "badge": "Mise en route",
+    "eta": "Environ 10 minutes · vous pourrez finir plus tard",
+    "continue": "Enregistrer et continuer",
+    "skip": "Passer cette étape",
+    "finish": "Terminer la configuration",
+    "finishLater": "Terminer plus tard",
+    "finishLaterHint": "Vous pourrez reprendre le guide depuis le tableau de bord ou les paramètres.",
     "error": "Une erreur est survenue. Réessayez.",
+    "stepOf": "Étape {current} sur {total}",
+    "progressLabel": "{done} sur {total} étapes",
+    "tipLabel": "Conseil :",
+    "addMemberContinue": "Ajouter et continuer",
+    "importMembers": "Importer une liste",
+    "createMeetingContinue": "Créer la réunion",
+    "inviteContinue": "Inviter et continuer",
+    "inviteHelp": "Donnez accès à un secrétaire, trésorier ou membre. Un e-mail d'invitation peut être envoyé selon la configuration e-mail du club.",
+    "firstMinuteHelp": "Un brouillon de PV est créé avec chaque réunion. Ouvrez-le pour rédiger, puis finalisez-le pour le PDF authentifié.",
+    "openDraftMinute": "Ouvrir le brouillon de PV",
+    "openMinutes": "Voir les procès-verbaux",
+    "resumeWizard": "Reprendre le guide",
+    "alreadyMembers": "{count} membre(s) déjà enregistré(s) — vous pouvez en ajouter un autre ou passer.",
+    "alreadyMeetings": "{count} réunion(s) déjà créée(s) — vous pouvez en créer une autre ou passer.",
+    "alreadyUsers": "{count} utilisateur(s) dans le club — vous pouvez en inviter un autre ou passer.",
+    "stats": {
+      "members": "Membres",
+      "meetings": "Réunions",
+      "users": "Utilisateurs",
+      "minutes": "PV"
+    },
     "steps": {
       "CLUB_PROFILE": "Profil du club",
       "MEMBERS": "Membres",
       "FIRST_MEETING": "Première réunion",
-      "INVITE_USERS": "Inviter des utilisateurs",
+      "INVITE_USERS": "Inviter l'équipe",
       "FIRST_MINUTE": "Premier PV"
     },
     "descriptions": {
-      "CLUB_PROFILE": "Complétez les informations de base de votre club.",
-      "MEMBERS": "Ajoutez au moins un membre du club.",
-      "FIRST_MEETING": "Planifiez votre première réunion statutaire.",
-      "INVITE_USERS": "Invitez un secrétaire ou un autre officier.",
-      "FIRST_MINUTE": "Ouvrez le brouillon de PV créé avec votre réunion, complétez-le et préparez votre premier procès-verbal officiel."
+      "CLUB_PROFILE": "Identité du club et habitudes de réunion — utilisées dans les documents et convocations.",
+      "MEMBERS": "Constituez la liste des membres pour les présences, cotisations et anniversaires.",
+      "FIRST_MEETING": "Planifiez une réunion statutaire ; un brouillon de PV est généré automatiquement.",
+      "INVITE_USERS": "Partagez l'accès avec le bureau (secrétaire, trésorier, lecteurs).",
+      "FIRST_MINUTE": "Découvrez le flux brouillon → finalisation → PDF avec QR d'authenticité."
     },
-    "openMinutes": "Ouvrir les PV",
-    "checklistTitle": "Premiers pas",
+    "tips": {
+      "CLUB_PROFILE": "Le lieu et le jour de réunion serviront de valeurs par défaut pour les prochaines séances.",
+      "MEMBERS": "Vous pourrez importer un fichier Excel/CSV plus tard depuis la page Membres.",
+      "FIRST_MEETING": "Le mode live permet de noter présences et décisions pendant la séance.",
+      "INVITE_USERS": "Un lecteur voit les PV et le calendrier sans pouvoir tout modifier.",
+      "FIRST_MINUTE": "Après finalisation, envoyez le PDF aux membres par e-mail en un clic."
+    },
+    "checklistTitle": "Premiers pas du club",
     "markDone": "Fait",
     "checklist": {
       "CLUB_PROFILE": "Compléter le profil du club",
@@ -1891,6 +1922,7 @@
       "city": "Ville",
       "meetingLocation": "Lieu de réunion",
       "meetingDay": "Jour de réunion",
+      "meetingDayHint": "ex. Mardi",
       "meetingTime": "Heure de réunion",
       "email": "Email",
       "website": "Site web",
@@ -1906,9 +1938,38 @@
       "SECRETARY": "Secrétaire",
       "PRESIDENT": "Président",
       "VICE_PRESIDENT": "Vice-président",
+      "TREASURER": "Trésorier",
       "COMMISSION_CHAIR": "Président de commission",
-      "READER": "Lecteur",
+      "READER": "Lecteur (membre)",
       "ADMIN": "Administrateur"
+    },
+    "setupPending": {
+      "title": "{club} est encore en configuration",
+      "body": "Les responsables du club finalisent la mise en route. Vous pouvez déjà consulter ce qui est disponible.",
+      "help": "Centre d'aide"
+    },
+    "memberWelcome": {
+      "title": "Bienvenue sur Rotary Minutes",
+      "titleNamed": "Bienvenue, {name}",
+      "subtitle": "Voici comment tirer le meilleur parti de l'espace membre de {club}.",
+      "dismiss": "Masquer",
+      "gotIt": "Compris",
+      "linkBannerTitle": "Liez votre fiche membre",
+      "linkBannerBody": "Pour voir vos cotisations, votre assiduité et recevoir les bons rappels, associez votre compte à votre fiche.",
+      "duesHint": "Suivez l'état de vos cotisations depuis",
+      "duesLink": "Mon compte",
+      "links": {
+        "minutes": "Procès-verbaux",
+        "minutesDesc": "Consultez les PV finalisés du club",
+        "calendar": "Calendrier",
+        "calendarDesc": "Réunions, anniversaires et événements",
+        "account": "Mon compte",
+        "accountDesc": "Profil, cotisations et assiduité",
+        "linkProfile": "Lier mon profil",
+        "linkProfileDesc": "Associez votre compte à votre fiche membre",
+        "notifications": "Notifications",
+        "notificationsDesc": "Rappels de réunion et alertes club"
+      }
     }
   },
   "offline": {
