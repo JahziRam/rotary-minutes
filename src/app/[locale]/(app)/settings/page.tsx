@@ -159,6 +159,7 @@ export default async function SettingsPage({
                       whatsappReminderPhone: club.whatsappReminderPhone,
                       guideEnabled: club.guideEnabled,
                       minuteShowMemberPhotos: club.minuteShowMemberPhotos,
+                      minuteMemberPhotoSize: club.minuteMemberPhotoSize,
                       publicCalendarToken: club.publicCalendarToken,
                     }}
                   />

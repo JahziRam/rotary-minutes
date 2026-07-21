@@ -17,6 +17,7 @@ export function buildClubEmailVars(opts: {
   meetingLocation?: string;
   minuteTitle?: string;
   verifyUrl?: string;
+  loginUrl?: string;
   dashboardUrl?: string;
   duesAmount?: string;
   duesDueDate?: string;
@@ -36,6 +37,7 @@ export function buildClubEmailVars(opts: {
     meetingLocation: opts.meetingLocation ?? "",
     minuteTitle: opts.minuteTitle ?? "",
     verifyUrl: opts.verifyUrl ?? "",
+    loginUrl: opts.loginUrl ?? "",
     dashboardUrl: opts.dashboardUrl ?? "",
     duesAmount: opts.duesAmount ?? "",
     duesDueDate: opts.duesDueDate ?? "",

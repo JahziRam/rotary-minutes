@@ -123,7 +123,8 @@ export async function dispatchCampaign(campaignId: string) {
       clubLogo: logoSrcFromResult(emailLogo) ?? "",
       firstName: contact?.firstName ?? undefined,
       lastName: contact?.lastName ?? undefined,
-      dashboardUrl: `${baseUrl}/${locale}/dashboard`,
+      loginUrl: `${baseUrl.replace(/\/$/, "")}/${locale}/login`,
+      dashboardUrl: `${baseUrl.replace(/\/$/, "")}/${locale}/dashboard`,
     });
     const subject = renderEmailContent(campaign.subject, vars);
     const bodyHtml = renderEmailContent(campaign.body, vars);

@@ -4,6 +4,7 @@ import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/require-permission";
+import { parseMinuteMemberPhotoSize } from "@/lib/minute-member-photo-size";
 
 function revalidateSettings() {
   for (const loc of ["fr", "en", "es"]) {
@@ -18,6 +19,7 @@ export async function updateClubWorkflowSettings(data: {
   whatsappReminderPhone?: string | null;
   guideEnabled: boolean;
   minuteShowMemberPhotos: boolean;
+  minuteMemberPhotoSize?: string | null;
 }) {
   const auth = await requirePermission("settings.manage");
   if (auth.error) return auth;
@@ -30,6 +32,7 @@ export async function updateClubWorkflowSettings(data: {
       whatsappReminderPhone: data.whatsappReminderPhone?.trim() || null,
       guideEnabled: data.guideEnabled,
       minuteShowMemberPhotos: data.minuteShowMemberPhotos,
+      minuteMemberPhotoSize: parseMinuteMemberPhotoSize(data.minuteMemberPhotoSize),
     },
   });
 

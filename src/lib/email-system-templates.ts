@@ -93,10 +93,14 @@ export const SYSTEM_EMAIL_TEMPLATES: SystemEmailTemplate[] = [
     body: {
       fr: `<p>Bonjour,</p>
 <p>Le procès-verbal <strong>{{minuteTitle}}</strong> du club <strong>{{clubName}}</strong> a été finalisé.</p>
-<p><a class="cta-button" href="{{verifyUrl}}">Vérifier l'authenticité du PV</a></p>`,
+<p>Le PDF officiel est joint à cet email.</p>
+<p><a class="cta-button" href="{{loginUrl}}">Se connecter à la plateforme</a></p>
+<p style="font-size:14px;color:#64748b">Pensez à consulter régulièrement votre compte pour suivre les projets et actions du club.</p>`,
       en: `<p>Hello,</p>
 <p>The minute <strong>{{minuteTitle}}</strong> for <strong>{{clubName}}</strong> has been finalized.</p>
-<p><a class="cta-button" href="{{verifyUrl}}">Verify minute authenticity</a></p>`,
+<p>The official PDF is attached to this email.</p>
+<p><a class="cta-button" href="{{loginUrl}}">Sign in to the platform</a></p>
+<p style="font-size:14px;color:#64748b">Please check your account regularly to follow the club's projects and actions.</p>`,
     },
   },
   {

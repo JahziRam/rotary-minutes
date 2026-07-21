@@ -48,6 +48,7 @@ type MinuteForPdf = {
     logoUrl?: string | null;
     language: string;
     minuteShowMemberPhotos?: boolean;
+    minuteMemberPhotoSize?: string | null;
   };
   agendaItems: Array<{
     title: string;
@@ -150,6 +151,7 @@ export async function buildMinutePdfData(
     annex: (() => {
       const annex = buildMinuteAttendanceAnnex(minute.meeting.attendances, locale, {
         showMemberPhotos: !!minute.club.minuteShowMemberPhotos,
+        memberPhotoSize: minute.club.minuteMemberPhotoSize,
         preferDataUrlOnly: true,
       });
       // Server-only: embed default wheel avatar for members without a data-URL photo.

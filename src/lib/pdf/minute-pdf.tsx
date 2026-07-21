@@ -14,6 +14,11 @@ import {
   type MinuteAttendanceAnnex,
   type VisitorAnnexRow,
 } from "@/lib/minute-attendance-annex";
+import {
+  DEFAULT_MINUTE_MEMBER_PHOTO_SIZE,
+  minuteMemberPhotoPdfStyle,
+  type MinuteMemberPhotoSize,
+} from "@/lib/minute-member-photo-size";
 import { ClubDefaultLogoPdf } from "@/components/brand/club-default-logo-pdf";
 import { ROTARY_BRAND, ROTARY_LOGO_DISPLAY } from "@/lib/rotary-brand";
 
@@ -303,15 +308,10 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   annexThumb: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
     overflow: "hidden",
     backgroundColor: C.border,
   },
   annexThumbImg: {
-    width: 12,
-    height: 12,
     objectFit: "cover",
   },
   annexEmpty: { fontSize: 9, color: C.muted, fontStyle: "italic" },
@@ -424,13 +424,16 @@ function MinutePdfFooter({
 function PersonColumns({
   people,
   showPhotos,
+  photoSize,
 }: {
   people: AnnexPersonEntry[];
   showPhotos: boolean;
+  photoSize: MinuteMemberPhotoSize;
 }) {
+  const thumb = minuteMemberPhotoPdfStyle(photoSize);
   const cols = splitIntoColumns(
     people,
-    annexColumnCount(people.length, showPhotos)
+    annexColumnCount(people.length, showPhotos, photoSize)
   );
   return (
     <View style={styles.annexColumns}>
@@ -439,10 +442,10 @@ function PersonColumns({
           {col.map((person, i) => (
             <View key={`${colIdx}-${i}`} style={styles.annexPersonRow}>
               {showPhotos ? (
-                <View style={styles.annexThumb}>
+                <View style={[styles.annexThumb, thumb]}>
                   <Image
                     src={person.photoUrl || ""}
-                    style={styles.annexThumbImg}
+                    style={[styles.annexThumbImg, thumb]}
                   />
                 </View>
               ) : null}
@@ -460,9 +463,11 @@ function PersonColumns({
 function MemberGroupBlock({
   group,
   showPhotos,
+  photoSize,
 }: {
   group: AttendanceAnnexGroup;
   showPhotos: boolean;
+  photoSize: MinuteMemberPhotoSize;
 }) {
   return (
     <View style={styles.annexGroup} wrap={false} minPresenceAhead={56}>
@@ -470,7 +475,7 @@ function MemberGroupBlock({
         <Text style={styles.annexCategory}>{group.label}</Text>
         <Text style={styles.annexCountBadge}>{group.people.length}</Text>
       </View>
-      <PersonColumns people={group.people} showPhotos={showPhotos} />
+      <PersonColumns people={group.people} showPhotos={showPhotos} photoSize={photoSize} />
     </View>
   );
 }
@@ -569,6 +574,7 @@ function AnnexPage({
             key={group.category}
             group={group}
             showPhotos={annex.showMemberPhotos}
+            photoSize={annex.memberPhotoSize ?? DEFAULT_MINUTE_MEMBER_PHOTO_SIZE}
           />
         ))
       )}

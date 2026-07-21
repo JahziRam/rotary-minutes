@@ -203,17 +203,17 @@ export async function minuteFinalizedEmail(opts: {
   clubName: string;
   clubId?: string;
   minuteTitle: string;
-  verifyUrl: string;
+  loginUrl: string;
   locale: string;
   logoUrl?: string;
 }) {
   const isFr = opts.locale === "fr";
   const isEs = opts.locale === "es";
   const body = isFr
-    ? `<p>Le procès-verbal <strong>${opts.minuteTitle}</strong> de ${opts.clubName} est disponible.</p><p>Le PDF officiel est joint à cet email.</p><p><a class="cta-button" href="${opts.verifyUrl}">Vérifier l'authenticité en ligne</a></p>`
+    ? `<p>Le procès-verbal <strong>${opts.minuteTitle}</strong> de ${opts.clubName} est disponible.</p><p>Le PDF officiel est joint à cet email.</p><p><a class="cta-button" href="${opts.loginUrl}">Se connecter à la plateforme</a></p><p style="font-size:14px;color:#64748b">Pensez à consulter régulièrement votre compte pour suivre les projets et actions du club.</p>`
     : isEs
-      ? `<p>El acta <strong>${opts.minuteTitle}</strong> de ${opts.clubName} está disponible.</p><p>El PDF oficial está adjunto.</p><p><a class="cta-button" href="${opts.verifyUrl}">Verificar autenticidad en línea</a></p>`
-      : `<p>The minutes <strong>${opts.minuteTitle}</strong> for ${opts.clubName} are available.</p><p>The official PDF is attached to this email.</p><p><a class="cta-button" href="${opts.verifyUrl}">Verify authenticity online</a></p>`;
+      ? `<p>El acta <strong>${opts.minuteTitle}</strong> de ${opts.clubName} está disponible.</p><p>El PDF oficial está adjunto.</p><p><a class="cta-button" href="${opts.loginUrl}">Conectarse a la plataforma</a></p><p style="font-size:14px;color:#64748b">Consulte su cuenta con regularidad para seguir los proyectos y acciones del club.</p>`
+      : `<p>The minutes <strong>${opts.minuteTitle}</strong> for ${opts.clubName} are available.</p><p>The official PDF is attached to this email.</p><p><a class="cta-button" href="${opts.loginUrl}">Sign in to the platform</a></p><p style="font-size:14px;color:#64748b">Please check your account regularly to follow the club's projects and actions.</p>`;
   const branded = await prepareBrandedEmail(body, {
     clubName: opts.clubName,
     clubId: opts.clubId,

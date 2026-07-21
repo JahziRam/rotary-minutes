@@ -7,6 +7,12 @@ import {
 } from "@/lib/format-person-name";
 import { isDataUrl } from "@/lib/image-storage";
 import { MEMBER_DEFAULT_AVATAR_PATH } from "@/lib/media-url";
+import {
+  annexColumnCountForPhotos,
+  DEFAULT_MINUTE_MEMBER_PHOTO_SIZE,
+  parseMinuteMemberPhotoSize,
+  type MinuteMemberPhotoSize,
+} from "@/lib/minute-member-photo-size";
 
 /** Build attendance & visitor lists for minute annex (PV). */
 
@@ -140,6 +146,8 @@ export type MinuteAttendanceAnnex = {
   totalMembers: number;
   totalVisitors: number;
   showMemberPhotos: boolean;
+  /** Profile photo size when showMemberPhotos is true. */
+  memberPhotoSize: MinuteMemberPhotoSize;
 };
 
 export function buildMinuteAttendanceAnnex(
@@ -147,11 +155,15 @@ export function buildMinuteAttendanceAnnex(
   locale: string,
   options?: {
     showMemberPhotos?: boolean;
+    memberPhotoSize?: string | null;
     /** When true (PDF), only embed photos stored as data: URLs. */
     preferDataUrlOnly?: boolean;
   }
 ): MinuteAttendanceAnnex {
   const showMemberPhotos = !!options?.showMemberPhotos;
+  const memberPhotoSize = showMemberPhotos
+    ? parseMinuteMemberPhotoSize(options?.memberPhotoSize)
+    : DEFAULT_MINUTE_MEMBER_PHOTO_SIZE;
   const countableRows = excludeHonoraryMemberAttendances(rows);
   const memberRows = countableRows.filter((r) =>
     (MEMBER_ATTENDANCE_CATEGORIES as readonly string[]).includes(r.category)
@@ -195,6 +207,7 @@ export function buildMinuteAttendanceAnnex(
     totalMembers: memberRows.length,
     totalVisitors: visitors.length,
     showMemberPhotos,
+    memberPhotoSize,
   };
 }
 
@@ -211,14 +224,14 @@ export function splitIntoColumns<T>(items: T[], columns: number): T[][] {
   return cols;
 }
 
-/** Adaptive columns: short lists stay single-column; long lists use 2–3 cols. */
-export function annexColumnCount(itemCount: number, withPhotos = false): number {
-  if (withPhotos) {
-    if (itemCount <= 10) return 1;
-    if (itemCount <= 28) return 2;
-    return 3;
-  }
-  if (itemCount <= 8) return 1;
-  if (itemCount <= 24) return 2;
-  return 3;
+/**
+ * Adaptive columns: short lists stay single-column; long lists use 2–3 cols.
+ * Larger photos use slightly fewer columns.
+ */
+export function annexColumnCount(
+  itemCount: number,
+  withPhotos = false,
+  photoSize: MinuteMemberPhotoSize = DEFAULT_MINUTE_MEMBER_PHOTO_SIZE
+): number {
+  return annexColumnCountForPhotos(itemCount, withPhotos, photoSize);
 }

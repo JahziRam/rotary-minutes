@@ -15,6 +15,13 @@ enum Language {
   ES
 }
 
+/** Profile photo size in PV attendance annex (when photos are enabled). */
+enum MinuteMemberPhotoSize {
+  S
+  M
+  L
+}
+
 enum ClubType {
   ROTARY
   ROTARACT
@@ -444,6 +451,8 @@ model Club {
   presidentApprovalRequired Boolean @default(true)
   /** Show small round member photos next to names in PV annex (PDF + preview). */
   minuteShowMemberPhotos    Boolean  @default(false)
+  /** Profile photo size in PV annex when minuteShowMemberPhotos is true: S, M or L. */
+  minuteMemberPhotoSize     MinuteMemberPhotoSize @default(S)
   publicCalendarToken       String?  @unique
   whatsappReminderPhone     String?
   guideEnabled              Boolean  @default(true)

@@ -10,6 +10,15 @@ describe("annex columns", () => {
     expect(annexColumnCount(25)).toBe(3);
   });
 
+  it("uses fewer columns for larger photos", () => {
+    expect(annexColumnCount(10, true, "S")).toBe(1);
+    expect(annexColumnCount(11, true, "S")).toBe(2);
+    expect(annexColumnCount(9, true, "M")).toBe(1);
+    expect(annexColumnCount(10, true, "M")).toBe(2);
+    expect(annexColumnCount(8, true, "L")).toBe(1);
+    expect(annexColumnCount(9, true, "L")).toBe(2);
+  });
+
   it("fills columns top-to-bottom then left-to-right", () => {
     const names = ["A", "B", "C", "D", "E"];
     expect(splitIntoColumns(names, 2)).toEqual([

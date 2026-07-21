@@ -12,6 +12,10 @@ import {
   buildMinuteAttendanceAnnex,
   MEMBER_ATTENDANCE_CATEGORIES,
 } from "@/lib/minute-attendance-annex";
+import {
+  minuteMemberPhotoPreviewStyle,
+  parseMinuteMemberPhotoSize,
+} from "@/lib/minute-member-photo-size";
 import { filterAttendancesForRate } from "@/lib/member-attendance-eligibility";
 import {
   MEMBER_DEFAULT_AVATAR_PATH,
@@ -33,6 +37,7 @@ export interface MinutePreviewData {
     country?: string | null;
     logoUrl?: string | null;
     minuteShowMemberPhotos?: boolean;
+    minuteMemberPhotoSize?: string | null;
   };
   meeting: {
     date: Date | string;
@@ -143,8 +148,11 @@ export function MinutePreview({
   const total = memberAttendances.length;
   const rate = total > 0 ? Math.round(calculateAttendanceRate(present, total).rate) : 0;
   const showPhotos = !!data.club.minuteShowMemberPhotos;
+  const photoSize = parseMinuteMemberPhotoSize(data.club.minuteMemberPhotoSize);
+  const photoPreviewStyle = minuteMemberPhotoPreviewStyle(photoSize);
   const annex = buildMinuteAttendanceAnnex(data.meeting.attendances, locale, {
     showMemberPhotos: showPhotos,
+    memberPhotoSize: photoSize,
     preferDataUrlOnly: false,
   });
   // Resolve media URLs for web preview thumbnails (custom photo or default wheel)
@@ -307,7 +315,8 @@ export function MinutePreview({
                     {annex.memberGroups.map((group) => {
                       const cols = annexColumnCount(
                         group.people.length,
-                        annex.showMemberPhotos
+                        annex.showMemberPhotos,
+                        annex.memberPhotoSize
                       );
                       return (
                         <div
@@ -339,7 +348,8 @@ export function MinutePreview({
                                   <img
                                     src={person.photoUrl || MEMBER_DEFAULT_AVATAR_PATH}
                                     alt=""
-                                    className="h-5 w-5 rounded-full object-cover shrink-0 bg-gray-100 ring-1 ring-gray-200"
+                                    className="rounded-full object-cover shrink-0 bg-gray-100 ring-1 ring-gray-200"
+                                    style={photoPreviewStyle}
                                   />
                                 ) : null}
                                 <span>

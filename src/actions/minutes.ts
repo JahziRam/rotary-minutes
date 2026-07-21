@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { getClubContext } from "@/lib/club-context";
 import { canViewDistrictMinutes } from "@/lib/district-access";
-import { generateMinuteHash, getVerifyUrl, resolveMinuteVerifyUrl } from "@/lib/hash";
+import { generateMinuteHash, getVerifyUrl } from "@/lib/hash";
 import { getAppBaseUrl } from "@/lib/app-url";
 import { requirePermission } from "@/lib/require-permission";
 import { minuteFinalizedEmail, minuteReviewRequestEmail } from "@/lib/email";
@@ -348,11 +348,12 @@ async function doFinalizeMinute(
 
   const clubEmail = minute.club.email;
   if (clubEmail) {
+    const loginUrl = `${baseUrl.replace(/\/$/, "")}/${locale}/login`;
     const mail = await minuteFinalizedEmail({
       clubName: minute.club.name,
       clubId: minute.club.id,
       minuteTitle: minute.title,
-      verifyUrl,
+      loginUrl,
       locale,
       logoUrl: minute.club.logoUrl ?? undefined,
     });
@@ -895,17 +896,17 @@ async function dispatchMinuteEmail(
   },
   recipientEmail: string,
   locale: string,
-  pdf: { buffer: Buffer; filename: string },
-  verifyUrl: string
+  pdf: { buffer: Buffer; filename: string }
 ) {
   const { loadMinuteAttachmentBuffers } = await import("@/actions/minute-attachments");
   const extraAttachments = await loadMinuteAttachmentBuffers(minute.id, minute.club.id);
+  const loginUrl = `${getAppBaseUrl().replace(/\/$/, "")}/${locale}/login`;
 
   const mail = await minuteFinalizedEmail({
     clubName: minute.club.name,
     clubId: minute.club.id,
     minuteTitle: minute.title,
-    verifyUrl,
+    loginUrl,
     locale,
     logoUrl: minute.club.logoUrl ?? undefined,
   });
@@ -944,16 +945,12 @@ export async function sendMinuteByEmail(
     return { error: "NOT_FINALIZED" };
   }
 
-  const verifyUrl = resolveMinuteVerifyUrl(minute, locale);
-  if (!verifyUrl) return { error: "NOT_FINALIZED" };
-
   const pdf = await buildMinutePdfBuffer(minute, locale);
   const { result: sent, subject, html } = await dispatchMinuteEmail(
     minute,
     recipientEmail,
     locale,
-    pdf,
-    verifyUrl
+    pdf
   );
 
   const { recordEmailCampaign, emailStatusFromSendResult } = await import(
@@ -1022,9 +1019,6 @@ export async function sendMinuteToAllMembers(minuteId: string, locale: string) {
     return { error: "NOT_FINALIZED" };
   }
 
-  const verifyUrl = resolveMinuteVerifyUrl(minute, locale);
-  if (!verifyUrl) return { error: "NOT_FINALIZED" };
-
   const members = await prisma.member.findMany({
     where: {
       clubId: ctx.clubId,
@@ -1061,8 +1055,7 @@ export async function sendMinuteToAllMembers(minuteId: string, locale: string) {
       minute,
       email,
       locale,
-      pdf,
-      verifyUrl
+      pdf
     );
     subject = subj;
     html = body;

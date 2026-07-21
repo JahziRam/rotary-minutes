@@ -10,12 +10,19 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Toast } from "@/components/ui/toast";
+import {
+  MINUTE_MEMBER_PHOTO_SIZES,
+  MINUTE_MEMBER_PHOTO_SIZE_SPECS,
+  parseMinuteMemberPhotoSize,
+  type MinuteMemberPhotoSize,
+} from "@/lib/minute-member-photo-size";
 
 interface WorkflowSettings {
   presidentApprovalRequired: boolean;
   whatsappReminderPhone: string | null;
   guideEnabled: boolean;
   minuteShowMemberPhotos: boolean;
+  minuteMemberPhotoSize?: string | null;
   publicCalendarToken: string | null;
 }
 
@@ -24,7 +31,10 @@ export function ClubWorkflowSettings({ settings }: { settings: WorkflowSettings 
   const tCommon = useTranslations("common");
   const [pending, startTransition] = useTransition();
   const [toast, setToast] = useState<string | null>(null);
-  const [state, setState] = useState(settings);
+  const [state, setState] = useState({
+    ...settings,
+    minuteMemberPhotoSize: parseMinuteMemberPhotoSize(settings.minuteMemberPhotoSize),
+  });
   const [calendarToken, setCalendarToken] = useState(settings.publicCalendarToken);
 
   const feedUrl = calendarToken ? `/api/public/calendar/${calendarToken}` : null;
@@ -36,6 +46,7 @@ export function ClubWorkflowSettings({ settings }: { settings: WorkflowSettings 
         whatsappReminderPhone: state.whatsappReminderPhone,
         guideEnabled: state.guideEnabled,
         minuteShowMemberPhotos: state.minuteShowMemberPhotos,
+        minuteMemberPhotoSize: state.minuteMemberPhotoSize,
       });
       if ("success" in result && result.success) setToast(t("saved"));
     });
@@ -100,6 +111,51 @@ export function ClubWorkflowSettings({ settings }: { settings: WorkflowSettings 
             <span className="block text-xs text-gray-500">{t("minuteShowMemberPhotosHint")}</span>
           </span>
         </label>
+
+        {state.minuteShowMemberPhotos && (
+          <div className="ml-6 space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
+            <p className="text-sm font-medium text-gray-900">{t("minuteMemberPhotoSize")}</p>
+            <p className="text-xs text-gray-500">{t("minuteMemberPhotoSizeHint")}</p>
+            <div className="flex flex-wrap gap-3">
+              {MINUTE_MEMBER_PHOTO_SIZES.map((size) => {
+                const px = MINUTE_MEMBER_PHOTO_SIZE_SPECS[size].previewPx;
+                const selected = state.minuteMemberPhotoSize === size;
+                return (
+                  <label
+                    key={size}
+                    className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${
+                      selected
+                        ? "border-navy bg-white ring-2 ring-navy/20"
+                        : "border-gray-200 bg-white hover:border-gray-300"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="minuteMemberPhotoSize"
+                      value={size}
+                      checked={selected}
+                      onChange={() =>
+                        setState((s) => ({
+                          ...s,
+                          minuteMemberPhotoSize: size as MinuteMemberPhotoSize,
+                        }))
+                      }
+                      className="sr-only"
+                    />
+                    <span
+                      className="shrink-0 rounded-full bg-gray-200 ring-1 ring-gray-300"
+                      style={{ width: px, height: px }}
+                      aria-hidden
+                    />
+                    <span className="font-medium text-gray-800">
+                      {t(`minuteMemberPhotoSize${size}`)}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <Input
           label={t("whatsappReminderPhone")}
