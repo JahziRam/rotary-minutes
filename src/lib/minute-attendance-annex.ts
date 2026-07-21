@@ -5,6 +5,9 @@ import {
   formatLastName,
   formatPersonName,
 } from "@/lib/format-person-name";
+import { isDataUrl } from "@/lib/image-storage";
+import { getMemberDefaultAvatarDataUrl } from "@/lib/member-default-avatar";
+import { MEMBER_DEFAULT_AVATAR_PATH } from "@/lib/media-url";
 
 /** Build attendance & visitor lists for minute annex (PV). */
 
@@ -30,7 +33,13 @@ export type MinuteAttendanceRow = {
   category: string;
   guestName?: string | null;
   memberId?: string | null;
-  member?: { firstName: string; lastName: string; isHonoraryMember?: boolean } | null;
+  member?: {
+    id?: string;
+    firstName: string;
+    lastName: string;
+    isHonoraryMember?: boolean;
+    photoUrl?: string | null;
+  } | null;
 };
 
 const CATEGORY_LABELS: Record<string, { fr: string; en: string }> = {
@@ -62,6 +71,28 @@ export function attendanceDisplayName(row: MinuteAttendanceRow): string {
   return formatGuestName(row.guestName) || "—";
 }
 
+/**
+ * Photo for annex row when club shows member photos.
+ * Uses custom profile photo when available; otherwise the default wheel avatar.
+ * For PDF (`preferDataUrlOnly`), embeds data URLs only (custom or default).
+ */
+export function annexMemberPhotoSrc(
+  row: MinuteAttendanceRow,
+  options?: { preferDataUrlOnly?: boolean }
+): string {
+  const photo = row.member?.photoUrl?.trim();
+  if (photo) {
+    if (options?.preferDataUrlOnly) {
+      return isDataUrl(photo) ? photo : getMemberDefaultAvatarDataUrl();
+    }
+    return photo;
+  }
+  if (options?.preferDataUrlOnly) {
+    return getMemberDefaultAvatarDataUrl();
+  }
+  return MEMBER_DEFAULT_AVATAR_PATH;
+}
+
 /** Sort by nom then prénom for stable annex lists. */
 function sortByName(a: MinuteAttendanceRow, b: MinuteAttendanceRow): number {
   if (a.member && b.member) {
@@ -82,10 +113,19 @@ function sortByName(a: MinuteAttendanceRow, b: MinuteAttendanceRow): number {
   });
 }
 
+export type AnnexPersonEntry = {
+  name: string;
+  /** Data URL or absolute URL for thumbnail (optional). */
+  photoUrl?: string | null;
+  memberId?: string | null;
+};
+
 export type AttendanceAnnexGroup = {
   category: string;
   label: string;
+  /** @deprecated use people — kept for text summaries */
   names: string[];
+  people: AnnexPersonEntry[];
 };
 
 export type VisitorAnnexRow = {
@@ -99,12 +139,19 @@ export type MinuteAttendanceAnnex = {
   visitors: VisitorAnnexRow[];
   totalMembers: number;
   totalVisitors: number;
+  showMemberPhotos: boolean;
 };
 
 export function buildMinuteAttendanceAnnex(
   rows: MinuteAttendanceRow[],
-  locale: string
+  locale: string,
+  options?: {
+    showMemberPhotos?: boolean;
+    /** When true (PDF), only embed photos stored as data: URLs. */
+    preferDataUrlOnly?: boolean;
+  }
 ): MinuteAttendanceAnnex {
+  const showMemberPhotos = !!options?.showMemberPhotos;
   const countableRows = excludeHonoraryMemberAttendances(rows);
   const memberRows = countableRows.filter((r) =>
     (MEMBER_ATTENDANCE_CATEGORIES as readonly string[]).includes(r.category)
@@ -117,10 +164,20 @@ export function buildMinuteAttendanceAnnex(
   for (const category of MEMBER_ATTENDANCE_CATEGORIES) {
     const inCategory = memberRows.filter((r) => r.category === category).sort(sortByName);
     if (inCategory.length === 0) continue;
+    const people: AnnexPersonEntry[] = inCategory.map((r) => ({
+      name: attendanceDisplayName(r),
+      memberId: r.memberId ?? r.member?.id ?? null,
+      photoUrl: showMemberPhotos
+        ? annexMemberPhotoSrc(r, {
+            preferDataUrlOnly: options?.preferDataUrlOnly,
+          })
+        : null,
+    }));
     memberGroups.push({
       category,
       label: attendanceCategoryLabel(category, locale),
-      names: inCategory.map(attendanceDisplayName),
+      names: people.map((p) => p.name),
+      people,
     });
   }
 
@@ -137,6 +194,7 @@ export function buildMinuteAttendanceAnnex(
     visitors,
     totalMembers: memberRows.length,
     totalVisitors: visitors.length,
+    showMemberPhotos,
   };
 }
 
@@ -154,7 +212,12 @@ export function splitIntoColumns<T>(items: T[], columns: number): T[][] {
 }
 
 /** Adaptive columns: short lists stay single-column; long lists use 2–3 cols. */
-export function annexColumnCount(itemCount: number): number {
+export function annexColumnCount(itemCount: number, withPhotos = false): number {
+  if (withPhotos) {
+    if (itemCount <= 10) return 1;
+    if (itemCount <= 28) return 2;
+    return 3;
+  }
   if (itemCount <= 8) return 1;
   if (itemCount <= 24) return 2;
   return 3;

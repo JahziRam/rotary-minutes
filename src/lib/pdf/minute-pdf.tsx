@@ -9,6 +9,7 @@ import {
 import {
   annexColumnCount,
   splitIntoColumns,
+  type AnnexPersonEntry,
   type AttendanceAnnexGroup,
   type MinuteAttendanceAnnex,
   type VisitorAnnexRow,
@@ -295,6 +296,24 @@ const styles = StyleSheet.create({
     marginBottom: 2,
     color: C.charcoal,
   },
+  annexPersonRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 3,
+    gap: 4,
+  },
+  annexThumb: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    overflow: "hidden",
+    backgroundColor: C.border,
+  },
+  annexThumbImg: {
+    width: 12,
+    height: 12,
+    objectFit: "cover",
+  },
   annexEmpty: { fontSize: 9, color: C.muted, fontStyle: "italic" },
   visitorRow: {
     flexDirection: "row",
@@ -402,16 +421,35 @@ function MinutePdfFooter({
   );
 }
 
-function NameColumns({ names }: { names: string[] }) {
-  const cols = splitIntoColumns(names, annexColumnCount(names.length));
+function PersonColumns({
+  people,
+  showPhotos,
+}: {
+  people: AnnexPersonEntry[];
+  showPhotos: boolean;
+}) {
+  const cols = splitIntoColumns(
+    people,
+    annexColumnCount(people.length, showPhotos)
+  );
   return (
     <View style={styles.annexColumns}>
       {cols.map((col, colIdx) => (
         <View key={`col-${colIdx}`} style={styles.annexColumn}>
-          {col.map((name, i) => (
-            <Text key={`${colIdx}-${i}`} style={styles.annexListItem}>
-              • {name}
-            </Text>
+          {col.map((person, i) => (
+            <View key={`${colIdx}-${i}`} style={styles.annexPersonRow}>
+              {showPhotos ? (
+                <View style={styles.annexThumb}>
+                  <Image
+                    src={person.photoUrl || ""}
+                    style={styles.annexThumbImg}
+                  />
+                </View>
+              ) : null}
+              <Text style={styles.annexListItem}>
+                {showPhotos ? person.name : `• ${person.name}`}
+              </Text>
+            </View>
           ))}
         </View>
       ))}
@@ -419,14 +457,20 @@ function NameColumns({ names }: { names: string[] }) {
   );
 }
 
-function MemberGroupBlock({ group }: { group: AttendanceAnnexGroup }) {
+function MemberGroupBlock({
+  group,
+  showPhotos,
+}: {
+  group: AttendanceAnnexGroup;
+  showPhotos: boolean;
+}) {
   return (
     <View style={styles.annexGroup} wrap={false} minPresenceAhead={56}>
       <View style={styles.annexGroupHeader}>
         <Text style={styles.annexCategory}>{group.label}</Text>
-        <Text style={styles.annexCountBadge}>{group.names.length}</Text>
+        <Text style={styles.annexCountBadge}>{group.people.length}</Text>
       </View>
-      <NameColumns names={group.names} />
+      <PersonColumns people={group.people} showPhotos={showPhotos} />
     </View>
   );
 }
@@ -501,7 +545,7 @@ function AnnexPage({
         <View style={styles.annexSummaryRow} wrap={false}>
           {annex.memberGroups.map((group) => (
             <View key={`chip-${group.category}`} style={styles.annexChip}>
-              <Text style={styles.annexChipValue}>{group.names.length}</Text>
+              <Text style={styles.annexChipValue}>{group.people.length}</Text>
               <Text style={styles.annexChipLabel}>{group.label}</Text>
             </View>
           ))}
@@ -521,7 +565,11 @@ function AnnexPage({
         <Text style={styles.annexEmpty}>{labels.none}</Text>
       ) : (
         annex.memberGroups.map((group) => (
-          <MemberGroupBlock key={group.category} group={group} />
+          <MemberGroupBlock
+            key={group.category}
+            group={group}
+            showPhotos={annex.showMemberPhotos}
+          />
         ))
       )}
 

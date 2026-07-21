@@ -18,6 +18,7 @@ import {
   getEmailHistory,
 } from "@/lib/queries/emails";
 import { ensureEmailSystemTemplates } from "@/lib/email-system-templates";
+import { prisma } from "@/lib/prisma";
 
 /** "campaigns" is intentionally omitted — section hidden from product UI. */
 const VALID = ["compose", "templates", "contacts", "history"] as const;
@@ -72,14 +73,38 @@ export default async function EmailSectionPage({
       break;
     }
     case "compose": {
-      const [templates, groups] = await Promise.all([
+      const [templates, groups, commissionsRaw] = await Promise.all([
         getEmailTemplates(ctx.clubId, locale),
         getEmailGroups(ctx.clubId),
+        prisma.commission.findMany({
+          where: { clubId: ctx.clubId, isActive: true },
+          orderBy: { name: "asc" },
+          select: {
+            id: true,
+            name: true,
+            members: {
+              where: { isActive: true, email: { not: null } },
+              select: { id: true },
+            },
+            memberships: {
+              where: { member: { isActive: true, email: { not: null } } },
+              select: { memberId: true },
+            },
+          },
+        }),
       ]);
+      const commissions = commissionsRaw.map((c) => {
+        const ids = new Set<string>([
+          ...c.members.map((m) => m.id),
+          ...c.memberships.map((m) => m.memberId),
+        ]);
+        return { id: c.id, name: c.name, memberCount: ids.size };
+      });
       content = (
         <ComposeForm
           templates={templates}
           groups={groups}
+          commissions={commissions}
           canSend={canSend}
           emailEnabled={emailEnabled}
         />

@@ -63,6 +63,9 @@ export function AddMemberForm({
               position: (formData.get("position") as string) || undefined,
               birthday: (formData.get("birthday") as string) || undefined,
               joinDate: (formData.get("joinDate") as string) || undefined,
+              spouseFirstName: (formData.get("spouseFirstName") as string) || undefined,
+              spouseLastName: (formData.get("spouseLastName") as string) || undefined,
+              spouseBirthday: (formData.get("spouseBirthday") as string) || undefined,
               isHonoraryMember: formData.get("isHonoraryMember") === "on",
               appRole,
               customRoleId,
@@ -104,6 +107,15 @@ export function AddMemberForm({
           <Input name="position" label={t("position")} />
           <Input name="birthday" type="date" label={t("birthday")} />
           <Input name="joinDate" type="date" label={t("joinDate")} />
+          <div className="space-y-1 pt-1">
+            <p className="text-sm font-medium text-gray-900">{t("spouseSection")}</p>
+            <p className="text-xs text-gray-500">{t("spouseSectionHint")}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Input name="spouseFirstName" label={t("spouseFirstName")} />
+            <Input name="spouseLastName" label={t("spouseLastName")} />
+          </div>
+          <Input name="spouseBirthday" type="date" label={t("spouseBirthday")} />
           <label className="flex items-start gap-2 text-sm text-gray-700">
             <input type="checkbox" name="isHonoraryMember" className="mt-0.5" />
             <span>

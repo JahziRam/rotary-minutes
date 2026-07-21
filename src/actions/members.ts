@@ -36,6 +36,9 @@ export async function createMember(data: {
   bio?: string;
   photoUrl?: string;
   isHonoraryMember?: boolean;
+  spouseFirstName?: string;
+  spouseLastName?: string;
+  spouseBirthday?: string;
   appRole?: ClubRole;
   customRoleId?: string | null;
   sendLogin?: boolean;
@@ -46,6 +49,10 @@ export async function createMember(data: {
   const { ctx } = auth;
 
   const nameParts = formatPersonNameParts(data.firstName, data.lastName);
+  const spouseParts =
+    data.spouseFirstName?.trim() || data.spouseLastName?.trim()
+      ? formatPersonNameParts(data.spouseFirstName ?? "", data.spouseLastName ?? "")
+      : null;
 
   const duplicate = await findMemberDuplicateInClub(ctx.clubId, {
     email: data.email,
@@ -73,6 +80,9 @@ export async function createMember(data: {
       birthday: data.birthday ? new Date(data.birthday) : null,
       joinDate: data.joinDate ? new Date(data.joinDate) : null,
       isHonoraryMember: data.isHonoraryMember ?? false,
+      spouseFirstName: spouseParts?.firstName || null,
+      spouseLastName: spouseParts?.lastName || null,
+      spouseBirthday: data.spouseBirthday ? new Date(data.spouseBirthday) : null,
     },
   });
 
@@ -147,6 +157,9 @@ export async function updateMember(
     photoUrl?: string;
     isActive?: boolean;
     isHonoraryMember?: boolean;
+    spouseFirstName?: string | null;
+    spouseLastName?: string | null;
+    spouseBirthday?: string | null;
   }
 ) {
   const auth = await requirePermission("members.manage");
@@ -165,6 +178,21 @@ export async function updateMember(
           data.lastName ?? existing.lastName
         )
       : null;
+
+  const spouseTouched =
+    data.spouseFirstName !== undefined ||
+    data.spouseLastName !== undefined ||
+    data.spouseBirthday !== undefined;
+  const spouseParts = spouseTouched
+    ? formatPersonNameParts(
+        data.spouseFirstName !== undefined
+          ? data.spouseFirstName ?? ""
+          : existing.spouseFirstName ?? "",
+        data.spouseLastName !== undefined
+          ? data.spouseLastName ?? ""
+          : existing.spouseLastName ?? ""
+      )
+    : null;
 
   await prisma.member.update({
     where: { id: memberId },
@@ -192,6 +220,13 @@ export async function updateMember(
       ...(data.isActive !== undefined && { isActive: data.isActive }),
       ...(data.isHonoraryMember !== undefined && {
         isHonoraryMember: data.isHonoraryMember,
+      }),
+      ...(spouseParts && {
+        spouseFirstName: spouseParts.firstName || null,
+        spouseLastName: spouseParts.lastName || null,
+      }),
+      ...(data.spouseBirthday !== undefined && {
+        spouseBirthday: data.spouseBirthday ? new Date(data.spouseBirthday) : null,
       }),
     },
   });

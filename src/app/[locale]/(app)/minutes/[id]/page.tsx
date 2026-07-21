@@ -106,6 +106,7 @@ export default async function MinuteDetailPage({
               address: minute.club.address,
               district: minute.club.district,
               country: minute.club.country,
+              minuteShowMemberPhotos: minute.club.minuteShowMemberPhotos,
               logoUrl: resolveClubBrandLogoSrc({
                 clubId: minute.club.id,
                 clubName: minute.club.name,

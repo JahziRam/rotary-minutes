@@ -11,15 +11,18 @@ import { sendComposedEmail } from "@/actions/emails";
 
 type Template = { id: string; name: string; subject: string; body: string };
 type Group = { id: string; name: string; _count: { contacts: number } };
+type CommissionOption = { id: string; name: string; memberCount: number };
 
 export function ComposeForm({
   templates,
   groups,
+  commissions = [],
   canSend,
   emailEnabled,
 }: {
   templates: Template[];
   groups: Group[];
+  commissions?: CommissionOption[];
   canSend: boolean;
   emailEnabled: boolean;
 }) {
@@ -58,11 +61,24 @@ export function ComposeForm({
         action={(fd) => {
           startTransition(async () => {
             const scheduledAt = fd.get("scheduledAt") as string;
+            const source = ((fd.get("recipientSource") as string) || "").trim();
+            let groupId: string | undefined;
+            let commissionId: string | undefined;
+            if (source.startsWith("group:")) {
+              groupId = source.slice("group:".length) || undefined;
+            } else if (source.startsWith("commission:")) {
+              commissionId = source.slice("commission:".length) || undefined;
+            } else if (source) {
+              // Backward-compat: bare group id
+              groupId = source;
+            }
+
             const result = await sendComposedEmail({
               name: (fd.get("name") as string) || t("quickSend"),
               subject: fd.get("subject") as string,
               body: fd.get("body") as string,
-              groupId: (fd.get("groupId") as string) || undefined,
+              groupId,
+              commissionId,
               recipients: (fd.get("recipients") as string) || undefined,
               cc: (fd.get("cc") as string) || undefined,
               bcc: (fd.get("bcc") as string) || undefined,
@@ -101,14 +117,31 @@ export function ComposeForm({
 
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-gray-700">{t("recipientGroup")}</label>
-          <select name="groupId" className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm">
+          <select
+            name="recipientSource"
+            className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm"
+          >
             <option value="">—</option>
-            {groups.map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.name} ({g._count.contacts})
-              </option>
-            ))}
+            {groups.length > 0 ? (
+              <optgroup label={t("recipientGroupsCustom")}>
+                {groups.map((g) => (
+                  <option key={g.id} value={`group:${g.id}`}>
+                    {g.name} ({g._count.contacts})
+                  </option>
+                ))}
+              </optgroup>
+            ) : null}
+            {commissions.length > 0 ? (
+              <optgroup label={t("recipientGroupsCommissions")}>
+                {commissions.map((c) => (
+                  <option key={c.id} value={`commission:${c.id}`}>
+                    {c.name} ({c.memberCount})
+                  </option>
+                ))}
+              </optgroup>
+            ) : null}
           </select>
+          <p className="text-xs text-gray-500">{t("recipientGroupHint")}</p>
         </div>
 
         <Input

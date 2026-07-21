@@ -15,7 +15,15 @@ import type { MinutePDFData } from "@/lib/pdf/minute-pdf";
 
 export const attendanceWithMemberInclude = {
   include: {
-    member: { select: { firstName: true, lastName: true, isHonoraryMember: true } },
+    member: {
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        isHonoraryMember: true,
+        photoUrl: true,
+      },
+    },
   },
   orderBy: { category: "asc" as const },
 } as const;
@@ -38,6 +46,7 @@ type MinuteForPdf = {
     meetingLocation?: string | null;
     logoUrl?: string | null;
     language: string;
+    minuteShowMemberPhotos?: boolean;
   };
   agendaItems: Array<{
     title: string;
@@ -56,9 +65,11 @@ type MinuteForPdf = {
       guestName?: string | null;
       memberId?: string | null;
       member?: {
+        id?: string;
         firstName: string;
         lastName: string;
         isHonoraryMember?: boolean;
+        photoUrl?: string | null;
       } | null;
     }>;
   };
@@ -135,7 +146,10 @@ export async function buildMinutePdfData(
     hash,
     qrCodeDataUrl,
     verifyUrl,
-    annex: buildMinuteAttendanceAnnex(minute.meeting.attendances, locale),
+    annex: buildMinuteAttendanceAnnex(minute.meeting.attendances, locale, {
+      showMemberPhotos: !!minute.club.minuteShowMemberPhotos,
+      preferDataUrlOnly: true,
+    }),
     locale,
   };
 }

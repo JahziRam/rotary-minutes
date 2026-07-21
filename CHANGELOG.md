@@ -7,13 +7,40 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-07-21
+
+### Added
+- **Membres — conjoint / lady**
+  - Champs prénom, nom et date de naissance du conjoint sur la fiche membre
+  - Anniversaires des conjoints affichés dans le calendrier unifié et la bannière « Anniversaires à venir »
+  - Migration `20260720180000_member_spouse`
+- **Emails — destinataires par commission**
+  - Dans Composer, le sélecteur « Groupe destinataires » propose les **groupes personnalisés** et les **commissions** actives
+  - Envoi aux membres actifs de la commission ayant un email
+- **PV — photos de profil dans l’annexe**
+  - Option club (Paramètres → Workflow) : afficher ou non les photos à côté des noms dans l’annexe de présence (aperçu + PDF)
+  - Miniatures rondes ; avatar par défaut (roue Rotary) si le membre n’a pas de photo personnalisée
+  - Migration `20260721100000_minute_show_member_photos`
+- **PV — édition exceptionnelle (président / admin)**
+  - Modification du contenu et des détails de réunion même si le PV est en révision, finalisé ou archivé
+  - Champs présidence, secrétaire, date, lieu, horaires éditables
+- **PV — PDF refondu (mix layout 3+4)**
+  - Header logo inchangé (clear space)
+  - Corps type compte-rendu (bande date/lieu, pastilles méta, ODJ numéroté or)
+  - Annexe multi-colonnes avec chips de synthèse
+  - Pied de page sans hash affiché : document authentifié + invitation à scanner le QR
+- **Assiduité**
+  - Exclusion des membres d’honneur (et invités) du calcul du taux d’assiduité
+
 ### Changed
 - **Navigation club — sidebar regroupée**
   - Menus organisés en groupes repliables : Accueil, Vie du club, Travail, Finance, Outils, Compte
   - Sous-entrées : commissions, cotisations, plan mandat (plus de liste plate de ~20 items)
   - Drawer mobile avec en-têtes de groupe ; mémorisation de l’état ouvert/fermé (localStorage)
+- **Noms dans les PV**
+  - Affichage uniformisé « Prénom NOM » (prénom capitalisé, nom en majuscules) dans l’annexe
 
-### Added
+### Added (suite)
 - **Suite productivité club (2026-07)**
   - Budget événements (prévu / réalisé / documents) aligné sur les projets
   - Multi-commissions par membre (`CommissionMembership`) avec rôles Président / Membre

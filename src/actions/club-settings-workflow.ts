@@ -6,9 +6,10 @@ import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/require-permission";
 
 function revalidateSettings() {
-  for (const loc of ["fr", "en"]) {
+  for (const loc of ["fr", "en", "es"]) {
     revalidatePath(`/${loc}/settings`);
     revalidatePath(`/${loc}/dashboard`);
+    revalidatePath(`/${loc}/minutes`);
   }
 }
 
@@ -16,6 +17,7 @@ export async function updateClubWorkflowSettings(data: {
   presidentApprovalRequired: boolean;
   whatsappReminderPhone?: string | null;
   guideEnabled: boolean;
+  minuteShowMemberPhotos: boolean;
 }) {
   const auth = await requirePermission("settings.manage");
   if (auth.error) return auth;
@@ -27,6 +29,7 @@ export async function updateClubWorkflowSettings(data: {
       presidentApprovalRequired: data.presidentApprovalRequired,
       whatsappReminderPhone: data.whatsappReminderPhone?.trim() || null,
       guideEnabled: data.guideEnabled,
+      minuteShowMemberPhotos: data.minuteShowMemberPhotos,
     },
   });
 

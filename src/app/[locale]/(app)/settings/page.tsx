@@ -158,6 +158,7 @@ export default async function SettingsPage({
                       presidentApprovalRequired: club.presidentApprovalRequired,
                       whatsappReminderPhone: club.whatsappReminderPhone,
                       guideEnabled: club.guideEnabled,
+                      minuteShowMemberPhotos: club.minuteShowMemberPhotos,
                       publicCalendarToken: club.publicCalendarToken,
                     }}
                   />

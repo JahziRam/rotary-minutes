@@ -4,15 +4,21 @@ Plateforme SaaS professionnelle pour la rédaction, l'archivage et l'authentific
 
 Production : [https://clubminutes.api.mg](https://clubminutes.api.mg)
 
+## Version
+
+**0.2.0** — voir [CHANGELOG.md](./CHANGELOG.md)
+
 ## Fonctionnalités
 
 - **Multi-tenant** — Chaque club possède son espace isolé
 - **Multilingue** — Français, anglais et espagnol (next-intl)
-- **Procès-verbaux** — Rédaction collaborative, versionnement, auto-sauvegarde
+- **Procès-verbaux** — Rédaction collaborative, versionnement, auto-sauvegarde ; édition exceptionnelle président/admin sur PV verrouillés
+- **PDF authentifié** — Logo club, mise en page modernisée, QR de vérification (hash en base, non affiché en pied)
+- **Annexe de présence** — Multi-colonnes, option photos de profil (miniatures rondes + avatar roue par défaut)
 - **Assistant IA** — Reformulation des notes de PV (SpaceXAI / xAI, Qwen, OpenAI compatible dont Bazaarlink)
-- **Réunions** — Types dynamiques, présences, assiduité automatique
-- **PDF authentifié** — Logo, QR code, hash SHA-256 inviolable
-- **Emails** — Templates, campagnes, contacts, planification
+- **Réunions** — Types dynamiques, présences, assiduité (hors membres d’honneur), édition présidence/secrétaire
+- **Membres** — Annuaire, cotisations, **conjoint/lady** (nom + anniversaire au calendrier)
+- **Emails** — Templates, contacts, groupes personnalisés **et commissions** comme destinataires
 - **Projets** — Gestion de projets club, tâches associées et **budget** (prévu / réalisé, devis & proformas) via `/projects`
 - **Tâches** — Suivi des actions (dont issues de PV) via `/actions`
 - **Assignation** — Tâches et projets assignables à **plusieurs membres** et/ou une **commission** (modifiable après création, avec notifications)
@@ -20,6 +26,7 @@ Production : [https://clubminutes.api.mg](https://clubminutes.api.mg)
 - **Mon travail** — Vue personnelle des projets et tâches assignés (`/my-work`)
 - **Plan budgétaire du mandat** — Consolidation sous-comptes + projets + événements (`/treasury/mandate-plan`)
 - **Tableau de bord** — Statistiques, mandat Rotary (1er juillet – 30 juin)
+- **Calendrier** — Réunions, événements, anniversaires membres **et conjoints**
 - **Mode hors ligne** — IndexedDB + synchronisation automatique
 - **Stripe** — Abonnements et essai gratuit 14 jours
 - **Super Admin** — Gestion globale du SaaS, feature flags par club

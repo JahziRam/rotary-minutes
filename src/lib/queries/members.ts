@@ -2,34 +2,78 @@ import { addDays, isWithinInterval } from "date-fns";
 import { prisma } from "@/lib/prisma";
 import { attendanceEligibleMemberWhere } from "@/lib/member-attendance-eligibility";
 
-export async function getUpcomingBirthdays(clubId: string, withinDays = 14) {
+export type UpcomingBirthday = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  nextBirthday: Date;
+  kind: "member" | "spouse";
+  /** Member name when kind is spouse */
+  relatedMemberName?: string;
+};
+
+function nextOccurrence(birthday: Date, now: Date): Date {
+  const next = new Date(now.getFullYear(), birthday.getMonth(), birthday.getDate());
+  if (next < now) {
+    next.setFullYear(now.getFullYear() + 1);
+  }
+  return next;
+}
+
+export async function getUpcomingBirthdays(
+  clubId: string,
+  withinDays = 14
+): Promise<UpcomingBirthday[]> {
   const members = await prisma.member.findMany({
-    where: { clubId, isActive: true, birthday: { not: null } },
-    select: { id: true, firstName: true, lastName: true, birthday: true },
+    where: {
+      clubId,
+      isActive: true,
+      OR: [{ birthday: { not: null } }, { spouseBirthday: { not: null } }],
+    },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      birthday: true,
+      spouseFirstName: true,
+      spouseLastName: true,
+      spouseBirthday: true,
+    },
   });
 
   const now = new Date();
   const end = addDays(now, withinDays);
+  const items: UpcomingBirthday[] = [];
 
-  return members
-    .filter((m) => {
-      if (!m.birthday) return false;
-      const bday = new Date(m.birthday);
-      const thisYear = new Date(now.getFullYear(), bday.getMonth(), bday.getDate());
-      if (thisYear < now) {
-        thisYear.setFullYear(now.getFullYear() + 1);
+  for (const m of members) {
+    if (m.birthday) {
+      const nextBirthday = nextOccurrence(new Date(m.birthday), now);
+      if (isWithinInterval(nextBirthday, { start: now, end })) {
+        items.push({
+          id: m.id,
+          firstName: m.firstName,
+          lastName: m.lastName,
+          nextBirthday,
+          kind: "member",
+        });
       }
-      return isWithinInterval(thisYear, { start: now, end });
-    })
-    .map((m) => ({
-      ...m,
-      nextBirthday: new Date(
-        now.getFullYear(),
-        m.birthday!.getMonth(),
-        m.birthday!.getDate()
-      ),
-    }))
-    .sort((a, b) => a.nextBirthday.getTime() - b.nextBirthday.getTime());
+    }
+    if (m.spouseBirthday) {
+      const nextBirthday = nextOccurrence(new Date(m.spouseBirthday), now);
+      if (isWithinInterval(nextBirthday, { start: now, end })) {
+        items.push({
+          id: `spouse-${m.id}`,
+          firstName: m.spouseFirstName || "—",
+          lastName: m.spouseLastName || "",
+          nextBirthday,
+          kind: "spouse",
+          relatedMemberName: `${m.firstName} ${m.lastName}`,
+        });
+      }
+    }
+  }
+
+  return items.sort((a, b) => a.nextBirthday.getTime() - b.nextBirthday.getTime());
 }
 
 export async function getMembersWithLowAttendance(

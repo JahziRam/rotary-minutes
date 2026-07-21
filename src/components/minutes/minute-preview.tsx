@@ -13,6 +13,11 @@ import {
   MEMBER_ATTENDANCE_CATEGORIES,
 } from "@/lib/minute-attendance-annex";
 import { filterAttendancesForRate } from "@/lib/member-attendance-eligibility";
+import {
+  MEMBER_DEFAULT_AVATAR_PATH,
+  resolveMemberPhotoUrlOrDefault,
+} from "@/lib/media-url";
+
 export interface MinutePreviewData {
   id: string;
   title: string;
@@ -27,6 +32,7 @@ export interface MinutePreviewData {
     district?: string | null;
     country?: string | null;
     logoUrl?: string | null;
+    minuteShowMemberPhotos?: boolean;
   };
   meeting: {
     date: Date | string;
@@ -39,7 +45,14 @@ export interface MinutePreviewData {
     attendances: Array<{
       category: string;
       guestName?: string | null;
-      member?: { firstName: string; lastName: string; isHonoraryMember?: boolean } | null;
+      memberId?: string | null;
+      member?: {
+        id?: string;
+        firstName: string;
+        lastName: string;
+        isHonoraryMember?: boolean;
+        photoUrl?: string | null;
+      } | null;
     }>;
   };
   agendaItems: Array<{
@@ -129,7 +142,27 @@ export function MinutePreview({
   const traveling = countByCategory(memberAttendances, "TRAVELING");
   const total = memberAttendances.length;
   const rate = total > 0 ? Math.round(calculateAttendanceRate(present, total).rate) : 0;
-  const annex = buildMinuteAttendanceAnnex(data.meeting.attendances, locale);
+  const showPhotos = !!data.club.minuteShowMemberPhotos;
+  const annex = buildMinuteAttendanceAnnex(data.meeting.attendances, locale, {
+    showMemberPhotos: showPhotos,
+    preferDataUrlOnly: false,
+  });
+  // Resolve media URLs for web preview thumbnails (custom photo or default wheel)
+  if (showPhotos) {
+    for (const group of annex.memberGroups) {
+      for (const person of group.people) {
+        const raw = person.photoUrl?.trim();
+        if (raw && raw !== MEMBER_DEFAULT_AVATAR_PATH && person.memberId) {
+          person.photoUrl = resolveMemberPhotoUrlOrDefault(
+            person.memberId,
+            raw
+          );
+        } else if (!raw || raw === MEMBER_DEFAULT_AVATAR_PATH) {
+          person.photoUrl = MEMBER_DEFAULT_AVATAR_PATH;
+        }
+      }
+    }
+  }
   const annexTitle = locale === "fr" ? "Annexe — Présences et visiteurs" : "Annex — Attendance and visitors";
   const attendanceListLabel = locale === "fr" ? "Liste de présence" : "Attendance list";
   const visitorsListLabel = locale === "fr" ? "Liste des visiteurs" : "Visitors list";
@@ -252,7 +285,7 @@ export function MinutePreview({
                     key={`chip-${group.category}`}
                     className="rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-center min-w-[4.5rem]"
                   >
-                    <p className="text-sm font-bold text-navy">{group.names.length}</p>
+                    <p className="text-sm font-bold text-navy">{group.people.length}</p>
                     <p className="text-[10px] text-gray-500 leading-tight">{group.label}</p>
                   </div>
                 ))}
@@ -272,7 +305,10 @@ export function MinutePreview({
                 ) : (
                   <div className="space-y-3">
                     {annex.memberGroups.map((group) => {
-                      const cols = annexColumnCount(group.names.length);
+                      const cols = annexColumnCount(
+                        group.people.length,
+                        annex.showMemberPhotos
+                      );
                       return (
                         <div
                           key={group.category}
@@ -283,22 +319,32 @@ export function MinutePreview({
                               {group.label}
                             </p>
                             <span className="text-[10px] text-gray-500 bg-gray-50 border border-gray-100 rounded-full px-2 py-0.5">
-                              {group.names.length}
+                              {group.people.length}
                             </span>
                           </div>
                           <ul
-                            className="text-sm text-gray-800 gap-x-4 gap-y-0.5"
+                            className="text-sm text-gray-800 gap-x-4 gap-y-1"
                             style={{
                               columnCount: cols,
                               columnGap: "1.25rem",
                             }}
                           >
-                            {group.names.map((name) => (
+                            {group.people.map((person) => (
                               <li
-                                key={`${group.category}-${name}`}
-                                className="break-inside-avoid"
+                                key={`${group.category}-${person.name}`}
+                                className="break-inside-avoid flex items-center gap-1.5"
                               >
-                                • {name}
+                                {annex.showMemberPhotos ? (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img
+                                    src={person.photoUrl || MEMBER_DEFAULT_AVATAR_PATH}
+                                    alt=""
+                                    className="h-5 w-5 rounded-full object-cover shrink-0 bg-gray-100 ring-1 ring-gray-200"
+                                  />
+                                ) : null}
+                                <span>
+                                  {annex.showMemberPhotos ? person.name : `• ${person.name}`}
+                                </span>
                               </li>
                             ))}
                           </ul>

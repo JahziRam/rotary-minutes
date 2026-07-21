@@ -31,6 +31,9 @@ export function MemberEditForm({
     photoUrl: string | null;
     isActive: boolean;
     isHonoraryMember: boolean;
+    spouseFirstName?: string | null;
+    spouseLastName?: string | null;
+    spouseBirthday?: Date | null;
   };
   commissions: Array<{ id: string; name: string }>;
   canManage: boolean;
@@ -72,6 +75,9 @@ export function MemberEditForm({
             bio: (fd.get("bio") as string) || undefined,
             birthday: (fd.get("birthday") as string) || undefined,
             joinDate: (fd.get("joinDate") as string) || undefined,
+            spouseFirstName: (fd.get("spouseFirstName") as string) || null,
+            spouseLastName: (fd.get("spouseLastName") as string) || null,
+            spouseBirthday: (fd.get("spouseBirthday") as string) || null,
             isActive: fd.get("isActive") === "on",
             isHonoraryMember: fd.get("isHonoraryMember") === "on",
           });
@@ -111,6 +117,30 @@ export function MemberEditForm({
           type="date"
           label={t("joinDate")}
           defaultValue={member.joinDate ? member.joinDate.toISOString().split("T")[0] : ""}
+        />
+        <div className="space-y-1.5 sm:col-span-2">
+          <p className="text-sm font-medium text-gray-900">{t("spouseSection")}</p>
+          <p className="text-xs text-gray-500">{t("spouseSectionHint")}</p>
+        </div>
+        <Input
+          name="spouseFirstName"
+          label={t("spouseFirstName")}
+          defaultValue={member.spouseFirstName ?? ""}
+        />
+        <Input
+          name="spouseLastName"
+          label={t("spouseLastName")}
+          defaultValue={member.spouseLastName ?? ""}
+        />
+        <Input
+          name="spouseBirthday"
+          type="date"
+          label={t("spouseBirthday")}
+          defaultValue={
+            member.spouseBirthday
+              ? member.spouseBirthday.toISOString().split("T")[0]
+              : ""
+          }
         />
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-gray-700">{t("commission")}</label>

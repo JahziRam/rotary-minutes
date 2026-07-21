@@ -15,6 +15,7 @@ interface WorkflowSettings {
   presidentApprovalRequired: boolean;
   whatsappReminderPhone: string | null;
   guideEnabled: boolean;
+  minuteShowMemberPhotos: boolean;
   publicCalendarToken: string | null;
 }
 
@@ -34,6 +35,7 @@ export function ClubWorkflowSettings({ settings }: { settings: WorkflowSettings 
         presidentApprovalRequired: state.presidentApprovalRequired,
         whatsappReminderPhone: state.whatsappReminderPhone,
         guideEnabled: state.guideEnabled,
+        minuteShowMemberPhotos: state.minuteShowMemberPhotos,
       });
       if ("success" in result && result.success) setToast(t("saved"));
     });
@@ -82,6 +84,21 @@ export function ClubWorkflowSettings({ settings }: { settings: WorkflowSettings 
             className="rounded border-gray-300"
           />
           {t("guideEnabled")}
+        </label>
+
+        <label className="flex items-start gap-2 text-sm text-gray-700">
+          <input
+            type="checkbox"
+            checked={state.minuteShowMemberPhotos}
+            onChange={(e) =>
+              setState((s) => ({ ...s, minuteShowMemberPhotos: e.target.checked }))
+            }
+            className="mt-0.5 rounded border-gray-300"
+          />
+          <span>
+            <span className="font-medium">{t("minuteShowMemberPhotos")}</span>
+            <span className="block text-xs text-gray-500">{t("minuteShowMemberPhotosHint")}</span>
+          </span>
         </label>
 
         <Input

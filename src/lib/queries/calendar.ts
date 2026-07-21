@@ -94,8 +94,20 @@ export async function getUnifiedCalendarEvents(
       },
     }),
     prisma.member.findMany({
-      where: { clubId, isActive: true, birthday: { not: null } },
-      select: { id: true, firstName: true, lastName: true, birthday: true },
+      where: {
+        clubId,
+        isActive: true,
+        OR: [{ birthday: { not: null } }, { spouseBirthday: { not: null } }],
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        birthday: true,
+        spouseFirstName: true,
+        spouseLastName: true,
+        spouseBirthday: true,
+      },
     }),
     prisma.clubCalendarNote.findMany({
       where: {
@@ -162,20 +174,46 @@ export async function getUnifiedCalendarEvents(
 
   const year = from.getFullYear();
   for (const member of members) {
-    if (!member.birthday) continue;
-    const bday = member.birthday;
-    let occurrence = setYear(bday, year);
-    if (occurrence < from) occurrence = setYear(bday, year + 1);
-    if (occurrence > to) continue;
-    events.push({
-      id: `birthday-${member.id}-${occurrence.getFullYear()}`,
-      source: "BIRTHDAY",
-      title: `🎂 ${member.firstName} ${member.lastName}`,
-      startAt: occurrence,
-      endAt: null,
-      color: SOURCE_COLORS.BIRTHDAY,
-      link: `/members`,
-    });
+    if (member.birthday) {
+      const bday = member.birthday;
+      let occurrence = setYear(bday, year);
+      if (occurrence < from) occurrence = setYear(bday, year + 1);
+      if (occurrence <= to) {
+        events.push({
+          id: `birthday-${member.id}-${occurrence.getFullYear()}`,
+          source: "BIRTHDAY",
+          title: `🎂 ${member.firstName} ${member.lastName}`,
+          startAt: occurrence,
+          endAt: null,
+          color: SOURCE_COLORS.BIRTHDAY,
+          link: `/members/${member.id}`,
+        });
+      }
+    }
+    if (member.spouseBirthday) {
+      const bday = member.spouseBirthday;
+      let occurrence = setYear(bday, year);
+      if (occurrence < from) occurrence = setYear(bday, year + 1);
+      if (occurrence <= to) {
+        const spouseName = [member.spouseFirstName, member.spouseLastName]
+          .filter(Boolean)
+          .join(" ")
+          .trim();
+        const label =
+          spouseName ||
+          `Conjoint de ${member.firstName} ${member.lastName}`;
+        events.push({
+          id: `birthday-spouse-${member.id}-${occurrence.getFullYear()}`,
+          source: "BIRTHDAY",
+          title: `🎂 ${label} (conjoint)`,
+          description: `${member.firstName} ${member.lastName}`,
+          startAt: occurrence,
+          endAt: null,
+          color: SOURCE_COLORS.BIRTHDAY,
+          link: `/members/${member.id}`,
+        });
+      }
+    }
   }
 
   for (const n of notes) {

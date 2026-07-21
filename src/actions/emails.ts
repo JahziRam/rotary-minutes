@@ -38,10 +38,46 @@ async function resolveRecipients(
       where: { groupId },
       include: { contact: true },
     });
-    for (const link of links) emails.add(link.contact.email);
+    for (const link of links) {
+      const e = link.contact.email?.trim().toLowerCase();
+      if (e?.includes("@")) emails.add(e);
+    }
   }
   for (const r of recipients ?? []) emails.add(r);
   return [...emails];
+}
+
+/** Active commission members with a usable email (primary commission or multi-membership). */
+export async function getCommissionMemberEmails(
+  clubId: string,
+  commissionId: string
+): Promise<string[]> {
+  const commission = await prisma.commission.findFirst({
+    where: { id: commissionId, clubId, isActive: true },
+    select: { id: true },
+  });
+  if (!commission) return [];
+
+  const members = await prisma.member.findMany({
+    where: {
+      clubId,
+      isActive: true,
+      email: { not: null },
+      OR: [
+        { commissionId },
+        { commissionMemberships: { some: { commissionId } } },
+      ],
+    },
+    select: { email: true },
+  });
+
+  return [
+    ...new Set(
+      members
+        .map((m) => m.email?.trim().toLowerCase())
+        .filter((e): e is string => !!e && e.includes("@"))
+    ),
+  ];
 }
 
 export async function dispatchCampaign(campaignId: string) {
@@ -365,7 +401,10 @@ export async function sendComposedEmail(data: {
   name: string;
   subject: string;
   body: string;
+  /** Custom email group id */
   groupId?: string;
+  /** Club commission id — members with email are expanded into recipients */
+  commissionId?: string;
   recipients?: string;
   cc?: string;
   bcc?: string;
@@ -376,8 +415,22 @@ export async function sendComposedEmail(data: {
   const auth = await requirePermission("emails.send");
   if (auth.error) return { error: auth.error };
 
-  const recipients = data.recipients ? parseEmails(data.recipients) : [];
-  if (!data.groupId && recipients.length === 0) {
+  let recipients = data.recipients ? parseEmails(data.recipients) : [];
+  let groupId = data.groupId?.trim() || null;
+  const commissionId = data.commissionId?.trim() || null;
+
+  // Commissions are not FK email groups: expand member emails into recipients.
+  if (commissionId) {
+    groupId = null;
+    const commissionEmails = await getCommissionMemberEmails(
+      auth.ctx.clubId,
+      commissionId
+    );
+    recipients = [...recipients, ...commissionEmails];
+  }
+
+  const uniqueRecipients = [...new Set(recipients)];
+  if (!groupId && uniqueRecipients.length === 0) {
     return { error: "NO_RECIPIENTS" as const };
   }
 
@@ -385,11 +438,11 @@ export async function sendComposedEmail(data: {
     data: {
       clubId: auth.ctx.clubId,
       templateId: data.templateId || null,
-      groupId: data.groupId || null,
+      groupId,
       name: data.name,
       subject: data.subject,
       body: data.body,
-      recipients,
+      recipients: uniqueRecipients,
       cc: data.cc ? parseEmails(data.cc) : [],
       bcc: data.bcc ? parseEmails(data.bcc) : [],
       replyTo: data.replyTo || null,

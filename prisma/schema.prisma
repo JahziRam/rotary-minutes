@@ -442,6 +442,8 @@ model Club {
   language        Language  @default(FR)
   isActive        Boolean   @default(true)
   presidentApprovalRequired Boolean @default(true)
+  /** Show small round member photos next to names in PV annex (PDF + preview). */
+  minuteShowMemberPhotos    Boolean  @default(false)
   publicCalendarToken       String?  @unique
   whatsappReminderPhone     String?
   guideEnabled              Boolean  @default(true)
@@ -536,6 +538,10 @@ model Member {
   isActive          Boolean   @default(true)
   isHonoraryMember  Boolean   @default(false)
   birthday          DateTime?
+  /** Spouse / partner / lady (conjoint). */
+  spouseFirstName   String?
+  spouseLastName    String?
+  spouseBirthday    DateTime?
   photoUrl     String?
   bio          String?   @db.Text
   commissionId String?
