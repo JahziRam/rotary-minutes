@@ -7,6 +7,13 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [0.2.1] — 2026-07-22
+
+### Fixed
+- **PV — autosave memory churn**
+  - Correction du flux de sauvegarde minute pour éviter le remplacement complet des `agendaItems` à chaque autosave
+  - Synchronisation incrémentale plus légère, avec conservation de l’ordre (`sortOrder`) et sans réécriture destructive
+
 ## [0.2.0] — 2026-07-21
 
 ### Added
