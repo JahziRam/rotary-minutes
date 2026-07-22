@@ -18,6 +18,9 @@ import {
 } from "@/lib/pdf/build-minute-pdf";
 import { getAgendaTemplateForMeeting } from "@/lib/minute-templates";
 import {
+  diffAgendaItemOperations,
+} from "@/lib/minute-agenda-item-sync";
+import {
   applyMinuteScopeToWhere,
   assertMinuteAccess,
   loadMinuteForContext,
@@ -160,20 +163,56 @@ export async function saveMinute(
     });
   }
 
-  await prisma.agendaItem.deleteMany({ where: { minuteId } });
-  await prisma.agendaItem.createMany({
-    data: data.agendaItems.map((item, i) => ({
-      minuteId,
-      sortOrder: i,
-      title: item.title,
-      description: item.description || null,
-      decisions: item.decisions || null,
-      actions: item.actions || null,
-      responsible: item.responsible || null,
-      dueDate: item.dueDate ? new Date(item.dueDate) : null,
-      status: item.status as "OPEN" | "IN_PROGRESS" | "COMPLETED" | "DEFERRED" | "CANCELLED",
-    })),
+  const existingAgendaItems = await prisma.agendaItem.findMany({
+    where: { minuteId },
+    orderBy: { sortOrder: "asc" },
+    select: { id: true, sortOrder: true },
   });
+
+  const { updateItems, createItems, deleteIds } = diffAgendaItemOperations(
+    existingAgendaItems,
+    data.agendaItems
+  );
+
+  for (const item of updateItems) {
+    const id = item.id?.trim();
+    if (!id) continue;
+    await prisma.agendaItem.update({
+      where: { id, minuteId },
+      data: {
+        sortOrder: item.sortOrder,
+        title: item.title,
+        description: item.description || null,
+        decisions: item.decisions || null,
+        actions: item.actions || null,
+        responsible: item.responsible || null,
+        dueDate: item.dueDate ? new Date(item.dueDate) : null,
+        status: item.status as "OPEN" | "IN_PROGRESS" | "COMPLETED" | "DEFERRED" | "CANCELLED",
+      },
+    });
+  }
+
+  if (deleteIds.length > 0) {
+    await prisma.agendaItem.deleteMany({
+      where: { id: { in: deleteIds }, minuteId },
+    });
+  }
+
+  if (createItems.length > 0) {
+    await prisma.agendaItem.createMany({
+      data: createItems.map((item) => ({
+        minuteId,
+        sortOrder: item.sortOrder,
+        title: item.title,
+        description: item.description || null,
+        decisions: item.decisions || null,
+        actions: item.actions || null,
+        responsible: item.responsible || null,
+        dueDate: item.dueDate ? new Date(item.dueDate) : null,
+        status: item.status as "OPEN" | "IN_PROGRESS" | "COMPLETED" | "DEFERRED" | "CANCELLED",
+      })),
+    });
+  }
 
   const savedAgendaItems = await prisma.agendaItem.findMany({
     where: { minuteId },
