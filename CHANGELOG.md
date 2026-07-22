@@ -7,6 +7,13 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [0.2.2] — 2026-07-22
+
+### Fixed
+- **Build Render / OOM Next.js**
+  - Forçage du build production sur Webpack (`next build --webpack`) pour éviter le crash mémoire de Turbopack sur Render
+  - Stabilisation du déploiement sans changement fonctionnel applicatif
+
 ## [0.2.1] — 2026-07-22
 
 ### Fixed
