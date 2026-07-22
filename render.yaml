@@ -64,6 +64,8 @@ services:
         value: "30"
       - key: RUN_DB_SEED
         value: "1"
+      - key: NODE_OPTIONS
+        value: "--max-old-space-size=384"
       - key: XAI_API_KEY
         sync: false
       - key: OPENAI_API_KEY

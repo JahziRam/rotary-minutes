@@ -10,6 +10,8 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "50mb",
     },
+    webpackMemoryOptimizations: true,
+    webpackBuildWorker: true,
     optimizePackageImports: [
       "lucide-react",
       "date-fns",
