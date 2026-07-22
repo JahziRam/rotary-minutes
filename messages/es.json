@@ -1137,6 +1137,7 @@
     "export": "Exportar",
     "verify": "Verificar autenticidad",
     "autoSave": "Guardado automático",
+    "autoSaveHint": "Los puntos del orden del día se guardan automáticamente en segundo plano",
     "offlineDraft": "Borrador sin conexión",
     "versionHistory": "Historial de versiones",
     "finalize": "Finalizar y autenticar",

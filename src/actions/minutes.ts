@@ -60,8 +60,11 @@ export async function saveMinute(
       presidedBy?: string | null;
       secretary?: string | null;
     };
-  }
+  },
+  /** quiet: background autosave — skip version snapshot + path revalidation flood. */
+  options?: { quiet?: boolean }
 ) {
+  const quiet = !!options?.quiet;
   const auth = await requirePermission("minutes.edit");
   if (auth.error) return { error: auth.error };
   const { ctx } = auth;
@@ -79,32 +82,35 @@ export async function saveMinute(
   const lock = assertMinuteEditable(minuteFull.status, ctx);
   if (lock) return lock;
 
-  const currentSnapshot = await prisma.minute.findUnique({
-    where: { id: minuteId },
-    include: {
-      agendaItems: true,
-      meeting: { include: { attendances: attendanceWithMemberInclude } },
-    },
-  });
-
-  if (currentSnapshot) {
-    const version = minuteFull.versions.length + 1;
-    const hash = generateMinuteHash({
-      id: minuteId,
-      title: currentSnapshot.title,
-      agendaItems: currentSnapshot.agendaItems,
-      meeting: currentSnapshot.meeting,
-      attendances: [],
-    });
-    await prisma.minuteVersion.create({
-      data: {
-        minuteId,
-        version,
-        snapshot: currentSnapshot as object,
-        contentHash: hash,
-        authorId: ctx.userId,
+  // Manual saves keep a version history; quiet autosaves only persist content.
+  if (!quiet) {
+    const currentSnapshot = await prisma.minute.findUnique({
+      where: { id: minuteId },
+      include: {
+        agendaItems: true,
+        meeting: { include: { attendances: attendanceWithMemberInclude } },
       },
     });
+
+    if (currentSnapshot) {
+      const version = minuteFull.versions.length + 1;
+      const hash = generateMinuteHash({
+        id: minuteId,
+        title: currentSnapshot.title,
+        agendaItems: currentSnapshot.agendaItems,
+        meeting: currentSnapshot.meeting,
+        attendances: [],
+      });
+      await prisma.minuteVersion.create({
+        data: {
+          minuteId,
+          version,
+          snapshot: currentSnapshot as object,
+          contentHash: hash,
+          authorId: ctx.userId,
+        },
+      });
+    }
   }
 
   // Meeting header (date, location, officers, times)
@@ -242,10 +248,17 @@ export async function saveMinute(
     });
   }
 
-  revalidateMinutePaths(minuteId);
-  for (const loc of ["fr", "en", "es"]) {
-    revalidatePath(`/${loc}/meetings`);
-    revalidatePath(`/${loc}/meetings/${minuteFull.meetingId}/attendance`);
+  if (!quiet) {
+    revalidateMinutePaths(minuteId);
+    for (const loc of ["fr", "en", "es"]) {
+      revalidatePath(`/${loc}/meetings`);
+      revalidatePath(`/${loc}/meetings/${minuteFull.meetingId}/attendance`);
+    }
+  } else {
+    // Light revalidation so the edit page stays coherent without full cache flush.
+    for (const loc of ["fr", "en", "es"]) {
+      revalidatePath(`/${loc}/minutes/${minuteId}/edit`);
+    }
   }
   return {
     success: true as const,

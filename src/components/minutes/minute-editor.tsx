@@ -1,10 +1,17 @@
 "use client";
 
-import { useState, useCallback, useEffect, useTransition } from "react";
+import { useState, useCallback, useEffect, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
-import { Plus, GripVertical, Save, Download, LayoutTemplate } from "lucide-react";
+import {
+  Plus,
+  GripVertical,
+  Save,
+  Download,
+  LayoutTemplate,
+  Trash2,
+} from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -27,6 +34,11 @@ import { MinuteAttachmentsPanel } from "./minute-attachments-panel";
 import { MinuteAiPolishButton } from "./minute-ai-polish-button";
 import { ContextualHintBanner } from "@/components/assistance/contextual-hint-banner";
 import { GlossaryTerm } from "@/components/assistance/glossary-term";
+
+/** Delay after last keystroke before background autosave (ms). */
+const AUTOSAVE_DEBOUNCE_MS = 1800;
+/** Safety net interval autosave (ms). */
+const AUTOSAVE_INTERVAL_MS = 45_000;
 
 interface AgendaItem {
   id: string;
@@ -73,6 +85,7 @@ export function MinuteEditor({
   minuteAiEnabled = false,
   minuteAiRemaining = 0,
   canOverrideLock = false,
+  canDeleteAgendaItems = false,
 }: {
   minute: MinuteData;
   clubId: string;
@@ -89,6 +102,8 @@ export function MinuteEditor({
   minuteAiRemaining?: number;
   /** President / club admin may edit FINALIZED, ARCHIVED or REVIEW minutes. */
   canOverrideLock?: boolean;
+  /** President, secretary, club admin, super admin may remove agenda items. */
+  canDeleteAgendaItems?: boolean;
 }) {
   const t = useTranslations("minutes");
   const tAi = useTranslations("minutes.aiAssist");
@@ -113,11 +128,41 @@ export function MinuteEditor({
   const [secretary, setSecretary] = useState(minute.meeting.secretary ?? "");
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [isOffline, setIsOffline] = useState(false);
   const [status, setStatus] = useState(minute.status);
   const [, startTransition] = useTransition();
   const isLockedStatus = ["FINALIZED", "ARCHIVED", "REVIEW"].includes(status);
   const readOnly = isLockedStatus && !canOverrideLock;
+  const allowDeleteAgenda = canDeleteAgendaItems && !readOnly;
+
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savingRef = useRef(false);
+  const skipDebounceRef = useRef(true); // skip first mount
+  const itemsRef = useRef(items);
+  const metaRef = useRef({
+    title,
+    meetingDate,
+    location,
+    startTime,
+    endTime,
+    presidedBy,
+    secretary,
+    status,
+    canOverrideLock,
+  });
+  itemsRef.current = items;
+  metaRef.current = {
+    title,
+    meetingDate,
+    location,
+    startTime,
+    endTime,
+    presidedBy,
+    secretary,
+    status,
+    canOverrideLock,
+  };
 
   const syncAgendaItemIds = useCallback(
     (saved: Array<{ id: string; sortOrder: number }>) => {
@@ -131,55 +176,82 @@ export function MinuteEditor({
     []
   );
 
-  const doSave = useCallback(async () => {
-    if (["FINALIZED", "ARCHIVED", "REVIEW"].includes(status) && !canOverrideLock) return;
-    setSaving(true);
-    const payload = {
-      title,
-      agendaItems: items,
-      meeting: {
-        date: meetingDate,
-        location,
-        startTime,
-        endTime,
-        presidedBy,
-        secretary,
-      },
-    };
-
-    if (typeof navigator !== "undefined" && !navigator.onLine) {
-      await saveDraftOffline(minute.id, clubId, payload);
-      setIsOffline(true);
-      setLastSaved(new Date());
-      setSaving(false);
-      return;
-    }
-
-    setIsOffline(false);
-    const result = await saveMinute(minute.id, payload);
-    if ("success" in result && result.success) {
-      if (result.agendaItems?.length) {
-        syncAgendaItemIds(result.agendaItems);
+  const doSave = useCallback(
+    async (opts?: { quiet?: boolean }) => {
+      const quiet = !!opts?.quiet;
+      const meta = metaRef.current;
+      if (
+        ["FINALIZED", "ARCHIVED", "REVIEW"].includes(meta.status) &&
+        !meta.canOverrideLock
+      ) {
+        return;
       }
-      await markDraftSynced(minute.id);
-      setLastSaved(new Date());
-    }
-    setSaving(false);
-  }, [
-    minute.id,
-    clubId,
-    items,
-    status,
-    canOverrideLock,
-    title,
-    meetingDate,
-    location,
-    startTime,
-    endTime,
-    presidedBy,
-    secretary,
-    syncAgendaItemIds,
-  ]);
+      if (savingRef.current) return;
+      savingRef.current = true;
+      setSaving(true);
+      setSaveError(null);
+
+      const payload = {
+        title: meta.title,
+        agendaItems: itemsRef.current,
+        meeting: {
+          date: meta.meetingDate,
+          location: meta.location,
+          startTime: meta.startTime,
+          endTime: meta.endTime,
+          presidedBy: meta.presidedBy,
+          secretary: meta.secretary,
+        },
+      };
+
+      try {
+        if (typeof navigator !== "undefined" && !navigator.onLine) {
+          await saveDraftOffline(minute.id, clubId, payload);
+          setIsOffline(true);
+          setLastSaved(new Date());
+          return;
+        }
+
+        setIsOffline(false);
+        const result = await saveMinute(minute.id, payload, { quiet });
+        if ("success" in result && result.success) {
+          if (result.agendaItems?.length) {
+            syncAgendaItemIds(result.agendaItems);
+          }
+          await markDraftSynced(minute.id);
+          setLastSaved(new Date());
+        } else if (result && "error" in result && result.error) {
+          setSaveError(
+            locale === "fr"
+              ? "Échec de la sauvegarde — réessayez"
+              : locale === "es"
+                ? "Error al guardar — reintente"
+                : "Save failed — try again"
+          );
+        }
+      } catch {
+        setSaveError(
+          locale === "fr"
+            ? "Échec de la sauvegarde — réessayez"
+            : locale === "es"
+              ? "Error al guardar — reintente"
+              : "Save failed — try again"
+        );
+      } finally {
+        savingRef.current = false;
+        setSaving(false);
+      }
+    },
+    [minute.id, clubId, locale, syncAgendaItemIds]
+  );
+
+  const scheduleAutosave = useCallback(() => {
+    if (readOnly) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      void doSave({ quiet: true });
+    }, AUTOSAVE_DEBOUNCE_MS);
+  }, [doSave, readOnly]);
 
   const syncOfflineDrafts = useCallback(async () => {
     const drafts = await getUnsyncedDrafts();
@@ -206,10 +278,58 @@ export function MinuteEditor({
     }
   }, [minute.id, router, startTransition]);
 
+  // Debounced autosave whenever content changes (after first paint).
   useEffect(() => {
-    const timer = setInterval(doSave, 30000);
+    if (skipDebounceRef.current) {
+      skipDebounceRef.current = false;
+      return;
+    }
+    if (readOnly) return;
+    scheduleAutosave();
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [
+    items,
+    title,
+    meetingDate,
+    location,
+    startTime,
+    endTime,
+    presidedBy,
+    secretary,
+    scheduleAutosave,
+    readOnly,
+  ]);
+
+  // Periodic safety-net autosave.
+  useEffect(() => {
+    if (readOnly) return;
+    const timer = setInterval(() => {
+      void doSave({ quiet: true });
+    }, AUTOSAVE_INTERVAL_MS);
     return () => clearInterval(timer);
-  }, [doSave]);
+  }, [doSave, readOnly]);
+
+  // Flush pending autosave on leave / tab hide.
+  useEffect(() => {
+    const flush = () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+        debounceRef.current = null;
+      }
+      if (!readOnly) void doSave({ quiet: true });
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") flush();
+    };
+    window.addEventListener("beforeunload", flush);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("beforeunload", flush);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [doSave, readOnly]);
 
   useEffect(() => {
     const onOffline = () => setIsOffline(true);
@@ -229,12 +349,46 @@ export function MinuteEditor({
   function addItem() {
     setItems((prev) => [
       ...prev,
-      { id: Date.now().toString(), title: "", description: "", decisions: "", actions: "", responsible: "", dueDate: "", status: "OPEN" },
+      {
+        id: Date.now().toString(),
+        title: "",
+        description: "",
+        decisions: "",
+        actions: "",
+        responsible: "",
+        dueDate: "",
+        status: "OPEN",
+      },
     ]);
   }
 
+  function removeItem(id: string) {
+    if (!allowDeleteAgenda) return;
+    if (items.length <= 1) return;
+    const confirmMsg =
+      locale === "fr"
+        ? "Supprimer ce point d'ordre du jour ?"
+        : locale === "es"
+          ? "¿Eliminar este punto del orden del día?"
+          : "Remove this agenda item?";
+    if (!window.confirm(confirmMsg)) return;
+    setItems((prev) => prev.filter((item) => item.id !== id));
+  }
+
   function updateItem(id: string, field: keyof AgendaItem, value: string) {
-    setItems((prev) => prev.map((item) => (item.id === id ? { ...item, [field]: value } : item)));
+    setItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
+    );
+  }
+
+  /** Immediate quiet save after leaving an agenda field (blur). */
+  function handleAgendaFieldBlur() {
+    if (readOnly) return;
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = null;
+    }
+    void doSave({ quiet: true });
   }
 
   function itemsHaveContent(): boolean {
@@ -342,14 +496,25 @@ export function MinuteEditor({
           ) : null}
           {isOffline ? (
             <span className="text-xs text-amber-600">{t("offlineDraft")}</span>
+          ) : saveError ? (
+            <span className="text-xs text-red-600">{saveError}</span>
           ) : saving ? (
-            <span className="text-xs text-gray-400">{t("autoSave")}...</span>
+            <span className="text-xs text-gray-400">{t("autoSave")}…</span>
           ) : lastSaved ? (
-            <span className="text-xs text-gray-400">{t("autoSave")} — {lastSaved.toLocaleTimeString()}</span>
-          ) : null}
+            <span className="text-xs text-gray-400">
+              {t("autoSave")} — {lastSaved.toLocaleTimeString()}
+            </span>
+          ) : (
+            <span className="text-xs text-gray-400">{t("autoSaveHint")}</span>
+          )}
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={doSave} disabled={saving || readOnly}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => void doSave({ quiet: false })}
+            disabled={saving || readOnly}
+          >
             <Save className="h-4 w-4" />
             {tCommon("save")}
           </Button>
@@ -472,12 +637,30 @@ export function MinuteEditor({
             <CardContent className="p-4 space-y-3">
               <div className="flex items-center gap-2">
                 <GripVertical className="h-4 w-4 text-gray-300 cursor-grab" />
-                <span className="text-xs font-medium text-gray-400">{t("agendaItem")} {index + 1}</span>
+                <span className="text-xs font-medium text-gray-400">
+                  {t("agendaItem")} {index + 1}
+                </span>
+                <div className="flex-1" />
+                {allowDeleteAgenda && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeItem(item.id)}
+                    disabled={items.length <= 1}
+                    className="text-gray-400 hover:text-red-600"
+                    aria-label={tMeetings("removeAgendaItem")}
+                    title={tMeetings("removeAgendaItem")}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
               <Input
                 label={t("agendaItem")}
                 value={item.title}
                 onChange={(e) => updateItem(item.id, "title", e.target.value)}
+                onBlur={handleAgendaFieldBlur}
                 placeholder="Titre du point"
                 disabled={readOnly}
               />
@@ -488,6 +671,7 @@ export function MinuteEditor({
                 <textarea
                   value={item.description}
                   onChange={(e) => updateItem(item.id, "description", e.target.value)}
+                  onBlur={handleAgendaFieldBlur}
                   rows={3}
                   disabled={readOnly}
                   placeholder={tAi("notesPlaceholder")}
@@ -518,6 +702,8 @@ export function MinuteEditor({
                             : row
                         )
                       );
+                      // Persist AI polish quickly in background.
+                      setTimeout(() => void doSave({ quiet: true }), 100);
                     }}
                   />
                 )}
@@ -528,6 +714,7 @@ export function MinuteEditor({
                   <textarea
                     value={item.decisions}
                     onChange={(e) => updateItem(item.id, "decisions", e.target.value)}
+                    onBlur={handleAgendaFieldBlur}
                     rows={2}
                     disabled={readOnly}
                     className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-navy focus:outline-none focus:ring-2 focus:ring-navy/20 disabled:opacity-60"
@@ -538,6 +725,7 @@ export function MinuteEditor({
                   <textarea
                     value={item.actions}
                     onChange={(e) => updateItem(item.id, "actions", e.target.value)}
+                    onBlur={handleAgendaFieldBlur}
                     rows={2}
                     disabled={readOnly}
                     className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-navy focus:outline-none focus:ring-2 focus:ring-navy/20 disabled:opacity-60"
@@ -549,6 +737,7 @@ export function MinuteEditor({
                   label={t("responsible")}
                   value={item.responsible}
                   onChange={(e) => updateItem(item.id, "responsible", e.target.value)}
+                  onBlur={handleAgendaFieldBlur}
                   disabled={readOnly}
                 />
                 <Input
@@ -556,6 +745,7 @@ export function MinuteEditor({
                   type="date"
                   value={item.dueDate}
                   onChange={(e) => updateItem(item.id, "dueDate", e.target.value)}
+                  onBlur={handleAgendaFieldBlur}
                   disabled={readOnly}
                 />
                 <div className="space-y-1.5">
@@ -563,6 +753,7 @@ export function MinuteEditor({
                   <select
                     value={item.status}
                     onChange={(e) => updateItem(item.id, "status", e.target.value)}
+                    onBlur={handleAgendaFieldBlur}
                     disabled={readOnly}
                     className="flex h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm disabled:opacity-60"
                   >

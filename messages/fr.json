@@ -468,6 +468,7 @@
     "export": "Exporter",
     "verify": "Vérifier l'authenticité",
     "autoSave": "Sauvegarde automatique",
+    "autoSaveHint": "Les points d'ordre du jour sont enregistrés automatiquement en arrière-plan",
     "offlineDraft": "Brouillon hors-ligne",
     "versionHistory": "Historique des versions",
     "finalize": "Finaliser et authentifier",

@@ -468,6 +468,7 @@
     "export": "Export",
     "verify": "Verify authenticity",
     "autoSave": "Auto-save",
+    "autoSaveHint": "Agenda items are saved automatically in the background",
     "offlineDraft": "Offline draft",
     "versionHistory": "Version history",
     "finalize": "Finalize and authenticate",
