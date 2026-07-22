@@ -7,6 +7,16 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-07-22
+
+### Fixed
+- **PV — autosave memory churn**
+  - Correction du flux de sauvegarde minute pour éviter le remplacement complet des `agendaItems` à chaque autosave
+  - Synchronisation incrémentale plus légère, avec conservation de l’ordre (`sortOrder`) et sans réécriture destructive
+- **Build Render / OOM Next.js**
+  - Forçage du build production sur Webpack (`next build --webpack`) pour éviter le crash mémoire de Turbopack sur Render
+  - Stabilisation du déploiement sans changement fonctionnel applicatif
+
 ## [0.2.2] — 2026-07-22
 
 ### Fixed
