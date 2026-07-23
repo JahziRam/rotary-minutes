@@ -139,6 +139,7 @@ export function MinuteEditor({
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savingRef = useRef(false);
   const skipDebounceRef = useRef(true); // skip first mount
+  const lastSavedSignatureRef = useRef<string | null>(null);
   const itemsRef = useRef(items);
   const metaRef = useRef({
     title,
@@ -166,12 +167,19 @@ export function MinuteEditor({
 
   const syncAgendaItemIds = useCallback(
     (saved: Array<{ id: string; sortOrder: number }>) => {
-      setItems((prev) =>
-        prev.map((item, index) => ({
-          ...item,
-          id: saved[index]?.id ?? item.id,
-        }))
-      );
+      setItems((prev) => {
+        let changed = false;
+        const nextItems = prev.map((item, index) => {
+          const nextId = saved[index]?.id;
+          if (!nextId || item.id === nextId) return item;
+          changed = true;
+          return {
+            ...item,
+            id: nextId,
+          };
+        });
+        return changed ? nextItems : prev;
+      });
     },
     []
   );
@@ -203,10 +211,16 @@ export function MinuteEditor({
           secretary: meta.secretary,
         },
       };
+      const payloadSignature = JSON.stringify(payload);
+
+      if (lastSavedSignatureRef.current === payloadSignature) {
+        return;
+      }
 
       try {
         if (typeof navigator !== "undefined" && !navigator.onLine) {
           await saveDraftOffline(minute.id, clubId, payload);
+          lastSavedSignatureRef.current = payloadSignature;
           setIsOffline(true);
           setLastSaved(new Date());
           return;
@@ -218,6 +232,7 @@ export function MinuteEditor({
           if (result.agendaItems?.length) {
             syncAgendaItemIds(result.agendaItems);
           }
+          lastSavedSignatureRef.current = payloadSignature;
           await markDraftSynced(minute.id);
           setLastSaved(new Date());
         } else if (result && "error" in result && result.error) {
@@ -262,15 +277,26 @@ export function MinuteEditor({
       if ("success" in result && result.success) {
         await markDraftSynced(draft.id);
         if (data.agendaItems && result.agendaItems?.length) {
-          setItems(
-            data.agendaItems.map((item, index) => ({
-              ...item,
-              id: result.agendaItems?.[index]?.id ?? item.id,
-            }))
-          );
+          setItems((prev) => {
+            let changed = false;
+            const nextItems = data.agendaItems.map((item, index) => {
+              const nextId = result.agendaItems?.[index]?.id;
+              const currentItem = prev[index];
+              if (!nextId || !currentItem || currentItem.id === nextId) {
+                return currentItem ?? item;
+              }
+              changed = true;
+              return {
+                ...item,
+                id: nextId,
+              };
+            });
+            return changed ? nextItems : prev;
+          });
         } else if (data.agendaItems) {
           setItems(data.agendaItems);
         }
+        lastSavedSignatureRef.current = JSON.stringify(data);
         setLastSaved(new Date());
         setIsOffline(false);
         startTransition(() => router.refresh());

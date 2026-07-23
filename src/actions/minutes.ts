@@ -13,6 +13,7 @@ import { minuteFinalizedEmail, minuteReviewRequestEmail } from "@/lib/email";
 import { sendClubEmail } from "@/lib/club-smtp";
 import {
   attendanceWithMemberInclude,
+  attendanceWithMemberLightInclude,
   buildMinutePdfBuffer,
   minutePdfInclude,
 } from "@/lib/pdf/build-minute-pdf";
@@ -1171,10 +1172,29 @@ export async function sendMinuteToAllMembers(minuteId: string, locale: string) {
   };
 }
 
+/** Page loads (edit / preview / district): no photoUrl or logoUrl blobs. */
 const minuteDetailInclude = {
-  club: true,
+  club: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      address: true,
+      district: true,
+      country: true,
+      city: true,
+      meetingLocation: true,
+      language: true,
+      minuteShowMemberPhotos: true,
+      minuteMemberPhotoSize: true,
+    },
+  },
   agendaItems: { orderBy: { sortOrder: "asc" as const } },
-  meeting: { include: { attendances: attendanceWithMemberInclude } },
+  meeting: {
+    include: {
+      attendances: attendanceWithMemberLightInclude,
+    },
+  },
   author: { select: { firstName: true, lastName: true } },
   versions: {
     orderBy: { version: "desc" as const },

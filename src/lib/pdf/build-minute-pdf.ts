@@ -15,6 +15,10 @@ import { loadBirthdayMembers } from "@/lib/queries/birthday-members";
 import { renderMinutePdf } from "@/lib/pdf/render";
 import type { MinutePDFData } from "@/lib/pdf/minute-pdf";
 
+/**
+ * PDF / hash paths need photoUrl (often data: base64) to embed images.
+ * Do NOT use this include on page loads — it OOMs when many members have photos.
+ */
 export const attendanceWithMemberInclude = {
   include: {
     member: {
@@ -24,6 +28,24 @@ export const attendanceWithMemberInclude = {
         lastName: true,
         isHonoraryMember: true,
         photoUrl: true,
+      },
+    },
+  },
+  orderBy: { category: "asc" as const },
+} as const;
+
+/**
+ * UI detail/edit/preview: never select photoUrl blobs.
+ * Thumbnails use /api/media/member/[id]/photo on demand.
+ */
+export const attendanceWithMemberLightInclude = {
+  include: {
+    member: {
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        isHonoraryMember: true,
       },
     },
   },

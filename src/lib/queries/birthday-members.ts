@@ -19,7 +19,7 @@ export async function loadBirthdayMembers(
       spouseFirstName: true,
       spouseLastName: true,
       spouseBirthday: true,
-      photoUrl: true,
+      // Never select photoUrl here — web annex uses /api/media/member/[id]/photo.
     },
   });
 }

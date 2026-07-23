@@ -7,8 +7,7 @@ import { getClubContext } from "@/lib/club-context";
 import { canViewDistrictMinutes } from "@/lib/district-access";
 import { isFeatureEnabled, isFeatureVisibleInUi } from "@/lib/feature-gate";
 import { resolveMinuteVerifyUrl } from "@/lib/hash";
-import { getAppBaseUrl } from "@/lib/app-url";
-import { resolveClubBrandLogoSrc } from "@/lib/club-logo-resolution";
+import { clubLogoMediaPath } from "@/lib/media-url";
 import {
   canOverrideMinuteLock,
   isMinuteContentLocked,
@@ -52,7 +51,6 @@ export default async function MinuteDetailPage({
     ? isFeatureVisibleInUi(ctx.features, "emailsEnabled", ctx.isSuperAdmin)
     : true;
 
-  const baseUrl = getAppBaseUrl();
   const verifyUrl = resolveMinuteVerifyUrl(minute, locale);
   const memberEmailCount =
     minute.status === "FINALIZED" && isOwnClubMinute
@@ -121,12 +119,8 @@ export default async function MinuteDetailPage({
               country: minute.club.country,
               minuteShowMemberPhotos: minute.club.minuteShowMemberPhotos,
               minuteMemberPhotoSize: minute.club.minuteMemberPhotoSize,
-              logoUrl: resolveClubBrandLogoSrc({
-                clubId: minute.club.id,
-                clubName: minute.club.name,
-                logoUrl: minute.club.logoUrl,
-                baseUrl,
-              }),
+              // Lazy media route — never embed logo base64 in the RSC payload.
+              logoUrl: clubLogoMediaPath(minute.club.id),
             },
             birthdayMembers,
             meeting: {

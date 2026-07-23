@@ -14,7 +14,10 @@ import {
   formatPersonName,
 } from "@/lib/format-person-name";
 import { isDataUrl } from "@/lib/image-storage";
-import { MEMBER_DEFAULT_AVATAR_PATH } from "@/lib/media-url";
+import {
+  MEMBER_DEFAULT_AVATAR_PATH,
+  memberPhotoMediaPath,
+} from "@/lib/media-url";
 import {
   annexColumnCountForPhotos,
   DEFAULT_MINUTE_MEMBER_PHOTO_SIZE,
@@ -86,7 +89,7 @@ export function attendanceDisplayName(row: MinuteAttendanceRow): string {
 
 /**
  * Photo for annex row when club shows member photos.
- * - Web: custom photo URL/data or public default path (no Node fs — client-safe).
+ * - Web: always `/api/media/member/[id]/photo` (lazy, one-at-a-time) — never data URLs.
  * - PDF (`preferDataUrlOnly`): only custom data: URLs; missing photos stay null
  *   and are filled with the default avatar data URL in build-minute-pdf (server).
  */
@@ -94,16 +97,17 @@ export function annexMemberPhotoSrc(
   row: MinuteAttendanceRow,
   options?: { preferDataUrlOnly?: boolean }
 ): string | null {
+  const memberId = row.memberId ?? row.member?.id ?? null;
   const photo = row.member?.photoUrl?.trim();
-  if (photo) {
-    if (options?.preferDataUrlOnly) {
-      return isDataUrl(photo) ? photo : null;
-    }
-    return photo;
-  }
+
   if (options?.preferDataUrlOnly) {
+    if (photo && isDataUrl(photo)) return photo;
     return null;
   }
+
+  // Web preview: media route only (img onError → default wheel).
+  if (memberId) return memberPhotoMediaPath(memberId);
+  if (photo && !isDataUrl(photo)) return photo;
   return MEMBER_DEFAULT_AVATAR_PATH;
 }
 
@@ -239,14 +243,12 @@ function memberPhotoForBirthday(
 ): string | null {
   if (!options?.showMemberPhotos) return null;
   const photo = member.photoUrl?.trim();
-  if (photo) {
-    if (options.preferDataUrlOnly) {
-      return isDataUrl(photo) ? photo : null;
-    }
-    return photo;
+  if (options.preferDataUrlOnly) {
+    if (photo && isDataUrl(photo)) return photo;
+    return null;
   }
-  if (options.preferDataUrlOnly) return null;
-  return MEMBER_DEFAULT_AVATAR_PATH;
+  // Web: media route by member id (no base64 in page payload).
+  return memberPhotoMediaPath(member.id);
 }
 
 /**

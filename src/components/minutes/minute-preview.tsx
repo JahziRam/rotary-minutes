@@ -18,10 +18,7 @@ import {
   parseMinuteMemberPhotoSize,
 } from "@/lib/minute-member-photo-size";
 import { filterAttendancesForRate } from "@/lib/member-attendance-eligibility";
-import {
-  MEMBER_DEFAULT_AVATAR_PATH,
-  resolveMemberPhotoUrlOrDefault,
-} from "@/lib/media-url";
+import { MEMBER_DEFAULT_AVATAR_PATH } from "@/lib/media-url";
 
 export interface MinutePreviewData {
   id: string;
@@ -156,35 +153,11 @@ export function MinutePreview({
   const annex = buildMinuteAttendanceAnnex(data.meeting.attendances, locale, {
     showMemberPhotos: showPhotos,
     memberPhotoSize: photoSize,
+    // Web: annex uses /api/media/member/[id]/photo (no photoUrl blobs in payload).
     preferDataUrlOnly: false,
     meetingDate: data.meeting.date,
     birthdayMembers: data.birthdayMembers,
   });
-  // Resolve media URLs for web preview thumbnails (custom photo or default wheel)
-  if (showPhotos) {
-    for (const group of annex.memberGroups) {
-      for (const person of group.people) {
-        const raw = person.photoUrl?.trim();
-        if (raw && raw !== MEMBER_DEFAULT_AVATAR_PATH && person.memberId) {
-          person.photoUrl = resolveMemberPhotoUrlOrDefault(
-            person.memberId,
-            raw
-          );
-        } else if (!raw || raw === MEMBER_DEFAULT_AVATAR_PATH) {
-          person.photoUrl = MEMBER_DEFAULT_AVATAR_PATH;
-        }
-      }
-    }
-    for (const entry of annex.weekBirthdays) {
-      if (entry.kind !== "member") continue;
-      const raw = entry.photoUrl?.trim();
-      if (raw && raw !== MEMBER_DEFAULT_AVATAR_PATH && entry.memberId) {
-        entry.photoUrl = resolveMemberPhotoUrlOrDefault(entry.memberId, raw);
-      } else if (!raw || raw === MEMBER_DEFAULT_AVATAR_PATH) {
-        entry.photoUrl = MEMBER_DEFAULT_AVATAR_PATH;
-      }
-    }
-  }
   const isFr = locale === "fr";
   const isEs = locale === "es";
   const annexTitle = isFr
@@ -383,6 +356,10 @@ export function MinutePreview({
                                     alt=""
                                     className="rounded-full object-cover shrink-0 bg-gray-100 ring-1 ring-gray-200"
                                     style={photoPreviewStyle}
+                                    onError={(e) => {
+                                      e.currentTarget.onerror = null;
+                                      e.currentTarget.src = MEMBER_DEFAULT_AVATAR_PATH;
+                                    }}
                                   />
                                 ) : null}
                                 <span>
@@ -466,6 +443,10 @@ export function MinutePreview({
                               alt=""
                               className="rounded-full object-cover shrink-0 bg-gray-100 ring-1 ring-gray-200 mt-0.5"
                               style={photoPreviewStyle}
+                              onError={(e) => {
+                                e.currentTarget.onerror = null;
+                                e.currentTarget.src = MEMBER_DEFAULT_AVATAR_PATH;
+                              }}
                             />
                           ) : null}
                           <span className="min-w-0">
