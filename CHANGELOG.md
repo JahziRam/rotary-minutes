@@ -7,6 +7,15 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [0.3.1] — 2026-07-23
+
+### Fixed
+- **Saturation mémoire serveur — captcha, audit log, uploads**
+  - Retrait du captcha visuel (calcul a+b) des formulaires auth et contact, côté client et serveur ; honeypot + délai d'ouverture de formulaire conservés comme filtre anti-bot minimal
+  - Ajout d'un interrupteur central (`AUDIT_LOG_ENABLED`, désactivé par défaut) pour suspendre les écritures d'audit log sans toucher aux sites d'appel existants
+  - Ajout d'un interrupteur central (`UPLOADS_ENABLED`, désactivé par défaut) pour suspendre les uploads (logos, photos, documents, pièces jointes, justificatifs) sans supprimer la fonctionnalité
+  - Réactivation possible à tout moment via ces deux variables d'environnement, sans autre modification de code
+
 ## [0.3.0] — 2026-07-22
 
 ### Fixed
