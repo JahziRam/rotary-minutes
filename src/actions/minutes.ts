@@ -28,6 +28,7 @@ import {
 } from "@/lib/commission-scope";
 import { assertMinuteEditable } from "@/lib/minute-lock";
 import { parseLocalDate } from "@/lib/local-date";
+import { assertMeetingsMinutesAvailable } from "@/lib/meetings-minutes-maintenance";
 import type { MinuteStatus, Prisma } from "@/generated/prisma/client";
 
 function revalidateMinutePaths(minuteId: string, locale?: string) {
@@ -68,6 +69,8 @@ export async function saveMinute(
   /** quiet: background autosave — skip version snapshot + path revalidation flood. */
   options?: { quiet?: boolean }
 ) {
+  const maint = assertMeetingsMinutesAvailable();
+  if (maint) return maint;
   const quiet = !!options?.quiet;
   const auth = await requirePermission("minutes.edit");
   if (auth.error) return { error: auth.error };
@@ -310,6 +313,8 @@ export async function saveMinute(
 }
 
 export async function applyAgendaTemplate(minuteId: string, locale: string) {
+  const maint = assertMeetingsMinutesAvailable();
+  if (maint) return maint;
   const auth = await requirePermission("minutes.edit");
   if (auth.error) return { error: auth.error };
   const { ctx } = auth;
@@ -468,6 +473,8 @@ async function doFinalizeMinute(
 }
 
 export async function submitMinuteForReview(minuteId: string, locale: string) {
+  const maint = assertMeetingsMinutesAvailable();
+  if (maint) return maint;
   const auth = await requirePermission("minutes.submit");
   if (auth.error) return { error: auth.error };
   const { ctx } = auth;
@@ -603,6 +610,8 @@ export async function submitMinuteForReview(minuteId: string, locale: string) {
  * Finalize the PV (if needed) then email the official PDF to all active members.
  */
 export async function finalizeAndSendToMembers(minuteId: string, locale: string) {
+  const maint = assertMeetingsMinutesAvailable();
+  if (maint) return maint;
   const finalizeAuth = await requirePermission("minutes.finalize");
   const submitAuth = finalizeAuth.error
     ? await requirePermission("minutes.submit")
@@ -632,6 +641,8 @@ export async function finalizeAndSendToMembers(minuteId: string, locale: string)
 }
 
 export async function approveMinute(minuteId: string, locale: string) {
+  const maint = assertMeetingsMinutesAvailable();
+  if (maint) return maint;
   const auth = await requirePermission("minutes.approve");
   if (auth.error) return { error: auth.error };
   const { ctx } = auth;
@@ -649,6 +660,8 @@ export async function approveMinute(minuteId: string, locale: string) {
 }
 
 export async function rejectMinute(minuteId: string, comment: string, locale: string) {
+  const maint = assertMeetingsMinutesAvailable();
+  if (maint) return maint;
   const auth = await requirePermission("minutes.approve");
   if (auth.error) return { error: auth.error };
   const { ctx } = auth;
@@ -702,6 +715,8 @@ export async function rejectMinute(minuteId: string, comment: string, locale: st
 
 /** @deprecated Préférer submitMinuteForReview + approveMinute */
 export async function finalizeMinute(minuteId: string, locale: string) {
+  const maint = assertMeetingsMinutesAvailable();
+  if (maint) return maint;
   const auth = await requirePermission("minutes.finalize");
   if (auth.error) return { error: auth.error };
   const { ctx } = auth;
@@ -817,6 +832,8 @@ export async function searchMinutes(filters: {
 }
 
 export async function duplicateMinute(minuteId: string, locale: string) {
+  const maint = assertMeetingsMinutesAvailable();
+  if (maint) return maint;
   const auth = await requirePermission("minutes.create");
   if (auth.error) return { error: auth.error };
   const { ctx } = auth;
@@ -885,6 +902,8 @@ export async function duplicateMinute(minuteId: string, locale: string) {
 }
 
 export async function archiveMinute(minuteId: string, locale: string) {
+  const maint = assertMeetingsMinutesAvailable();
+  if (maint) return maint;
   const auth = await requirePermission("minutes.delete");
   if (auth.error) return { error: auth.error };
   const { ctx } = auth;
@@ -981,6 +1000,8 @@ export async function sendMinuteByEmail(
   recipientEmail: string,
   locale: string
 ) {
+  const maint = assertMeetingsMinutesAvailable();
+  if (maint) return maint;
   const ctx = await getClubContext();
   if (!ctx) return { error: "UNAUTHORIZED" };
 
@@ -1059,6 +1080,8 @@ export async function sendMinuteByEmail(
 }
 
 export async function sendMinuteToAllMembers(minuteId: string, locale: string) {
+  const maint = assertMeetingsMinutesAvailable();
+  if (maint) return maint;
   const ctx = await getClubContext();
   if (!ctx) return { error: "UNAUTHORIZED" };
 
@@ -1204,6 +1227,7 @@ const minuteDetailInclude = {
 };
 
 export async function getMinuteById(minuteId: string) {
+  if (assertMeetingsMinutesAvailable()) return null;
   const session = await auth();
   if (!session?.user) return null;
 

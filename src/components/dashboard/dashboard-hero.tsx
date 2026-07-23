@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Plus, FileText } from "lucide-react";
+import { isMeetingsMinutesMaintenanceActive } from "@/lib/meetings-minutes-maintenance";
 
 export function DashboardHero({
   greeting,
@@ -14,6 +15,10 @@ export function DashboardHero({
   newMinuteLabel: string;
   locale: string;
 }) {
+  const maintenance = isMeetingsMinutesMaintenanceActive();
+  const disabledClass =
+    "inline-flex items-center justify-center gap-2 h-10 px-4 py-2 rounded-lg text-sm font-semibold opacity-50 cursor-not-allowed pointer-events-none";
+
   return (
     <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-navy via-navy to-navy-dark text-white p-6 sm:p-8 shadow-lg">
       <div
@@ -32,20 +37,37 @@ export function DashboardHero({
           {greeting}
         </h1>
         <div className="flex flex-wrap gap-3 mt-6">
-          <Link
-            href={`/${locale}/meetings/new`}
-            className="inline-flex items-center justify-center gap-2 h-10 px-4 py-2 rounded-lg text-sm font-semibold bg-gold text-navy-dark hover:bg-gold-light shadow-sm transition-all"
-          >
-            <Plus className="h-4 w-4" />
-            {newMeetingLabel}
-          </Link>
-          <Link
-            href={`/${locale}/minutes/new`}
-            className="inline-flex items-center justify-center gap-2 h-10 px-4 py-2 rounded-lg text-sm font-medium border border-white/20 bg-white/10 hover:bg-white/20 text-white transition-all"
-          >
-            <FileText className="h-4 w-4" />
-            {newMinuteLabel}
-          </Link>
+          {maintenance ? (
+            <>
+              <span className={`${disabledClass} bg-gold text-navy-dark`}>
+                <Plus className="h-4 w-4" />
+                {newMeetingLabel}
+              </span>
+              <span
+                className={`${disabledClass} border border-white/20 bg-white/10 text-white font-medium`}
+              >
+                <FileText className="h-4 w-4" />
+                {newMinuteLabel}
+              </span>
+            </>
+          ) : (
+            <>
+              <Link
+                href={`/${locale}/meetings/new`}
+                className="inline-flex items-center justify-center gap-2 h-10 px-4 py-2 rounded-lg text-sm font-semibold bg-gold text-navy-dark hover:bg-gold-light shadow-sm transition-all"
+              >
+                <Plus className="h-4 w-4" />
+                {newMeetingLabel}
+              </Link>
+              <Link
+                href={`/${locale}/minutes/new`}
+                className="inline-flex items-center justify-center gap-2 h-10 px-4 py-2 rounded-lg text-sm font-medium border border-white/20 bg-white/10 hover:bg-white/20 text-white transition-all"
+              >
+                <FileText className="h-4 w-4" />
+                {newMinuteLabel}
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </section>

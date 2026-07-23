@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getClubContext } from "@/lib/club-context";
 import { requirePermission } from "@/lib/require-permission";
+import { assertMeetingsMinutesAvailable } from "@/lib/meetings-minutes-maintenance";
 import type { AttendanceCategory } from "@/generated/prisma/client";
 
 export type AttendanceEntry = {
@@ -26,6 +27,8 @@ export async function saveMeetingAttendance(
   meetingId: string,
   attendances: AttendanceEntry[]
 ) {
+  const maint = assertMeetingsMinutesAvailable();
+  if (maint) return maint;
   const auth = await requirePermission("meetings.edit");
   if (auth.error) return { error: auth.error };
   const { ctx } = auth;

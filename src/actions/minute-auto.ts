@@ -9,6 +9,7 @@ import {
 } from "@/lib/minute-auto-generate";
 import { attendanceWithMemberInclude } from "@/lib/pdf/build-minute-pdf";
 import { assertMinuteEditable } from "@/lib/minute-lock";
+import { assertMeetingsMinutesAvailable } from "@/lib/meetings-minutes-maintenance";
 
 function revalidateMinute(minuteId: string) {
   for (const loc of ["fr", "en"]) {
@@ -19,6 +20,8 @@ function revalidateMinute(minuteId: string) {
 
 /** Génère le brouillon PV à partir de l'ordre du jour, présences et visiteurs. */
 export async function autoGenerateMinuteFromMeeting(minuteId: string, locale = "fr") {
+  const maint = assertMeetingsMinutesAvailable();
+  if (maint) return maint;
   const auth = await requirePermission("minutes.edit");
   if (auth.error) return auth;
   const { ctx } = auth;

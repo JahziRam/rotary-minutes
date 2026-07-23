@@ -114,6 +114,11 @@ export async function uploadMinuteAttachmentFromBuffer(
     title?: string;
   }
 ) {
+  const { assertMeetingsMinutesAvailable } = await import(
+    "@/lib/meetings-minutes-maintenance"
+  );
+  const maint = assertMeetingsMinutesAvailable();
+  if (maint) return maint;
   const loaded = await loadMinuteForAttachments(minuteId, "minutes.edit");
   if ("error" in loaded) return loaded;
   const { ctx, minute } = loaded;
@@ -213,6 +218,11 @@ export async function uploadMinuteAttachmentFile(minuteId: string, formData: For
 }
 
 export async function deleteMinuteAttachment(attachmentId: string) {
+  const { assertMeetingsMinutesAvailable } = await import(
+    "@/lib/meetings-minutes-maintenance"
+  );
+  const maint = assertMeetingsMinutesAvailable();
+  if (maint) return maint;
   const auth = await requirePermission("minutes.edit");
   if (auth.error) return auth;
   const { ctx } = auth;

@@ -51,6 +51,11 @@ export async function polishMinuteAgendaItem(
   minuteId: string,
   input: PolishMinuteAgendaItemInput
 ) {
+  const { assertMeetingsMinutesAvailable } = await import(
+    "@/lib/meetings-minutes-maintenance"
+  );
+  const maint = assertMeetingsMinutesAvailable();
+  if (maint) return maint;
   const auth = await requirePermission("minutes.edit");
   if (auth.error) return auth;
   const { ctx } = auth;

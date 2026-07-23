@@ -19,6 +19,7 @@ import {
 
 import { parseLocalDate } from "@/lib/local-date";
 import { assertMinuteEditable } from "@/lib/minute-lock";
+import { assertMeetingsMinutesAvailable } from "@/lib/meetings-minutes-maintenance";
 
 function revalidateMeetingPaths(locale: string, meetingId?: string) {
   for (const loc of ["fr", "en", "es"]) {
@@ -67,6 +68,8 @@ function parseAgendaFromForm(data: Record<string, string>): AgendaDraftItem[] | 
 
 /** Returns the agenda template for a meeting type (club/district/system). */
 export async function fetchAgendaTemplate(meetingType: string, locale: string) {
+  const maint = assertMeetingsMinutesAvailable();
+  if (maint) return { error: maint.error, items: [] as AgendaDraftItem[] };
   const auth = await requirePermission("meetings.create");
   if (auth.error) return { error: auth.error, items: [] as AgendaDraftItem[] };
   const type = (meetingType as MeetingType) || "STATUTORY";
@@ -155,6 +158,8 @@ export async function createMeeting(
   data: Record<string, string>,
   locale: string
 ) {
+  const maint = assertMeetingsMinutesAvailable();
+  if (maint) return maint;
   const auth = await requirePermission("meetings.create");
   if (auth.error) return { error: auth.error };
   const { ctx } = auth;
@@ -268,6 +273,8 @@ export async function createMeeting(
 
 /** Mark a scheduled meeting as live and open the live room. */
 export async function startLiveMeeting(meetingId: string, locale: string) {
+  const maint = assertMeetingsMinutesAvailable();
+  if (maint) return maint;
   const auth = await requirePermission("meetings.edit");
   if (auth.error) return { error: auth.error };
   const { ctx } = auth;
@@ -307,6 +314,8 @@ export async function startLiveMeeting(meetingId: string, locale: string) {
 
 /** End a live meeting: clear isLive, set endTime, go to PV or attendance. */
 export async function endLiveMeeting(meetingId: string, locale: string) {
+  const maint = assertMeetingsMinutesAvailable();
+  if (maint) return maint;
   const auth = await requirePermission("meetings.edit");
   if (auth.error) return { error: auth.error };
   const { ctx } = auth;
@@ -354,6 +363,8 @@ export async function endLiveMeeting(meetingId: string, locale: string) {
 
 /** Send meeting invitation (convocation) to club members with an email. */
 export async function sendMeetingInvitation(meetingId: string, locale: string) {
+  const maint = assertMeetingsMinutesAvailable();
+  if (maint) return maint;
   const auth = await requirePermission("meetings.create");
   if (auth.error) return { error: auth.error };
   const { ctx } = auth;
@@ -482,6 +493,8 @@ export async function updateMeeting(
   data: MeetingDetailsUpdate,
   locale: string
 ) {
+  const maint = assertMeetingsMinutesAvailable();
+  if (maint) return maint;
   const auth = await requirePermission("meetings.edit");
   if (auth.error) return { error: auth.error };
   const { ctx } = auth;

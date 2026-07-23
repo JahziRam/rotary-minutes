@@ -52,6 +52,8 @@ import {
   canViewMemberEngagement,
   getRecentMemberEngagement,
 } from "@/lib/queries/member-engagement";
+import { MeetingsMinutesMaintenanceNotice } from "@/components/layout/meetings-minutes-maintenance-notice";
+import { isMeetingsMinutesMaintenanceActive } from "@/lib/meetings-minutes-maintenance";
 
 export default async function DashboardPage({
   params,
@@ -250,6 +252,10 @@ export default async function DashboardPage({
         )}
 
         <DashboardAssistance />
+
+        {isMeetingsMinutesMaintenanceActive() && (
+          <MeetingsMinutesMaintenanceNotice locale={locale} />
+        )}
 
         {session?.user?.isSuperAdmin && !ctx ? (
           <ViewAsClubPicker

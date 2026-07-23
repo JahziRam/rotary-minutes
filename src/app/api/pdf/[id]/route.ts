@@ -7,11 +7,24 @@ import {
   buildMinutePdfBuffer,
   minutePdfInclude,
 } from "@/lib/pdf/build-minute-pdf";
+import { assertMeetingsMinutesAvailable } from "@/lib/meetings-minutes-maintenance";
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const maint = assertMeetingsMinutesAvailable();
+  if (maint) {
+    return NextResponse.json(
+      {
+        error: "MAINTENANCE",
+        message:
+          "Réunions et PV temporairement indisponibles jusqu'au lundi 27 juillet 2026 à 12:00 (GMT+3).",
+      },
+      { status: 503 }
+    );
+  }
+
   const { id } = await params;
 
   const minute = await prisma.minute.findUnique({

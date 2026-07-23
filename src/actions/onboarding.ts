@@ -261,6 +261,11 @@ export async function createOnboardingMeeting(
   data: { date: string; location?: string; startTime?: string },
   locale: string
 ) {
+  const { assertMeetingsMinutesAvailable } = await import(
+    "@/lib/meetings-minutes-maintenance"
+  );
+  const maint = assertMeetingsMinutesAvailable();
+  if (maint) return maint;
   const auth = await requirePermission("meetings.create");
   if (auth.error) return { error: auth.error };
   const { ctx } = auth;
