@@ -5,6 +5,18 @@ import { createPgAdapter, ensureSslForRemotePostgres } from "@/lib/pg-adapter";
 /** Incrémenter quand le schéma Prisma change (invalide le cache dev). */
 const PRISMA_SCHEMA_VERSION = 18;
 
+/**
+ * Audit log suspendu (2026-07) : suspecté de contribuer à la saturation
+ * mémoire serveur (scans jusqu'à 500 lignes par vérification de rate-limit,
+ * écritures à chaque action). Repasser à `true` (ou définir la variable
+ * d'env AUDIT_LOG_ENABLED=true) pour réactiver sans toucher aux ~90 sites
+ * d'appel `prisma.auditLog.create` du code — ils redeviennent actifs
+ * automatiquement.
+ */
+export function isAuditLogEnabled(): boolean {
+  return process.env.AUDIT_LOG_ENABLED === "true";
+}
+
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
   prismaSchemaVersion?: number;
@@ -81,6 +93,17 @@ function readClientProperty(client: PrismaClient, prop: string | symbol, receive
   return typeof value === "function" ? value.bind(client) : value;
 }
 
+function wrapAuditLogDelegate(delegate: unknown) {
+  return new Proxy(delegate as object, {
+    get(target, prop, receiver) {
+      if (prop === "create" && !isAuditLogEnabled()) {
+        return async () => null;
+      }
+      return Reflect.get(target, prop, receiver);
+    },
+  });
+}
+
 /** Proxy pour survivre au hot-reload et réutiliser le client par isolate Worker. */
 export const prisma: PrismaClient = new Proxy({} as PrismaClient, {
   get(_target, prop, receiver) {
@@ -95,8 +118,12 @@ export const prisma: PrismaClient = new Proxy({} as PrismaClient, {
     ) {
       globalForPrisma.prismaSchemaVersion = -1;
       const freshClient = getPrismaClient();
-      return readClientProperty(freshClient, prop, receiver);
+      const freshValue = readClientProperty(freshClient, prop, receiver);
+      if (prop === "auditLog") return wrapAuditLogDelegate(freshValue);
+      return freshValue;
     }
+
+    if (prop === "auditLog") return wrapAuditLogDelegate(value);
 
     return value;
   },

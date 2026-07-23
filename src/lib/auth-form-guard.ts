@@ -49,41 +49,11 @@ export function validateAuthFormGuard(
     return { ok: false, error: "TIMING_INVALID" };
   }
 
-  let parsed: CaptchaPayload;
-  try {
-    parsed = JSON.parse(
-      Buffer.from(payload.captchaToken, "base64url").toString("utf8")
-    ) as CaptchaPayload;
-  } catch {
-    return { ok: false, error: "CAPTCHA_INVALID" };
-  }
-
-  const { a, b, issuedAt, sig } = parsed;
-  if (
-    !Number.isInteger(a) ||
-    !Number.isInteger(b) ||
-    !Number.isInteger(issuedAt) ||
-    a < 1 ||
-    a > 12 ||
-    b < 1 ||
-    b > 12 ||
-    typeof sig !== "string"
-  ) {
-    return { ok: false, error: "CAPTCHA_INVALID" };
-  }
-
-  if (Date.now() - issuedAt > CHALLENGE_TTL_MS) {
-    return { ok: false, error: "CAPTCHA_EXPIRED" };
-  }
-
-  const expected = signChallenge(a, b, issuedAt);
-  if (!safeEqual(expected, sig)) {
-    return { ok: false, error: "CAPTCHA_INVALID" };
-  }
-
-  if (!Number.isInteger(payload.captchaAnswer) || a + b !== payload.captchaAnswer) {
-    return { ok: false, error: "CAPTCHA_INVALID" };
-  }
+  // Captcha retiré (2026-07) : cause suspectée de saturation mémoire serveur.
+  // Honeypot ("website") + vérification de timing ci-dessus restent actifs.
+  void CHALLENGE_TTL_MS;
+  void signChallenge;
+  void safeEqual;
 
   return { ok: true };
 }

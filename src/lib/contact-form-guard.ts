@@ -72,18 +72,8 @@ export function validateContactForm(payload: ContactFormPayload): ContactGuardSu
     return { ok: false, error: "TIMING_INVALID" };
   }
 
-  const { captchaA: a, captchaB: b, captchaAnswer: answer } = payload;
-  if (
-    !Number.isInteger(a) ||
-    !Number.isInteger(b) ||
-    a < 1 ||
-    a > 12 ||
-    b < 1 ||
-    b > 12 ||
-    a + b !== answer
-  ) {
-    return { ok: false, error: "CAPTCHA_INVALID" };
-  }
+  // Captcha retiré (2026-07) : cause suspectée de saturation mémoire serveur.
+  // Honeypot ("website") + vérification de timing ci-dessus restent actifs.
 
   const name = payload.name?.trim() ?? "";
   const email = normalizeEmail(payload.email ?? "");

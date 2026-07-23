@@ -86,7 +86,6 @@ export function ContactModal({
     email.includes("@") &&
     message.trim().length >= 20 &&
     humanCheck &&
-    captchaAnswer.trim() !== "" &&
     !pending;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -282,30 +281,6 @@ export function ContactModal({
                   />
                   <span className="text-sm text-gray-700">{t("humanCheck")}</span>
                 </label>
-                <div className="flex flex-wrap items-end gap-3">
-                  <div className="min-w-[140px] flex-1">
-                    <Input
-                      label={t("captcha", { a: captcha.a, b: captcha.b })}
-                      name="captcha"
-                      inputMode="numeric"
-                      value={captchaAnswer}
-                      onChange={(e) => setCaptchaAnswer(e.target.value.replace(/\D/g, ""))}
-                      required
-                      autoComplete="off"
-                      placeholder="?"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    className="text-xs text-navy underline-offset-2 hover:underline pb-2"
-                    onClick={() => {
-                      setCaptcha(randomCaptcha());
-                      setCaptchaAnswer("");
-                    }}
-                  >
-                    {t("captchaRefresh")}
-                  </button>
-                </div>
               </div>
 
               {error && (

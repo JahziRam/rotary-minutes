@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/prisma";
+import { prisma, isAuditLogEnabled } from "@/lib/prisma";
 import { requirePermission } from "@/lib/require-permission";
 import {
   canManageMemberRoles,
@@ -186,21 +186,23 @@ export async function approveJoinRequest(
       });
     }
 
-    await tx.auditLog.create({
-      data: {
-        clubId: ctx.clubId,
-        userId: ctx.userId,
-        action: "MEMBERSHIP_APPROVED",
-        entity: "ClubMembership",
-        entityId: membershipId,
-        metadata: {
-          approvedUserId: membership.userId,
-          email: membership.user.email,
-          role,
-          customRoleId,
+    if (isAuditLogEnabled()) {
+      await tx.auditLog.create({
+        data: {
+          clubId: ctx.clubId,
+          userId: ctx.userId,
+          action: "MEMBERSHIP_APPROVED",
+          entity: "ClubMembership",
+          entityId: membershipId,
+          metadata: {
+            approvedUserId: membership.userId,
+            email: membership.user.email,
+            role,
+            customRoleId,
+          },
         },
-      },
-    });
+      });
+    }
 
     await tx.notification.create({
       data: {
@@ -285,19 +287,21 @@ export async function rejectJoinRequest(membershipId: string) {
       data: { isActive: false },
     });
 
-    await tx.auditLog.create({
-      data: {
-        clubId: ctx.clubId,
-        userId: ctx.userId,
-        action: "MEMBERSHIP_REJECTED",
-        entity: "ClubMembership",
-        entityId: membershipId,
-        metadata: {
-          rejectedUserId: membership.userId,
-          email: membership.user.email,
+    if (isAuditLogEnabled()) {
+      await tx.auditLog.create({
+        data: {
+          clubId: ctx.clubId,
+          userId: ctx.userId,
+          action: "MEMBERSHIP_REJECTED",
+          entity: "ClubMembership",
+          entityId: membershipId,
+          metadata: {
+            rejectedUserId: membership.userId,
+            email: membership.user.email,
+          },
         },
-      },
-    });
+      });
+    }
 
     await tx.notification.create({
       data: {

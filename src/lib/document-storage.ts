@@ -1,5 +1,6 @@
 import { MAX_UPLOAD_FILE_BYTES } from "@/lib/upload-limits";
 import { normalizeDocumentMime } from "@/lib/document-types";
+import { areUploadsEnabled } from "@/lib/image-storage";
 
 export const MAX_DOCUMENT_BYTES = MAX_UPLOAD_FILE_BYTES;
 
@@ -58,6 +59,9 @@ export function bufferToDocumentDataUrl(
   fileName: string,
   mimeTypeInput?: string
 ): { dataUrl: string; mimeType: string } {
+  if (!areUploadsEnabled()) {
+    throw new Error("UPLOADS_SUSPENDED");
+  }
   if (buffer.byteLength > MAX_DOCUMENT_BYTES) {
     throw new Error("TOO_LARGE");
   }
@@ -78,6 +82,9 @@ export async function fileToDocumentDataUrl(file: File): Promise<{
   dataUrl: string;
   mimeType: string;
 }> {
+  if (!areUploadsEnabled()) {
+    throw new Error("UPLOADS_SUSPENDED");
+  }
   const buffer = Buffer.from(await file.arrayBuffer());
   return bufferToDocumentDataUrl(buffer, file.name, file.type);
 }

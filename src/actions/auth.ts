@@ -1,7 +1,7 @@
 "use server";
 
 import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/prisma";
+import { prisma, isAuditLogEnabled } from "@/lib/prisma";
 import { auth, signIn, signOut } from "@/lib/auth";
 import { AuthError } from "next-auth";
 import { passwordResetEmail, welcomeClubEmail } from "@/lib/email";
@@ -127,16 +127,18 @@ export async function registerClub(data: {
       },
     });
 
-    await tx.auditLog.create({
-      data: {
-        clubId: club.id,
-        userId: user.id,
-        action: "CLUB_REGISTERED",
-        entity: "Club",
-        entityId: club.id,
-        metadata: { clubType: data.clubType },
-      },
-    });
+    if (isAuditLogEnabled()) {
+      await tx.auditLog.create({
+        data: {
+          clubId: club.id,
+          userId: user.id,
+          action: "CLUB_REGISTERED",
+          entity: "Club",
+          entityId: club.id,
+          metadata: { clubType: data.clubType },
+        },
+      });
+    }
   });
 
   const { syncClubFeaturesFromPlan } = await import("@/lib/features");
@@ -338,15 +340,17 @@ export async function registerMember(data: {
       });
     }
 
-    await tx.auditLog.create({
-      data: {
-        clubId: club.id,
-        userId: user.id,
-        action: "MEMBER_JOIN_REQUESTED",
-        entity: "ClubMembership",
-        metadata: { email: normalizedEmail },
-      },
-    });
+    if (isAuditLogEnabled()) {
+      await tx.auditLog.create({
+        data: {
+          clubId: club.id,
+          userId: user.id,
+          action: "MEMBER_JOIN_REQUESTED",
+          entity: "ClubMembership",
+          metadata: { email: normalizedEmail },
+        },
+      });
+    }
   });
 
   try {
