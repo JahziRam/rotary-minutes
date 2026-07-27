@@ -92,17 +92,28 @@ pg_restore --clean --if-exists --no-owner --no-acl `
 Si `pg_restore` se plaint de rôles manquants, c’est souvent OK (`--no-owner`).  
 Vérifier dans Neon **SQL Editor** : `SELECT COUNT(*) FROM "User";` (ou table `Club`).
 
-### B.4 Prisma (alignement migrations)
+### B.4 Schéma sur Neon vide (important)
 
-En local, avec `DIRECT_URL` = Neon direct dans `.env` :
+La migration `20260101000000_baseline` est **volontairement vide** (historique Render :
+schéma créé autrefois avec `db push`). Sur une base Neon **vide**,
+`prisma migrate deploy` casse à la 2ᵉ migration (`SubscriptionPlan does not exist`).
 
-```bash
-npx prisma migrate status
+**Procédure correcte :**
+
+```powershell
+cd C:\Users\jahaz\Documents\GitHub\rotary-minutes
+$env:DIRECT_URL = "postgresql://…@ep-….neon.tech/rotary-minutes?sslmode=require"
+$env:DATABASE_URL = $env:DIRECT_URL
+
+# Crée tout le schéma + marque les migrations comme appliquées
+node scripts/neon-bootstrap-schema.mjs
+
+# Puis les données
+$env:TARGET_DATABASE_URL = $env:DIRECT_URL
+node scripts/db-migrate-dump-restore.mjs restore rotary_minutes_dump.sql
 ```
 
-- Si le schéma est déjà à jour via le dump : rien à faire, ou  
-  `npx prisma migrate resolve --applied "<nom_migration>"` pour les migrations déjà présentes.
-- **Ne pas** lancer `npm run db:seed` en production (écrase / pollue les données).
+- **Ne pas** lancer `npm run db:seed` en production.
 
 ---
 
