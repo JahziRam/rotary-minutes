@@ -1,9 +1,18 @@
 # Vercel Hobby — alternative gratuite (si Render bloque la sécurité)
 
+> **Migration complète (Vercel + Neon)** : voir [`deploy-vercel-neon.md`](./deploy-vercel-neon.md).
+
 Render peut demander un upgrade **Pro ($25/mo)** pour certaines options « Account Security »
 (forcer 2FA, audit logs, etc.). **Ce n'est pas nécessaire pour déployer.**
 
 Si Render vous bloque quand même → **Vercel Hobby (gratuit)** est idéal pour Next.js.
+
+## Vercel free (Hobby) en résumé
+
+- **Oui, gratuit** pour héberger l’app Next.js.
+- Limites de bande passante / builds / crons (suffisant pour démarrer un club SaaS).
+- **Mieux que Render free** pour Next (pas le même plafond RAM permanent ~512 Mo).
+- La **base** n’est pas fournie : utiliser **Neon free** (ou autre Postgres).
 
 ## 1. Créer le compte Vercel
 
