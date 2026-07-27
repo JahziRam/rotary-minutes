@@ -172,15 +172,21 @@ Manuel :
 
 ---
 
-## Étape E — Crons
+## Étape E — Crons (plan Hobby)
 
-Le fichier `vercel.json` du repo définit déjà les crons (`/api/cron/...`).
+**Hobby n’autorise que des crons « une fois par jour »** par expression  
+(pas de `*/15 * * * *` ni de `0 * * * *`).
 
-Vérifier que chaque route cron :
-- accepte `Authorization: Bearer $CRON_SECRET` ou le header Vercel Cron
-- n’est pas bloquée par middleware auth utilisateur
+Le `vercel.json` du repo est adapté Hobby :
+- rappels / essais / cotisations : **1×/jour**
+- `email-campaigns` : **4×/jour** (8h, 12h, 16h, 20h UTC) via 4 entrées quotidiennes
+- `meeting-push` : **3×/jour** (7h, 12h, 17h UTC)
 
-Sur Hobby, surveiller les logs **Cron** après le premier jour.
+Pour du temps réel (toutes les 15 min) → plan **Pro**, ou un cron externe (cron-job.org) qui appelle l’URL avec `CRON_SECRET`.
+
+Vérifier que chaque route :
+- accepte `Authorization: Bearer $CRON_SECRET` / header Vercel Cron
+- n’est pas bloquée par le middleware auth
 
 ---
 
