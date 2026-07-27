@@ -211,6 +211,95 @@ Next:
   }
 }
 
+/** Split SQL into statements; keep DO $$ … $$ blocks intact. */
+function splitSqlStatements(sql) {
+  const statements = [];
+  let buf = "";
+  let i = 0;
+  let inSingle = false;
+  let dollarTag = null; // e.g. $$ or $tag$
+
+  while (i < sql.length) {
+    const c = sql[i];
+    const next = sql[i + 1];
+
+    if (dollarTag) {
+      if (sql.startsWith(dollarTag, i)) {
+        buf += dollarTag;
+        i += dollarTag.length;
+        dollarTag = null;
+        continue;
+      }
+      buf += c;
+      i++;
+      continue;
+    }
+
+    if (inSingle) {
+      if (c === "'" && next === "'") {
+        buf += "''";
+        i += 2;
+        continue;
+      }
+      if (c === "'") {
+        inSingle = false;
+        buf += c;
+        i++;
+        continue;
+      }
+      buf += c;
+      i++;
+      continue;
+    }
+
+    if (c === "'") {
+      inSingle = true;
+      buf += c;
+      i++;
+      continue;
+    }
+
+    // Dollar-quoting: $$ or $tag$
+    if (c === "$") {
+      const m = sql.slice(i).match(/^\$([A-Za-z0-9_]*)\$/);
+      if (m) {
+        dollarTag = m[0];
+        buf += dollarTag;
+        i += dollarTag.length;
+        continue;
+      }
+    }
+
+    if (c === "-" && next === "-") {
+      // line comment
+      while (i < sql.length && sql[i] !== "\n") {
+        buf += sql[i];
+        i++;
+      }
+      continue;
+    }
+
+    if (c === ";") {
+      const stmt = buf.trim();
+      if (stmt.length > 0 && !stmt.startsWith("--")) {
+        statements.push(stmt);
+      }
+      buf = "";
+      i++;
+      continue;
+    }
+
+    buf += c;
+    i++;
+  }
+
+  const tail = buf.trim();
+  if (tail.length > 0 && !tail.startsWith("--")) {
+    statements.push(tail);
+  }
+  return statements;
+}
+
 async function cmdRestore(infile) {
   const target = normalizeUrl(
     process.env.TARGET_DATABASE_URL || process.env.NEON_DIRECT_URL
@@ -233,22 +322,53 @@ async function cmdRestore(infile) {
     ssl: /neon\.tech|render\.com/i.test(target)
       ? { rejectUnauthorized: false }
       : undefined,
+    connectionTimeoutMillis: 60_000,
   });
 
   console.log("Connecting to TARGET…");
   await client.connect();
   try {
-    // Split on semicolons carefully is hard; run as one script with simple splits
-    // Prefer node-pg multi-statement if allowed
-    console.log(`Restoring ${file} (${(sql.length / 1024 / 1024).toFixed(2)} MB)…`);
-    await client.query(sql);
-    console.log("Restore finished OK.");
+    const statements = splitSqlStatements(sql);
+    console.log(
+      `Restoring ${file} (${(sql.length / 1024 / 1024).toFixed(2)} MB, ${statements.length} statements)…`
+    );
+
+    let ok = 0;
+    let skipped = 0;
+    for (let n = 0; n < statements.length; n++) {
+      const stmt = statements[n];
+      try {
+        await client.query(stmt);
+        ok++;
+      } catch (e) {
+        const msg = e.message || String(e);
+        // Idempotent-ish: already exists / duplicate key after partial run
+        if (
+          /already exists|duplicate key|unique constraint/i.test(msg) &&
+          /CREATE TYPE|INSERT INTO/i.test(stmt.slice(0, 80))
+        ) {
+          skipped++;
+          continue;
+        }
+        console.error(`\nFailed at statement ${n + 1}/${statements.length}:`);
+        console.error(msg);
+        console.error("Statement preview:", stmt.slice(0, 200).replace(/\s+/g, " "));
+        throw e;
+      }
+      if ((n + 1) % 50 === 0 || n + 1 === statements.length) {
+        process.stdout.write(`\r  ${n + 1}/${statements.length}…`);
+      }
+    }
+    console.log(`\nRestore finished OK (${ok} ok, ${skipped} skipped duplicates).`);
   } catch (e) {
     console.error("Restore failed:", e.message);
     console.error(`
-If errors are about missing types/tables, first run on Neon:
+If errors are about missing relations/tables, first run on Neon (empty DB):
+  $env:DIRECT_URL = "<neon direct>"
+  $env:DATABASE_URL = $env:DIRECT_URL
   npx prisma migrate deploy
-Then re-run restore, or use a dump that is data-only.
+
+Then re-run restore.
 `);
     process.exit(1);
   } finally {
