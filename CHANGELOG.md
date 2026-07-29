@@ -7,6 +7,13 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [0.6.5] — 2026-07-29
+
+### Changed
+- **Perf — code splitting UI**
+  - Import dynamique (`next/dynamic`) pour trésorerie, documents, aperçu PV, éditeur PV
+  - Réduit le JS initial chargé hors de ces pages
+
 ## [0.6.4] — 2026-07-29
 
 ### Changed

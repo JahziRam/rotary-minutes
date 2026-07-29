@@ -15,9 +15,15 @@ import {
 import { hasRolePermission } from "@/lib/roles";
 import { getMinuteMemberEmailCount } from "@/actions/minutes";
 import { loadBirthdayMembers } from "@/lib/queries/birthday-members";
+import dynamic from "next/dynamic";
 import { AppShellServer } from "@/components/layout/app-shell-server";
-import { MinutePreview } from "@/components/minutes/minute-preview";
 import { MinuteComments } from "@/components/minutes/minute-comments";
+
+const MinutePreview = dynamic(
+  () =>
+    import("@/components/minutes/minute-preview").then((m) => m.MinutePreview),
+  { loading: () => <div className="h-64 animate-pulse rounded-xl bg-gray-100" /> }
+);
 
 export default async function MinuteDetailPage({
   params,

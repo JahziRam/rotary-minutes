@@ -7,13 +7,19 @@ import { isFeatureEnabled, isFeatureVisibleInUi } from "@/lib/feature-gate";
 import { canOverrideMinuteLock } from "@/lib/minute-lock";
 import { canDeleteMinuteAgendaItems } from "@/lib/minute-agenda-permissions";
 import { hasRolePermission } from "@/lib/roles";
+import dynamic from "next/dynamic";
 import { AppShellServer } from "@/components/layout/app-shell-server";
-import { MinuteEditor } from "@/components/minutes/minute-editor";
 import { MinuteTaskAssignPanel } from "@/components/minutes/minute-task-assign-panel";
 import { MinuteAutoGenerateButton } from "@/components/minutes/minute-auto-generate-button";
 import { MinuteComments } from "@/components/minutes/minute-comments";
 import { listMinuteComments } from "@/actions/minute-comments";
 import { getMinuteAiStatus } from "@/actions/minute-ai";
+
+const MinuteEditor = dynamic(
+  () =>
+    import("@/components/minutes/minute-editor").then((m) => m.MinuteEditor),
+  { loading: () => <div className="h-96 animate-pulse rounded-xl bg-gray-100" /> }
+);
 
 export default async function MinuteEditPage({
   params,

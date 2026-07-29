@@ -10,14 +10,36 @@ import {
   getTreasuryDashboardData,
   getTreasurySubAccounts,
 } from "@/lib/queries/treasury";
+import dynamic from "next/dynamic";
 import { AppShellServer } from "@/components/layout/app-shell-server";
-import { TreasuryPanel } from "@/components/treasury/treasury-panel";
-import { TreasuryMandatePanel } from "@/components/treasury/treasury-mandate-panel";
-import { BankReconciliationPanel } from "@/components/treasury/bank-reconciliation-panel";
 import { hasRolePermission } from "@/lib/roles";
 import { GuidedEmptyState } from "@/components/assistance/guided-empty-state";
 import { Wallet } from "lucide-react";
 import type { BudgetEntryType } from "@/generated/prisma/client";
+
+const PanelSkeleton = () => (
+  <div className="h-48 animate-pulse rounded-xl bg-gray-100" aria-hidden />
+);
+
+const TreasuryPanel = dynamic(
+  () =>
+    import("@/components/treasury/treasury-panel").then((m) => m.TreasuryPanel),
+  { loading: PanelSkeleton }
+);
+const TreasuryMandatePanel = dynamic(
+  () =>
+    import("@/components/treasury/treasury-mandate-panel").then(
+      (m) => m.TreasuryMandatePanel
+    ),
+  { loading: PanelSkeleton }
+);
+const BankReconciliationPanel = dynamic(
+  () =>
+    import("@/components/treasury/bank-reconciliation-panel").then(
+      (m) => m.BankReconciliationPanel
+    ),
+  { loading: PanelSkeleton }
+);
 
 export const dynamic = "force-dynamic";
 

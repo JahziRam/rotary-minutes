@@ -2,8 +2,16 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { listDocuments } from "@/actions/documents";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { FeatureUnavailable } from "@/components/layout/feature-unavailable";
-import { DocumentsLibrary } from "@/components/documents/documents-library";
+import dynamic from "next/dynamic";
 import { getClubContext } from "@/lib/club-context";
+
+const DocumentsLibrary = dynamic(
+  () =>
+    import("@/components/documents/documents-library").then(
+      (m) => m.DocumentsLibrary
+    ),
+  { loading: () => <div className="h-48 animate-pulse rounded-xl bg-gray-100" /> }
+);
 
 export default async function DocumentsPage({
   params,
