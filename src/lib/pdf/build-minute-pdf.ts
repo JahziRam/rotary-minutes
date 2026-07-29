@@ -53,7 +53,19 @@ export const attendanceWithMemberLightInclude = {
 } as const;
 
 export const minutePdfInclude = {
-  club: true,
+  // Select only fields the PDF needs — avoid loading unrelated club TEXT columns.
+  club: {
+    select: {
+      id: true,
+      name: true,
+      address: true,
+      meetingLocation: true,
+      logoUrl: true,
+      language: true,
+      minuteShowMemberPhotos: true,
+      minuteMemberPhotoSize: true,
+    },
+  },
   agendaItems: { orderBy: { sortOrder: "asc" as const } },
   meeting: { include: { attendances: attendanceWithMemberInclude } },
 } as const;

@@ -16,15 +16,22 @@ export async function GET(request: Request) {
 
   const trialing = await prisma.subscription.findMany({
     where: { status: "TRIALING", trialEndsAt: { gt: now } },
-    include: {
+    select: {
+      trialEndsAt: true,
       club: {
-        include: {
+        select: {
+          id: true,
+          name: true,
+          language: true,
+          // no logoUrl blob — use media route in email
           memberships: {
             where: {
               role: { in: ["ADMIN", "PRESIDENT", "VICE_PRESIDENT"] },
               isActive: true,
             },
-            include: { user: true },
+            select: {
+              user: { select: { email: true } },
+            },
             take: 3,
           },
         },
@@ -45,10 +52,11 @@ export async function GET(request: Request) {
       daysLeft,
       locale,
       upgradeUrl: `${baseUrl}/${locale}/settings/subscription`,
-      logoUrl: sub.club.logoUrl ?? undefined,
+      logoUrl: `${baseUrl.replace(/\/$/, "")}/api/media/club/${sub.club.id}/logo`,
     });
 
     for (const m of sub.club.memberships) {
+      if (!m.user.email) continue;
       const result = await sendEmail({
         to: m.user.email,
         subject: mail.subject,

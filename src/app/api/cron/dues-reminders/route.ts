@@ -53,7 +53,7 @@ export async function GET(request: Request) {
     },
     include: {
       member: { select: { id: true, firstName: true, lastName: true, email: true, userId: true } },
-      club: { select: { id: true, name: true, logoUrl: true, language: true } },
+      club: { select: { id: true, name: true, language: true } },
     },
   });
 
@@ -115,7 +115,7 @@ export async function GET(request: Request) {
         amount: `${Number(dues.amount)} ${dues.currency}`,
         dueDate: format(dues.dueDate, "d MMMM yyyy", { locale: dateLocale }),
         locale,
-        logoUrl: dues.club.logoUrl ?? undefined,
+        logoUrl: `${(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(/\/$/, "")}/api/media/club/${dues.club.id}/logo`,
       });
 
       const result = await sendClubEmail(dues.club.id, {

@@ -74,7 +74,8 @@ export async function getOverdueActionsForReminders(cooldownCutoff: Date) {
       OR: [{ lastRemindedAt: null }, { lastRemindedAt: { lt: cooldownCutoff } }],
     },
     include: {
-      club: { select: { id: true, name: true, logoUrl: true, language: true } },
+      // Never select logoUrl (data URL) — emails use /api/media/club/[id]/logo
+      club: { select: { id: true, name: true, language: true } },
       responsibleMember: {
         select: { id: true, firstName: true, lastName: true, email: true, userId: true },
       },

@@ -43,12 +43,12 @@ async function requireDocumentsManage() {
   return auth;
 }
 
-const documentSelect = {
+/** List/library rows — never load fileUrl blobs into memory. */
+const documentListSelect = {
   id: true,
   title: true,
   category: true,
   description: true,
-  fileUrl: true,
   fileName: true,
   mimeType: true,
   minuteId: true,
@@ -62,6 +62,47 @@ const documentSelect = {
   updatedAt: true,
   uploadedBy: { select: { firstName: true, lastName: true } },
 } as const;
+
+/** Single-document ops that need storage path (share, rename metadata). */
+const documentSelect = {
+  ...documentListSelect,
+  fileUrl: true,
+} as const;
+
+function mapDocumentListRow(d: {
+  id: string;
+  title: string;
+  category: DocumentCategory;
+  description: string | null;
+  fileName: string | null;
+  mimeType: string | null;
+  minuteId: string | null;
+  folderId: string | null;
+  isArchived: boolean;
+  isShareEnabled: boolean;
+  shareToken: string | null;
+  shareExpiresAt: Date | null;
+  tags: string[];
+  createdAt: Date;
+  updatedAt: Date;
+  uploadedBy: { firstName: string; lastName: string } | null;
+}) {
+  // Always route through API — avoids shipping data: base64 in RSC payloads.
+  const syntheticStorage =
+    d.minuteId && !d.fileName ? `/api/pdf/${d.minuteId}` : "data:application/octet-stream;base64,";
+  return {
+    ...d,
+    fileUrl: documentViewUrl(d.id, syntheticStorage, d.mimeType),
+    downloadUrl: documentDownloadUrl(d.id, syntheticStorage),
+    viewKind: getDocumentViewKind(d.mimeType, d.minuteId ? `/api/pdf/${d.minuteId}` : null),
+    createdAt: d.createdAt.toISOString(),
+    updatedAt: d.updatedAt.toISOString(),
+    shareExpiresAt: d.shareExpiresAt?.toISOString() ?? null,
+    uploadedByName: d.uploadedBy
+      ? `${d.uploadedBy.firstName} ${d.uploadedBy.lastName}`
+      : null,
+  };
+}
 
 function mapDocumentRow(d: {
   id: string;
@@ -235,7 +276,7 @@ export async function listDocuments(filters?: {
       ...(filters?.includeArchived ? {} : { isArchived: false }),
       ...(filters?.folderId !== undefined ? { folderId: filters.folderId } : {}),
     },
-    select: documentSelect,
+    select: documentListSelect,
     orderBy: [{ category: "asc" }, { createdAt: "desc" }],
   });
 
@@ -245,7 +286,7 @@ export async function listDocuments(filters?: {
     features.fileManagerEnabled ? await listDocumentFolders() : { folders: [] };
 
   return {
-    documents: documents.map(mapDocumentRow),
+    documents: documents.map(mapDocumentListRow),
     folders: "folders" in foldersResult ? foldersResult.folders : [],
     fileManagerEnabled: features.fileManagerEnabled,
     documentSharingEnabled: features.documentSharingEnabled,
@@ -275,7 +316,7 @@ export async function searchDocuments(query: string, category?: DocumentCategory
           }
         : {}),
     },
-    select: documentSelect,
+    select: documentListSelect,
     orderBy: { createdAt: "desc" },
     take: 50,
   });
@@ -283,7 +324,7 @@ export async function searchDocuments(query: string, category?: DocumentCategory
   const canManage = await hasRolePermission(ctx.role, "documents.manage", ctx.isSuperAdmin);
 
   return {
-    documents: documents.map(mapDocumentRow),
+    documents: documents.map(mapDocumentListRow),
     canManage,
   };
 }
@@ -384,11 +425,11 @@ export async function fetchDocumentRows(filters?: {
       ...(filters?.includeArchived ? {} : { isArchived: false }),
       ...(filters?.folderId !== undefined ? { folderId: filters.folderId } : {}),
     },
-    select: documentSelect,
+    select: documentListSelect,
     orderBy: [{ category: "asc" }, { createdAt: "desc" }],
   });
 
-  return { documents: documents.map(mapDocumentRow) };
+  return { documents: documents.map(mapDocumentListRow) };
 }
 
 export async function uploadDocumentFromBuffer(data: {

@@ -7,6 +7,15 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [0.6.2] — 2026-07-29
+
+### Changed
+- **Perf / mémoire — requêtes Prisma maigres**
+  - Bibliothèque documents : listes sans colonne `fileUrl` (blobs) ; URLs via `/api/documents/[id]`
+  - Crons (actions, cotisations, essai) : plus de `logoUrl` data URL en SELECT ; logo via `/api/media/club/...`
+  - PDF PV : `minutePdfInclude.club` limité aux champs utiles
+  - Helper `prisma-lean-selects.ts` pour réutiliser des selects sans blobs
+
 ## [0.6.1] — 2026-07-29
 
 ### Changed

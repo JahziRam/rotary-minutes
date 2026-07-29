@@ -75,7 +75,12 @@ export async function GET(request: Request) {
 
     if (emailOn && action.responsibleMember?.email) {
       const baseUrl = getAppBaseUrl();
-      const emailLogo = resolveLogoForEmail(action.clubId, action.club.logoUrl, baseUrl);
+      const emailLogo = resolveLogoForEmail(
+        action.clubId,
+        `${baseUrl.replace(/\/$/, "")}/api/media/club/${action.clubId}/logo`,
+        baseUrl,
+        action.club.name
+      );
       const systemTpl = SYSTEM_EMAIL_TEMPLATES.find((t) => t.slug === "action-deadline-reminder");
       const dbTpl = await prisma.emailTemplate.findFirst({
         where: { slug: `action-deadline-reminder-${locale}`, clubId: null, isSystem: true },
