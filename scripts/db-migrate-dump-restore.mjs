@@ -63,6 +63,15 @@ function quoteIdent(name) {
   return `"${String(name).replace(/"/g, '""')}"`;
 }
 
+function escapePgTextArray(arr) {
+  if (arr.length === 0) return `ARRAY[]::text[]`;
+  const els = arr.map((x) => {
+    if (x === null || x === undefined) return "NULL";
+    return `'${String(x).replace(/'/g, "''")}'`;
+  });
+  return `ARRAY[${els.join(", ")}]::text[]`;
+}
+
 function escapeLiteral(value) {
   if (value === null || value === undefined) return "NULL";
   if (typeof value === "number" && Number.isFinite(value)) return String(value);
@@ -71,10 +80,46 @@ function escapeLiteral(value) {
   if (Buffer.isBuffer(value)) {
     return `E'\\\\x${value.toString("hex")}'`;
   }
+  // pg returns Postgres text[] / arrays as JS arrays — not jsonb
+  if (Array.isArray(value)) {
+    if (value.every((x) => x === null || typeof x === "string")) {
+      return escapePgTextArray(value);
+    }
+    if (value.every((x) => x === null || typeof x === "number")) {
+      if (value.length === 0) return `ARRAY[]::float8[]`;
+      return `ARRAY[${value.map((x) => (x === null ? "NULL" : String(x))).join(", ")}]`;
+    }
+    // mixed / objects → jsonb array
+    return `'${JSON.stringify(value).replace(/'/g, "''")}'::jsonb`;
+  }
   if (typeof value === "object") {
     return `'${JSON.stringify(value).replace(/'/g, "''")}'::jsonb`;
   }
   return `'${String(value).replace(/'/g, "''")}'`;
+}
+
+/**
+ * Existing dumps cast JS string arrays to ::jsonb by mistake.
+ * Rewrite pure JSON string arrays to text[] for Neon restore.
+ * Objects/numbers jsonb stay as jsonb.
+ */
+function fixMistakenJsonbStringArrays(sql) {
+  // Match '…'::jsonb where … is a JSON array (handles doubled single-quotes inside)
+  return sql.replace(/'((?:[^']|'')*)'::jsonb/g, (full, inner) => {
+    const jsonText = inner.replace(/''/g, "'");
+    try {
+      const parsed = JSON.parse(jsonText);
+      if (
+        Array.isArray(parsed) &&
+        parsed.every((x) => x === null || typeof x === "string")
+      ) {
+        return escapePgTextArray(parsed);
+      }
+    } catch {
+      /* keep original */
+    }
+    return full;
+  });
 }
 
 async function listUserTables(client) {
@@ -380,7 +425,15 @@ async function cmdRestore(infile) {
     process.exit(1);
   }
 
-  const sql = fs.readFileSync(file, "utf8");
+  let sql = fs.readFileSync(file, "utf8");
+  const beforeFix = sql.length;
+  sql = fixMistakenJsonbStringArrays(sql);
+  if (sql.length !== beforeFix || sql.includes("::text[]")) {
+    console.log(
+      "Normalized string arrays: '…'::jsonb → ARRAY[…]::text[] (ClubDocument.tags, etc.)"
+    );
+  }
+
   const client = new Client({
     connectionString: target,
     ssl: /neon\.tech|render\.com/i.test(target)
