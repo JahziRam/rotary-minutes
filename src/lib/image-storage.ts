@@ -1,52 +1,114 @@
 /**
- * Uploads suspendus (2026-07) : suspectés de contribuer à la saturation
- * mémoire serveur (fichier entier chargé en mémoire, encodé en base64,
- * puis stocké en data URL). Repasser à `true` (ou définir la variable
- * d'env UPLOADS_ENABLED=true) pour réactiver — aucune autre modification
- * n'est nécessaire, la fonctionnalité reste intacte.
+ * Server image optimization (sharp — do not import this module from client components).
+ * Client-safe helpers: import from `@/lib/image-data-url` instead.
  */
+
+import {
+  ALLOWED_IMAGE_TYPES,
+  MAX_IMAGE_SOURCE_BYTES,
+  MAX_STORED_IMAGE_BYTES,
+} from "@/lib/image-data-url";
+
+export {
+  ALLOWED_IMAGE_TYPES,
+  MAX_IMAGE_SOURCE_BYTES,
+  MAX_STORED_IMAGE_BYTES,
+  parseDataUrl,
+  validateImageDataUrl,
+  MAX_IMAGE_BYTES,
+  isDataUrl,
+} from "@/lib/image-data-url";
+
+/** Profile photos & club logos (compressed pipeline). Default: enabled. */
+export function areImageUploadsEnabled(): boolean {
+  if (process.env.IMAGE_UPLOADS_ENABLED === "false") return false;
+  return true;
+}
+
+/** @deprecated prefer areDocumentUploadsEnabled from document-storage */
 export function areUploadsEnabled(): boolean {
-  return process.env.UPLOADS_ENABLED === "true";
+  if (process.env.DOCUMENT_UPLOADS_ENABLED === "false") return false;
+  if (process.env.UPLOADS_ENABLED === "false") return false;
+  return true;
 }
 
-export const MAX_IMAGE_BYTES = 512 * 1024;
-export const ALLOWED_IMAGE_TYPES = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-]);
+export type OptimizeImageOptions = {
+  /** Longest edge in px (default 400 for avatars). */
+  maxEdge?: number;
+  /** JPEG quality 1–100 (default 80). */
+  quality?: number;
+  /** Hard cap on output binary size (default MAX_STORED_IMAGE_BYTES). */
+  maxStoredBytes?: number;
+};
 
-export function isDataUrl(value: string): boolean {
-  return value.startsWith("data:image/");
+/**
+ * Resize + JPEG-encode an image buffer. Retries with lower quality if over cap.
+ */
+export async function optimizeImageBuffer(
+  input: Buffer,
+  options: OptimizeImageOptions = {}
+): Promise<{ buffer: Buffer; mime: "image/jpeg" }> {
+  const maxEdge = options.maxEdge ?? 400;
+  const maxStored = options.maxStoredBytes ?? MAX_STORED_IMAGE_BYTES;
+  let quality = options.quality ?? 80;
+
+  const sharp = (await import("sharp")).default;
+
+  let edge = maxEdge;
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const buffer = await sharp(input, { failOn: "none" })
+      .rotate()
+      .resize({
+        width: edge,
+        height: edge,
+        fit: "inside",
+        withoutEnlargement: true,
+      })
+      .jpeg({ quality, mozjpeg: true })
+      .toBuffer();
+
+    if (buffer.byteLength <= maxStored) {
+      return { buffer, mime: "image/jpeg" };
+    }
+    quality = Math.max(40, quality - 12);
+    edge = Math.max(160, Math.round(edge * 0.85));
+  }
+
+  throw new Error("TOO_LARGE");
 }
 
-export function validateImageDataUrl(dataUrl: string): string | null {
-  if (!isDataUrl(dataUrl)) return "INVALID_FORMAT";
-  const match = dataUrl.match(/^data:(image\/[a-z+]+);base64,(.+)$/i);
-  if (!match) return "INVALID_FORMAT";
-  const mime = match[1].toLowerCase();
-  if (!ALLOWED_IMAGE_TYPES.has(mime)) return "INVALID_TYPE";
-  const buffer = Buffer.from(match[2], "base64");
-  if (buffer.byteLength > MAX_IMAGE_BYTES) return "TOO_LARGE";
-  return null;
+/**
+ * Convert an uploaded File into a compact JPEG data URL for DB storage.
+ */
+export async function fileToOptimizedImageDataUrl(
+  file: File,
+  options: OptimizeImageOptions = {}
+): Promise<string> {
+  if (!areImageUploadsEnabled()) {
+    throw new Error("UPLOADS_SUSPENDED");
+  }
+  if (file.size <= 0) throw new Error("NO_FILE");
+  if (file.size > MAX_IMAGE_SOURCE_BYTES) throw new Error("TOO_LARGE");
+
+  const type = (file.type || "").toLowerCase();
+  if (type && !ALLOWED_IMAGE_TYPES.has(type)) {
+    throw new Error("INVALID_TYPE");
+  }
+
+  const input = Buffer.from(await file.arrayBuffer());
+  const { buffer, mime } = await optimizeImageBuffer(input, options);
+  return `data:${mime};base64,${buffer.toString("base64")}`;
 }
 
-export function parseDataUrl(dataUrl: string): { mime: string; buffer: Buffer } | null {
-  const match = dataUrl.match(/^data:(image\/[a-z+]+);base64,(.+)$/i);
-  if (!match) return null;
-  return {
-    mime: match[1].toLowerCase(),
-    buffer: Buffer.from(match[2], "base64"),
-  };
-}
-
+/**
+ * Legacy path: store as-is (no resize). Prefer fileToOptimizedImageDataUrl.
+ */
 export async function fileToDataUrl(file: File): Promise<string> {
-  if (!areUploadsEnabled()) {
+  if (!areImageUploadsEnabled()) {
     throw new Error("UPLOADS_SUSPENDED");
   }
   const buffer = Buffer.from(await file.arrayBuffer());
-  if (buffer.byteLength > MAX_IMAGE_BYTES) {
+  if (buffer.byteLength > MAX_STORED_IMAGE_BYTES) {
     throw new Error("TOO_LARGE");
   }
   if (!ALLOWED_IMAGE_TYPES.has(file.type)) {

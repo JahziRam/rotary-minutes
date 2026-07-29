@@ -4,7 +4,7 @@ import { hasRolePermission } from "@/lib/roles";
 import { loadMinuteForContext, assertMinuteAccess } from "@/lib/commission-scope";
 import { canOverrideMinuteLock } from "@/lib/minute-lock";
 import { uploadMinuteAttachmentFromBuffer } from "@/actions/minute-attachments";
-import { validateUploadFiles } from "@/lib/upload-limits";
+import { validateDocumentUploadFiles } from "@/lib/document-storage";
 
 export async function POST(
   request: Request,
@@ -46,7 +46,7 @@ export async function POST(
     .getAll("files")
     .filter((f): f is File => f instanceof File && f.size > 0);
 
-  const batchError = validateUploadFiles(files);
+  const batchError = validateDocumentUploadFiles(files);
   if (batchError) {
     return NextResponse.json({ error: batchError }, { status: 400 });
   }

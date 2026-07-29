@@ -8,12 +8,12 @@ import { hasRolePermission } from "@/lib/roles";
 import {
   fileToDocumentDataUrl,
   validateDocumentDataUrl,
+  validateDocumentUploadFiles,
 } from "@/lib/document-storage";
 import {
   budgetDocumentDownloadUrl,
   budgetDocumentViewUrl,
 } from "@/lib/budget-document-urls";
-import { validateUploadFiles } from "@/lib/upload-limits";
 import type { BudgetDocumentKind } from "@/generated/prisma/client";
 
 export type BudgetDocumentScope =
@@ -193,7 +193,7 @@ export async function uploadBudgetDocument(formData: FormData) {
     .filter((f): f is File => f instanceof File && f.size > 0);
   if (files.length === 0) return { error: "NO_FILES" as const };
 
-  const validationError = validateUploadFiles(files);
+  const validationError = validateDocumentUploadFiles(files);
   if (validationError) return { error: validationError };
 
   const created: string[] = [];

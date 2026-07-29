@@ -26,8 +26,11 @@ import { DocumentViewerModal } from "@/components/documents/document-viewer-moda
 import { DocumentManageDialog } from "@/components/documents/document-manage-dialog";
 import {
   MAX_UPLOAD_FILES_PER_BATCH,
-  validateUploadFiles,
 } from "@/lib/upload-limits";
+import {
+  DOCUMENT_FILE_ACCEPT,
+  validateDocumentUploadFiles,
+} from "@/lib/document-storage";
 import {
   searchDocuments,
   fetchDocumentRows,
@@ -126,13 +129,17 @@ export function DocumentsLibrary({
     const fileInput = form.elements.namedItem("files") as HTMLInputElement | null;
     const selected = Array.from(fileInput?.files ?? []);
 
-    const validationError = validateUploadFiles(selected);
+    const validationError = validateDocumentUploadFiles(selected);
     if (validationError === "TOO_LARGE") {
       setToast(t("fileTooLarge"));
       return;
     }
     if (validationError === "TOO_MANY_FILES") {
       setToast(t("tooManyFiles", { max: MAX_UPLOAD_FILES_PER_BATCH }));
+      return;
+    }
+    if (validationError === "INVALID_TYPE") {
+      setToast(t("invalidType"));
       return;
     }
     if (validationError === "NO_FILE") {
@@ -412,7 +419,7 @@ export function DocumentsLibrary({
                   name="files"
                   required
                   multiple
-                  accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.webp,.txt"
+                  accept={DOCUMENT_FILE_ACCEPT}
                   className="flex w-full text-sm"
                 />
                 <p className="text-xs text-gray-500">{t("uploadLimitsHint")}</p>

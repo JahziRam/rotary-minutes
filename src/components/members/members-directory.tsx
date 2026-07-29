@@ -13,14 +13,15 @@ import { ServerListPagination } from "@/components/ui/list-controls";
 import { MemberDuesBadge } from "@/components/treasury/member-dues-badge";
 import { MemberRoleSelect } from "@/components/members/member-role-select";
 import { SendMemberLoginButton } from "@/components/members/send-member-login-button";
-import { resolveMemberPhotoUrl } from "@/lib/media-url";
+import { memberPhotoMediaPath } from "@/lib/media-url";
 import type { PaginatedResult } from "@/lib/server-list";
 
 export type MemberCard = {
   id: string;
   firstName: string;
   lastName: string;
-  photoUrl: string | null;
+  hasPhoto?: boolean;
+  photoUrl?: string | null;
   position: string | null;
   isActive: boolean;
   commissionName: string | null;
@@ -137,11 +138,9 @@ export function MembersDirectory({
                   href={`/${locale}/members/${member.id}`}
                   className="flex items-center gap-3 flex-1 min-w-0"
                 >
-                  {member.photoUrl ? (
+                  {member.hasPhoto ? (
                     <Image
-                      src={
-                        resolveMemberPhotoUrl(member.id, member.photoUrl) ?? member.photoUrl
-                      }
+                      src={memberPhotoMediaPath(member.id)}
                       alt=""
                       width={40}
                       height={40}

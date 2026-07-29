@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 import { getAppBaseUrl } from "@/lib/app-url";
-import { isDataUrl } from "@/lib/image-storage";
+import { isDataUrl } from "@/lib/image-data-url";
 import { resolveClubLogoUrl } from "@/lib/media-url";
 import { fiscalYearLabel, formatDuesMoney } from "@/lib/dues";
 import type { DuesPaymentPlan, DuesStatus } from "@/generated/prisma/client";

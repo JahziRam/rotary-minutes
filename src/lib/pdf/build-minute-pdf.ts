@@ -4,7 +4,7 @@ import { getAppBaseUrl } from "@/lib/app-url";
 import { generateMinuteHash, getVerifyUrl } from "@/lib/hash";
 import { computeRecordedAttendanceRate, isAttendancePresent } from "@/lib/rotary";
 import { rasterizeClubDefaultLogoPng } from "@/lib/club-default-logo-raster";
-import { isDataUrl } from "@/lib/image-storage";
+import { isDataUrl } from "@/lib/image-data-url";
 import { resolveClubLogoUrl } from "@/lib/media-url";
 import {
   buildMinuteAttendanceAnnex,

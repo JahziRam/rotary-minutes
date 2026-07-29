@@ -10,10 +10,11 @@ import {
   bufferToDocumentDataUrl,
   fileToDocumentDataUrl,
   validateDocumentDataUrl,
+  validateDocumentUploadFiles,
 } from "@/lib/document-storage";
 import { documentDownloadUrl, documentViewUrl } from "@/lib/document-urls";
 import { getDocumentViewKind } from "@/lib/document-types";
-import { validateUploadFileSize, validateUploadFiles } from "@/lib/upload-limits";
+import { validateUploadFileSize } from "@/lib/upload-limits";
 import { getClubFeatures } from "@/lib/features";
 import type { DocumentCategory } from "@/generated/prisma/client";
 
@@ -520,7 +521,7 @@ export async function uploadDocumentFiles(formData: FormData) {
 
   if (!category) return { error: "MISSING_FIELDS" as const };
 
-  const batchError = validateUploadFiles(files);
+  const batchError = validateDocumentUploadFiles(files);
   if (batchError) return { error: batchError };
 
   const tags = tagsRaw

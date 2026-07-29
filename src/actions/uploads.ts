@@ -3,8 +3,25 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/require-permission";
-import { fileToDataUrl, validateImageDataUrl } from "@/lib/image-storage";
-import { validateUploadFileSize } from "@/lib/upload-limits";
+import {
+  fileToOptimizedImageDataUrl,
+  MAX_IMAGE_SOURCE_BYTES,
+  validateImageDataUrl,
+} from "@/lib/image-storage";
+
+function mapImageUploadError(e: unknown): string {
+  const msg = e instanceof Error ? e.message : "UPLOAD_FAILED";
+  if (
+    msg === "TOO_LARGE" ||
+    msg === "INVALID_TYPE" ||
+    msg === "NO_FILE" ||
+    msg === "UPLOADS_SUSPENDED" ||
+    msg === "INVALID_FORMAT"
+  ) {
+    return msg;
+  }
+  return "UPLOAD_FAILED";
+}
 
 export async function uploadClubLogo(formData: FormData) {
   const auth = await requirePermission("settings.manage");
@@ -15,11 +32,16 @@ export async function uploadClubLogo(formData: FormData) {
   if (!(file instanceof File) || file.size === 0) {
     return { error: "NO_FILE" as const };
   }
-  const sizeError = validateUploadFileSize(file.size);
-  if (sizeError) return { error: sizeError };
+  if (file.size > MAX_IMAGE_SOURCE_BYTES) {
+    return { error: "TOO_LARGE" as const };
+  }
 
   try {
-    const dataUrl = await fileToDataUrl(file);
+    // Logos: slightly larger edge for PDF/header; still hard-capped in storage.
+    const dataUrl = await fileToOptimizedImageDataUrl(file, {
+      maxEdge: 512,
+      quality: 82,
+    });
     const validationError = validateImageDataUrl(dataUrl);
     if (validationError) return { error: validationError };
 
@@ -30,10 +52,10 @@ export async function uploadClubLogo(formData: FormData) {
 
     revalidatePath("/fr/settings");
     revalidatePath("/en/settings");
+    revalidatePath("/es/settings");
     return { success: true as const };
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "UPLOAD_FAILED";
-    return { error: msg };
+    return { error: mapImageUploadError(e) };
   }
 }
 
@@ -66,11 +88,16 @@ export async function uploadMemberPhoto(memberId: string, formData: FormData) {
   if (!(file instanceof File) || file.size === 0) {
     return { error: "NO_FILE" as const };
   }
-  const sizeError = validateUploadFileSize(file.size);
-  if (sizeError) return { error: sizeError };
+  if (file.size > MAX_IMAGE_SOURCE_BYTES) {
+    return { error: "TOO_LARGE" as const };
+  }
 
   try {
-    const dataUrl = await fileToDataUrl(file);
+    // Avatars: 400px max edge, JPEG ≤ ~120 KB — enough for annex/PDF thumbs.
+    const dataUrl = await fileToOptimizedImageDataUrl(file, {
+      maxEdge: 400,
+      quality: 80,
+    });
     const validationError = validateImageDataUrl(dataUrl);
     if (validationError) return { error: validationError };
 
@@ -81,12 +108,13 @@ export async function uploadMemberPhoto(memberId: string, formData: FormData) {
 
     revalidatePath("/fr/members");
     revalidatePath("/en/members");
+    revalidatePath("/es/members");
     revalidatePath(`/fr/members/${memberId}`);
     revalidatePath(`/en/members/${memberId}`);
+    revalidatePath(`/es/members/${memberId}`);
     return { success: true as const };
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "UPLOAD_FAILED";
-    return { error: msg };
+    return { error: mapImageUploadError(e) };
   }
 }
 

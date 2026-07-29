@@ -15,11 +15,22 @@ export interface SendEmailOptions {
 }
 
 export async function isEmailEnabled(): Promise<boolean> {
-  const [settings, resend] = await Promise.all([
-    prisma.appSettings.findUnique({ where: { id: "global" } }),
-    getResend(),
-  ]);
-  return !!(settings?.resendEnabled && resend);
+  const resend = await getResend();
+  if (!resend) return false;
+
+  const settings = await prisma.appSettings.findUnique({
+    where: { id: "global" },
+    select: { resendEnabled: true },
+  });
+
+  // Explicit admin toggle on
+  if (settings?.resendEnabled) return true;
+
+  // Vercel / .env: key present is enough even if DB toggle still at default false
+  if (process.env.RESEND_API_KEY?.trim()) return true;
+
+  // Key only in AppSettings (DB) without env — require the admin switch
+  return false;
 }
 
 export async function sendEmail(options: SendEmailOptions): Promise<{ ok: boolean; id?: string; error?: string }> {
@@ -283,6 +294,14 @@ export async function memberLoginEmail(opts: {
   };
 }
 
+function escapeEmailHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 export async function clubAnnouncementEmail(opts: {
   clubName: string;
   clubId?: string;
@@ -294,11 +313,11 @@ export async function clubAnnouncementEmail(opts: {
   const isFr = opts.locale === "fr";
   const isEs = opts.locale === "es";
   const intro = isFr
-    ? `<p><strong>${opts.clubName}</strong> — annonce du club</p>`
+    ? `<p><strong>${escapeEmailHtml(opts.clubName)}</strong> — annonce du club</p>`
     : isEs
-      ? `<p><strong>${opts.clubName}</strong> — anuncio del club</p>`
-      : `<p><strong>${opts.clubName}</strong> — club announcement</p>`;
-  const body = `${intro}<h2 style="margin:16px 0 8px;font-size:18px;color:#0f172a">${opts.title}</h2><div style="white-space:pre-wrap;line-height:1.6">${opts.message}</div>`;
+      ? `<p><strong>${escapeEmailHtml(opts.clubName)}</strong> — anuncio del club</p>`
+      : `<p><strong>${escapeEmailHtml(opts.clubName)}</strong> — club announcement</p>`;
+  const body = `${intro}<h2 style="margin:16px 0 8px;font-size:18px;color:#0f172a">${escapeEmailHtml(opts.title)}</h2><div style="white-space:pre-wrap;line-height:1.6">${escapeEmailHtml(opts.message)}</div>`;
   const branded = await prepareBrandedEmail(body, {
     clubName: opts.clubName,
     clubId: opts.clubId,
@@ -310,6 +329,42 @@ export async function clubAnnouncementEmail(opts: {
       : isEs
         ? `${opts.title} — ${opts.clubName}`
         : `${opts.title} — ${opts.clubName}`,
+    html: branded.html,
+    attachments: branded.attachments,
+  };
+}
+
+/** Platform super-admin announcement (all clubs / role / club). */
+export async function platformAnnouncementEmail(opts: {
+  title: string;
+  message: string;
+  locale: string;
+  appUrl?: string;
+}) {
+  const appName = await getAppName();
+  const isFr = opts.locale === "fr";
+  const isEs = opts.locale === "es";
+  const intro = isFr
+    ? `<p>Annonce de la plateforme <strong>${escapeEmailHtml(appName)}</strong></p>`
+    : isEs
+      ? `<p>Anuncio de la plataforma <strong>${escapeEmailHtml(appName)}</strong></p>`
+      : `<p>Announcement from <strong>${escapeEmailHtml(appName)}</strong></p>`;
+  const cta =
+    opts.appUrl
+      ? isFr
+        ? `<p style="margin-top:20px"><a class="cta-button" href="${escapeEmailHtml(opts.appUrl)}">Ouvrir l'application</a></p>`
+        : isEs
+          ? `<p style="margin-top:20px"><a class="cta-button" href="${escapeEmailHtml(opts.appUrl)}">Abrir la aplicación</a></p>`
+          : `<p style="margin-top:20px"><a class="cta-button" href="${escapeEmailHtml(opts.appUrl)}">Open the app</a></p>`
+      : "";
+  const body = `${intro}<h2 style="margin:16px 0 8px;font-size:18px;color:#0f172a">${escapeEmailHtml(opts.title)}</h2><div style="white-space:pre-wrap;line-height:1.6">${escapeEmailHtml(opts.message)}</div>${cta}`;
+  const branded = await prepareBrandedEmail(body, { clubName: appName });
+  return {
+    subject: isFr
+      ? `${opts.title} — ${appName}`
+      : isEs
+        ? `${opts.title} — ${appName}`
+        : `${opts.title} — ${appName}`,
     html: branded.html,
     attachments: branded.attachments,
   };

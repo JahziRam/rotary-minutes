@@ -6,7 +6,7 @@ import { getAppName } from "@/lib/app-settings";
 import { formatClubAddressForEmail } from "@/lib/email-branding";
 import { prisma } from "@/lib/prisma";
 import { rasterizeClubDefaultLogoPng } from "@/lib/club-default-logo-raster";
-import { isDataUrl } from "@/lib/image-storage";
+import { isDataUrl } from "@/lib/image-data-url";
 import { resolveClubLogoUrl } from "@/lib/media-url";
 import { getAppBaseUrl } from "@/lib/app-url";
 

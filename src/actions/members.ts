@@ -252,25 +252,53 @@ export async function getMemberDetail(memberId: string) {
   const ctx = await getClubContext();
   if (!ctx) return null;
 
-  return prisma.member.findFirst({
+  const member = await prisma.member.findFirst({
     where: { id: memberId, clubId: ctx.clubId },
     include: {
       commission: true,
       officerMandates: { orderBy: { startDate: "desc" }, take: 5 },
     },
   });
+  if (!member) return null;
+
+  // Never ship base64 data URLs to the client RSC payload.
+  return {
+    ...member,
+    photoUrl: member.photoUrl
+      ? `/api/media/member/${member.id}/photo`
+      : null,
+  };
 }
 
 export async function getClubMembers(includeInactive = false) {
   const ctx = await getClubContext();
   if (!ctx) return [];
 
-  return prisma.member.findMany({
+  const members = await prisma.member.findMany({
     where: {
       clubId: ctx.clubId,
       ...(includeInactive ? {} : { isActive: true }),
     },
-    include: { commission: true },
+    // Omit photoUrl blobs from list queries (OOM-safe).
+    select: {
+      id: true,
+      clubId: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      phone: true,
+      registrationNumber: true,
+      position: true,
+      isActive: true,
+      isHonoraryMember: true,
+      commissionId: true,
+      userId: true,
+      birthday: true,
+      joinDate: true,
+      commission: true,
+    },
     orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
   });
+
+  return members.map((m) => ({ ...m, photoUrl: null as string | null }));
 }

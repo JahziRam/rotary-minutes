@@ -13,7 +13,7 @@ import {
   formatLastName,
   formatPersonName,
 } from "@/lib/format-person-name";
-import { isDataUrl } from "@/lib/image-storage";
+import { isDataUrl } from "@/lib/image-data-url";
 import {
   MEMBER_DEFAULT_AVATAR_PATH,
   memberPhotoMediaPath,

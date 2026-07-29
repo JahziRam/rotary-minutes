@@ -67,3 +67,5 @@ android/capacitor-cordova-android-plugins/
 rotary_minutes_dump.sql
 *.dump
 
+.vercel
+.env*

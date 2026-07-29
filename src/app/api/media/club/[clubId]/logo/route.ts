@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { buildClubDefaultLogoSvg } from "@/lib/club-default-logo";
-import { isDataUrl, parseDataUrl } from "@/lib/image-storage";
+import { isDataUrl, parseDataUrl } from "@/lib/image-data-url";
 
 export async function GET(
   _request: Request,

@@ -2,7 +2,7 @@ import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 import { getAppBaseUrl } from "@/lib/app-url";
 import { formatBudgetMoney } from "@/lib/budget-utils";
-import { isDataUrl } from "@/lib/image-storage";
+import { isDataUrl } from "@/lib/image-data-url";
 import { resolveClubLogoUrl } from "@/lib/media-url";
 import type { BudgetEntryType } from "@/generated/prisma/client";
 import type { TreasuryFilters } from "@/lib/queries/treasury";

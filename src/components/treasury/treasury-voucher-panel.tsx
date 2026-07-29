@@ -9,10 +9,11 @@ import {
   listTreasuryVouchers,
   type TreasuryVoucherEntity,
 } from "@/actions/treasury-vouchers";
+import { MAX_UPLOAD_FILES_PER_BATCH } from "@/lib/upload-limits";
 import {
-  MAX_UPLOAD_FILES_PER_BATCH,
-  validateUploadFiles,
-} from "@/lib/upload-limits";
+  DOCUMENT_FILE_ACCEPT,
+  validateDocumentUploadFiles,
+} from "@/lib/document-storage";
 import type { TreasuryVoucherKind } from "@/generated/prisma/client";
 
 type VoucherRow = {
@@ -40,9 +41,10 @@ export async function uploadVoucherFilesClient(
   files: File[],
   kind: TreasuryVoucherKind = "OTHER"
 ): Promise<{ ok: boolean; uploaded?: number; error?: string }> {
-  const validationError = validateUploadFiles(files);
+  const validationError = validateDocumentUploadFiles(files);
   if (validationError === "TOO_LARGE") return { ok: false, error: "TOO_LARGE" };
   if (validationError === "TOO_MANY_FILES") return { ok: false, error: "TOO_MANY_FILES" };
+  if (validationError === "INVALID_TYPE") return { ok: false, error: "INVALID_TYPE" };
   if (validationError === "NO_FILE") return { ok: false, error: "NO_FILE" };
 
   const fd = new FormData();
@@ -123,6 +125,8 @@ export function TreasuryVoucherPanel({
       setError(t("fileTooLarge"));
     } else if (result.error === "TOO_MANY_FILES") {
       setError(t("tooManyFiles", { max: MAX_UPLOAD_FILES_PER_BATCH }));
+    } else if (result.error === "INVALID_TYPE") {
+      setError(t("invalidType"));
     } else {
       setError(t("uploadError"));
     }
@@ -166,7 +170,7 @@ export function TreasuryVoucherPanel({
             <input
               type="file"
               multiple
-              accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.webp,.txt"
+              accept={DOCUMENT_FILE_ACCEPT}
               className="sr-only"
               disabled={pending}
               onChange={handleUpload}

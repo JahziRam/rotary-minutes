@@ -528,7 +528,7 @@ export function TreasuryPanel({
                   <input
                     type="file"
                     multiple
-                    accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.webp,.txt"
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
                     className="sr-only"
                     onChange={(e) =>
                       setPendingVoucherFiles(Array.from(e.target.files ?? []))

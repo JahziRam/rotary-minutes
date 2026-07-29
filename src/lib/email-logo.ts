@@ -1,5 +1,5 @@
 import { buildClubDefaultLogoDataUrl } from "@/lib/club-default-logo";
-import { isDataUrl, parseDataUrl } from "@/lib/image-storage";
+import { isDataUrl, parseDataUrl } from "@/lib/image-data-url";
 import { resolveClubLogoUrl } from "@/lib/media-url";
 
 export interface EmailLogoResult {

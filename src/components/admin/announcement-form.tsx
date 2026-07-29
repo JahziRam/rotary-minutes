@@ -49,8 +49,28 @@ export function AnnouncementForm({
               locale
             );
             if (result.success) {
-              setToast(`Annonce envoyée à ${result.recipients} utilisateur(s)`);
+              const wantEmail = fd.get("sendEmail") === "on";
+              let msg = `Annonce envoyée à ${result.recipients} utilisateur(s) (notification in-app)`;
+              if (wantEmail) {
+                if (result.emailError === "EMAIL_DISABLED") {
+                  msg +=
+                    " — emails non envoyés : activez Resend dans Admin → Paramètres (clé API + interrupteur Resend).";
+                } else if (result.emailError === "NO_EMAIL_ADDRESSES") {
+                  msg += " — aucun email destinataire trouvé.";
+                } else {
+                  msg += ` — emails : ${result.emailsSent ?? 0} envoyé(s)`;
+                  if ((result.emailsFailed ?? 0) > 0) {
+                    msg += `, ${result.emailsFailed} échec(s)`;
+                  }
+                  if (result.emailError && (result.emailsSent ?? 0) === 0) {
+                    msg += ` (${result.emailError})`;
+                  }
+                }
+              }
+              setToast(msg);
               router.refresh();
+            } else if ("error" in result && result.error) {
+              setToast(`Erreur : ${result.error}`);
             }
           });
         }}

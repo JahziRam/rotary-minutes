@@ -13,7 +13,8 @@ describe("upload-limits", () => {
     expect(validateUploadFileSize(MAX_UPLOAD_FILE_BYTES + 1)).toBe("TOO_LARGE");
   });
 
-  it("allows up to 10 files per batch", () => {
+  it("allows up to 5 files per batch", () => {
+    expect(MAX_UPLOAD_FILES_PER_BATCH).toBe(5);
     expect(validateUploadFileCount(MAX_UPLOAD_FILES_PER_BATCH)).toBeNull();
     expect(validateUploadFileCount(MAX_UPLOAD_FILES_PER_BATCH + 1)).toBe(
       "TOO_MANY_FILES"

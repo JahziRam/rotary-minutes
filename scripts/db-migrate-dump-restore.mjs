@@ -99,13 +99,13 @@ function escapeLiteral(value) {
 }
 
 /**
- * Existing dumps cast JS string arrays to ::jsonb by mistake.
- * Rewrite pure JSON string arrays to text[] for Neon restore.
- * Objects/numbers jsonb stay as jsonb.
+ * Dump bug: JS string arrays became '["a"]'::jsonb.
+ * - text[] columns (tags, recipients, …) need ARRAY[]::text[]
+ * - jsonb columns that store string arrays (RoleConfig.permissions) must stay ::jsonb
  */
-function fixMistakenJsonbStringArrays(sql) {
-  // Match '…'::jsonb where … is a JSON array (handles doubled single-quotes inside)
-  return sql.replace(/'((?:[^']|'')*)'::jsonb/g, (full, inner) => {
+function prepareDumpSqlForNeon(sql) {
+  // 1) Pure JSON string arrays cast to jsonb → text[]
+  let s = sql.replace(/'((?:[^']|'')*)'::jsonb/g, (full, inner) => {
     const jsonText = inner.replace(/''/g, "'");
     try {
       const parsed = JSON.parse(jsonText);
@@ -116,10 +116,34 @@ function fixMistakenJsonbStringArrays(sql) {
         return escapePgTextArray(parsed);
       }
     } catch {
-      /* keep original */
+      /* keep */
     }
     return full;
   });
+
+  // 2) RoleConfig / CustomRole.permissions is Json — undo text[] back to jsonb
+  s = s.replace(
+    /INSERT INTO "(RoleConfig|CustomRole)" \(([^)]+)\) VALUES\s*([\s\S]*?);/gi,
+    (full, table, colList, vals) => {
+      if (!/"?permissions"?/i.test(colList)) return full;
+      const fixedVals = vals.replace(
+        /ARRAY\[((?:(?:NULL|'[^']*')(?:,\s*)?)*)\]::text\[\]/g,
+        (arrFull, inner) => {
+          const parts = [];
+          const re = /NULL|'([^']*)'/g;
+          let mm;
+          while ((mm = re.exec(inner)) !== null) {
+            if (mm[0] === "NULL") parts.push(null);
+            else parts.push(mm[1]);
+          }
+          return `'${JSON.stringify(parts).replace(/'/g, "''")}'::jsonb`;
+        }
+      );
+      return `INSERT INTO "${table}" (${colList}) VALUES ${fixedVals};`;
+    }
+  );
+
+  return s;
 }
 
 async function listUserTables(client) {
@@ -409,6 +433,110 @@ async function restoreForeignKeys(client, fks) {
   console.log(`Re-added ${ok}/${fks.length} foreign keys.`);
 }
 
+function isConnectionError(e) {
+  const msg = e?.message || String(e);
+  const code = e?.code || "";
+  return (
+    /Connection terminated|ECONNRESET|ECONNREFUSED|connection.*closed|server closed the connection|Client has encountered a connection error|not queryable|Connection ended unexpectedly|timeout expired|Could not connect|terminating connection/i.test(
+      msg
+    ) ||
+    ["ECONNRESET", "ECONNREFUSED", "57P01", "57P02", "57P03", "08006", "08003", "08001"].includes(
+      code
+    )
+  );
+}
+
+function makeTargetClient(target) {
+  return new Client({
+    connectionString: target,
+    ssl: /neon\.tech|render\.com/i.test(target)
+      ? { rejectUnauthorized: false }
+      : undefined,
+    connectionTimeoutMillis: 120_000,
+    keepAlive: true,
+    keepAliveInitialDelayMillis: 10_000,
+  });
+}
+
+async function connectTarget(target) {
+  const client = makeTargetClient(target);
+  // Avoid unhandled 'error' crash when Neon drops the socket mid-restore
+  client.on("error", (err) => {
+    console.warn(`\n[pg client error] ${err.message}`);
+  });
+  await client.connect();
+  try {
+    await client.query("SET statement_timeout = 0");
+    await client.query("SET idle_in_transaction_session_timeout = 0");
+    await client.query("SET lock_timeout = 0");
+  } catch {
+    /* best-effort on managed PG */
+  }
+  return client;
+}
+
+/** Split huge multi-row INSERT INTO "T" (...) VALUES (...),(...); into chunks. */
+function expandLargeInserts(statements, maxRows = 20) {
+  const out = [];
+  for (const stmt of statements) {
+    const m = stmt.match(
+      /^(INSERT INTO\s+"[^"]+"\s*\([^)]+\)\s*VALUES)\s*([\s\S]+)$/i
+    );
+    if (!m) {
+      out.push(stmt);
+      continue;
+    }
+    const head = m[1];
+    const valsPart = m[2].replace(/;\s*$/, "").trim();
+    // Only split when clearly huge
+    if (valsPart.length < 200_000) {
+      out.push(stmt.endsWith(";") ? stmt : `${stmt};`);
+      continue;
+    }
+    const rows = [];
+    let depth = 0;
+    let start = -1;
+    let inStr = false;
+    for (let i = 0; i < valsPart.length; i++) {
+      const c = valsPart[i];
+      if (inStr) {
+        if (c === "'" && valsPart[i + 1] === "'") {
+          i++;
+          continue;
+        }
+        if (c === "'") inStr = false;
+        continue;
+      }
+      if (c === "'") {
+        inStr = true;
+        continue;
+      }
+      if (c === "(") {
+        if (depth === 0) start = i;
+        depth++;
+      } else if (c === ")") {
+        depth--;
+        if (depth === 0 && start >= 0) {
+          rows.push(valsPart.slice(start, i + 1));
+          start = -1;
+        }
+      }
+    }
+    if (rows.length <= maxRows) {
+      out.push(stmt.endsWith(";") ? stmt : `${stmt};`);
+      continue;
+    }
+    console.log(
+      `  splitting INSERT (${(valsPart.length / 1024 / 1024).toFixed(1)} MB, ${rows.length} rows) into chunks of ${maxRows}`
+    );
+    for (let i = 0; i < rows.length; i += maxRows) {
+      const chunk = rows.slice(i, i + maxRows);
+      out.push(`${head} ${chunk.join(",\n")};`);
+    }
+  }
+  return out;
+}
+
 async function cmdRestore(infile) {
   const target = normalizeUrl(
     process.env.TARGET_DATABASE_URL || process.env.NEON_DIRECT_URL
@@ -426,37 +554,74 @@ async function cmdRestore(infile) {
   }
 
   let sql = fs.readFileSync(file, "utf8");
-  const beforeFix = sql.length;
-  sql = fixMistakenJsonbStringArrays(sql);
-  if (sql.length !== beforeFix || sql.includes("::text[]")) {
-    console.log(
-      "Normalized string arrays: '…'::jsonb → ARRAY[…]::text[] (ClubDocument.tags, etc.)"
-    );
-  }
-
-  const client = new Client({
-    connectionString: target,
-    ssl: /neon\.tech|render\.com/i.test(target)
-      ? { rejectUnauthorized: false }
-      : undefined,
-    connectionTimeoutMillis: 60_000,
-  });
+  sql = prepareDumpSqlForNeon(sql);
+  console.log(
+    "Normalized arrays: text[] columns → ARRAY[]::text[]; RoleConfig/CustomRole.permissions → jsonb"
+  );
 
   console.log("Connecting to TARGET…");
-  await client.connect();
+  let client = await connectTarget(target);
   let fks = [];
+
+  async function ensureClient() {
+    try {
+      await client.query("SELECT 1");
+      return client;
+    } catch {
+      try {
+        await client.end();
+      } catch {
+        /* ignore */
+      }
+      console.log("\nReconnecting to Neon…");
+      await new Promise((r) => setTimeout(r, 2000));
+      client = await connectTarget(target);
+      return client;
+    }
+  }
+
+  async function runQuery(stmt, attempts = 6) {
+    let lastErr;
+    for (let a = 1; a <= attempts; a++) {
+      try {
+        client = await ensureClient();
+        await client.query(stmt);
+        return;
+      } catch (e) {
+        lastErr = e;
+        if (isConnectionError(e) && a < attempts) {
+          console.warn(
+            `\n  connection lost (attempt ${a}/${attempts}): ${e.message}`
+          );
+          try {
+            await client.end();
+          } catch {
+            /* ignore */
+          }
+          await new Promise((r) => setTimeout(r, 1500 * a));
+          client = await connectTarget(target);
+          continue;
+        }
+        throw e;
+      }
+    }
+    throw lastErr;
+  }
+
   try {
     // Neon cannot SET session_replication_role — drop FKs instead.
     fks = await dropForeignKeys(client);
 
     const rawStatements = splitSqlStatements(sql);
-    const statements = rawStatements.filter((s) => !shouldSkipRestoreStatement(s));
+    let statements = rawStatements.filter((s) => !shouldSkipRestoreStatement(s));
     const skippedRole = rawStatements.length - statements.length;
     if (skippedRole > 0) {
       console.log(
         `Skipped ${skippedRole} statement(s) (session_replication_role — not allowed on Neon).`
       );
     }
+
+    statements = expandLargeInserts(statements, 15);
 
     console.log(
       `Restoring ${file} (${(sql.length / 1024 / 1024).toFixed(2)} MB, ${statements.length} statements)…`
@@ -467,7 +632,7 @@ async function cmdRestore(infile) {
     for (let n = 0; n < statements.length; n++) {
       const stmt = statements[n];
       try {
-        await client.query(stmt);
+        await runQuery(stmt);
         ok++;
       } catch (e) {
         const msg = e.message || String(e);
@@ -488,12 +653,13 @@ async function cmdRestore(infile) {
         console.error("Statement preview:", stmt.slice(0, 200).replace(/\s+/g, " "));
         throw e;
       }
-      if ((n + 1) % 50 === 0 || n + 1 === statements.length) {
+      if ((n + 1) % 10 === 0 || n + 1 === statements.length) {
         process.stdout.write(`\r  ${n + 1}/${statements.length}…`);
       }
     }
     console.log(`\nData load finished (${ok} ok, ${skipped} skipped).`);
 
+    client = await ensureClient();
     await restoreForeignKeys(client, fks);
     console.log("Restore finished OK.");
   } catch (e) {
@@ -501,6 +667,7 @@ async function cmdRestore(infile) {
     if (fks.length) {
       console.error("Attempting to re-add foreign keys after failure…");
       try {
+        client = await ensureClient();
         await restoreForeignKeys(client, fks);
       } catch {
         /* ignore */
@@ -514,7 +681,11 @@ Then re-run restore.
 `);
     process.exit(1);
   } finally {
-    await client.end();
+    try {
+      await client.end();
+    } catch {
+      /* ignore */
+    }
   }
 }
 

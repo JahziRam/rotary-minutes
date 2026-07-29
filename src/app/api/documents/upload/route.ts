@@ -5,7 +5,7 @@ import {
   moveDocumentToFolder,
   uploadDocumentFromBuffer,
 } from "@/actions/documents";
-import { validateUploadFiles } from "@/lib/upload-limits";
+import { validateDocumentUploadFiles } from "@/lib/document-storage";
 import type { DocumentCategory } from "@/generated/prisma/client";
 
 function titleFromFileName(fileName: string): string {
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "MISSING_FIELDS" }, { status: 400 });
   }
 
-  const batchError = validateUploadFiles(files);
+  const batchError = validateDocumentUploadFiles(files);
   if (batchError) {
     return NextResponse.json({ error: batchError }, { status: 400 });
   }

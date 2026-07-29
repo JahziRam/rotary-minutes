@@ -1,4 +1,4 @@
-import { isDataUrl } from "@/lib/image-storage";
+import { isDataUrl } from "@/lib/image-data-url";
 import { getAppBaseUrl } from "@/lib/app-url";
 
 /** Default member avatar (Rotary wheel) when no custom profile photo. */

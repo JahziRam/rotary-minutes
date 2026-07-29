@@ -10,6 +10,9 @@ export type MemberListRow = {
   id: string;
   firstName: string;
   lastName: string;
+  /** True if a profile photo exists — never the data URL (OOM-safe list payloads). */
+  hasPhoto: boolean;
+  /** @deprecated use hasPhoto + /api/media/member/[id]/photo — kept null for type compat */
   photoUrl: string | null;
   position: string | null;
   isActive: boolean;
@@ -53,7 +56,15 @@ export async function searchMembersPaginated(
     prisma.member.count({ where }),
     prisma.member.findMany({
       where,
-      include: {
+      // Never select photoUrl here — data URLs would bloat list memory/RSC payloads.
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        position: true,
+        isActive: true,
+        email: true,
+        userId: true,
         commission: { select: { name: true } },
         user: {
           select: {
@@ -71,6 +82,17 @@ export async function searchMembersPaginated(
       take: params.take,
     }),
   ]);
+
+  const pageIds = rows.map((m) => m.id);
+  // Select only id — never photoUrl — so large data URLs stay out of Node memory.
+  const withPhotoRows =
+    pageIds.length > 0
+      ? await prisma.member.findMany({
+          where: { id: { in: pageIds }, photoUrl: { not: null } },
+          select: { id: true },
+        })
+      : [];
+  const hasPhotoSet = new Set(withPhotoRows.map((r) => r.id));
 
   const orphanEmails = [
     ...new Set(
@@ -110,7 +132,8 @@ export async function searchMembersPaginated(
       id: m.id,
       firstName: m.firstName,
       lastName: m.lastName,
-      photoUrl: m.photoUrl,
+      hasPhoto: hasPhotoSet.has(m.id),
+      photoUrl: null,
       position: m.position,
       isActive: m.isActive,
       commissionName: m.commission?.name ?? null,

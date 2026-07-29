@@ -671,7 +671,7 @@ export async function sendAnnouncement(
   locale: string
 ) {
   const author = await admin();
-  if (!author) return { error: "UNAUTHORIZED" };
+  if (!author) return { error: "UNAUTHORIZED" as const };
 
   const announcement = await prisma.announcement.create({
     data: {
@@ -723,18 +723,92 @@ export async function sendAnnouncement(
     });
   }
 
+  let emailsSent = 0;
+  let emailsFailed = 0;
+  let emailError: string | null = null;
+
+  // Previously only stored sendEmail=true without calling Resend.
+  if (data.sendEmail && recipientIds.length > 0) {
+    const { isEmailEnabled, sendEmail, platformAnnouncementEmail } = await import(
+      "@/lib/email"
+    );
+    const { getAppBaseUrl } = await import("@/lib/app-url");
+
+    if (!(await isEmailEnabled())) {
+      emailError = "EMAIL_DISABLED";
+      console.warn(
+        "[announcement] sendEmail checked but Resend is disabled or not configured (AppSettings.resendEnabled + API key)"
+      );
+    } else {
+      const users = await prisma.user.findMany({
+        where: {
+          id: { in: recipientIds },
+          email: { not: "" },
+        },
+        select: { email: true },
+      });
+      const emails = [
+        ...new Set(
+          users
+            .map((u) => u.email?.trim().toLowerCase())
+            .filter((e): e is string => !!e && e.includes("@"))
+        ),
+      ];
+
+      if (emails.length === 0) {
+        emailError = "NO_EMAIL_ADDRESSES";
+      } else {
+        const appUrl = `${getAppBaseUrl().replace(/\/$/, "")}/${locale}/notifications?tab=announcements`;
+        const mail = await platformAnnouncementEmail({
+          title: data.title,
+          message: data.message,
+          locale,
+          appUrl,
+        });
+
+        // Sequential sends — avoids Resend rate spikes; keeps serverless under control.
+        for (const to of emails) {
+          const result = await sendEmail({
+            to,
+            subject: mail.subject,
+            html: mail.html,
+            attachments: mail.attachments,
+          });
+          if (result.ok) emailsSent++;
+          else {
+            emailsFailed++;
+            if (!emailError && result.error) emailError = result.error;
+            console.warn("[announcement] email failed:", to, result.error);
+          }
+        }
+      }
+    }
+  }
+
   await prisma.auditLog.create({
     data: {
       userId: author.id,
       action: "ANNOUNCEMENT_SENT",
       entity: "Announcement",
       entityId: announcement.id,
-      metadata: { recipients: recipientIds.length, sendEmail: data.sendEmail },
+      metadata: {
+        recipients: recipientIds.length,
+        sendEmail: !!data.sendEmail,
+        emailsSent,
+        emailsFailed,
+        emailError,
+      },
     },
   });
 
   revalidateAdmin(locale);
-  return { success: true, recipients: recipientIds.length };
+  return {
+    success: true as const,
+    recipients: recipientIds.length,
+    emailsSent,
+    emailsFailed,
+    emailError,
+  };
 }
 
 // ─── Export statistiques ─────────────────────────────────────────────────────

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ImageUpload } from "@/components/ui/image-upload";
 import { updateMember } from "@/actions/members";
 import { uploadMemberPhoto, removeMemberPhoto } from "@/actions/uploads";
-import { resolveMemberPhotoUrl } from "@/lib/media-url";
+import { memberPhotoMediaPath } from "@/lib/media-url";
 
 export function MemberEditForm({
   member,
@@ -55,8 +55,12 @@ export function MemberEditForm({
     );
   }
 
-  const photoPreview =
-    resolveMemberPhotoUrl(member.id, member.photoUrl) ?? member.photoUrl;
+  // Prefer media route (or path already set by getMemberDetail) — never embed base64.
+  const photoPreview = member.photoUrl
+    ? member.photoUrl.startsWith("/") || member.photoUrl.startsWith("http")
+      ? member.photoUrl
+      : memberPhotoMediaPath(member.id)
+    : null;
 
   return (
     <form

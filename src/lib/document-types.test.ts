@@ -16,7 +16,7 @@ describe("document-types", () => {
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
       )
     ).toBe("office");
-    expect(getDocumentViewKind("application/msword")).toBe("unsupported");
+    expect(getDocumentViewKind("application/msword")).toBe("office");
   });
 
   it("routes office files to preview endpoint", () => {

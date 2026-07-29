@@ -233,3 +233,54 @@ Quand tout est OK en prod sur Vercel + Neon :
 5. Suspendre Render  
 
 Durée typique : **1–2 h** si le dump est raisonnable.
+
+---
+
+## Statut migration (2026-07-29)
+
+### Fait (automatisé)
+
+| Étape | Détail |
+|-------|--------|
+| Projet Neon | `hidden-bread-82483437` · DB `rotary-minutes` · eu-central-1 |
+| Schéma | `node scripts/neon-bootstrap-schema.mjs` (db push + 20 migrations marquées) |
+| Données | `node scripts/db-migrate-dump-restore.mjs restore rotary_minutes_dump.sql` |
+| Vérif | User 60 · Club 7 · Member 65 · Meeting 20 · Minute 20 · RoleConfig 11 · 144 FK |
+
+Commandes de re-vérif :
+
+```powershell
+$env:DIRECT_URL = (neonctl connection-string --project-id hidden-bread-82483437 --org-id org-still-resonance-91116135 --database-name rotary-minutes).Trim()
+node scripts/verify-neon-counts.mjs
+```
+
+Fichier local (gitignored) : `.env.neon` avec `DATABASE_URL` (pooler) + `DIRECT_URL` (direct).
+
+### À faire côté Vercel (auth requise sur la machine)
+
+Le CLI Vercel n’est **pas connecté** ici (`vercel login` manquant). Sur votre PC :
+
+```powershell
+cd C:\Users\jahaz\Documents\GitHub\rotary-minutes
+npx vercel login
+npx vercel link          # importer / lier le projet Hobby
+
+# PowerShell Windows (pas "pwsh" — c'est PowerShell 7, souvent non installé) :
+.\scripts\push-neon-env-to-vercel.ps1
+# ou :
+# powershell -ExecutionPolicy Bypass -File .\scripts\push-neon-env-to-vercel.ps1
+
+# Copier le reste des secrets depuis Render → Vercel Dashboard
+# (AUTH_*, RESEND_*, STRIPE_*, CRON_SECRET, AI keys, …)
+
+npx vercel --prod
+```
+
+Puis domaine `clubminutes.api.mg` + DNS Cloudflare (Étape D).
+
+### Sécurité
+
+Le mot de passe Neon a pu apparaître dans des logs de session / `.env.neon`.  
+Après bascule : **Neon Console → Reset password**, mettre à jour `.env.neon` + variables Vercel, puis redeploy.
+
+Ne **pas** committer `rotary_minutes_dump.sql` ni `.env.neon`.

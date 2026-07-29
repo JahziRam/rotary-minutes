@@ -3,10 +3,18 @@
 import { useRef, useState, useTransition } from "react";
 import { Camera, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { MAX_IMAGE_BYTES } from "@/lib/image-storage";
-import { validateUploadFileSize } from "@/lib/upload-limits";
+import { MAX_IMAGE_SOURCE_BYTES } from "@/lib/image-data-url";
 
 type UploadResult = { success?: true; error?: string };
+
+const ERROR_LABELS: Record<string, string> = {
+  TOO_LARGE: "Image trop volumineuse (max 5 Mo à l’envoi — redimensionnée automatiquement)",
+  INVALID_TYPE: "Format non supporté (JPEG, PNG, WebP ou GIF)",
+  NO_FILE: "Aucun fichier sélectionné",
+  UPLOADS_SUSPENDED: "Upload d’images temporairement désactivé",
+  UPLOAD_FAILED: "Échec du téléversement",
+  INVALID_FORMAT: "Format d’image invalide",
+};
 
 export function ImageUpload({
   label,
@@ -37,25 +45,30 @@ export function ImageUpload({
 
   const handleFile = (file: File) => {
     setError(null);
-    if (validateUploadFileSize(file.size) === "TOO_LARGE") {
-      setError("Fichier trop volumineux (max 5 Mo)");
+    if (file.size > MAX_IMAGE_SOURCE_BYTES) {
+      setError(ERROR_LABELS.TOO_LARGE);
       return;
     }
-    if (file.size > MAX_IMAGE_BYTES) {
-      setError("Image trop volumineuse (max 512 Ko)");
+    if (file.type && !/^image\/(jpeg|png|webp|gif)$/i.test(file.type)) {
+      setError(ERROR_LABELS.INVALID_TYPE);
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => setPreview(reader.result as string);
-    reader.readAsDataURL(file);
+
+    // Local preview only (object URL — free after upload). Do not keep a second base64 copy.
+    const objectUrl = URL.createObjectURL(file);
+    setPreview(objectUrl);
 
     const fd = new FormData();
     fd.set("file", file);
     startTransition(async () => {
-      const result = await onUpload(fd);
-      if (result.error) {
-        setError(result.error);
-        setPreview(currentUrl ?? null);
+      try {
+        const result = await onUpload(fd);
+        if (result.error) {
+          setError(ERROR_LABELS[result.error] ?? result.error);
+          setPreview(currentUrl ?? null);
+        }
+      } finally {
+        URL.revokeObjectURL(objectUrl);
       }
     });
   };
@@ -111,6 +124,7 @@ export function ImageUpload({
                 startTransition(async () => {
                   const result = await onRemove();
                   if (!result.error) setPreview(null);
+                  else setError(ERROR_LABELS[result.error] ?? result.error);
                 });
               }}
             >

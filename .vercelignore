@@ -1,0 +1,46 @@
+# Local / heavy artifacts — never upload to Vercel
+node_modules
+.next
+.out
+build
+dist
+coverage
+.git
+.vercel
+.android-sdk
+.android-keystore
+.continue
+.cursor
+.vscode
+.open-next
+.wrangler
+.neon
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+.dev.vars
+
+# DB dumps
+rotary_minutes_dump.sql
+*.dump
+*.sql
+
+# Android / Capacitor local builds
+android/.gradle
+android/app/build
+android/build
+android/.idea
+android/local.properties
+*.apk
+*.aab
+
+# Logs / caches
+*.log
+*.tsbuildinfo
+build-last.log
+
+# Landing worker (separate deploy)
+landing-worker
+landing

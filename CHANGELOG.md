@@ -7,6 +7,35 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [0.6.0] — 2026-07-29
+
+### Added
+- **Infrastructure — migration Vercel + Neon**
+  - Scripts de bootstrap / reset Neon (`neon-bootstrap-schema`, `neon-reset-public`) et dump/restore sans `pg_dump`
+  - Restore résilient (reconnexion, découpe des gros INSERT, normalisation text[] / jsonb `permissions`)
+  - Doc `scripts/deploy-vercel-neon.md` + helper `push-neon-env-to-vercel.ps1`
+  - `.vercelignore` pour deploys CLI sous la limite de fichiers
+- **Photos de profil & logos — pipeline anti-OOM**
+  - Upload réactivé par défaut avec compression **sharp** (max ~400 px / ~120 Ko stockés)
+  - Source jusqu’à 5 Mo ; listes membres sans blobs base64 (`hasPhoto` + `/api/media/member/[id]/photo`)
+  - Séparation client/serveur : `image-data-url.ts` vs `image-storage.ts` (sharp hors bundle client)
+- **Documents / pièces jointes — partage réactivé**
+  - Max **5 fichiers** par envoi, **5 Mo** par fichier
+  - Formats : PDF, Word, Excel, PowerPoint, TXT uniquement (plus d’images en pièces jointes)
+  - Validation serveur + `accept` unifié (`DOCUMENT_FILE_ACCEPT`)
+
+### Fixed
+- **Annonces super-admin — email Resend**
+  - La case « Envoyer aussi par email » n’envoyait pas d’email (flag stocké seulement)
+  - Envoi réel via Resend + template plateforme + compteurs envoyés/échecs dans le toast
+  - `isEmailEnabled` : clé `RESEND_API_KEY` en env Vercel suffit même si le toggle DB reste à false par défaut
+- **Crons Vercel Hobby** — expressions adaptées au plan gratuit (quotidien / multi-entrées)
+
+### Changed
+- Uploads documents : activés par défaut (`DOCUMENT_UPLOADS_ENABLED=false` ou `UPLOADS_ENABLED=false` pour suspendre)
+- Photos / logos : activés par défaut (`IMAGE_UPLOADS_ENABLED=false` pour suspendre)
+- Hints i18n FR/EN/ES pour limites d’upload photos et documents
+
 ## [0.3.1] — 2026-07-23
 
 ### Fixed

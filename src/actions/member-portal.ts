@@ -219,7 +219,10 @@ export async function getMyAccountData() {
       lastName: member.lastName,
       email: member.email,
       position: member.position,
-      photoUrl: member.photoUrl,
+      // Media path only — never ship base64 data URLs to the client
+      photoUrl: member.photoUrl
+        ? `/api/media/member/${member.id}/photo`
+        : null,
       registrationNumber: member.registrationNumber,
     },
     duesSummary,

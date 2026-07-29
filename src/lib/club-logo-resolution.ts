@@ -1,6 +1,6 @@
 import { buildClubDefaultLogoDataUrl } from "@/lib/club-default-logo";
 import { getAppBaseUrl } from "@/lib/app-url";
-import { isDataUrl } from "@/lib/image-storage";
+import { isDataUrl } from "@/lib/image-data-url";
 import { resolveClubLogoUrl } from "@/lib/media-url";
 
 export type ClubBrandLogoInput = {

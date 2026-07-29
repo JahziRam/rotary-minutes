@@ -1,18 +1,39 @@
-import { MAX_UPLOAD_FILE_BYTES } from "@/lib/upload-limits";
+import {
+  MAX_UPLOAD_FILE_BYTES,
+  MAX_UPLOAD_FILES_PER_BATCH,
+  type UploadValidationError,
+  validateUploadFileCount,
+  validateUploadFileSize,
+} from "@/lib/upload-limits";
 import { normalizeDocumentMime } from "@/lib/document-types";
-import { areUploadsEnabled } from "@/lib/image-storage";
 
 export const MAX_DOCUMENT_BYTES = MAX_UPLOAD_FILE_BYTES;
+export const MAX_DOCUMENT_FILES_PER_BATCH = MAX_UPLOAD_FILES_PER_BATCH;
 
+/**
+ * Document / attachment uploads (library, PV, treasury, budget).
+ * Enabled by default — set UPLOADS_ENABLED=false or DOCUMENT_UPLOADS_ENABLED=false to suspend.
+ */
+export function areDocumentUploadsEnabled(): boolean {
+  if (process.env.DOCUMENT_UPLOADS_ENABLED === "false") return false;
+  if (process.env.UPLOADS_ENABLED === "false") return false;
+  return true;
+}
+
+/** @deprecated use areDocumentUploadsEnabled — kept for call sites that imported image-storage */
+export function areUploadsEnabled(): boolean {
+  return areDocumentUploadsEnabled();
+}
+
+/** PDF, Microsoft Office, plain text only (no images). */
 export const ALLOWED_DOCUMENT_TYPES = new Set([
   "application/pdf",
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "application/vnd.ms-excel",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  "image/jpeg",
-  "image/png",
-  "image/webp",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
   "text/plain",
 ]);
 
@@ -22,12 +43,14 @@ const EXTENSION_MIME: Record<string, string> = {
   docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   xls: "application/vnd.ms-excel",
   xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  png: "image/png",
-  webp: "image/webp",
+  ppt: "application/vnd.ms-powerpoint",
+  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
   txt: "text/plain",
 };
+
+/** For HTML file inputs: Office + PDF + TXT only. */
+export const DOCUMENT_FILE_ACCEPT =
+  ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain";
 
 export function resolveFileMimeType(file: Pick<File, "type" | "name">): string {
   const normalized = normalizeDocumentMime(file.type);
@@ -36,7 +59,28 @@ export function resolveFileMimeType(file: Pick<File, "type" | "name">): string {
   }
   const ext = file.name.split(".").pop()?.toLowerCase();
   if (ext && EXTENSION_MIME[ext]) return EXTENSION_MIME[ext];
-  return normalized || file.type;
+  return normalized || file.type || "";
+}
+
+export function isAllowedDocumentFile(file: Pick<File, "type" | "name">): boolean {
+  const mime = resolveFileMimeType(file);
+  return ALLOWED_DOCUMENT_TYPES.has(mime);
+}
+
+/**
+ * Validate a batch for document sharing: count ≤ 5, size ≤ 5 MB, allowed types only.
+ */
+export function validateDocumentUploadFiles(
+  files: File[]
+): UploadValidationError | null {
+  const countError = validateUploadFileCount(files.length);
+  if (countError) return countError;
+  for (const file of files) {
+    const sizeError = validateUploadFileSize(file.size);
+    if (sizeError) return sizeError;
+    if (!isAllowedDocumentFile(file)) return "INVALID_TYPE";
+  }
+  return null;
 }
 
 export function isDataUrl(value: string): boolean {
@@ -59,7 +103,7 @@ export function bufferToDocumentDataUrl(
   fileName: string,
   mimeTypeInput?: string
 ): { dataUrl: string; mimeType: string } {
-  if (!areUploadsEnabled()) {
+  if (!areDocumentUploadsEnabled()) {
     throw new Error("UPLOADS_SUSPENDED");
   }
   if (buffer.byteLength > MAX_DOCUMENT_BYTES) {
@@ -82,8 +126,14 @@ export async function fileToDocumentDataUrl(file: File): Promise<{
   dataUrl: string;
   mimeType: string;
 }> {
-  if (!areUploadsEnabled()) {
+  if (!areDocumentUploadsEnabled()) {
     throw new Error("UPLOADS_SUSPENDED");
+  }
+  if (file.size > MAX_DOCUMENT_BYTES) {
+    throw new Error("TOO_LARGE");
+  }
+  if (!isAllowedDocumentFile(file)) {
+    throw new Error("INVALID_TYPE");
   }
   const buffer = Buffer.from(await file.arrayBuffer());
   return bufferToDocumentDataUrl(buffer, file.name, file.type);

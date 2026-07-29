@@ -6,6 +6,7 @@ import { requirePermission } from "@/lib/require-permission";
 import {
   bufferToDocumentDataUrl,
   fileToDocumentDataUrl,
+  validateDocumentUploadFiles,
 } from "@/lib/document-storage";
 import { documentDownloadUrl, documentViewUrl } from "@/lib/document-urls";
 import { getDocumentViewKind } from "@/lib/document-types";
@@ -20,7 +21,7 @@ import {
 } from "@/lib/minute-attachments";
 import { canOverrideMinuteLock } from "@/lib/minute-lock";
 import { hasRolePermission } from "@/lib/roles";
-import { validateUploadFileSize, validateUploadFiles } from "@/lib/upload-limits";
+import { validateUploadFileSize } from "@/lib/upload-limits";
 
 function revalidateMinuteAttachmentPaths(minuteId: string) {
   for (const loc of ["fr", "en", "es"]) {
@@ -185,7 +186,7 @@ export async function uploadMinuteAttachmentFile(minuteId: string, formData: For
     .getAll("files")
     .filter((f): f is File => f instanceof File && f.size > 0);
 
-  const batchError = validateUploadFiles(files);
+  const batchError = validateDocumentUploadFiles(files);
   if (batchError) return { error: batchError };
 
   const uploaded = [];

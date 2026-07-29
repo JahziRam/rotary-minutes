@@ -1,9 +1,12 @@
 export type DocumentViewKind = "pdf" | "image" | "office" | "text" | "unsupported";
 
 const OFFICE_PREVIEW_MIMES = new Set([
+  "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "application/vnd.ms-excel",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
 ]);
 
 const MIME_ALIASES: Record<string, string> = {

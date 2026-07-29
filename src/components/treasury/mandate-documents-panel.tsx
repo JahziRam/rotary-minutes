@@ -10,6 +10,11 @@ import { Toast } from "@/components/ui/toast";
 import { formatBudgetMoney } from "@/lib/budget-utils";
 import { deleteBudgetDocument } from "@/actions/budget-documents";
 import type { BudgetDocumentKind } from "@/generated/prisma/client";
+import {
+  DOCUMENT_FILE_ACCEPT,
+  MAX_DOCUMENT_FILES_PER_BATCH,
+  validateDocumentUploadFiles,
+} from "@/lib/document-storage";
 
 type DocRow = {
   id: string;
@@ -57,19 +62,33 @@ export function MandateDocumentsPanel({
 
   function upload(files: FileList | null) {
     if (!files?.length) return;
+    const selected = Array.from(files);
+    const validationError = validateDocumentUploadFiles(selected);
+    if (validationError) {
+      setToast(
+        validationError === "TOO_LARGE"
+          ? t("fileTooLarge")
+          : validationError === "TOO_MANY_FILES"
+            ? t("tooManyFiles", { max: MAX_DOCUMENT_FILES_PER_BATCH })
+            : validationError === "INVALID_TYPE"
+              ? t("invalidType")
+              : t("uploadError")
+      );
+      return;
+    }
     const fd = new FormData();
     fd.set("scopeType", "mandate");
     fd.set("mandateYear", String(mandateYear));
     fd.set("kind", kind);
     if (label.trim()) fd.set("label", label.trim());
     if (amount.trim()) fd.set("amount", amount.trim());
-    for (const f of Array.from(files)) fd.append("files", f);
+    for (const f of selected) fd.append("files", f);
     startTransition(async () => {
       const res = await fetch("/api/budget/documents/upload", {
         method: "POST",
         body: fd,
       });
-      const json = (await res.json()) as { success?: boolean };
+      const json = (await res.json()) as { success?: boolean; error?: string };
       if (res.ok && json.success) {
         setToast(t("documentUploaded"));
         setLabel("");
@@ -131,6 +150,7 @@ export function MandateDocumentsPanel({
               ref={fileRef}
               type="file"
               multiple
+              accept={DOCUMENT_FILE_ACCEPT}
               className="text-sm"
               onChange={(e) => upload(e.target.files)}
             />

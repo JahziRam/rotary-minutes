@@ -14,6 +14,11 @@ import { formatBudgetMoney } from "@/lib/budget-utils";
 import { createEventBudgetEntry, updateEvent } from "@/actions/events";
 import { deleteBudgetDocument } from "@/actions/budget-documents";
 import type { BudgetDocumentKind } from "@/generated/prisma/client";
+import {
+  DOCUMENT_FILE_ACCEPT,
+  MAX_DOCUMENT_FILES_PER_BATCH,
+  validateDocumentUploadFiles,
+} from "@/lib/document-storage";
 
 type BudgetSummary = {
   planned: number | null;
@@ -135,6 +140,20 @@ export function EventBudgetPanel({
 
   function uploadDocs(files: FileList | null) {
     if (!files?.length) return;
+    const selected = Array.from(files);
+    const validationError = validateDocumentUploadFiles(selected);
+    if (validationError) {
+      setToast(
+        validationError === "TOO_LARGE"
+          ? t("fileTooLarge")
+          : validationError === "TOO_MANY_FILES"
+            ? t("tooManyFiles", { max: MAX_DOCUMENT_FILES_PER_BATCH })
+            : validationError === "INVALID_TYPE"
+              ? t("invalidType")
+              : t("uploadError")
+      );
+      return;
+    }
     const fd = new FormData();
     fd.set("scopeType", "event");
     fd.set("scopeId", eventId);
@@ -142,7 +161,7 @@ export function EventBudgetPanel({
     if (docForm.label.trim()) fd.set("label", docForm.label.trim());
     if (docForm.notes.trim()) fd.set("notes", docForm.notes.trim());
     if (docForm.amount.trim()) fd.set("amount", docForm.amount.trim());
-    for (const file of Array.from(files)) fd.append("files", file);
+    for (const file of selected) fd.append("files", file);
     startTransition(async () => {
       const res = await fetch("/api/budget/documents/upload", {
         method: "POST",
@@ -356,7 +375,7 @@ export function EventBudgetPanel({
                   ref={fileRef}
                   type="file"
                   multiple
-                  accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.webp,.txt"
+                  accept={DOCUMENT_FILE_ACCEPT}
                   className="text-sm"
                   onChange={(e) => uploadDocs(e.target.files)}
                 />

@@ -1,10 +1,14 @@
 /** Max size per uploaded file (5 MB). */
 export const MAX_UPLOAD_FILE_BYTES = 5 * 1024 * 1024;
 
-/** Max files per upload batch. */
-export const MAX_UPLOAD_FILES_PER_BATCH = 10;
+/** Max files per upload batch (documents / attachments). */
+export const MAX_UPLOAD_FILES_PER_BATCH = 5;
 
-export type UploadValidationError = "NO_FILE" | "TOO_LARGE" | "TOO_MANY_FILES";
+export type UploadValidationError =
+  | "NO_FILE"
+  | "TOO_LARGE"
+  | "TOO_MANY_FILES"
+  | "INVALID_TYPE";
 
 export function validateUploadFileSize(size: number): UploadValidationError | null {
   if (size <= 0) return "NO_FILE";

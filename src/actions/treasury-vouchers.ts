@@ -9,12 +9,13 @@ import {
   bufferToDocumentDataUrl,
   fileToDocumentDataUrl,
   validateDocumentDataUrl,
+  validateDocumentUploadFiles,
 } from "@/lib/document-storage";
 import {
   treasuryVoucherDownloadUrl,
   treasuryVoucherViewUrl,
 } from "@/lib/treasury-voucher-urls";
-import { validateUploadFileSize, validateUploadFiles } from "@/lib/upload-limits";
+import { validateUploadFileSize } from "@/lib/upload-limits";
 import type { TreasuryVoucherKind } from "@/generated/prisma/client";
 
 export type TreasuryVoucherEntity =
@@ -264,7 +265,7 @@ export async function uploadTreasuryVoucherFiles(formData: FormData) {
     .getAll("files")
     .filter((f): f is File => f instanceof File && f.size > 0);
 
-  const batchError = validateUploadFiles(files);
+  const batchError = validateDocumentUploadFiles(files);
   if (batchError) return { error: batchError };
 
   const uploaded: string[] = [];
