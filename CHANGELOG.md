@@ -7,6 +7,13 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [0.6.4] — 2026-07-29
+
+### Changed
+- **Perf / mémoire — contexte club**
+  - `getClubContext` remplace les `logoUrl` data URL par `/api/media/club/...` (plus de multi‑Mo dans le scope React)
+  - `includeMembers` n’inclut plus `photoUrl` (select explicite sans blob)
+
 ## [0.6.3] — 2026-07-29
 
 ### Added

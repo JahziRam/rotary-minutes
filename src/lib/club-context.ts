@@ -49,13 +49,41 @@ async function resolveClubContext(includeMembers: boolean): Promise<ClubContext 
     include: {
       subscription: true,
       ...(includeMembers
-        ? { members: { where: { isActive: true }, orderBy: { lastName: "asc" } } }
+        ? {
+            members: {
+              where: { isActive: true },
+              orderBy: { lastName: "asc" as const },
+              // Omit photoUrl — callers use /api/media/member/[id]/photo
+              select: {
+                id: true,
+                clubId: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                phone: true,
+                position: true,
+                isActive: true,
+                isHonoraryMember: true,
+                commissionId: true,
+                userId: true,
+                birthday: true,
+                joinDate: true,
+                registrationNumber: true,
+              },
+            },
+          }
         : {}),
     },
   });
 
   if (!club) return null;
   if (!club.isActive && !session.user.isSuperAdmin) return null;
+
+  // Drop base64 logo blobs from the request-scoped context (keep media route or https URL).
+  // Prevents every Server Component that calls getClubContext from retaining multi‑MB strings.
+  if (club.logoUrl?.startsWith("data:")) {
+    club.logoUrl = `/api/media/club/${club.id}/logo`;
+  }
 
   const features = await getClubFeatures(club.id);
 
