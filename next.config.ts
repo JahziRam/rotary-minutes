@@ -5,10 +5,13 @@ import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["pg", "pg-cloudflare"],
+  // Keep native/heavy deps out of the webpack server bundle (lower peak RAM).
+  serverExternalPackages: ["pg", "pg-cloudflare", "sharp", "@prisma/client", "prisma"],
   experimental: {
     serverActions: {
-      bodySizeLimit: "50mb",
+      // Uploads max 5 MB/file; 8 MB leaves headroom for multipart overhead.
+      // Was 50 MB — unnecessarily large heap risk on Server Actions.
+      bodySizeLimit: "8mb",
     },
     webpackMemoryOptimizations: true,
     webpackBuildWorker: true,
@@ -18,6 +21,7 @@ const nextConfig: NextConfig = {
       "@tanstack/react-query",
       "react-hook-form",
       "@hookform/resolvers",
+      "@react-pdf/renderer",
     ],
   },
   images: {

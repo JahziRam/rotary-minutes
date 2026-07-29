@@ -7,6 +7,14 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [0.6.1] — 2026-07-29
+
+### Changed
+- **Perf / mémoire — config Next.js**
+  - `serverActions.bodySizeLimit` : 50 Mo → **8 Mo** (aligné sur uploads 5 Mo + overhead)
+  - `serverExternalPackages` : `sharp`, Prisma hors bundle webpack serveur
+  - `optimizePackageImports` : ajout `@react-pdf/renderer`
+
 ## [0.6.0] — 2026-07-29
 
 ### Added
