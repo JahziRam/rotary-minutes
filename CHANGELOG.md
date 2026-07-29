@@ -7,6 +7,14 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [0.6.6] — 2026-07-29
+
+### Changed
+- **Perf — annonces email**
+  - Envoi Resend par lots de 5 (concurrence bornée) au lieu d’une boucle 100 % séquentielle
+- **Docs**
+  - README mis à jour (version 0.6.x, stack Vercel/Neon, perf mémoire, Blob)
+
 ## [0.6.5] — 2026-07-29
 
 ### Changed

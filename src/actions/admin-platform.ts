@@ -766,19 +766,27 @@ export async function sendAnnouncement(
           appUrl,
         });
 
-        // Sequential sends — avoids Resend rate spikes; keeps serverless under control.
-        for (const to of emails) {
-          const result = await sendEmail({
-            to,
-            subject: mail.subject,
-            html: mail.html,
-            attachments: mail.attachments,
-          });
-          if (result.ok) emailsSent++;
-          else {
-            emailsFailed++;
-            if (!emailError && result.error) emailError = result.error;
-            console.warn("[announcement] email failed:", to, result.error);
+        // Bounded concurrency (5) — faster than fully sequential, safer than all-at-once.
+        const CONCURRENCY = 5;
+        for (let i = 0; i < emails.length; i += CONCURRENCY) {
+          const slice = emails.slice(i, i + CONCURRENCY);
+          const results = await Promise.all(
+            slice.map((to) =>
+              sendEmail({
+                to,
+                subject: mail.subject,
+                html: mail.html,
+                attachments: mail.attachments,
+              }).then((result) => ({ to, result }))
+            )
+          );
+          for (const { to, result } of results) {
+            if (result.ok) emailsSent++;
+            else {
+              emailsFailed++;
+              if (!emailError && result.error) emailError = result.error;
+              console.warn("[announcement] email failed:", to, result.error);
+            }
           }
         }
       }

@@ -6,7 +6,7 @@ Production : [https://clubminutes.api.mg](https://clubminutes.api.mg)
 
 ## Version
 
-**0.2.0** — voir [CHANGELOG.md](./CHANGELOG.md)
+**0.6.6** — voir [CHANGELOG.md](./CHANGELOG.md)
 
 ## Fonctionnalités
 
@@ -14,14 +14,14 @@ Production : [https://clubminutes.api.mg](https://clubminutes.api.mg)
 - **Multilingue** — Français, anglais et espagnol (next-intl)
 - **Procès-verbaux** — Rédaction collaborative, versionnement, auto-sauvegarde ; édition exceptionnelle président/admin sur PV verrouillés
 - **PDF authentifié** — Logo club, mise en page modernisée, QR de vérification (hash en base, non affiché en pied)
-- **Annexe de présence** — Multi-colonnes, option photos de profil (miniatures rondes + avatar roue par défaut)
+- **Annexe de présence** — Multi-colonnes, option photos de profil (miniatures via `/api/media`, anti-OOM)
 - **Assistant IA** — Reformulation des notes de PV (SpaceXAI / xAI, Qwen, OpenAI compatible dont Bazaarlink)
 - **Réunions** — Types dynamiques, présences, assiduité (hors membres d’honneur), édition présidence/secrétaire
 - **Membres** — Annuaire, cotisations, **conjoint/lady** (nom + anniversaire au calendrier)
 - **Emails** — Templates, contacts, groupes personnalisés **et commissions** comme destinataires
 - **Projets** — Gestion de projets club, tâches associées et **budget** (prévu / réalisé, devis & proformas) via `/projects`
 - **Tâches** — Suivi des actions (dont issues de PV) via `/actions`
-- **Assignation** — Tâches et projets assignables à **plusieurs membres** et/ou une **commission** (modifiable après création, avec notifications)
+- **Assignation** — Tâches et projets assignables à **plusieurs membres** et/ou une **commission**
 - **Commissions** — Multi-appartenance, rôles Président/Membre (`/members/commissions`)
 - **Mon travail** — Vue personnelle des projets et tâches assignés (`/my-work`)
 - **Plan budgétaire du mandat** — Consolidation sous-comptes + projets + événements (`/treasury/mandate-plan`)
@@ -29,9 +29,9 @@ Production : [https://clubminutes.api.mg](https://clubminutes.api.mg)
 - **Calendrier** — Réunions, événements, anniversaires membres **et conjoints**
 - **Mode hors ligne** — IndexedDB + synchronisation automatique
 - **Stripe** — Abonnements et essai gratuit 14 jours
-- **Super Admin** — Gestion globale du SaaS, feature flags par club
-- **Documents** — Bibliothèque, aperçu inline (PDF, images, Office), gestion (renommer, classer, déplacer, archiver)
-- **Trésorerie** — Opérations, exports comptables, pièces justificatives (factures, reçus, preuves de paiement)
+- **Super Admin** — Gestion globale du SaaS, feature flags, annonces (in-app + email Resend)
+- **Documents** — Bibliothèque (PDF / Office / TXT, max 5 × 5 Mo), aperçu, partage
+- **Trésorerie** — Opérations, exports comptables, pièces justificatives
 - **Cotisations** — Facturation, reçus, paiements (dont en ligne club)
 
 ## Stack technique
@@ -40,13 +40,29 @@ Production : [https://clubminutes.api.mg](https://clubminutes.api.mg)
 |--------|-------------|
 | Frontend | Next.js 16, React 19, Tailwind CSS 4 |
 | Backend | Next.js API Routes, Server Actions |
-| Base de données | PostgreSQL + Prisma 7 |
+| Base de données | **Neon** PostgreSQL + Prisma 7 |
 | Auth | NextAuth.js v5 |
 | i18n | next-intl |
 | PDF | @react-pdf/renderer + QRCode |
 | Email | Resend |
+| Médias (prod) | Vercel Blob (optionnel) ou data URL compressés |
 | Paiement | Stripe |
-| Déploiement | Render (web) ; option Cloudflare Workers (OpenNext) |
+| Déploiement | **Vercel** (Hobby/Pro) ; migration documentée depuis Render |
+
+## Performance & mémoire (0.6.x)
+
+Mesures principales pour rester sous les plafonds serverless (Vercel) :
+
+| Mesure | Détail |
+|--------|--------|
+| Uploads photos | Resize sharp (~400 px, ≤ ~120 Ko) ; listes sans blobs |
+| Uploads documents | Max 5 fichiers × 5 Mo ; PDF/Office/TXT uniquement |
+| Object storage | `BLOB_READ_WRITE_TOKEN` → Vercel Blob pour les nouveaux fichiers |
+| Prisma | Selects maigres ; pas de `fileUrl`/`logoUrl` data URL en listes/crons |
+| Next.js | `bodySizeLimit` 8 Mo ; `sharp` externalisé ; dynamic import pages lourdes |
+| Contexte club | Logos data URL remplacés par `/api/media/club/...` |
+
+Voir aussi `scripts/deploy-vercel-neon.md` pour la migration Render → Vercel + Neon.
 
 ## Démarrage rapide
 
@@ -83,14 +99,25 @@ Compte super admin (seed) :
 
 | Variable | Rôle |
 |----------|------|
-| `DATABASE_URL` / `DIRECT_URL` | PostgreSQL (app + CLI Prisma) |
+| `DATABASE_URL` / `DIRECT_URL` | PostgreSQL pooled / direct (Neon) |
 | `AUTH_SECRET` | Secret NextAuth |
+| `RESEND_API_KEY` / `EMAIL_FROM` | Emails transactionnels |
+| `BLOB_READ_WRITE_TOKEN` | Stockage objet Vercel Blob (recommandé en prod) |
+| `IMAGE_UPLOADS_ENABLED` | `false` pour suspendre photos/logos |
+| `UPLOADS_ENABLED` / `DOCUMENT_UPLOADS_ENABLED` | `false` pour suspendre documents |
 | `XAI_API_KEY` | Assistant IA SpaceXAI (xAI) |
-| `DASHSCOPE_API_KEY` / `QWEN_API_KEY` | Assistant IA Qwen |
-| `OPENAI_API_KEY` | Assistant IA OpenAI / compatible |
-| `OPENAI_API_BASE_URL` | Endpoint custom (ex. `https://bazaarlink.ai/api/v1`) — aussi configurable en Admin |
+| `CRON_SECRET` | Auth des routes cron Vercel |
 
 Voir `.env.example` pour la liste complète.
+
+### Déploiement production (Vercel)
+
+```bash
+npx vercel login
+npx vercel link
+# Définir DATABASE_URL (pooler), DIRECT_URL, secrets (voir .env.example)
+npx vercel --prod --yes --archive=tgz
+```
 
 ### Hyperdrive (dev Cloudflare / OpenNext)
 
@@ -100,85 +127,15 @@ En `next dev`, le binding Hyperdrive nécessite une URL locale. Le script `npm r
 
 ```
 src/
-├── app/[locale]/          # Pages i18n (fr, en, es)
-│   ├── (auth)/            # Login, inscription
-│   ├── (app)/             # Application authentifiée
-│   │   ├── projects/      # Module projets (+ budget)
-│   │   ├── actions/       # Gestion des tâches
-│   │   ├── members/       # Annuaire, cotisations, commissions
-│   │   └── ...
-│   └── verify/[hash]/     # Vérification PV
-├── components/
-│   ├── ui/                # Composants de base (ex. AssigneePicker)
-│   ├── layout/            # Navigation, sidebar
-│   ├── projects/          # Projets, tâches projet, budget
-│   ├── members/           # Annuaire, commissions
-│   ├── minutes/           # Éditeur PV + assistant IA
-│   └── ...
-├── lib/
-│   ├── auth.ts            # NextAuth
-│   ├── permissions.ts     # RBAC
-│   ├── currency.ts        # Devises ISO (évite crash Intl)
-│   ├── minute-ai*.ts      # Fournisseurs IA PV
-│   └── ...
-├── actions/               # Server Actions
-prisma/                    # Schéma + migrations
-scripts/                   # Setup local, Render, utilitaires
-messages/                  # Traductions fr / en / es
+  app/           # App Router (pages, API, crons)
+  actions/       # Server Actions
+  components/    # UI
+  lib/           # Domaine, Prisma helpers, email, PDF, storage
+prisma/          # Schéma + migrations
+scripts/         # Neon bootstrap, dump/restore, Android, branding
+messages/        # i18n fr / en / es
 ```
 
-## Modules club (feature flags)
+## Licence
 
-Les modules se basculent par club (super admin → Clubs → fonctionnalités) ou via les presets d’offre :
-
-| Module | Routes | Flags / notes |
-|--------|--------|----------------|
-| Projets | `/projects`, `/projects/[id]` | `projectsEnabled` — budget, multi-assignees, commission |
-| Tâches | `/actions` | `actionsEnabled` — multi-assignees, commission |
-| Commissions | `/members/commissions` | Gestion des membres par commission |
-| Trésorerie | `/treasury` | `treasuryEnabled` — budget mandat (sous-comptes) |
-| Cotisations | `/members/dues` | `duesEnabled` |
-| Assistant IA PV | éditeur de PV | `minuteAiAssistEnabled` (+ clé API plateforme) |
-
-Permissions projets : `projects.view`, `projects.manage`.  
-Permissions tâches : `actions.view`, `actions.manage`.  
-Gestion commissions : `members.manage`.
-
-### Budgétisation (rappel)
-
-| Niveau | Où |
-|--------|-----|
-| Mandat club | Trésorerie → tableau budgétaire (sous-comptes `budgetPlanned`) |
-| Projet | Fiche projet → budget prévu / réalisé + pièces (devis, proforma…) |
-| Documents budgétaires | API `/api/budget/documents` |
-
-## Rôles et permissions
-
-| Rôle | Permissions clés |
-|------|-----------------|
-| Président | Tout sauf super admin |
-| Secrétaire | Créer/éditer/finaliser PV |
-| Protocole | Créer/éditer réunions et PV |
-| Trésorier | Consultation / trésorerie selon droits |
-| Administrateur | Gestion complète du club |
-| Lecteur | Consultation seule |
-
-## Scripts npm utiles
-
-| Script | Description |
-|--------|-------------|
-| `npm run dev` | Serveur de développement |
-| `npm run build` | Build production |
-| `npm run db:push` | Synchroniser le schéma Prisma |
-| `npm run db:seed` | Données de démo + super admin |
-| `npm run db:setup-local` | Créer user/base locale + push + seed |
-| `npm test` | Tests unitaires (Vitest) |
-
-## Documentation
-
-- Historique des versions : [CHANGELOG.md](./CHANGELOG.md)
-- Checklist Render : `scripts/render-web-service-checklist.md`
-
-## Nom de l'application
-
-Le nom **Rotary Minutes** est modifiable dans les paramètres SaaS et via `NEXT_PUBLIC_APP_NAME`.
+Propriétaire — Club Minutes / Rotary Minutes.
