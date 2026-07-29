@@ -16,6 +16,7 @@ import { getEnvAnalyticsConfig } from "@/lib/analytics-env";
 import { getAppBranding } from "@/lib/app-settings";
 import { patchMessagesWithBranding } from "@/lib/i18n-branding";
 import { AppBrandingProvider } from "@/components/brand/app-branding-provider";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "../globals.css";
 
 export const viewport: Viewport = {
@@ -87,6 +88,7 @@ export default async function LocaleLayout({
                 </WebOnly>
                 <CapacitorBridge />
                 {children}
+                <SpeedInsights />
               </CookieConsentProvider>
             </AnalyticsConfigProvider>
           </AppBrandingProvider>
