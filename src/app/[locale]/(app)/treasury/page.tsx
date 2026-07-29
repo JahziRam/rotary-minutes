@@ -10,7 +10,7 @@ import {
   getTreasuryDashboardData,
   getTreasurySubAccounts,
 } from "@/lib/queries/treasury";
-import dynamic from "next/dynamic";
+import nextDynamic from "next/dynamic";
 import { AppShellServer } from "@/components/layout/app-shell-server";
 import { hasRolePermission } from "@/lib/roles";
 import { GuidedEmptyState } from "@/components/assistance/guided-empty-state";
@@ -21,19 +21,19 @@ const PanelSkeleton = () => (
   <div className="h-48 animate-pulse rounded-xl bg-gray-100" aria-hidden />
 );
 
-const TreasuryPanel = dynamic(
+const TreasuryPanel = nextDynamic(
   () =>
     import("@/components/treasury/treasury-panel").then((m) => m.TreasuryPanel),
   { loading: PanelSkeleton }
 );
-const TreasuryMandatePanel = dynamic(
+const TreasuryMandatePanel = nextDynamic(
   () =>
     import("@/components/treasury/treasury-mandate-panel").then(
       (m) => m.TreasuryMandatePanel
     ),
   { loading: PanelSkeleton }
 );
-const BankReconciliationPanel = dynamic(
+const BankReconciliationPanel = nextDynamic(
   () =>
     import("@/components/treasury/bank-reconciliation-panel").then(
       (m) => m.BankReconciliationPanel
