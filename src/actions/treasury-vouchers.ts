@@ -7,7 +7,7 @@ import { requirePermission } from "@/lib/require-permission";
 import { hasRolePermission } from "@/lib/roles";
 import {
   bufferToDocumentDataUrl,
-  fileToDocumentDataUrl,
+  fileToDocumentStorage,
   validateDocumentDataUrl,
   validateDocumentUploadFiles,
 } from "@/lib/document-storage";
@@ -236,7 +236,11 @@ export async function uploadTreasuryVoucherFile(formData: FormData) {
   if (sizeError) return { error: sizeError };
 
   try {
-    const { dataUrl, mimeType } = await fileToDocumentDataUrl(file);
+    const clubId = auth.ctx?.clubId ?? "shared";
+    const { dataUrl, mimeType } = await fileToDocumentStorage(
+      file,
+      `clubs/${clubId}/vouchers`
+    );
     return uploadTreasuryVoucher({
       entity,
       kind,

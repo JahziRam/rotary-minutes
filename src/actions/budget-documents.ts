@@ -6,7 +6,7 @@ import { requireFeature } from "@/lib/require-feature";
 import { requirePermission } from "@/lib/require-permission";
 import { hasRolePermission } from "@/lib/roles";
 import {
-  fileToDocumentDataUrl,
+  fileToDocumentStorage,
   validateDocumentDataUrl,
   validateDocumentUploadFiles,
 } from "@/lib/document-storage";
@@ -201,7 +201,10 @@ export async function uploadBudgetDocument(formData: FormData) {
     let dataUrl: string;
     let mimeType: string;
     try {
-      const converted = await fileToDocumentDataUrl(file);
+      const converted = await fileToDocumentStorage(
+        file,
+        `clubs/${ctx.clubId}/budget`
+      );
       dataUrl = converted.dataUrl;
       mimeType = converted.mimeType;
     } catch {

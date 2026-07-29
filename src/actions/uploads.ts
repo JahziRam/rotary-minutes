@@ -4,10 +4,11 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/require-permission";
 import {
-  fileToOptimizedImageDataUrl,
+  fileToOptimizedImageStorage,
   MAX_IMAGE_SOURCE_BYTES,
   validateImageDataUrl,
 } from "@/lib/image-storage";
+import { isDataUrl } from "@/lib/image-data-url";
 
 function mapImageUploadError(e: unknown): string {
   const msg = e instanceof Error ? e.message : "UPLOAD_FAILED";
@@ -37,17 +38,19 @@ export async function uploadClubLogo(formData: FormData) {
   }
 
   try {
-    // Logos: slightly larger edge for PDF/header; still hard-capped in storage.
-    const dataUrl = await fileToOptimizedImageDataUrl(file, {
-      maxEdge: 512,
-      quality: 82,
-    });
-    const validationError = validateImageDataUrl(dataUrl);
-    if (validationError) return { error: validationError };
+    const stored = await fileToOptimizedImageStorage(
+      file,
+      `clubs/${ctx.clubId}/logo`,
+      { maxEdge: 512, quality: 82 }
+    );
+    if (isDataUrl(stored)) {
+      const validationError = validateImageDataUrl(stored);
+      if (validationError) return { error: validationError };
+    }
 
     await prisma.club.update({
       where: { id: ctx.clubId },
-      data: { logoUrl: dataUrl },
+      data: { logoUrl: stored },
     });
 
     revalidatePath("/fr/settings");
@@ -93,17 +96,19 @@ export async function uploadMemberPhoto(memberId: string, formData: FormData) {
   }
 
   try {
-    // Avatars: 400px max edge, JPEG ≤ ~120 KB — enough for annex/PDF thumbs.
-    const dataUrl = await fileToOptimizedImageDataUrl(file, {
-      maxEdge: 400,
-      quality: 80,
-    });
-    const validationError = validateImageDataUrl(dataUrl);
-    if (validationError) return { error: validationError };
+    const stored = await fileToOptimizedImageStorage(
+      file,
+      `clubs/${ctx.clubId}/members/${memberId}`,
+      { maxEdge: 400, quality: 80 }
+    );
+    if (isDataUrl(stored)) {
+      const validationError = validateImageDataUrl(stored);
+      if (validationError) return { error: validationError };
+    }
 
     await prisma.member.update({
       where: { id: memberId },
-      data: { photoUrl: dataUrl },
+      data: { photoUrl: stored },
     });
 
     revalidatePath("/fr/members");

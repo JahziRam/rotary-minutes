@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/require-permission";
 import {
   bufferToDocumentDataUrl,
-  fileToDocumentDataUrl,
+  fileToDocumentStorage,
   validateDocumentUploadFiles,
 } from "@/lib/document-storage";
 import { documentDownloadUrl, documentViewUrl } from "@/lib/document-urls";
@@ -194,17 +194,61 @@ export async function uploadMinuteAttachmentFile(minuteId: string, formData: For
 
   for (const file of files) {
     try {
-      const buffer = Buffer.from(await file.arrayBuffer());
-      const { mimeType } = await fileToDocumentDataUrl(file);
-      const result = await uploadMinuteAttachmentFromBuffer(minuteId, {
-        buffer,
-        fileName: file.name,
-        mimeType,
-      });
-      if ("success" in result && result.success) {
-        uploaded.push(result.attachment);
+      // Prefer Blob storage when configured; falls back to data URL in buffer path.
+      const { dataUrl, mimeType } = await fileToDocumentStorage(
+        file,
+        `clubs/minutes/${minuteId}`
+      );
+      // Reconstruct a small buffer only for the legacy buffer helper when data URL;
+      // when dataUrl is HTTPS, write row directly.
+      if (/^https?:\/\//i.test(dataUrl)) {
+        const loaded = await loadMinuteForAttachments(minuteId, "minutes.edit");
+        if ("error" in loaded) {
+          failed.push(file.name);
+          continue;
+        }
+        const { ctx, minute } = loaded;
+        if (minute.status === "ARCHIVED" && !canOverrideMinuteLock(ctx)) {
+          failed.push(file.name);
+          continue;
+        }
+        const doc = await prisma.clubDocument.create({
+          data: {
+            clubId: ctx.clubId,
+            minuteId,
+            title: titleFromFileName(file.name),
+            category: "OTHER",
+            description: null,
+            fileUrl: dataUrl,
+            fileName: file.name,
+            mimeType,
+            tags: [MINUTE_ATTACHMENT_TAG, "minute"],
+            uploadedById: ctx.userId,
+          },
+          select: {
+            id: true,
+            title: true,
+            fileUrl: true,
+            fileName: true,
+            mimeType: true,
+            createdAt: true,
+            uploadedBy: { select: { firstName: true, lastName: true } },
+          },
+        });
+        revalidateMinuteAttachmentPaths(minuteId);
+        uploaded.push(mapAttachmentRow(doc));
       } else {
-        failed.push(file.name);
+        const buffer = Buffer.from(await file.arrayBuffer());
+        const result = await uploadMinuteAttachmentFromBuffer(minuteId, {
+          buffer,
+          fileName: file.name,
+          mimeType,
+        });
+        if ("success" in result && result.success) {
+          uploaded.push(result.attachment);
+        } else {
+          failed.push(file.name);
+        }
       }
     } catch {
       failed.push(file.name);

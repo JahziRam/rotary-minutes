@@ -101,6 +101,41 @@ export async function fileToOptimizedImageDataUrl(
 }
 
 /**
+ * Prefer Vercel Blob when configured; otherwise store optimized JPEG data URL.
+ * Returns a value safe for `photoUrl` / `logoUrl` columns (https URL or data:).
+ */
+export async function fileToOptimizedImageStorage(
+  file: File,
+  pathPrefix: string,
+  options: OptimizeImageOptions = {}
+): Promise<string> {
+  if (!areImageUploadsEnabled()) {
+    throw new Error("UPLOADS_SUSPENDED");
+  }
+  if (file.size <= 0) throw new Error("NO_FILE");
+  if (file.size > MAX_IMAGE_SOURCE_BYTES) throw new Error("TOO_LARGE");
+
+  const type = (file.type || "").toLowerCase();
+  if (type && !ALLOWED_IMAGE_TYPES.has(type)) {
+    throw new Error("INVALID_TYPE");
+  }
+
+  const input = Buffer.from(await file.arrayBuffer());
+  const { buffer, mime } = await optimizeImageBuffer(input, options);
+
+  const { isObjectStorageEnabled, putObject, storagePath } = await import(
+    "@/lib/object-storage"
+  );
+  if (isObjectStorageEnabled()) {
+    const key = storagePath([pathPrefix, "image.jpg"]);
+    const put = await putObject(key, buffer, mime);
+    return put.url;
+  }
+
+  return `data:${mime};base64,${buffer.toString("base64")}`;
+}
+
+/**
  * Legacy path: store as-is (no resize). Prefer fileToOptimizedImageDataUrl.
  */
 export async function fileToDataUrl(file: File): Promise<string> {

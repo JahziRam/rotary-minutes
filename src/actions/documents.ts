@@ -8,7 +8,7 @@ import { hasRolePermission } from "@/lib/roles";
 import { randomBytes } from "node:crypto";
 import {
   bufferToDocumentDataUrl,
-  fileToDocumentDataUrl,
+  fileToDocumentStorage,
   validateDocumentDataUrl,
   validateDocumentUploadFiles,
 } from "@/lib/document-storage";
@@ -527,7 +527,10 @@ export async function uploadDocumentFile(formData: FormData) {
   if (sizeError) return { error: sizeError };
 
   try {
-    const { dataUrl, mimeType } = await fileToDocumentDataUrl(file);
+    const { dataUrl, mimeType } = await fileToDocumentStorage(
+      file,
+      `clubs/${auth.ctx.clubId}/documents`
+    );
     return uploadDocument({
       title,
       category,
@@ -576,7 +579,10 @@ export async function uploadDocumentFiles(formData: FormData) {
     const title = titleSingle || titleFromFileName(file.name);
 
     try {
-      const { dataUrl, mimeType } = await fileToDocumentDataUrl(file);
+      const { dataUrl, mimeType } = await fileToDocumentStorage(
+        file,
+        `clubs/${auth.ctx.clubId}/documents`
+      );
       const result = await uploadDocument({
         title,
         category,

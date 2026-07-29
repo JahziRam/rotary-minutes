@@ -7,6 +7,15 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [0.6.3] — 2026-07-29
+
+### Added
+- **Perf / mémoire — Vercel Blob (optionnel)**
+  - Nouveaux uploads photo/logo/documents : stockés sur **Vercel Blob** si `BLOB_READ_WRITE_TOKEN` est défini
+  - Sinon fallback data URL compressé (comportement précédent)
+  - Module `object-storage.ts` + `fileToOptimizedImageStorage` / `fileToDocumentStorage`
+  - Les URLs HTTPS en base ne chargent plus de base64 dans le heap à la lecture liste
+
 ## [0.6.2] — 2026-07-29
 
 ### Changed

@@ -88,6 +88,8 @@ export function isDataUrl(value: string): boolean {
 }
 
 export function validateDocumentDataUrl(dataUrl: string): string | null {
+  // Vercel Blob / external HTTPS URLs stored in fileUrl
+  if (/^https?:\/\//i.test(dataUrl)) return null;
   if (!isDataUrl(dataUrl)) return "INVALID_FORMAT";
   const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/i);
   if (!match) return "INVALID_FORMAT";
@@ -136,5 +138,41 @@ export async function fileToDocumentDataUrl(file: File): Promise<{
     throw new Error("INVALID_TYPE");
   }
   const buffer = Buffer.from(await file.arrayBuffer());
+  return bufferToDocumentDataUrl(buffer, file.name, file.type);
+}
+
+/**
+ * Prefer Vercel Blob when configured; otherwise data URL in DB.
+ * `dataUrl` field name kept for callers — may be an https:// blob URL.
+ */
+export async function fileToDocumentStorage(
+  file: File,
+  pathPrefix: string
+): Promise<{ dataUrl: string; mimeType: string }> {
+  if (!areDocumentUploadsEnabled()) {
+    throw new Error("UPLOADS_SUSPENDED");
+  }
+  if (file.size > MAX_DOCUMENT_BYTES) {
+    throw new Error("TOO_LARGE");
+  }
+  if (!isAllowedDocumentFile(file)) {
+    throw new Error("INVALID_TYPE");
+  }
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const mimeType = resolveFileMimeType({ type: file.type, name: file.name });
+  if (!ALLOWED_DOCUMENT_TYPES.has(mimeType)) {
+    throw new Error("INVALID_TYPE");
+  }
+
+  const { isObjectStorageEnabled, putObject, storagePath } = await import(
+    "@/lib/object-storage"
+  );
+  if (isObjectStorageEnabled()) {
+    const ext = file.name.split(".").pop()?.toLowerCase() || "bin";
+    const key = storagePath([pathPrefix, `file.${ext}`]);
+    const put = await putObject(key, buffer, mimeType);
+    return { dataUrl: put.url, mimeType };
+  }
+
   return bufferToDocumentDataUrl(buffer, file.name, file.type);
 }
