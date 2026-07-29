@@ -22,6 +22,33 @@ export type ClubContext = {
   features: ClubFeatureSet;
 };
 
+/** Fields needed for attendance pickers / stats — never photoUrl blobs. */
+const memberLiteSelect = {
+  id: true,
+  clubId: true,
+  firstName: true,
+  lastName: true,
+  email: true,
+  phone: true,
+  position: true,
+  isActive: true,
+  isHonoraryMember: true,
+  commissionId: true,
+  userId: true,
+  birthday: true,
+  joinDate: true,
+  registrationNumber: true,
+  createdAt: true,
+  updatedAt: true,
+  sponsorName: true,
+  bio: true,
+  spouseFirstName: true,
+  spouseLastName: true,
+  spouseBirthday: true,
+  duesPaymentPlan: true,
+  // photoUrl intentionally omitted (use /api/media/member/[id]/photo)
+} as const;
+
 async function resolveClubContext(includeMembers: boolean): Promise<ClubContext | null> {
   const session = await getSession();
   if (!session?.user) return null;
@@ -44,55 +71,43 @@ async function resolveClubContext(includeMembers: boolean): Promise<ClubContext 
     }
   }
 
+  // Two-step query: avoid nested select/include quirks and never pull photo blobs.
   const club = await prisma.club.findUnique({
     where: { id: clubId! },
-    include: {
-      subscription: true,
-      ...(includeMembers
-        ? {
-            members: {
-              where: { isActive: true },
-              orderBy: { lastName: "asc" as const },
-              // Omit photoUrl — callers use /api/media/member/[id]/photo
-              select: {
-                id: true,
-                clubId: true,
-                firstName: true,
-                lastName: true,
-                email: true,
-                phone: true,
-                position: true,
-                isActive: true,
-                isHonoraryMember: true,
-                commissionId: true,
-                userId: true,
-                birthday: true,
-                joinDate: true,
-                registrationNumber: true,
-              },
-            },
-          }
-        : {}),
-    },
+    include: { subscription: true },
   });
 
   if (!club) return null;
   if (!club.isActive && !session.user.isSuperAdmin) return null;
 
-  // Drop base64 logo blobs from the request-scoped context (keep media route or https URL).
-  // Prevents every Server Component that calls getClubContext from retaining multi‑MB strings.
+  // Replace data-URL logos with media route so the RSC payload stays small.
   if (club.logoUrl?.startsWith("data:")) {
     club.logoUrl = `/api/media/club/${club.id}/logo`;
   }
 
+  let members: Member[] | undefined;
+  if (includeMembers) {
+    const rows = await prisma.member.findMany({
+      where: { clubId: club.id, isActive: true },
+      orderBy: { lastName: "asc" },
+      select: memberLiteSelect,
+    });
+    // Satisfy ClubContextClub.members type without loading photoUrl from DB.
+    members = rows.map((m) => ({ ...m, photoUrl: null })) as Member[];
+  }
+
   const features = await getClubFeatures(club.id);
+
+  const clubWithMembers: ClubContextClub = members
+    ? { ...club, members }
+    : club;
 
   return {
     userId: session.user.id,
     isSuperAdmin: session.user.isSuperAdmin,
     role,
     customRoleId,
-    club,
+    club: clubWithMembers,
     clubId: club.id,
     clubName: club.name,
     features,

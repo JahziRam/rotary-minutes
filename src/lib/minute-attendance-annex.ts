@@ -105,7 +105,8 @@ export function annexMemberPhotoSrc(
     return null;
   }
 
-  // Web preview: media route only (img onError → default wheel).
+  // Web: always media route — API returns custom photo or default avatar (200, no 404).
+  // Light page queries omit photoUrl blobs; the route loads one photo at a time.
   if (memberId) return memberPhotoMediaPath(memberId);
   if (photo && !isDataUrl(photo)) return photo;
   return MEMBER_DEFAULT_AVATAR_PATH;

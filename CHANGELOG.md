@@ -7,6 +7,14 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [0.6.7] — 2026-07-29
+
+### Fixed
+- **RSC / photos membres**
+  - `getClubContext(includeMembers)` : requête membres séparée sans `photoUrl` (évite erreur Prisma nested select + OOM)
+  - `/api/media/member/[id]/photo` : renvoie l’avatar par défaut (200) au lieu de 404 si pas de photo
+  - Listes : `hasPhoto` ignore les `photoUrl` vides
+
 ## [0.6.6] — 2026-07-29
 
 ### Changed

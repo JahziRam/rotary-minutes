@@ -49,17 +49,18 @@ export function resolveMemberPhotoUrlOrDefault(
   photoUrl: string | null | undefined,
   baseUrl?: string
 ): string {
+  const photo = photoUrl?.trim();
   if (memberId) {
-    // Always prefer the media route when we have an id — avoids shipping data URLs.
-    if (!photoUrl?.trim() || isDataUrl(photoUrl)) {
-      return memberPhotoMediaPath(memberId);
-    }
+    // No photo stored → static default (avoid N× 404 on annex).
+    if (!photo) return MEMBER_DEFAULT_AVATAR_PATH;
+    // data: or blob-backed → media route (lazy, no base64 in RSC).
+    if (isDataUrl(photo)) return memberPhotoMediaPath(memberId);
     return (
-      resolveMemberPhotoUrl(memberId, photoUrl, baseUrl) ?? photoUrl.trim()
+      resolveMemberPhotoUrl(memberId, photo, baseUrl) ?? photo
     );
   }
-  if (photoUrl?.trim() && !isDataUrl(photoUrl)) {
-    return photoUrl.trim();
+  if (photo && !isDataUrl(photo)) {
+    return photo;
   }
   return MEMBER_DEFAULT_AVATAR_PATH;
 }

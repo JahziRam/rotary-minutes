@@ -84,11 +84,15 @@ export async function searchMembersPaginated(
   ]);
 
   const pageIds = rows.map((m) => m.id);
-  // Select only id — never photoUrl — so large data URLs stay out of Node memory.
+  // Select only id — never photoUrl content — so large data URLs stay out of Node memory.
+  // Exclude empty strings so we don't show broken thumbs.
   const withPhotoRows =
     pageIds.length > 0
       ? await prisma.member.findMany({
-          where: { id: { in: pageIds }, photoUrl: { not: null } },
+          where: {
+            id: { in: pageIds },
+            AND: [{ photoUrl: { not: null } }, { NOT: { photoUrl: "" } }],
+          },
           select: { id: true },
         })
       : [];
