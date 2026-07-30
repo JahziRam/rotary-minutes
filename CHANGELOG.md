@@ -7,6 +7,14 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [0.6.14] — 2026-07-30
+
+### Fixed
+- **PDF PV — logo Rotary généré complet (wordmark + nom club)**
+  - Priorité au logo généré (plus le logo custom en premier)
+  - Rasterisation sharp fiable : PNG wordmark + calque texte (plus de SVG avec image base64 embarquée)
+  - En-tête PDF élargi pour afficher le logo complet sans rogner le nom
+
 ## [0.6.13] — 2026-07-30
 
 ### Fixed

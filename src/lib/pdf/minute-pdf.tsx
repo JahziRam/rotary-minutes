@@ -384,17 +384,25 @@ export interface MinutePDFData {
 }
 
 function PdfClubHeader({ data }: { data: MinutePDFData }) {
+  // Generated logo already includes club name → slightly taller + wider budget
+  const logoH = data.club.logoIsGenerated
+    ? ROTARY_LOGO_DISPLAY.pdfMaxHeightPt + 8
+    : ROTARY_LOGO_DISPLAY.pdfMaxHeightPt;
+  const logoW = Math.min(
+    ROTARY_LOGO_DISPLAY.pdfMaxWidthPt + (data.club.logoIsGenerated ? 40 : 0),
+    logoH * (data.club.logoAspectRatio ?? 3.0)
+  );
+
   return (
     <View style={styles.header}>
       {isPdfSafeImageSrc(data.club.logoUrl) ? (
-        <View style={styles.logoClearSpace}>
+        <View style={{ ...styles.logoClearSpace, maxWidth: logoW + clear * 2 }}>
           <Image
             src={data.club.logoUrl!}
             style={{
-              ...styles.logo,
-              width:
-                ROTARY_LOGO_DISPLAY.pdfMaxHeightPt *
-                (data.club.logoAspectRatio ?? 3.5),
+              height: logoH,
+              width: logoW,
+              objectFit: "contain",
             }}
           />
         </View>
@@ -402,6 +410,7 @@ function PdfClubHeader({ data }: { data: MinutePDFData }) {
         <ClubDefaultLogoPdf clubName={data.club.name} />
       )}
       <View style={styles.clubInfo}>
+        {/* Generated logo already contains the club name under the wordmark */}
         {!data.club.logoIsGenerated ? (
           <Text style={styles.clubNameSide}>{data.club.name}</Text>
         ) : null}
