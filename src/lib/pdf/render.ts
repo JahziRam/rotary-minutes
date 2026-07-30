@@ -21,9 +21,8 @@ export async function renderMinutePdf(data: MinutePDFData): Promise<Buffer> {
     import("@/lib/pdf/minute-pdf"),
   ]);
   // Always createElement (never call the component as a function)
-  return renderToBuffer(
-    React.createElement(MinutePDFDocument, { data }) as React.ReactElement
-  );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return renderToBuffer(React.createElement(MinutePDFDocument, { data }) as any);
 }
 
 /** Last-resort text-only layout via react-pdf (simpler tree). */
@@ -35,8 +34,9 @@ export async function renderMinimalMinutePdf(
     import("@react-pdf/renderer"),
     import("@/lib/pdf/minimal-minute-pdf"),
   ]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return renderToBuffer(
-    React.createElement(MinimalMinutePDFDocument, { data }) as React.ReactElement
+    React.createElement(MinimalMinutePDFDocument, { data }) as any
   );
 }
 
@@ -77,9 +77,8 @@ export async function renderStatsPdf(data: StatsPDFData): Promise<Buffer> {
     import("@react-pdf/renderer"),
     import("@/lib/pdf/stats-pdf"),
   ]);
-  return renderToBuffer(
-    React.createElement(StatsPDFDocument, { data }) as React.ReactElement
-  );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return renderToBuffer(React.createElement(StatsPDFDocument, { data }) as any);
 }
 
 export async function renderDuesInvoicePdf(
@@ -90,8 +89,9 @@ export async function renderDuesInvoicePdf(
     import("@react-pdf/renderer"),
     import("@/lib/pdf/dues-invoice-pdf"),
   ]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return renderToBuffer(
-    React.createElement(DuesInvoicePDFDocument, { data }) as React.ReactElement
+    React.createElement(DuesInvoicePDFDocument, { data }) as any
   );
 }
 
@@ -103,8 +103,9 @@ export async function renderDuesReceiptPdf(
     import("@react-pdf/renderer"),
     import("@/lib/pdf/dues-receipt-pdf"),
   ]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return renderToBuffer(
-    React.createElement(DuesReceiptPDFDocument, { data }) as React.ReactElement
+    React.createElement(DuesReceiptPDFDocument, { data }) as any
   );
 }
 
@@ -116,8 +117,9 @@ export async function renderDuesHistoryPdf(
     import("@react-pdf/renderer"),
     import("@/lib/pdf/dues-history-pdf"),
   ]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return renderToBuffer(
-    React.createElement(DuesHistoryPDFDocument, { data }) as React.ReactElement
+    React.createElement(DuesHistoryPDFDocument, { data }) as any
   );
 }
 
@@ -129,10 +131,9 @@ export async function renderTreasuryReportPdf(
     import("@react-pdf/renderer"),
     import("@/lib/pdf/treasury-report-pdf"),
   ]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return renderToBuffer(
-    React.createElement(TreasuryReportPDFDocument, {
-      data,
-    }) as React.ReactElement
+    React.createElement(TreasuryReportPDFDocument, { data }) as any
   );
 }
 
@@ -144,9 +145,8 @@ export async function renderAttendanceReportPdf(
     import("@react-pdf/renderer"),
     import("@/lib/pdf/attendance-report-pdf"),
   ]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return renderToBuffer(
-    React.createElement(AttendanceReportPDFDocument, {
-      data,
-    }) as React.ReactElement
+    React.createElement(AttendanceReportPDFDocument, { data }) as any
   );
 }
