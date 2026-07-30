@@ -7,6 +7,15 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [0.6.12] — 2026-07-30
+
+### Fixed
+- **PDF PV — TypeError `reading 'S'` systémique sur Vercel**
+  - Cause probable : `optimizePackageImports` + bundling webpack de `@react-pdf/*`
+  - `@react-pdf/*` / yoga / fontkit en `serverExternalPackages` ; retiré de optimizePackageImports
+  - Rendu via `React.createElement` (plus d’appel direct des composants)
+  - **Fallback raw PDF** (sans react-pdf) si toutes les tentatives plantent — contenu lisible garanti
+
 ## [0.6.11] — 2026-07-30
 
 ### Fixed

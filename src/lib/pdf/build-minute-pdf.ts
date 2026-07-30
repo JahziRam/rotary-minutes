@@ -12,7 +12,11 @@ import {
 import { getMemberDefaultAvatarDataUrl } from "@/lib/member-default-avatar";
 import { loadBirthdayMembers } from "@/lib/queries/birthday-members";
 import { isPdfSafeImageSrc, toPdfEmbedImage } from "@/lib/pdf/pdf-image";
-import { renderMinimalMinutePdf, renderMinutePdf } from "@/lib/pdf/render";
+import {
+  renderMinimalMinutePdf,
+  renderMinutePdf,
+  renderRawMinutePdf,
+} from "@/lib/pdf/render";
 import type { MinutePDFData } from "@/lib/pdf/minute-pdf";
 
 /**
@@ -298,33 +302,41 @@ export function minutePdfFilename(minute: { id: string; title: string }): string
 
 /**
  * Build PDF with progressive fallbacks so users almost never get a hard 500.
- * 1) Full (shared avatar thumbs if photos enabled)
- * 2) No photos
- * 3) No custom logo + no photos
- * 4) Full layout without any images
- * 5) Minimal text-only document (separate component — survives layout bugs)
+ * 1–4) react-pdf layouts (full → no photos → no logo → no images → minimal)
+ * last) raw PDF writer (no react-pdf) — always works
  */
 export async function buildMinutePdfBuffer(
   minute: MinuteForPdf,
   locale: string
 ): Promise<{ buffer: Buffer; filename: string }> {
   const filename = minutePdfFilename(minute);
-  const attempts: Array<PdfBuildOptions & { minimal?: boolean }> = [
+  const attempts: Array<
+    PdfBuildOptions & { minimal?: boolean; raw?: boolean }
+  > = [
     { embedPhotos: true, skipCustomLogo: false },
     { embedPhotos: false, skipCustomLogo: false },
     { embedPhotos: false, skipCustomLogo: true },
     { stripAllImages: true },
     { stripAllImages: true, minimal: true },
+    { stripAllImages: true, raw: true },
   ];
 
   let lastError: unknown;
   for (const opts of attempts) {
     try {
       const data = await buildMinutePdfData(minute, locale, opts);
-      const buffer = opts.minimal
-        ? await renderMinimalMinutePdf(data)
-        : await renderMinutePdf(data);
+      let buffer: Buffer;
+      if (opts.raw) {
+        buffer = renderRawMinutePdf(data);
+      } else if (opts.minimal) {
+        buffer = await renderMinimalMinutePdf(data);
+      } else {
+        buffer = await renderMinutePdf(data);
+      }
       if (!buffer?.length) throw new Error("EMPTY_PDF_BUFFER");
+      if (opts.raw) {
+        console.warn("[buildMinutePdfBuffer] used raw PDF fallback");
+      }
       return { buffer, filename };
     } catch (e) {
       lastError = e;

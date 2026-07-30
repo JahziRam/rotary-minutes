@@ -1,5 +1,7 @@
+import React from "react";
 import type { MinutePDFData } from "@/lib/pdf/minute-pdf";
 import type { StatsPDFData } from "@/lib/pdf/stats-pdf";
+import { buildRawMinutePdfBuffer } from "@/lib/pdf/raw-minute-pdf";
 
 let pdfHyphenationReady = false;
 
@@ -18,10 +20,13 @@ export async function renderMinutePdf(data: MinutePDFData): Promise<Buffer> {
     import("@react-pdf/renderer"),
     import("@/lib/pdf/minute-pdf"),
   ]);
-  return renderToBuffer(MinutePDFDocument({ data }));
+  // Always createElement (never call the component as a function)
+  return renderToBuffer(
+    React.createElement(MinutePDFDocument, { data }) as React.ReactElement
+  );
 }
 
-/** Last-resort text-only layout (no images / complex styles). */
+/** Last-resort text-only layout via react-pdf (simpler tree). */
 export async function renderMinimalMinutePdf(
   data: MinutePDFData
 ): Promise<Buffer> {
@@ -30,7 +35,40 @@ export async function renderMinimalMinutePdf(
     import("@react-pdf/renderer"),
     import("@/lib/pdf/minimal-minute-pdf"),
   ]);
-  return renderToBuffer(MinimalMinutePDFDocument({ data }));
+  return renderToBuffer(
+    React.createElement(MinimalMinutePDFDocument, { data }) as React.ReactElement
+  );
+}
+
+/**
+ * Absolute last resort: handcrafted PDF, no react-pdf.
+ * Always succeeds if data is available.
+ */
+export function renderRawMinutePdf(data: MinutePDFData): Buffer {
+  const attendanceLines: string[] = [];
+  if (data.annex) {
+    for (const group of data.annex.memberGroups) {
+      attendanceLines.push(`${group.label} (${group.people.length})`);
+      for (const person of group.people) {
+        attendanceLines.push(`- ${person.name}`);
+      }
+    }
+  }
+  return buildRawMinutePdfBuffer({
+    clubName: data.club.name,
+    title: data.title,
+    date: data.meeting.date,
+    location: data.meeting.location,
+    type: data.meeting.type,
+    presidedBy: data.meeting.presidedBy,
+    secretary: data.meeting.secretary,
+    present: data.attendances.present,
+    absent: data.attendances.absent,
+    rate: data.attendances.rate,
+    agendaItems: data.agendaItems,
+    attendanceLines,
+    verifyUrl: data.verifyUrl,
+  });
 }
 
 export async function renderStatsPdf(data: StatsPDFData): Promise<Buffer> {
@@ -39,7 +77,9 @@ export async function renderStatsPdf(data: StatsPDFData): Promise<Buffer> {
     import("@react-pdf/renderer"),
     import("@/lib/pdf/stats-pdf"),
   ]);
-  return renderToBuffer(StatsPDFDocument({ data }));
+  return renderToBuffer(
+    React.createElement(StatsPDFDocument, { data }) as React.ReactElement
+  );
 }
 
 export async function renderDuesInvoicePdf(
@@ -50,7 +90,9 @@ export async function renderDuesInvoicePdf(
     import("@react-pdf/renderer"),
     import("@/lib/pdf/dues-invoice-pdf"),
   ]);
-  return renderToBuffer(DuesInvoicePDFDocument({ data }));
+  return renderToBuffer(
+    React.createElement(DuesInvoicePDFDocument, { data }) as React.ReactElement
+  );
 }
 
 export async function renderDuesReceiptPdf(
@@ -61,7 +103,9 @@ export async function renderDuesReceiptPdf(
     import("@react-pdf/renderer"),
     import("@/lib/pdf/dues-receipt-pdf"),
   ]);
-  return renderToBuffer(DuesReceiptPDFDocument({ data }));
+  return renderToBuffer(
+    React.createElement(DuesReceiptPDFDocument, { data }) as React.ReactElement
+  );
 }
 
 export async function renderDuesHistoryPdf(
@@ -72,7 +116,9 @@ export async function renderDuesHistoryPdf(
     import("@react-pdf/renderer"),
     import("@/lib/pdf/dues-history-pdf"),
   ]);
-  return renderToBuffer(DuesHistoryPDFDocument({ data }));
+  return renderToBuffer(
+    React.createElement(DuesHistoryPDFDocument, { data }) as React.ReactElement
+  );
 }
 
 export async function renderTreasuryReportPdf(
@@ -83,7 +129,11 @@ export async function renderTreasuryReportPdf(
     import("@react-pdf/renderer"),
     import("@/lib/pdf/treasury-report-pdf"),
   ]);
-  return renderToBuffer(TreasuryReportPDFDocument({ data }));
+  return renderToBuffer(
+    React.createElement(TreasuryReportPDFDocument, {
+      data,
+    }) as React.ReactElement
+  );
 }
 
 export async function renderAttendanceReportPdf(
@@ -94,5 +144,9 @@ export async function renderAttendanceReportPdf(
     import("@react-pdf/renderer"),
     import("@/lib/pdf/attendance-report-pdf"),
   ]);
-  return renderToBuffer(AttendanceReportPDFDocument({ data }));
+  return renderToBuffer(
+    React.createElement(AttendanceReportPDFDocument, {
+      data,
+    }) as React.ReactElement
+  );
 }
