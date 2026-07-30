@@ -3,7 +3,6 @@ import { fr, enUS } from "date-fns/locale";
 import { getAppBaseUrl } from "@/lib/app-url";
 import { generateMinuteHash, getVerifyUrl } from "@/lib/hash";
 import { computeRecordedAttendanceRate, isAttendancePresent } from "@/lib/rotary";
-import { rasterizeClubDefaultLogoPng } from "@/lib/club-default-logo-raster";
 import { isDataUrl } from "@/lib/image-data-url";
 import { resolveClubLogoUrl } from "@/lib/media-url";
 import {
@@ -118,6 +117,8 @@ type PdfBuildOptions = {
   embedPhotos?: boolean;
   /** When true, skip custom club logo (use generated wordmark only). */
   skipCustomLogo?: boolean;
+  /** When true, no images at all (logo, QR, photos) — max reliability. */
+  stripAllImages?: boolean;
 };
 
 function stripNullBytes(text: string | null | undefined): string | undefined {
@@ -131,8 +132,9 @@ export async function buildMinutePdfData(
   locale: string,
   options: PdfBuildOptions = {}
 ): Promise<MinutePDFData> {
-  const embedPhotos = options.embedPhotos !== false;
-  const skipCustomLogo = options.skipCustomLogo === true;
+  const stripAllImages = options.stripAllImages === true;
+  const embedPhotos = !stripAllImages && options.embedPhotos !== false;
+  const skipCustomLogo = stripAllImages || options.skipCustomLogo === true;
   const baseUrl = getAppBaseUrl();
   const dateLocale = locale === "en" ? enUS : fr;
 
@@ -147,12 +149,24 @@ export async function buildMinutePdfData(
     });
 
   const verifyUrl = getVerifyUrl(hash, baseUrl, locale);
-  const { default: QRCode } = await import("qrcode");
-  const qrCodeDataUrl = await QRCode.toDataURL(verifyUrl, {
-    width: 128,
-    margin: 1,
-    errorCorrectionLevel: "M",
-  });
+
+  // QR → small JPEG only (raw PNG from qrcode can crash react-pdf intermittently)
+  let qrCodeDataUrl = "";
+  if (!stripAllImages) {
+    try {
+      const { default: QRCode } = await import("qrcode");
+      const rawQr = await QRCode.toDataURL(verifyUrl, {
+        width: 128,
+        margin: 1,
+        errorCorrectionLevel: "M",
+      });
+      qrCodeDataUrl =
+        (await toPdfEmbedImage(rawQr, { maxEdge: 96 })) ?? "";
+      if (!isPdfSafeImageSrc(qrCodeDataUrl)) qrCodeDataUrl = "";
+    } catch {
+      qrCodeDataUrl = "";
+    }
+  }
 
   const memberAttendances = minute.meeting.attendances.filter(
     (a) =>
@@ -164,7 +178,6 @@ export async function buildMinutePdfData(
   const total = memberAttendances.length;
   const rate = computeRecordedAttendanceRate(memberAttendances) ?? 0;
 
-  const usesGeneratedLogo = !minute.club.logoUrl || skipCustomLogo;
   let logoUrl: string | undefined;
   let logoAspectRatio: number | undefined;
 
@@ -187,20 +200,13 @@ export async function buildMinutePdfData(
     }
   }
 
-  if (!logoUrl) {
-    // Prefer pre-rasterized PNG; if sharp/SVG fails, leave undefined → ClubDefaultLogoPdf
-    try {
-      const raster = await rasterizeClubDefaultLogoPng(minute.club.name);
-      if (raster?.dataUrl && isPdfSafeImageSrc(raster.dataUrl)) {
-        logoUrl = raster.dataUrl;
-        logoAspectRatio = raster.aspectRatio;
-      }
-    } catch {
-      logoUrl = undefined;
-    }
-  }
+  // Do NOT rasterize SVG wordmark / default logo via sharp on the PDF path:
+  // fontconfig + large PNG embeds cause intermittent TypeError 'S' on Vercel.
+  // Missing logoUrl → ClubDefaultLogoPdf (text-only, reliable).
 
-  const birthdayMembers = await loadBirthdayMembers(minute.club.id);
+  const birthdayMembers = stripAllImages
+    ? []
+    : await loadBirthdayMembers(minute.club.id);
   const showPhotos =
     embedPhotos && !!minute.club.minuteShowMemberPhotos;
 
@@ -214,18 +220,27 @@ export async function buildMinutePdfData(
   });
 
   if (annex.showMemberPhotos) {
-    // Single shared avatar: avoids loading N data-URL photos (main OOM / crash source).
+    // Single shared avatar JPEG: never embed raw PNG avatar file.
     const fallback = getMemberDefaultAvatarDataUrl();
-    const safe =
-      (await toPdfEmbedImage(fallback, { maxEdge: 48, fallback })) ?? fallback;
-    for (const group of annex.memberGroups) {
-      for (const person of group.people) {
-        person.photoUrl = safe;
+    const safe = await toPdfEmbedImage(fallback, { maxEdge: 48 });
+    if (safe && isPdfSafeImageSrc(safe)) {
+      for (const group of annex.memberGroups) {
+        for (const person of group.people) {
+          person.photoUrl = safe;
+        }
       }
-    }
-    for (const entry of annex.weekBirthdays) {
-      if (entry.kind === "member") {
-        entry.photoUrl = safe;
+      for (const entry of annex.weekBirthdays) {
+        if (entry.kind === "member") {
+          entry.photoUrl = safe;
+        }
+      }
+    } else {
+      // Conversion failed → disable photos rather than risk crash
+      annex.showMemberPhotos = false;
+      for (const group of annex.memberGroups) {
+        for (const person of group.people) {
+          person.photoUrl = undefined;
+        }
       }
     }
   }
@@ -256,7 +271,7 @@ export async function buildMinutePdfData(
       actions: stripNullBytes(item.actions),
     })),
     hash,
-    qrCodeDataUrl: isPdfSafeImageSrc(qrCodeDataUrl) ? qrCodeDataUrl : "",
+    qrCodeDataUrl,
     verifyUrl,
     annex,
     locale,
@@ -279,6 +294,7 @@ export function minutePdfFilename(minute: { id: string; title: string }): string
  * 1) Full (shared avatar thumbs if photos enabled)
  * 2) No photos
  * 3) No custom logo + no photos
+ * 4) Text-only (no logo/QR/photos) — last resort against react-pdf image crashes
  */
 export async function buildMinutePdfBuffer(
   minute: MinuteForPdf,
@@ -289,6 +305,7 @@ export async function buildMinutePdfBuffer(
     { embedPhotos: true, skipCustomLogo: false },
     { embedPhotos: false, skipCustomLogo: false },
     { embedPhotos: false, skipCustomLogo: true },
+    { stripAllImages: true },
   ];
 
   let lastError: unknown;

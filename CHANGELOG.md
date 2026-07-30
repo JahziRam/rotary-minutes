@@ -7,10 +7,21 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [0.6.10] — 2026-07-30
+
+### Fixed
+- **PDF PV — 500 + téléchargement JSON (critique)**
+  - Le déploiement 0.6.9 n’était **jamais en prod** (échec build TypeScript `errorCorrectionLevel` QR)
+  - Types `qrcode` corrigés ; build Vercel OK
+  - Wordmark PNG Rotary retiré du PDF (cause TypeError `reading 'S'` intermittente sur Vercel)
+  - QR converti en JPEG compressé via `toPdfEmbedImage` (plus de PNG brut)
+  - 4e tentative **text-only** (sans logo/QR/photos) si le rendu image échoue
+  - `download=1` : en cas d’échec total, **PDF d’erreur** au lieu d’un fichier JSON
+
 ## [0.6.9] — 2026-07-30
 
 ### Fixed
-- **PDF PV — 500 intermittents (suite)**
+- **PDF PV — 500 intermittents (suite)** *(non déployé — bloqué par TS, corrigé en 0.6.10)*
   - Ne charge plus les `photoUrl` en base pour le PDF (source OOM / images corrompues)
   - Annexe : un seul avatar par défaut partagé si photos activées
   - Logo SVG / sharp fontconfig : fallback wordmark ; 3 tentatives de génération
