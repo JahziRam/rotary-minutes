@@ -7,6 +7,15 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [0.6.17] — 2026-07-30
+
+### Added / Fixed
+- **Super admin — changement de forfait club**
+  - Liste clubs : sélecteur de forfait plus visible, y compris sans abonnement
+  - Panneau « Gérer » : section **Forfait & abonnement** (forfait + statut)
+  - Passage payant → statut ACTIVE ; TRIAL → TRIALING ; sync modules du plan
+  - Journal d’audit + revalidation des pages admin / abonnement
+
 ## [0.6.16] — 2026-07-30
 
 ### Fixed

@@ -17,9 +17,17 @@ import {
   updateClubMembership,
   removeClubMembership,
 } from "@/actions/admin-clubs";
+import { updateClubSubscription } from "@/actions/admin";
 import { CLUB_ROLES } from "@/lib/rotary";
 import { getRoleLabel } from "@/lib/role-labels";
-import type { ClubRole, ClubType, Language } from "@/generated/prisma/client";
+import type {
+  ClubRole,
+  ClubType,
+  Language,
+  SubscriptionPlan,
+  SubscriptionStatus,
+} from "@/generated/prisma/client";
+import type { PlanOption } from "@/lib/plans-utils";
 
 export interface AdminClubMemberRow {
   id: string;
@@ -57,6 +65,11 @@ export interface AdminClubManagementData {
   website: string | null;
   language: Language;
   isActive: boolean;
+  subscription: {
+    plan: SubscriptionPlan;
+    status: SubscriptionStatus;
+    trialEndsAt: string | null;
+  } | null;
   members: AdminClubMemberRow[];
   memberships: AdminClubMembershipRow[];
 }
@@ -65,10 +78,12 @@ export function ClubManagementPanel({
   club,
   platformUsers,
   customRoles,
+  planOptions = [],
 }: {
   club: AdminClubManagementData;
   platformUsers: Array<{ id: string; email: string; firstName: string; lastName: string }>;
   customRoles: Array<{ id: string; key: string; labelFr: string; labelEn: string }>;
+  planOptions?: PlanOption[];
 }) {
   const locale = useLocale();
   const router = useRouter();
@@ -98,8 +113,89 @@ export function ClubManagementPanel({
     });
   }
 
+  const statusOptions: { value: SubscriptionStatus; label: string }[] = [
+    { value: "TRIALING", label: "Essai (TRIALING)" },
+    { value: "ACTIVE", label: "Actif (ACTIVE)" },
+    { value: "PAST_DUE", label: "Impayé (PAST_DUE)" },
+    { value: "CANCELLED", label: "Annulé (CANCELLED)" },
+    { value: "EXPIRED", label: "Expiré (EXPIRED)" },
+  ];
+
   return (
     <div className="px-4 py-4 bg-slate-50 border-t border-gray-100 space-y-6">
+      <div>
+        <p className="text-xs font-medium text-gray-600 mb-3">Forfait & abonnement</p>
+        <div className="grid sm:grid-cols-2 gap-3 p-4 rounded-xl border border-navy/20 bg-white">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-gray-700">Forfait</label>
+            <select
+              key={`plan-${club.id}-${club.subscription?.plan ?? "none"}`}
+              disabled={pending || planOptions.length === 0}
+              defaultValue={club.subscription?.plan ?? ""}
+              className="flex h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm"
+              onChange={(e) => {
+                const plan = e.target.value as SubscriptionPlan;
+                if (!plan) return;
+                startTransition(async () => {
+                  const result = await updateClubSubscription(club.id, { plan }, locale);
+                  if (result.success) {
+                    setToast("Forfait mis à jour");
+                    router.refresh();
+                  } else {
+                    setToast("Échec du changement de forfait");
+                  }
+                });
+              }}
+            >
+              {!club.subscription && (
+                <option value="" disabled>
+                  Choisir un forfait…
+                </option>
+              )}
+              {planOptions.map((p) => (
+                <option key={p.key} value={p.key}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-500">
+              Les modules du forfait sont synchronisés automatiquement.
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-gray-700">Statut</label>
+            <select
+              key={`status-${club.id}-${club.subscription?.status ?? "none"}`}
+              disabled={pending || !club.subscription}
+              defaultValue={club.subscription?.status ?? "TRIALING"}
+              className="flex h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm"
+              onChange={(e) => {
+                const status = e.target.value as SubscriptionStatus;
+                startTransition(async () => {
+                  const result = await updateClubSubscription(
+                    club.id,
+                    { status },
+                    locale
+                  );
+                  if (result.success) {
+                    setToast("Statut mis à jour");
+                    router.refresh();
+                  } else {
+                    setToast("Échec du changement de statut");
+                  }
+                });
+              }}
+            >
+              {statusOptions.map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
       <div>
         <p className="text-xs font-medium text-gray-600 mb-3">Informations du club</p>
         <form

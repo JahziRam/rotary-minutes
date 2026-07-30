@@ -262,50 +262,78 @@ export function ClubsTable({
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      {club.subscription ? (
-                        <div className="space-y-1.5">
-                          <div className="flex gap-1 flex-wrap">
-                            <Badge variant={planVariant[club.subscription.plan] ?? "default"}>
-                              {getPlanLabel(club.subscription.plan, locale, planLabels)}
-                            </Badge>
-                            <Badge variant={statusVariant[club.subscription.status] ?? "muted"}>
-                              {club.subscription.status}
-                            </Badge>
-                          </div>
-                          {club.subscription.trialEndsAt && club.subscription.status === "TRIALING" && (
-                            <p className="text-xs text-amber-700">
-                              Essai jusqu&apos;au{" "}
-                              {format(new Date(club.subscription.trialEndsAt), "d MMM yyyy", {
-                                locale: dateLocale,
-                              })}
-                            </p>
+                      <div className="space-y-1.5 min-w-[150px]">
+                        {club.subscription ? (
+                          <>
+                            <div className="flex gap-1 flex-wrap">
+                              <Badge variant={planVariant[club.subscription.plan] ?? "default"}>
+                                {getPlanLabel(club.subscription.plan, locale, planLabels)}
+                              </Badge>
+                              <Badge variant={statusVariant[club.subscription.status] ?? "muted"}>
+                                {club.subscription.status}
+                              </Badge>
+                            </div>
+                            {club.subscription.trialEndsAt &&
+                              club.subscription.status === "TRIALING" && (
+                                <p className="text-xs text-amber-700">
+                                  Essai jusqu&apos;au{" "}
+                                  {format(
+                                    new Date(club.subscription.trialEndsAt),
+                                    "d MMM yyyy",
+                                    { locale: dateLocale }
+                                  )}
+                                </p>
+                              )}
+                          </>
+                        ) : (
+                          <span className="text-xs text-gray-400">Aucun abonnement</span>
+                        )}
+                        <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wide">
+                          Forfait
+                        </label>
+                        <select
+                          key={`${club.id}-${club.subscription?.plan ?? "none"}`}
+                          disabled={pending || planOptions.length === 0}
+                          defaultValue={club.subscription?.plan ?? ""}
+                          onChange={(e) => {
+                            const plan = e.target
+                              .value as import("@/generated/prisma/client").SubscriptionPlan;
+                            if (!plan) return;
+                            startTransition(async () => {
+                              const result = await updateClubSubscription(
+                                club.id,
+                                { plan },
+                                locale
+                              );
+                              if (result.success) {
+                                setToast(
+                                  `Forfait → ${getPlanLabel(plan, locale, planLabels)}`
+                                );
+                                router.refresh();
+                              } else {
+                                setToast(
+                                  result.error === "UNAUTHORIZED"
+                                    ? "Non autorisé"
+                                    : "Échec du changement de forfait"
+                                );
+                              }
+                            });
+                          }}
+                          className="h-8 w-full max-w-[160px] rounded-lg border border-navy/30 bg-white text-xs px-2 font-medium text-navy focus:border-navy focus:outline-none focus:ring-2 focus:ring-navy/20"
+                          title="Changer le forfait du club"
+                        >
+                          {!club.subscription && (
+                            <option value="" disabled>
+                              Choisir un forfait…
+                            </option>
                           )}
-                          <select
-                            disabled={pending}
-                            defaultValue={club.subscription.plan}
-                            onChange={(e) =>
-                              run(
-                                () =>
-                                  updateClubSubscription(
-                                    club.id,
-                                    { plan: e.target.value as import("@/generated/prisma/client").SubscriptionPlan },
-                                    locale
-                                  ),
-                                "Plan mis à jour"
-                              )
-                            }
-                            className="h-7 w-full max-w-[140px] rounded border border-gray-200 text-xs px-1.5"
-                          >
-                            {planOptions.map((p) => (
-                              <option key={p.key} value={p.key}>
-                                {p.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-gray-400">Aucun</span>
-                      )}
+                          {planOptions.map((p) => (
+                            <option key={p.key} value={p.key}>
+                              {p.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-1">
@@ -389,6 +417,7 @@ export function ClubsTable({
                             club={managementByClubId[club.id]}
                             platformUsers={platformUsers}
                             customRoles={customRoles}
+                            planOptions={planOptions}
                           />
                         )}
                         {expandedFeaturesId === club.id && (

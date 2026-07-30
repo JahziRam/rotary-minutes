@@ -19,7 +19,14 @@ export default async function AdminClubsPage({
   const tNav = await getTranslations("adminNav");
   const tPages = await getTranslations("adminPages");
 
-  const [clubs, managementData, planLabels, planOptions] = await Promise.all([
+  const fallbackPlanOptions = [
+    { key: "TRIAL", label: locale === "fr" ? "Essai gratuit" : "Free trial" },
+    { key: "STARTER", label: "Starter" },
+    { key: "PROFESSIONAL", label: locale === "fr" ? "Active" : "Active" },
+    { key: "ENTERPRISE", label: locale === "fr" ? "High level" : "High level" },
+  ];
+
+  const [clubs, managementData, planLabels, planOptionsRaw] = await Promise.all([
     adminQuery("clubs", () => getAdminClubs(), []),
     adminQuery(
       "clubs-management",
@@ -29,42 +36,56 @@ export default async function AdminClubsPage({
     adminQuery("planLabels", () => getPlanLabelMap(locale), {}),
     adminQuery("planOptions", () => getSubscriptionPlanOptions(locale), []),
   ]);
+  const planOptions =
+    planOptionsRaw.length > 0 ? planOptionsRaw : fallbackPlanOptions;
 
   const managementByClubId = Object.fromEntries(
-    managementData.clubs.map((c) => [
-      c.id,
-      {
-        id: c.id,
-        slug: c.slug,
-        name: c.name,
-        type: c.type,
-        city: c.city,
-        country: c.country,
-        district: c.district,
-        address: c.address,
-        email: c.email,
-        phone: c.phone,
-        website: c.website,
-        language: c.language,
-        isActive: c.isActive,
-        members: c.members,
-        memberships: c.memberships.map((m) => ({
-          id: m.id,
-          userId: m.user.id,
-          email: m.user.email,
-          firstName: m.user.firstName,
-          lastName: m.user.lastName,
-          role: m.role,
-          customRoleId: m.customRoleId,
-          customRoleLabel: m.customRole
-            ? locale === "fr"
-              ? m.customRole.labelFr
-              : m.customRole.labelEn
+    managementData.clubs.map((c) => {
+      const sub = clubs.find((row) => row.id === c.id)?.subscription ?? null;
+      return [
+        c.id,
+        {
+          id: c.id,
+          slug: c.slug,
+          name: c.name,
+          type: c.type,
+          city: c.city,
+          country: c.country,
+          district: c.district,
+          address: c.address,
+          email: c.email,
+          phone: c.phone,
+          website: c.website,
+          language: c.language,
+          isActive: c.isActive,
+          subscription: sub
+            ? {
+                plan: sub.plan,
+                status: sub.status,
+                trialEndsAt: sub.trialEndsAt
+                  ? sub.trialEndsAt.toISOString()
+                  : null,
+              }
             : null,
-          isActive: m.isActive,
-        })),
-      } satisfies AdminClubManagementData,
-    ])
+          members: c.members,
+          memberships: c.memberships.map((m) => ({
+            id: m.id,
+            userId: m.user.id,
+            email: m.user.email,
+            firstName: m.user.firstName,
+            lastName: m.user.lastName,
+            role: m.role,
+            customRoleId: m.customRoleId,
+            customRoleLabel: m.customRole
+              ? locale === "fr"
+                ? m.customRole.labelFr
+                : m.customRole.labelEn
+              : null,
+            isActive: m.isActive,
+          })),
+        } satisfies AdminClubManagementData,
+      ];
+    })
   );
 
   const clubRows: AdminClubRow[] = clubs.map((c) => ({
