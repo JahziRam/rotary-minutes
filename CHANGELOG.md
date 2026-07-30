@@ -7,6 +7,15 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [0.6.13] — 2026-07-30
+
+### Fixed
+- **PDF PV — logos de retour**
+  - Cause : désactivation volontaire des logos pour stabiliser react-pdf (crash `reading 'S'`)
+  - Logo club (PNG/JPEG/WebP/**SVG**) re-encodé en JPEG sûr via `toPdfLogoImage`
+  - Repli : logo Rotary généré (raster SVG) puis wordmark JPEG, puis texte
+  - Plus jamais de PNG wordmark brut dans le document PDF
+
 ## [0.6.12] — 2026-07-30
 
 ### Fixed

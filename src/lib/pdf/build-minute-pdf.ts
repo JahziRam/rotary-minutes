@@ -3,6 +3,8 @@ import { fr, enUS } from "date-fns/locale";
 import { getAppBaseUrl } from "@/lib/app-url";
 import { generateMinuteHash, getVerifyUrl } from "@/lib/hash";
 import { computeRecordedAttendanceRate, isAttendancePresent } from "@/lib/rotary";
+import { getRotaryWordmarkDataUrl } from "@/lib/club-default-logo";
+import { rasterizeClubDefaultLogoPng } from "@/lib/club-default-logo-raster";
 import { isDataUrl } from "@/lib/image-data-url";
 import { resolveClubLogoUrl } from "@/lib/media-url";
 import {
@@ -11,7 +13,11 @@ import {
 } from "@/lib/minute-attendance-annex";
 import { getMemberDefaultAvatarDataUrl } from "@/lib/member-default-avatar";
 import { loadBirthdayMembers } from "@/lib/queries/birthday-members";
-import { isPdfSafeImageSrc, toPdfEmbedImage } from "@/lib/pdf/pdf-image";
+import {
+  isPdfSafeImageSrc,
+  toPdfEmbedImage,
+  toPdfLogoImage,
+} from "@/lib/pdf/pdf-image";
 import {
   renderMinimalMinutePdf,
   renderMinutePdf,
@@ -191,29 +197,58 @@ export async function buildMinutePdfData(
 
   let logoUrl: string | undefined;
   let logoAspectRatio: number | undefined;
+  let logoIsGenerated = false;
 
-  if (!skipCustomLogo && minute.club.logoUrl) {
-    const raw = minute.club.logoUrl.trim();
-    // SVG + sharp on Vercel often fails (fontconfig) → skip custom SVG logos
-    const isSvg =
-      raw.startsWith("data:image/svg") ||
-      raw.includes("image/svg+xml") ||
-      /\.svg(\?|$)/i.test(raw);
-
-    if (!isSvg) {
+  if (!stripAllImages) {
+    // 1) Custom club logo (PNG/JPEG/WebP/SVG) → safe JPEG for react-pdf
+    if (!skipCustomLogo && minute.club.logoUrl) {
+      const raw = minute.club.logoUrl.trim();
       const rawLogo = isDataUrl(raw)
         ? raw
         : resolveClubLogoUrl(minute.club.id, raw, baseUrl) ?? raw;
       const logoSrc = rawLogo?.startsWith("/")
         ? `${baseUrl.replace(/\/$/, "")}${rawLogo}`
         : rawLogo;
-      logoUrl = await toPdfEmbedImage(logoSrc, { maxEdge: 160 });
+      const embedded = await toPdfLogoImage(logoSrc, 200);
+      if (embedded) {
+        logoUrl = embedded.dataUrl;
+        logoAspectRatio = embedded.aspectRatio;
+        logoIsGenerated = false;
+      }
+    }
+
+    // 2) Default brand logo: rasterized SVG wordmark + club name (JPEG only)
+    if (!logoUrl) {
+      try {
+        const raster = await rasterizeClubDefaultLogoPng(minute.club.name);
+        if (raster?.dataUrl) {
+          const embedded = await toPdfLogoImage(raster.dataUrl, 220);
+          if (embedded) {
+            logoUrl = embedded.dataUrl;
+            logoAspectRatio = embedded.aspectRatio ?? raster.aspectRatio;
+            logoIsGenerated = true;
+          }
+        }
+      } catch {
+        // sharp/fontconfig can fail on some hosts — fall through
+      }
+    }
+
+    // 3) Wordmark PNG alone (JPEG) — club name still shown beside it
+    if (!logoUrl) {
+      try {
+        const embedded = await toPdfLogoImage(getRotaryWordmarkDataUrl(), 200);
+        if (embedded) {
+          logoUrl = embedded.dataUrl;
+          logoAspectRatio = embedded.aspectRatio;
+          // false → header still prints club name next to wordmark
+          logoIsGenerated = false;
+        }
+      } catch {
+        // ClubDefaultLogoPdf text-only as last visual fallback
+      }
     }
   }
-
-  // Do NOT rasterize SVG wordmark / default logo via sharp on the PDF path:
-  // fontconfig + large PNG embeds cause intermittent TypeError 'S' on Vercel.
-  // Missing logoUrl → ClubDefaultLogoPdf (text-only, reliable).
 
   const birthdayMembers = stripAllImages
     ? []
@@ -263,7 +298,9 @@ export async function buildMinutePdfData(
         stripNullBytes(minute.club.address ?? minute.club.meetingLocation) ??
         undefined,
       logoUrl: isPdfSafeImageSrc(logoUrl) ? logoUrl : undefined,
-      logoIsGenerated: !isPdfSafeImageSrc(logoUrl),
+      logoIsGenerated: isPdfSafeImageSrc(logoUrl)
+        ? logoIsGenerated
+        : true,
       logoAspectRatio,
     },
     meeting: {
