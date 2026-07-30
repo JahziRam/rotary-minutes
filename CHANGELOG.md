@@ -7,6 +7,14 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [0.6.16] — 2026-07-30
+
+### Fixed
+- **PDF PV — nom du club sur une seule ligne** sous le wordmark
+  - Largeur de boîte texte = largeur réelle du nom (plus de wrap forcé par la colonne étroite)
+  - Police réduite automatiquement si le nom est long
+  - Espaces / retours ligne normalisés ; `wrap={false}`
+
 ## [0.6.15] — 2026-07-30
 
 ### Fixed
