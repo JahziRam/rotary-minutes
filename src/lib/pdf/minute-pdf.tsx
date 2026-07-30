@@ -384,12 +384,24 @@ export interface MinutePDFData {
 }
 
 function PdfClubHeader({ data }: { data: MinutePDFData }) {
-  // Generated logo already includes club name → slightly taller + wider budget
-  const logoH = data.club.logoIsGenerated
-    ? ROTARY_LOGO_DISPLAY.pdfMaxHeightPt + 8
-    : ROTARY_LOGO_DISPLAY.pdfMaxHeightPt;
+  // Generated Rotary brand: wordmark image + club name as PDF text (reliable fonts)
+  if (data.club.logoIsGenerated) {
+    return (
+      <View style={styles.header}>
+        <ClubDefaultLogoPdf
+          clubName={data.club.name}
+          wordmarkSrc={data.club.logoUrl}
+        />
+        <View style={styles.clubInfo}>
+          {data.club.address ? <Text>{data.club.address}</Text> : null}
+        </View>
+      </View>
+    );
+  }
+
+  const logoH = ROTARY_LOGO_DISPLAY.pdfMaxHeightPt;
   const logoW = Math.min(
-    ROTARY_LOGO_DISPLAY.pdfMaxWidthPt + (data.club.logoIsGenerated ? 40 : 0),
+    ROTARY_LOGO_DISPLAY.pdfMaxWidthPt,
     logoH * (data.club.logoAspectRatio ?? 3.0)
   );
 
@@ -410,10 +422,7 @@ function PdfClubHeader({ data }: { data: MinutePDFData }) {
         <ClubDefaultLogoPdf clubName={data.club.name} />
       )}
       <View style={styles.clubInfo}>
-        {/* Generated logo already contains the club name under the wordmark */}
-        {!data.club.logoIsGenerated ? (
-          <Text style={styles.clubNameSide}>{data.club.name}</Text>
-        ) : null}
+        <Text style={styles.clubNameSide}>{data.club.name}</Text>
         {data.club.address ? <Text>{data.club.address}</Text> : null}
       </View>
     </View>

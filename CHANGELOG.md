@@ -7,6 +7,14 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [0.6.15] — 2026-07-30
+
+### Fixed
+- **PDF PV — logo Rotary généré correct (wordmark + nom)**
+  - Cause : sharp/SVG ne rend pas le texte sans police Arial sur Vercel Linux → seul le wordmark apparaissait
+  - Wordmark officiel en image JPEG ; **nom du club en texte PDF (Helvetica)** positionné sous « Rotary », à gauche de la roue
+  - Même structure Brand Center que l’UI, fiable sur serverless
+
 ## [0.6.14] — 2026-07-30
 
 ### Fixed

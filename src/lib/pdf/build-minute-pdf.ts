@@ -4,7 +4,6 @@ import { getAppBaseUrl } from "@/lib/app-url";
 import { generateMinuteHash, getVerifyUrl } from "@/lib/hash";
 import { computeRecordedAttendanceRate, isAttendancePresent } from "@/lib/rotary";
 import { getRotaryWordmarkDataUrl } from "@/lib/club-default-logo";
-import { rasterizeClubDefaultLogoPng } from "@/lib/club-default-logo-raster";
 import { isDataUrl } from "@/lib/image-data-url";
 import { resolveClubLogoUrl } from "@/lib/media-url";
 import {
@@ -200,28 +199,26 @@ export async function buildMinutePdfData(
   let logoIsGenerated = false;
 
   if (!stripAllImages) {
-    // PV: always prefer the full generated Rotary logo (wordmark + club name).
-    // Custom club logo is secondary (e.g. skip when skipCustomLogo / failure).
+    // PV: always use generated Rotary brand logo.
+    // Wordmark = image (JPEG). Club name = PDF Text (Helvetica) — sharp/SVG text
+    // has no Arial on Vercel Linux so baking the name into a raster fails.
     try {
-      const raster = await rasterizeClubDefaultLogoPng(minute.club.name);
-      if (raster?.dataUrl) {
-        // Larger max edge so wordmark + club name stay legible
-        const embedded = await toPdfLogoImage(raster.dataUrl, 320);
-        if (embedded) {
-          logoUrl = embedded.dataUrl;
-          // Keep design aspect ratio from layout (more reliable than JPEG meta)
-          logoAspectRatio = raster.aspectRatio;
-          logoIsGenerated = true;
-        }
+      const embedded = await toPdfLogoImage(getRotaryWordmarkDataUrl(), 280);
+      if (embedded) {
+        logoUrl = embedded.dataUrl;
+        logoAspectRatio = embedded.aspectRatio;
+        logoIsGenerated = true;
       }
     } catch (e) {
       console.warn(
-        "[buildMinutePdfData] generated logo failed:",
+        "[buildMinutePdfData] wordmark failed:",
         e instanceof Error ? e.message : e
       );
+      // Still mark generated so header uses ClubDefaultLogoPdf (text fallback)
+      logoIsGenerated = true;
     }
 
-    // Optional custom logo only if generated logo unavailable and not skipped
+    // Custom club logo only if wordmark unavailable and not skipped
     if (!logoUrl && !skipCustomLogo && minute.club.logoUrl) {
       const raw = minute.club.logoUrl.trim();
       const rawLogo = isDataUrl(raw)
@@ -235,20 +232,6 @@ export async function buildMinutePdfData(
         logoUrl = embedded.dataUrl;
         logoAspectRatio = embedded.aspectRatio;
         logoIsGenerated = false;
-      }
-    }
-
-    // Last image fallback: wordmark alone (club name printed beside in header)
-    if (!logoUrl) {
-      try {
-        const embedded = await toPdfLogoImage(getRotaryWordmarkDataUrl(), 200);
-        if (embedded) {
-          logoUrl = embedded.dataUrl;
-          logoAspectRatio = embedded.aspectRatio;
-          logoIsGenerated = false;
-        }
-      } catch {
-        // ClubDefaultLogoPdf text-only as ultimate fallback
       }
     }
   }
