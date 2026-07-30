@@ -22,6 +22,7 @@ import {
 } from "@/lib/minute-member-photo-size";
 import { ClubDefaultLogoPdf } from "@/components/brand/club-default-logo-pdf";
 import { ROTARY_BRAND, ROTARY_LOGO_DISPLAY } from "@/lib/rotary-brand";
+import { isPdfSafeImageSrc } from "@/lib/pdf/pdf-image";
 
 const C = ROTARY_BRAND;
 const clear = ROTARY_LOGO_DISPLAY.clearSpacePx * 0.75;
@@ -364,10 +365,10 @@ export interface MinutePDFData {
 function PdfClubHeader({ data }: { data: MinutePDFData }) {
   return (
     <View style={styles.header}>
-      {data.club.logoUrl ? (
+      {isPdfSafeImageSrc(data.club.logoUrl) ? (
         <View style={styles.logoClearSpace}>
           <Image
-            src={data.club.logoUrl}
+            src={data.club.logoUrl!}
             style={{
               ...styles.logo,
               width:
@@ -415,7 +416,9 @@ function MinutePdfFooter({
       </View>
       {showQr && data.qrCodeDataUrl ? (
         <View style={styles.footerRight}>
-          <Image src={data.qrCodeDataUrl} style={styles.qr} />
+          {isPdfSafeImageSrc(data.qrCodeDataUrl) ? (
+            <Image src={data.qrCodeDataUrl} style={styles.qr} />
+          ) : null}
         </View>
       ) : null}
     </View>
@@ -442,13 +445,15 @@ function PersonColumns({
         <View key={`col-${colIdx}`} style={styles.annexColumn}>
           {col.map((person, i) => (
             <View key={`${colIdx}-${i}`} style={styles.annexPersonRow}>
-              {showPhotos ? (
+              {showPhotos && isPdfSafeImageSrc(person.photoUrl) ? (
                 <View style={[styles.annexThumb, thumb]}>
                   <Image
-                    src={person.photoUrl || ""}
+                    src={person.photoUrl!}
                     style={[styles.annexThumbImg, thumb]}
                   />
                 </View>
+              ) : showPhotos ? (
+                <View style={[styles.annexThumb, thumb]} />
               ) : null}
               <Text style={styles.annexListItem}>
                 {showPhotos ? person.name : `• ${person.name}`}
@@ -536,13 +541,17 @@ function WeekBirthdaysBlock({
           <View key={`bcol-${colIdx}`} style={styles.annexColumn}>
             {col.map((entry, i) => (
               <View key={`${colIdx}-${i}`} style={styles.annexPersonRow}>
-                {showPhotos && entry.kind === "member" ? (
+                {showPhotos &&
+                entry.kind === "member" &&
+                isPdfSafeImageSrc(entry.photoUrl) ? (
                   <View style={[styles.annexThumb, thumb]}>
                     <Image
-                      src={entry.photoUrl || ""}
+                      src={entry.photoUrl!}
                       style={[styles.annexThumbImg, thumb]}
                     />
                   </View>
+                ) : showPhotos && entry.kind === "member" ? (
+                  <View style={[styles.annexThumb, thumb]} />
                 ) : null}
                 <View style={{ flex: 1 }}>
                   <Text style={styles.annexListItem}>

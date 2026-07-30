@@ -7,6 +7,15 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [0.6.8] — 2026-07-30
+
+### Fixed
+- **PDF PV — erreur 500 intermittente**
+  - Cause : `@react-pdf/renderer` crash (`Cannot read properties of undefined (reading 'S')`) quand une `Image` a un `src` vide ou une URL HTTP invalide
+  - Toutes les images (logo, photos annexe, QR) sont converties en **JPEG data URL** compressés via `pdf-image.ts` avant rendu
+  - Plus jamais de `src=""` dans le document PDF
+  - Route `/api/pdf/[id]` : try/catch + `maxDuration` 60s
+
 ## [0.6.7] — 2026-07-29
 
 ### Fixed

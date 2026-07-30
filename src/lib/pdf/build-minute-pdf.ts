@@ -12,6 +12,7 @@ import {
 } from "@/lib/minute-attendance-annex";
 import { getMemberDefaultAvatarDataUrl } from "@/lib/member-default-avatar";
 import { loadBirthdayMembers } from "@/lib/queries/birthday-members";
+import { mapToPdfEmbedImages, toPdfEmbedImage } from "@/lib/pdf/pdf-image";
 import { renderMinutePdf } from "@/lib/pdf/render";
 import type { MinutePDFData } from "@/lib/pdf/minute-pdf";
 
@@ -147,14 +148,59 @@ export async function buildMinutePdfData(
   let logoUrl: string | undefined;
   let logoAspectRatio: number | undefined;
   if (minute.club.logoUrl) {
-    logoUrl = isDataUrl(minute.club.logoUrl)
+    const rawLogo = isDataUrl(minute.club.logoUrl)
       ? minute.club.logoUrl
       : resolveClubLogoUrl(minute.club.id, minute.club.logoUrl, baseUrl) ??
         minute.club.logoUrl;
+    // Absolute URL for relative media paths (react-pdf cannot use relative paths).
+    const logoSrc =
+      rawLogo?.startsWith("/")
+        ? `${baseUrl.replace(/\/$/, "")}${rawLogo}`
+        : rawLogo;
+    logoUrl = await toPdfEmbedImage(logoSrc, { maxEdge: 180 });
+    if (!logoUrl) {
+      const raster = await rasterizeClubDefaultLogoPng(minute.club.name);
+      logoUrl = raster?.dataUrl;
+      logoAspectRatio = raster?.aspectRatio;
+    }
   } else {
     const raster = await rasterizeClubDefaultLogoPng(minute.club.name);
     logoUrl = raster?.dataUrl;
     logoAspectRatio = raster?.aspectRatio;
+  }
+
+  const birthdayMembers = await loadBirthdayMembers(minute.club.id);
+  const annex = buildMinuteAttendanceAnnex(minute.meeting.attendances, locale, {
+    showMemberPhotos: !!minute.club.minuteShowMemberPhotos,
+    memberPhotoSize: minute.club.minuteMemberPhotoSize,
+    preferDataUrlOnly: true,
+    meetingDate: minute.meeting.date,
+    birthdayMembers,
+  });
+
+  // Sanitize ALL annex photos for react-pdf (never empty/invalid src → crash 'S').
+  if (annex.showMemberPhotos) {
+    const fallback = getMemberDefaultAvatarDataUrl();
+    const people = annex.memberGroups.flatMap((g) => g.people);
+    const birthdayPeople = annex.weekBirthdays.filter((e) => e.kind === "member");
+
+    const sources = [
+      ...people.map((p) => p.photoUrl),
+      ...birthdayPeople.map((e) => e.photoUrl),
+    ];
+    const embedded = await mapToPdfEmbedImages(
+      sources,
+      { maxEdge: 64, fallback },
+      4
+    );
+
+    let k = 0;
+    for (const person of people) {
+      person.photoUrl = embedded[k++] ?? fallback;
+    }
+    for (const entry of birthdayPeople) {
+      entry.photoUrl = embedded[k++] ?? fallback;
+    }
   }
 
   return {
@@ -162,7 +208,7 @@ export async function buildMinutePdfData(
       name: minute.club.name,
       address: minute.club.address ?? minute.club.meetingLocation ?? undefined,
       logoUrl,
-      logoIsGenerated: usesGeneratedLogo,
+      logoIsGenerated: usesGeneratedLogo && !minute.club.logoUrl,
       logoAspectRatio,
     },
     meeting: {
@@ -183,33 +229,7 @@ export async function buildMinutePdfData(
     hash,
     qrCodeDataUrl,
     verifyUrl,
-    annex: await (async () => {
-      const birthdayMembers = await loadBirthdayMembers(minute.club.id);
-      const annex = buildMinuteAttendanceAnnex(minute.meeting.attendances, locale, {
-        showMemberPhotos: !!minute.club.minuteShowMemberPhotos,
-        memberPhotoSize: minute.club.minuteMemberPhotoSize,
-        preferDataUrlOnly: true,
-        meetingDate: minute.meeting.date,
-        birthdayMembers,
-      });
-      // Server-only: embed default wheel avatar for members without a data-URL photo.
-      if (annex.showMemberPhotos) {
-        const fallback = getMemberDefaultAvatarDataUrl();
-        for (const group of annex.memberGroups) {
-          for (const person of group.people) {
-            if (!person.photoUrl || !isDataUrl(person.photoUrl)) {
-              person.photoUrl = fallback;
-            }
-          }
-        }
-        for (const entry of annex.weekBirthdays) {
-          if (entry.kind === "member" && (!entry.photoUrl || !isDataUrl(entry.photoUrl))) {
-            entry.photoUrl = fallback;
-          }
-        }
-      }
-      return annex;
-    })(),
+    annex,
     locale,
   };
 }
