@@ -8,6 +8,7 @@ import {
 } from "@/lib/club-default-logo";
 import { ROTARY_BRAND, ROTARY_LOGO_DISPLAY } from "@/lib/rotary-brand";
 import { ROTARY_WORDMARK_ASPECT } from "@/lib/rotary-wordmark-b64";
+import { isPdfSafeImageSrc } from "@/lib/pdf/pdf-image";
 
 const clear = ROTARY_LOGO_DISPLAY.clearSpacePx * 0.75;
 const WORDMARK_H = 38;
@@ -23,25 +24,29 @@ export function ClubDefaultLogoPdf({ clubName }: { clubName: string }) {
     getClubNameBlockBottomY(WORDMARK_H, lines, clubSize)
   );
   const contentWidth = offsetX + wordmarkW;
+  const wordmarkSrc = getRotaryWordmarkDataUrl();
+  const showWordmark = isPdfSafeImageSrc(wordmarkSrc);
+  const label = (lines[0] || clubName || "Rotary").replace(/\u0000/g, "");
 
   return (
     <View style={{ padding: clear, width: contentWidth, height: contentHeight }}>
-      <Image
-        src={getRotaryWordmarkDataUrl()}
-        style={{
-          position: "absolute",
-          top: 0,
-          left: offsetX,
-          height: WORDMARK_H,
-          width: wordmarkW,
-          objectFit: "contain",
-        }}
-      />
+      {showWordmark ? (
+        <Image
+          src={wordmarkSrc}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: offsetX,
+            height: WORDMARK_H,
+            width: wordmarkW,
+          }}
+        />
+      ) : null}
       <View
         style={{
           position: "absolute",
           left: offsetX,
-          top: clubTop,
+          top: showWordmark ? clubTop : 0,
           width: columnW,
           alignItems: "flex-end",
         }}
@@ -51,12 +56,11 @@ export function ClubDefaultLogoPdf({ clubName }: { clubName: string }) {
           style={{
             fontFamily: "Helvetica",
             fontSize: clubSize,
-            fontWeight: "normal",
             color: ROTARY_BRAND.royalBlue,
             textAlign: "right",
           }}
         >
-          {lines[0]}
+          {label}
         </Text>
       </View>
     </View>

@@ -446,14 +446,33 @@ function PersonColumns({
           {col.map((person, i) => (
             <View key={`${colIdx}-${i}`} style={styles.annexPersonRow}>
               {showPhotos && isPdfSafeImageSrc(person.photoUrl) ? (
-                <View style={[styles.annexThumb, thumb]}>
+                <View
+                  style={{
+                    ...styles.annexThumb,
+                    width: thumb.width,
+                    height: thumb.height,
+                    borderRadius: thumb.borderRadius,
+                  }}
+                >
                   <Image
                     src={person.photoUrl!}
-                    style={[styles.annexThumbImg, thumb]}
+                    style={{
+                      ...styles.annexThumbImg,
+                      width: thumb.width,
+                      height: thumb.height,
+                      borderRadius: thumb.borderRadius,
+                    }}
                   />
                 </View>
               ) : showPhotos ? (
-                <View style={[styles.annexThumb, thumb]} />
+                <View
+                  style={{
+                    ...styles.annexThumb,
+                    width: thumb.width,
+                    height: thumb.height,
+                    borderRadius: thumb.borderRadius,
+                  }}
+                />
               ) : null}
               <Text style={styles.annexListItem}>
                 {showPhotos ? person.name : `• ${person.name}`}
@@ -544,14 +563,33 @@ function WeekBirthdaysBlock({
                 {showPhotos &&
                 entry.kind === "member" &&
                 isPdfSafeImageSrc(entry.photoUrl) ? (
-                  <View style={[styles.annexThumb, thumb]}>
+                  <View
+                    style={{
+                      ...styles.annexThumb,
+                      width: thumb.width,
+                      height: thumb.height,
+                      borderRadius: thumb.borderRadius,
+                    }}
+                  >
                     <Image
                       src={entry.photoUrl!}
-                      style={[styles.annexThumbImg, thumb]}
+                      style={{
+                        ...styles.annexThumbImg,
+                        width: thumb.width,
+                        height: thumb.height,
+                        borderRadius: thumb.borderRadius,
+                      }}
                     />
                   </View>
                 ) : showPhotos && entry.kind === "member" ? (
-                  <View style={[styles.annexThumb, thumb]} />
+                  <View
+                    style={{
+                      ...styles.annexThumb,
+                      width: thumb.width,
+                      height: thumb.height,
+                      borderRadius: thumb.borderRadius,
+                    }}
+                  />
                 ) : null}
                 <View style={{ flex: 1 }}>
                   <Text style={styles.annexListItem}>

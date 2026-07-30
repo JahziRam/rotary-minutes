@@ -7,6 +7,16 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [0.6.9] — 2026-07-30
+
+### Fixed
+- **PDF PV — 500 intermittents (suite)**
+  - Ne charge plus les `photoUrl` en base pour le PDF (source OOM / images corrompues)
+  - Annexe : un seul avatar par défaut partagé si photos activées
+  - Logo SVG / sharp fontconfig : fallback wordmark ; 3 tentatives de génération
+  - `download=1` : en cas d’échec, renvoie un **PDF d’erreur** (plus de fichier JSON)
+  - Styles Image annexes aplatis (évite bugs style-array react-pdf)
+
 ## [0.6.8] — 2026-07-30
 
 ### Fixed

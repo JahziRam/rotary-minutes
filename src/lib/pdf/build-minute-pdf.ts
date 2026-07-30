@@ -12,13 +12,13 @@ import {
 } from "@/lib/minute-attendance-annex";
 import { getMemberDefaultAvatarDataUrl } from "@/lib/member-default-avatar";
 import { loadBirthdayMembers } from "@/lib/queries/birthday-members";
-import { mapToPdfEmbedImages, toPdfEmbedImage } from "@/lib/pdf/pdf-image";
+import { isPdfSafeImageSrc, toPdfEmbedImage } from "@/lib/pdf/pdf-image";
 import { renderMinutePdf } from "@/lib/pdf/render";
 import type { MinutePDFData } from "@/lib/pdf/minute-pdf";
 
 /**
- * PDF / hash paths need photoUrl (often data: base64) to embed images.
- * Do NOT use this include on page loads — it OOMs when many members have photos.
+ * PDF path: NEVER load photoUrl blobs into the query (OOM on large clubs).
+ * Annex photos use a single shared default avatar JPEG for reliability.
  */
 export const attendanceWithMemberInclude = {
   include: {
@@ -53,8 +53,8 @@ export const attendanceWithMemberLightInclude = {
   orderBy: { category: "asc" as const },
 } as const;
 
+/** Safe include for PDF route — no photoUrl column (can be multi-MB data URLs). */
 export const minutePdfInclude = {
-  // Select only fields the PDF needs — avoid loading unrelated club TEXT columns.
   club: {
     select: {
       id: true,
@@ -68,7 +68,7 @@ export const minutePdfInclude = {
     },
   },
   agendaItems: { orderBy: { sortOrder: "asc" as const } },
-  meeting: { include: { attendances: attendanceWithMemberInclude } },
+  meeting: { include: { attendances: attendanceWithMemberLightInclude } },
 } as const;
 
 type MinuteForPdf = {
@@ -113,10 +113,26 @@ type MinuteForPdf = {
   };
 };
 
+type PdfBuildOptions = {
+  /** When false, annex shows no photos (more reliable / lower memory). */
+  embedPhotos?: boolean;
+  /** When true, skip custom club logo (use generated wordmark only). */
+  skipCustomLogo?: boolean;
+};
+
+function stripNullBytes(text: string | null | undefined): string | undefined {
+  if (text == null) return undefined;
+  // Null bytes / control chars can break PDF text encoding
+  return text.replace(/\u0000/g, "").replace(/[\u0001-\u0008\u000B\u000C\u000E-\u001F]/g, "");
+}
+
 export async function buildMinutePdfData(
   minute: MinuteForPdf,
-  locale: string
+  locale: string,
+  options: PdfBuildOptions = {}
 ): Promise<MinutePDFData> {
+  const embedPhotos = options.embedPhotos !== false;
+  const skipCustomLogo = options.skipCustomLogo === true;
   const baseUrl = getAppBaseUrl();
   const dateLocale = locale === "en" ? enUS : fr;
 
@@ -132,7 +148,11 @@ export async function buildMinutePdfData(
 
   const verifyUrl = getVerifyUrl(hash, baseUrl, locale);
   const { default: QRCode } = await import("qrcode");
-  const qrCodeDataUrl = await QRCode.toDataURL(verifyUrl, { width: 200 });
+  const qrCodeDataUrl = await QRCode.toDataURL(verifyUrl, {
+    width: 128,
+    margin: 1,
+    errorCorrectionLevel: "M",
+  });
 
   const memberAttendances = minute.meeting.attendances.filter(
     (a) =>
@@ -144,90 +164,99 @@ export async function buildMinutePdfData(
   const total = memberAttendances.length;
   const rate = computeRecordedAttendanceRate(memberAttendances) ?? 0;
 
-  const usesGeneratedLogo = !minute.club.logoUrl;
+  const usesGeneratedLogo = !minute.club.logoUrl || skipCustomLogo;
   let logoUrl: string | undefined;
   let logoAspectRatio: number | undefined;
-  if (minute.club.logoUrl) {
-    const rawLogo = isDataUrl(minute.club.logoUrl)
-      ? minute.club.logoUrl
-      : resolveClubLogoUrl(minute.club.id, minute.club.logoUrl, baseUrl) ??
-        minute.club.logoUrl;
-    // Absolute URL for relative media paths (react-pdf cannot use relative paths).
-    const logoSrc =
-      rawLogo?.startsWith("/")
+
+  if (!skipCustomLogo && minute.club.logoUrl) {
+    const raw = minute.club.logoUrl.trim();
+    // SVG + sharp on Vercel often fails (fontconfig) → skip custom SVG logos
+    const isSvg =
+      raw.startsWith("data:image/svg") ||
+      raw.includes("image/svg+xml") ||
+      /\.svg(\?|$)/i.test(raw);
+
+    if (!isSvg) {
+      const rawLogo = isDataUrl(raw)
+        ? raw
+        : resolveClubLogoUrl(minute.club.id, raw, baseUrl) ?? raw;
+      const logoSrc = rawLogo?.startsWith("/")
         ? `${baseUrl.replace(/\/$/, "")}${rawLogo}`
         : rawLogo;
-    logoUrl = await toPdfEmbedImage(logoSrc, { maxEdge: 180 });
-    if (!logoUrl) {
-      const raster = await rasterizeClubDefaultLogoPng(minute.club.name);
-      logoUrl = raster?.dataUrl;
-      logoAspectRatio = raster?.aspectRatio;
+      logoUrl = await toPdfEmbedImage(logoSrc, { maxEdge: 160 });
     }
-  } else {
-    const raster = await rasterizeClubDefaultLogoPng(minute.club.name);
-    logoUrl = raster?.dataUrl;
-    logoAspectRatio = raster?.aspectRatio;
+  }
+
+  if (!logoUrl) {
+    // Prefer pre-rasterized PNG; if sharp/SVG fails, leave undefined → ClubDefaultLogoPdf
+    try {
+      const raster = await rasterizeClubDefaultLogoPng(minute.club.name);
+      if (raster?.dataUrl && isPdfSafeImageSrc(raster.dataUrl)) {
+        logoUrl = raster.dataUrl;
+        logoAspectRatio = raster.aspectRatio;
+      }
+    } catch {
+      logoUrl = undefined;
+    }
   }
 
   const birthdayMembers = await loadBirthdayMembers(minute.club.id);
+  const showPhotos =
+    embedPhotos && !!minute.club.minuteShowMemberPhotos;
+
   const annex = buildMinuteAttendanceAnnex(minute.meeting.attendances, locale, {
-    showMemberPhotos: !!minute.club.minuteShowMemberPhotos,
+    showMemberPhotos: showPhotos,
     memberPhotoSize: minute.club.minuteMemberPhotoSize,
+    // Do not pull individual photo blobs — use one shared default for all faces.
     preferDataUrlOnly: true,
     meetingDate: minute.meeting.date,
     birthdayMembers,
   });
 
-  // Sanitize ALL annex photos for react-pdf (never empty/invalid src → crash 'S').
   if (annex.showMemberPhotos) {
+    // Single shared avatar: avoids loading N data-URL photos (main OOM / crash source).
     const fallback = getMemberDefaultAvatarDataUrl();
-    const people = annex.memberGroups.flatMap((g) => g.people);
-    const birthdayPeople = annex.weekBirthdays.filter((e) => e.kind === "member");
-
-    const sources = [
-      ...people.map((p) => p.photoUrl),
-      ...birthdayPeople.map((e) => e.photoUrl),
-    ];
-    const embedded = await mapToPdfEmbedImages(
-      sources,
-      { maxEdge: 64, fallback },
-      4
-    );
-
-    let k = 0;
-    for (const person of people) {
-      person.photoUrl = embedded[k++] ?? fallback;
+    const safe =
+      (await toPdfEmbedImage(fallback, { maxEdge: 48, fallback })) ?? fallback;
+    for (const group of annex.memberGroups) {
+      for (const person of group.people) {
+        person.photoUrl = safe;
+      }
     }
-    for (const entry of birthdayPeople) {
-      entry.photoUrl = embedded[k++] ?? fallback;
+    for (const entry of annex.weekBirthdays) {
+      if (entry.kind === "member") {
+        entry.photoUrl = safe;
+      }
     }
   }
 
   return {
     club: {
-      name: minute.club.name,
-      address: minute.club.address ?? minute.club.meetingLocation ?? undefined,
-      logoUrl,
-      logoIsGenerated: usesGeneratedLogo && !minute.club.logoUrl,
+      name: stripNullBytes(minute.club.name) ?? minute.club.name,
+      address:
+        stripNullBytes(minute.club.address ?? minute.club.meetingLocation) ??
+        undefined,
+      logoUrl: isPdfSafeImageSrc(logoUrl) ? logoUrl : undefined,
+      logoIsGenerated: !isPdfSafeImageSrc(logoUrl),
       logoAspectRatio,
     },
     meeting: {
       date: format(minute.meeting.date, "d MMMM yyyy", { locale: dateLocale }),
-      location: minute.meeting.location ?? undefined,
-      type: minute.meeting.type,
-      presidedBy: minute.meeting.presidedBy ?? undefined,
-      secretary: minute.meeting.secretary ?? undefined,
+      location: stripNullBytes(minute.meeting.location) ?? undefined,
+      type: stripNullBytes(minute.meeting.type) ?? minute.meeting.type,
+      presidedBy: stripNullBytes(minute.meeting.presidedBy) ?? undefined,
+      secretary: stripNullBytes(minute.meeting.secretary) ?? undefined,
     },
-    title: minute.title,
+    title: stripNullBytes(minute.title) ?? minute.title,
     attendances: { present, absent: total - present, rate },
     agendaItems: minute.agendaItems.map((item) => ({
-      title: item.title,
-      description: item.description ?? undefined,
-      decisions: item.decisions ?? undefined,
-      actions: item.actions ?? undefined,
+      title: stripNullBytes(item.title) ?? item.title,
+      description: stripNullBytes(item.description),
+      decisions: stripNullBytes(item.decisions),
+      actions: stripNullBytes(item.actions),
     })),
     hash,
-    qrCodeDataUrl,
+    qrCodeDataUrl: isPdfSafeImageSrc(qrCodeDataUrl) ? qrCodeDataUrl : "",
     verifyUrl,
     annex,
     locale,
@@ -245,11 +274,41 @@ export function minutePdfFilename(minute: { id: string; title: string }): string
   return `pv-${slug || minute.id}.pdf`;
 }
 
+/**
+ * Build PDF with progressive fallbacks so users almost never get a hard 500.
+ * 1) Full (shared avatar thumbs if photos enabled)
+ * 2) No photos
+ * 3) No custom logo + no photos
+ */
 export async function buildMinutePdfBuffer(
   minute: MinuteForPdf,
   locale: string
 ): Promise<{ buffer: Buffer; filename: string }> {
-  const data = await buildMinutePdfData(minute, locale);
-  const buffer = await renderMinutePdf(data);
-  return { buffer, filename: minutePdfFilename(minute) };
+  const filename = minutePdfFilename(minute);
+  const attempts: PdfBuildOptions[] = [
+    { embedPhotos: true, skipCustomLogo: false },
+    { embedPhotos: false, skipCustomLogo: false },
+    { embedPhotos: false, skipCustomLogo: true },
+  ];
+
+  let lastError: unknown;
+  for (const opts of attempts) {
+    try {
+      const data = await buildMinutePdfData(minute, locale, opts);
+      const buffer = await renderMinutePdf(data);
+      if (!buffer?.length) throw new Error("EMPTY_PDF_BUFFER");
+      return { buffer, filename };
+    } catch (e) {
+      lastError = e;
+      console.warn(
+        "[buildMinutePdfBuffer] attempt failed",
+        opts,
+        e instanceof Error ? e.message : e
+      );
+    }
+  }
+
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("PDF_GENERATION_FAILED");
 }
