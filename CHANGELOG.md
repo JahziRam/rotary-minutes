@@ -7,6 +7,15 @@ et le versionnement suit [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [0.6.11] — 2026-07-30
+
+### Fixed
+- **PDF PV — TypeError `reading 'S'` même sans images**
+  - Cause layout react-pdf : `gap`, `border` shorthand, `fontWeight: bold`, `maxWidth: %`
+  - Styles du PV réécrits (borderWidth/Color, Helvetica-Bold, margins)
+  - 5e fallback : document **minimal text-only** (`minimal-minute-pdf.tsx`) si le layout complet plante
+  - Sanitisation unicode (guillemets, tirets) pour Helvetica WinAnsi
+
 ## [0.6.10] — 2026-07-30
 
 ### Fixed

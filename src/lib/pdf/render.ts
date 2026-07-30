@@ -21,6 +21,18 @@ export async function renderMinutePdf(data: MinutePDFData): Promise<Buffer> {
   return renderToBuffer(MinutePDFDocument({ data }));
 }
 
+/** Last-resort text-only layout (no images / complex styles). */
+export async function renderMinimalMinutePdf(
+  data: MinutePDFData
+): Promise<Buffer> {
+  await ensurePdfHyphenationDisabled();
+  const [{ renderToBuffer }, { MinimalMinutePDFDocument }] = await Promise.all([
+    import("@react-pdf/renderer"),
+    import("@/lib/pdf/minimal-minute-pdf"),
+  ]);
+  return renderToBuffer(MinimalMinutePDFDocument({ data }));
+}
+
 export async function renderStatsPdf(data: StatsPDFData): Promise<Buffer> {
   await ensurePdfHyphenationDisabled();
   const [{ renderToBuffer }, { StatsPDFDocument }] = await Promise.all([

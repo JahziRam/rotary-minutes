@@ -12,7 +12,7 @@ import {
 import { getMemberDefaultAvatarDataUrl } from "@/lib/member-default-avatar";
 import { loadBirthdayMembers } from "@/lib/queries/birthday-members";
 import { isPdfSafeImageSrc, toPdfEmbedImage } from "@/lib/pdf/pdf-image";
-import { renderMinutePdf } from "@/lib/pdf/render";
+import { renderMinimalMinutePdf, renderMinutePdf } from "@/lib/pdf/render";
 import type { MinutePDFData } from "@/lib/pdf/minute-pdf";
 
 /**
@@ -123,8 +123,15 @@ type PdfBuildOptions = {
 
 function stripNullBytes(text: string | null | undefined): string | undefined {
   if (text == null) return undefined;
-  // Null bytes / control chars can break PDF text encoding
-  return text.replace(/\u0000/g, "").replace(/[\u0001-\u0008\u000B\u000C\u000E-\u001F]/g, "");
+  // Null bytes / control chars / exotic unicode can break Helvetica WinAnsi in react-pdf
+  return text
+    .replace(/\u0000/g, "")
+    .replace(/[\u0001-\u0008\u000B\u000C\u000E-\u001F]/g, "")
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/[\u2013\u2014]/g, "-")
+    .replace(/\u2026/g, "...")
+    .replace(/\u00A0/g, " ");
 }
 
 export async function buildMinutePdfData(
@@ -294,25 +301,29 @@ export function minutePdfFilename(minute: { id: string; title: string }): string
  * 1) Full (shared avatar thumbs if photos enabled)
  * 2) No photos
  * 3) No custom logo + no photos
- * 4) Text-only (no logo/QR/photos) — last resort against react-pdf image crashes
+ * 4) Full layout without any images
+ * 5) Minimal text-only document (separate component — survives layout bugs)
  */
 export async function buildMinutePdfBuffer(
   minute: MinuteForPdf,
   locale: string
 ): Promise<{ buffer: Buffer; filename: string }> {
   const filename = minutePdfFilename(minute);
-  const attempts: PdfBuildOptions[] = [
+  const attempts: Array<PdfBuildOptions & { minimal?: boolean }> = [
     { embedPhotos: true, skipCustomLogo: false },
     { embedPhotos: false, skipCustomLogo: false },
     { embedPhotos: false, skipCustomLogo: true },
     { stripAllImages: true },
+    { stripAllImages: true, minimal: true },
   ];
 
   let lastError: unknown;
   for (const opts of attempts) {
     try {
       const data = await buildMinutePdfData(minute, locale, opts);
-      const buffer = await renderMinutePdf(data);
+      const buffer = opts.minimal
+        ? await renderMinimalMinutePdf(data)
+        : await renderMinutePdf(data);
       if (!buffer?.length) throw new Error("EMPTY_PDF_BUFFER");
       return { buffer, filename };
     } catch (e) {

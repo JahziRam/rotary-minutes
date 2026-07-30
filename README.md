@@ -6,7 +6,7 @@ Production : [https://clubminutes.api.mg](https://clubminutes.api.mg)
 
 ## Version
 
-**0.6.10** — voir [CHANGELOG.md](./CHANGELOG.md)
+**0.6.11** — voir [CHANGELOG.md](./CHANGELOG.md)
 
 ## Fonctionnalités
 

@@ -61,7 +61,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 20,
-    borderBottom: `1.5pt solid ${C.royalBlue}`,
+    // Avoid CSS border shorthands — they crash yoga/react-pdf on serverless
+    borderBottomWidth: 1.5,
+    borderBottomColor: C.royalBlue,
+    borderBottomStyle: "solid",
     paddingBottom: 14,
   },
   logoClearSpace: {
@@ -73,12 +76,17 @@ const styles = StyleSheet.create({
     objectFit: "contain",
   },
   clubInfo: { textAlign: "right", fontSize: 9, color: C.muted, flex: 1, marginLeft: 16 },
-  clubNameSide: { fontWeight: "bold", color: C.royalBlue, fontSize: 11, marginBottom: 4 },
+  clubNameSide: {
+    fontFamily: "Helvetica-Bold",
+    color: C.royalBlue,
+    fontSize: 11,
+    marginBottom: 4,
+  },
 
   /* ── Corps (proposition 4) ──────────────────────────────────────────── */
   title: {
     fontSize: 15,
-    fontWeight: "bold",
+    fontFamily: "Helvetica-Bold",
     color: C.charcoal,
     marginBottom: 6,
   },
@@ -90,6 +98,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 0.5,
     borderColor: C.border,
+    borderStyle: "solid",
     flexDirection: "row",
     justifyContent: "space-between",
   },
@@ -98,19 +107,19 @@ const styles = StyleSheet.create({
   metaRow: {
     flexDirection: "row",
     marginBottom: 12,
-    gap: 8,
+    // no gap — use margin on children (gap crashes some react-pdf builds)
   },
   metaPill: {
     flex: 1,
     padding: 8,
     backgroundColor: "#E8F0FA",
     borderRadius: 4,
+    marginRight: 8,
   },
   metaLbl: { fontSize: 7, color: C.muted, marginBottom: 2 },
   metaVal: { fontSize: 9, fontFamily: "Helvetica-Bold", color: C.royalBlue },
   stats: {
     flexDirection: "row",
-    gap: 8,
     marginBottom: 14,
   },
   stat: {
@@ -120,6 +129,8 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     borderWidth: 1,
     borderColor: C.royalBlue,
+    borderStyle: "solid",
+    marginRight: 8,
   },
   statVal: { fontSize: 13, fontFamily: "Helvetica-Bold", color: C.royalBlue },
   statLbl: { fontSize: 7, color: C.muted, marginTop: 2 },
@@ -138,13 +149,13 @@ const styles = StyleSheet.create({
     padding: 9,
     borderWidth: 0.5,
     borderColor: C.border,
+    borderStyle: "solid",
     borderRadius: 5,
     backgroundColor: C.white,
   },
   agendaHead: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
     marginBottom: 5,
   },
   agendaNum: {
@@ -154,6 +165,7 @@ const styles = StyleSheet.create({
     backgroundColor: C.gold,
     alignItems: "center",
     justifyContent: "center",
+    marginRight: 8,
   },
   agendaNumText: { fontSize: 9, fontFamily: "Helvetica-Bold", color: C.charcoal },
   agendaTitle: { flex: 1, fontSize: 10, fontFamily: "Helvetica-Bold" },
@@ -165,6 +177,7 @@ const styles = StyleSheet.create({
     paddingLeft: 6,
     borderLeftWidth: 2,
     borderLeftColor: C.royalBlue,
+    borderLeftStyle: "solid",
   },
   lineAct: {
     fontSize: 8,
@@ -173,6 +186,7 @@ const styles = StyleSheet.create({
     paddingLeft: 6,
     borderLeftWidth: 2,
     borderLeftColor: "#047857",
+    borderLeftStyle: "solid",
   },
 
   /* ── Footer ─────────────────────────────────────────────────────────── */
@@ -185,7 +199,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-end",
-    borderTop: `1pt solid ${C.border}`,
+    borderTopWidth: 1,
+    borderTopColor: C.border,
+    borderTopStyle: "solid",
     paddingTop: 8,
     fontSize: 8,
     color: C.muted,
@@ -226,7 +242,6 @@ const styles = StyleSheet.create({
   annexSummaryRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 6,
     marginBottom: 12,
   },
   annexChip: {
@@ -236,6 +251,9 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     borderWidth: 0.5,
     borderColor: C.border,
+    borderStyle: "solid",
+    marginRight: 6,
+    marginBottom: 6,
   },
   annexChipValue: {
     fontSize: 10,
@@ -258,6 +276,7 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
     borderBottomWidth: 1,
     borderBottomColor: C.border,
+    borderBottomStyle: "solid",
   },
   annexGroup: {
     marginBottom: 8,
@@ -266,6 +285,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     borderWidth: 0.5,
     borderColor: C.border,
+    borderStyle: "solid",
   },
   annexGroupHeader: {
     flexDirection: "row",
@@ -275,6 +295,7 @@ const styles = StyleSheet.create({
     paddingBottom: 3,
     borderBottomWidth: 0.5,
     borderBottomColor: C.border,
+    borderBottomStyle: "solid",
   },
   annexCategory: {
     fontSize: 9,
@@ -290,13 +311,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 0.5,
     borderColor: C.border,
+    borderStyle: "solid",
   },
   annexColumns: {
     flexDirection: "row",
-    gap: 6,
   },
   annexColumn: {
     flex: 1,
+    marginRight: 6,
   },
   annexListItem: {
     fontSize: 8,
@@ -307,11 +329,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 3,
-    gap: 4,
   },
   annexThumb: {
     overflow: "hidden",
     backgroundColor: C.border,
+    marginRight: 4,
   },
   annexThumbImg: {
     objectFit: "cover",
@@ -321,10 +343,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 3,
-    gap: 4,
   },
-  visitorName: { fontSize: 8, flex: 1, color: C.charcoal },
-  visitorType: { fontSize: 7.5, color: C.muted, maxWidth: "42%" },
+  visitorName: { fontSize: 8, flex: 1, color: C.charcoal, marginRight: 4 },
+  visitorType: { fontSize: 7.5, color: C.muted, maxWidth: 120 },
 });
 
 export interface MinutePDFData {
@@ -761,9 +782,7 @@ export function MinutePDFDocument({ data }: { data: MinutePDFData }) {
         <Text style={styles.title}>{data.title}</Text>
 
         <View style={styles.dateBand} wrap={false}>
-          <Text style={styles.dateBandText}>
-            <Text style={styles.dateBandStrong}>{data.meeting.date}</Text>
-          </Text>
+          <Text style={styles.dateBandStrong}>{data.meeting.date}</Text>
           {data.meeting.location ? (
             <Text style={styles.dateBandText}>{data.meeting.location}</Text>
           ) : null}
